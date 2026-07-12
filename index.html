@@ -162,6 +162,31 @@
     background:var(--surface2);color:var(--sand);cursor:pointer;
   }
   .hedit button.hdone{width:auto;padding:0 12px;font-size:12px;color:var(--amber);border-color:var(--amber)}
+  .hdetail{padding:2px 0 12px;font-size:13px}
+  .hses{display:flex;justify-content:space-between;color:#C6CBDA;padding:3px 0}
+  .hses .t{color:var(--muted)}
+  .hnote-line{color:var(--muted);font-style:italic;padding:3px 0}
+  .hdetail .hedit{margin-top:10px;justify-content:flex-end}
+
+  /* ---- log-at-a-time ---- */
+  .time-link{
+    display:block;background:none;border:none;color:var(--muted);
+    font-family:'Karla',sans-serif;font-size:13px;text-decoration:underline;
+    margin-top:14px;cursor:pointer;padding:0;
+  }
+  .earlier-row{display:flex;gap:10px;margin-top:10px;align-items:stretch}
+  .earlier-row[hidden]{display:none}
+  .earlier-row input{
+    flex:1;background:var(--surface2);border:1px solid var(--line);border-radius:12px;
+    color:var(--sand);font-family:'Karla',sans-serif;font-size:16px;padding:8px 10px;
+    color-scheme:dark;min-width:0;
+  }
+  .earlier-row button{
+    flex:1.4;font-family:'Karla',sans-serif;font-weight:700;font-size:14px;
+    padding:10px 0;border-radius:12px;border:1px solid var(--line);
+    background:var(--surface2);color:var(--sand);cursor:pointer;
+  }
+  #earlierMsg{font-size:12px;color:var(--muted);margin-top:6px;min-height:1em}
 
   /* ---- phase cards ---- */
   h2{font-family:'Fraunces',serif;font-weight:500;font-size:23px;margin:0 0 16px;letter-spacing:-.01em}
@@ -247,6 +272,12 @@
     <button class="minus" id="btnMinus" aria-label="Remove one hit">−1</button>
     <button id="btnPlus">Log a hit</button>
   </div>
+  <button class="time-link" id="btnEarlier">Forgot to log? Add hits from earlier…</button>
+  <div class="earlier-row" id="earlierRow" hidden>
+    <input type="time" id="earlierTime" aria-label="Time the hit happened">
+    <button id="btnAddEarlier">+1 at this time</button>
+  </div>
+  <p id="earlierMsg"></p>
   <br>
   <button class="delay-chip" id="urgeChip">Urge? Start the 20-minute timer.</button>
   <button class="slip-btn" id="btnSlip">Slipped? Log it honestly</button>
@@ -254,7 +285,7 @@
 
 <div class="history">
   <h3>The record</h3>
-  <p class="history-hint">Tap any day to correct its count.</p>
+  <p class="history-hint">Tap any day to see its log or correct its count.</p>
   <div id="historyRows"><p class="hempty">Your days will stack up here as you go.</p></div>
 </div>
 
@@ -294,7 +325,7 @@
   <details>
     <summary>Structural supports</summary>
     <div class="d-body">
-      <p><strong>Casita:</strong> stay through at least the first zero days. Before going home, have your place fully stripped — flower, pieces, papers — so home isn't a loaded environment.</p>
+      <p><strong>Casita:</strong> stay through at least the first zero days. The stash stays put during the taper — the cap is the guardrail, not scarcity. Then the night before zero, everything goes — flower, pieces, papers — so home isn't a loaded environment for zero week.</p>
       <p><strong>Friend is briefed:</strong> knows the zero date, won't enable a supply run, expects week one to be prickly.</p>
       <p><strong>Professional support knows</strong> — before zero, not after it gets hard.</p>
       <p><strong>Food:</strong> grabbable and easy, no forcing meals. Appetite returns around week two.</p>
@@ -471,6 +502,19 @@
     var last=hits[hits.length-1];
     return {last:last,inSession:inSession,nextOpen:spacing>0?new Date(last.getTime()+spacing):null};
   }
+  function sessionsFor(key){
+    var e=data.days[key];
+    if(!e||!e.hits||!e.hits.length)return [];
+    var hits=e.hits.map(function(t){return new Date(t);}).sort(function(a,b){return a-b;});
+    var dIdx=phaseIndexFor(dateOf(key));
+    var sp=((dIdx>=0&&BASE_PHASES[dIdx].spacingH)||3)*3600000;
+    var out=[[hits[0]]];
+    for(var i=1;i<hits.length;i++){
+      if(hits[i]-hits[i-1]>=sp)out.push([hits[i]]);
+      else out[out.length-1].push(hits[i]);
+    }
+    return out;
+  }
 
   /* ================= rendering ================= */
   function $(id){return document.getElementById(id);}
@@ -542,6 +586,8 @@
     if(isZeroEra){
       card.classList.add('free');
       $('tallyBtns').style.display='none';
+      $('btnEarlier').style.display='none';
+      $('earlierRow').hidden=true;
       $('todayEyebrow').textContent='Days off';
       $('tallyCount').textContent=Math.max(0,daysFree());
       $('capLabel').textContent='and climbing';
@@ -558,6 +604,7 @@
     }else{
       card.classList.remove('free');
       $('tallyBtns').style.display='flex';
+      $('btnEarlier').style.display='block';
       var sch=schedule();
       $('todayEyebrow').textContent=idx>=0?'Today · '+sch[idx].lbl:'Starts '+fmtShort(sch[0].start);
       $('tallyCount').textContent=count;
@@ -604,18 +651,29 @@
         else{stat='under';cls='under';}
         countHtml=nn+' <span style="color:var(--muted);font-size:12px">/ '+dCap+'</span>';
       }
-      var right;
+      var right='<span class="hstat '+cls+'">'+stat+'</span>';
+      var rowHtml='<div class="hrow" data-key="'+key+'">'+
+        '<span class="hdate">'+(d.getMonth()+1)+'/'+d.getDate()+'</span>'+
+        '<span class="hcount">'+countHtml+'</span>'+right+'</div>';
       if(editingKey===key){
-        right='<span class="hedit">'+
+        var detail='';
+        sessionsFor(key).forEach(function(s){
+          var t=fmtTime(s[0]);
+          var t2=fmtTime(s[s.length-1]);
+          if(s.length>1&&t2!==t)t+=' – '+t2;
+          detail+='<div class="hses"><span class="t">'+t+'</span><span>'+s.length+' hit'+(s.length>1?'s':'')+'</span></div>';
+        });
+        var e=data.days[key];
+        var adj=e?(e.adj||0):0;
+        if(adj>0)detail+='<div class="hnote-line">+'+adj+' logged without a time</div>';
+        if(!detail)detail='<div class="hnote-line">Nothing logged this day.</div>';
+        detail+='<div class="hedit">'+
           '<button data-act="dec" aria-label="One less">−</button>'+
           '<button data-act="inc" aria-label="One more">+</button>'+
-          '<button data-act="done" class="hdone">Done</button></span>';
-      }else{
-        right='<span class="hstat '+cls+'">'+stat+'</span>';
+          '<button data-act="done" class="hdone">Done</button></div>';
+        rowHtml+='<div class="hdetail" data-key="'+key+'">'+detail+'</div>';
       }
-      rows='<div class="hrow" data-key="'+key+'">'+
-        '<span class="hdate">'+(d.getMonth()+1)+'/'+d.getDate()+'</span>'+
-        '<span class="hcount">'+countHtml+'</span>'+right+'</div>'+rows;
+      rows=rowHtml+rows;
       d=addDays(d,1);
     }
     rowsEl.innerHTML=rows||'<p class="hempty">Your days will stack up here as you go.</p>';
@@ -699,6 +757,27 @@
     data.holdPrompts[$('holdBanner').dataset.ykey]='kept';
     save();renderAll();
   });
+  $('btnEarlier').addEventListener('click',function(){
+    var r=$('earlierRow');
+    r.hidden=!r.hidden;
+    if(!r.hidden){
+      var n=new Date();
+      $('earlierTime').value=pad(n.getHours())+':'+pad(n.getMinutes());
+    }
+    $('earlierMsg').textContent='';
+  });
+  $('btnAddEarlier').addEventListener('click',function(){
+    var v=$('earlierTime').value;
+    if(!v){$('earlierMsg').textContent='Pick a time first.';return;}
+    var hm=v.split(':');
+    // times before the 4am cutoff belong to tonight (next calendar day)
+    var dayShift=(+hm[0]<DAY_CUTOFF_H)?1:0;
+    var ts=new Date(today.getFullYear(),today.getMonth(),today.getDate()+dayShift,+hm[0],+hm[1]);
+    if(ts>new Date()){$('earlierMsg').textContent='That time hasn’t happened yet today.';return;}
+    entryFor(todayKey,true).hits.push(ts.toISOString());
+    save();renderAll();
+    $('earlierMsg').textContent='Added a hit at '+fmtTime(ts)+'. Tap again for another at the same time.';
+  });
   $('urgeChip').addEventListener('click',function(){
     if(!data.urgeStart){data.urgeStart=Date.now();}
     else if(Date.now()-data.urgeStart>=URGE_MS){data.urgeStart=null;}
@@ -707,12 +786,13 @@
     save();renderUrge();
   });
 
-  /* history editing */
+  /* history log + editing */
   $('historyRows').addEventListener('click',function(ev){
-    var row=ev.target.closest('.hrow');
-    if(!row)return;
+    var holder=ev.target.closest('[data-key]');
+    if(!holder)return;
     var btn=ev.target.closest('button');
-    var key=row.dataset.key;
+    var key=holder.dataset.key;
+    if(!btn&&!holder.classList.contains('hrow'))return;
     if(btn){
       var n=countOf(key)||0;
       if(btn.dataset.act==='inc'){setCount(key,n+1);}
