@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Taper">
+<meta name="theme-color" content="#171B26">
+<title>Taper to Zero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600&family=Karla:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#171B26;
+    --surface:#1F2433;
+    --surface2:#262C3E;
+    --line:#323A50;
+    --sand:#EADFC9;
+    --muted:#8B93A7;
+    --amber:#E0A458;
+    --sage:#A3B899;
+    --clay:#C97B63;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto} *{transition:none!important;animation:none!important}}
+  body{
+    background:var(--bg);
+    color:var(--sand);
+    font-family:'Karla',sans-serif;
+    font-size:16px;
+    line-height:1.55;
+    max-width:480px;
+    margin:0 auto;
+    padding:calc(28px + env(safe-area-inset-top)) 20px calc(80px + env(safe-area-inset-bottom));
+    -webkit-user-select:none;user-select:none;
+  }
+  .eyebrow{
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--muted);font-weight:700;
+  }
+  h1{
+    font-family:'Fraunces',serif;font-weight:300;font-size:40px;
+    line-height:1.05;margin:6px 0 4px;letter-spacing:-.01em;
+  }
+  h1 em{font-style:italic;color:var(--amber)}
+  .countdown{color:var(--muted);font-size:15px;margin-bottom:26px}
+  .countdown strong{color:var(--sand)}
+
+  /* ---- staircase ---- */
+  .stairs{display:flex;align-items:flex-end;gap:6px;height:150px;margin:8px 0 6px}
+  .step{
+    flex:1;border-radius:8px 8px 4px 4px;background:var(--surface2);
+    display:flex;flex-direction:column;justify-content:flex-start;align-items:center;
+    padding-top:8px;border:1px solid var(--line);color:var(--muted);cursor:pointer;
+    transition:background .25s;
+  }
+  .step .cap{font-family:'Fraunces',serif;font-weight:600;font-size:20px;line-height:1}
+  .step .lbl{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;margin-top:3px}
+  .step.past{background:#20283A;color:#5E6679}
+  .step.past .cap{color:var(--sage)}
+  .step.now{
+    background:linear-gradient(180deg,#3A3149,#2C2A3C);
+    border-color:var(--amber);color:var(--sand);
+    box-shadow:0 0 22px rgba(224,164,88,.22);
+  }
+  .step.now .cap{color:var(--amber)}
+  .stairs-note{font-size:12.5px;color:var(--muted);margin-bottom:30px}
+
+  /* ---- today card ---- */
+  .today{
+    background:var(--surface);border:1px solid var(--line);
+    border-radius:18px;padding:22px 20px;margin-bottom:14px;
+  }
+  .today .eyebrow{color:var(--amber)}
+  .today-cap-row{display:flex;align-items:baseline;gap:10px;margin:8px 0 2px}
+  .big{font-family:'Fraunces',serif;font-weight:600;font-size:64px;line-height:1;color:var(--sand)}
+  .of{color:var(--muted);font-size:15px}
+  .bar{height:8px;border-radius:99px;background:var(--surface2);overflow:hidden;margin:16px 0 6px}
+  .bar>div{height:100%;border-radius:99px;background:var(--sage);width:0%;transition:width .3s,background .3s}
+  .bar-note{font-size:12.5px;color:var(--muted)}
+  .tally-btns{display:flex;gap:12px;margin-top:18px}
+  .tally-btns button{
+    flex:1;font-family:'Karla',sans-serif;font-weight:700;font-size:16px;
+    padding:14px 0;border-radius:14px;border:1px solid var(--line);
+    background:var(--surface2);color:var(--sand);cursor:pointer;
+  }
+  .tally-btns button:active{background:#313950}
+  .tally-btns button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+  .tally-btns .minus{flex:0 0 84px;color:var(--muted)}
+  .delay-chip{
+    display:inline-block;margin-top:16px;font-size:13px;color:var(--amber);
+    border:1px dashed rgba(224,164,88,.45);border-radius:99px;padding:6px 14px;
+  }
+  .free .big{color:var(--sage);font-size:72px}
+
+  /* ---- history ---- */
+  .history{
+    background:var(--surface);border:1px solid var(--line);
+    border-radius:18px;padding:16px 20px;margin-bottom:34px;
+  }
+  .history h3{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:10px}
+  .hrow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-top:1px solid var(--surface2);font-size:14px}
+  .hrow:first-of-type{border-top:none}
+  .hdate{color:var(--muted)}
+  .hcount{font-family:'Fraunces',serif;font-weight:600;font-size:17px}
+  .hstat{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+  .hstat.under{color:var(--sage)}
+  .hstat.at{color:var(--amber)}
+  .hstat.over{color:var(--clay)}
+  .hstat.zero{color:var(--sage)}
+  .hempty{color:var(--muted);font-size:14px}
+
+  /* ---- phase cards ---- */
+  h2{font-family:'Fraunces',serif;font-weight:500;font-size:23px;margin:0 0 16px;letter-spacing:-.01em}
+  .phase{
+    border:1px solid var(--line);background:var(--surface);border-radius:16px;
+    padding:16px 18px;margin-bottom:12px;scroll-margin-top:16px;
+  }
+  .phase.now{border-color:var(--amber);box-shadow:0 0 18px rgba(224,164,88,.14)}
+  .phase.past{opacity:.55}
+  .phase-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .phase-dates{font-size:12.5px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+  .phase-cap{font-family:'Fraunces',serif;font-weight:600;font-size:26px;color:var(--sand);white-space:nowrap}
+  .phase.now .phase-cap{color:var(--amber)}
+  .phase-cap small{font-family:'Karla',sans-serif;font-size:12px;color:var(--muted);font-weight:400}
+  .phase-rule{font-size:13px;color:var(--sage);margin:2px 0 6px;font-weight:500}
+  .phase p{font-size:14.5px;color:#C6CBDA}
+  .phase.zero{background:linear-gradient(160deg,#233126,#1F2433);border-color:var(--sage)}
+  .phase.zero .phase-cap{color:var(--sage)}
+
+  /* ---- collapsibles ---- */
+  details{border:1px solid var(--line);border-radius:16px;background:var(--surface);margin-bottom:12px;overflow:hidden}
+  summary{
+    list-style:none;cursor:pointer;padding:16px 18px;font-weight:700;font-size:15.5px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  summary::-webkit-details-marker{display:none}
+  summary:focus-visible{outline:2px solid var(--amber);outline-offset:-2px}
+  summary::after{content:"+";font-family:'Fraunces',serif;font-size:22px;color:var(--muted);font-weight:300}
+  details[open] summary::after{content:"–"}
+  .d-body{padding:0 18px 18px;font-size:14.5px;color:#C6CBDA}
+  .d-body p{margin-bottom:10px}
+  .d-body p:last-child{margin-bottom:0}
+  .d-body strong{color:var(--sand)}
+  .d-body .hl{color:var(--amber)}
+  .d-body .ok{color:var(--sage)}
+
+  .section{margin-bottom:36px}
+  .footer{text-align:center;color:var(--muted);margin-top:44px;font-family:'Fraunces',serif;font-style:italic;font-size:15px}
+</style>
+</head>
+<body>
+
+<p class="eyebrow">Ten days · flower only · cap only goes down</p>
+<h1>Taper to <em>zero</em></h1>
+<p class="countdown" id="countdown"></p>
+
+<div class="stairs" id="stairs" aria-label="Step-down schedule"></div>
+<p class="stairs-note">Each step is your daily hit cap. Tap a step to jump to its details.</p>
+
+<div class="today" id="todayCard">
+  <p class="eyebrow" id="todayEyebrow">Today</p>
+  <div class="today-cap-row">
+    <span class="big" id="tallyCount">0</span>
+    <span class="of" id="capLabel"></span>
+  </div>
+  <div class="bar"><div id="barFill"></div></div>
+  <p class="bar-note" id="barNote"></p>
+  <div class="tally-btns" id="tallyBtns">
+    <button class="minus" id="btnMinus" aria-label="Remove one hit">−1</button>
+    <button id="btnPlus">Log a hit</button>
+  </div>
+  <span class="delay-chip">Urge? Start the 20-minute timer first.</span>
+</div>
+
+<div class="history">
+  <h3>The record</h3>
+  <div id="historyRows"><p class="hempty">Your days will stack up here as you go.</p></div>
+</div>
+
+<div class="section">
+  <h2>The step-down</h2>
+  <div id="phases"></div>
+</div>
+
+<div class="section">
+  <h2>The system</h2>
+  <details>
+    <summary>The three rules</summary>
+    <div class="d-body">
+      <p><strong>1 · The cap is a ceiling, not a target.</strong> Under is always fine. Over is never fine. It only moves down.</p>
+      <p><strong>2 · The 20-minute delay.</strong> Every urge waits 20 minutes before it counts. Half the time the wave passes and you banked a hit.</p>
+      <p><strong>3 · Every hit gets logged.</strong> Same machinery as your puff-limit system. What gets counted gets controlled.</p>
+    </div>
+  </details>
+  <details>
+    <summary>What zero week feels like</summary>
+    <div class="d-body">
+      <p>You've done most of the receptor adjustment on the way down, so this is the blunted version.</p>
+      <p><strong>Days 1–3 off:</strong> restlessness, irritability, appetite dip. Cravings fire on old cue times — each wave passes in minutes.</p>
+      <p><strong>Days 3–7 off:</strong> the peak, such as it is. The <span class="hl">"why am I doing this"</span> window. Clear it and the grade flattens.</p>
+      <p><strong>Weeks 2–3:</strong> steady climb back to baseline. Ten years daily — give it the full three weeks.</p>
+      <p><span class="ok">None of it is dangerous.</span> Worst case is bad-flu-week energy, and the taper exists to shave that down.</p>
+    </div>
+  </details>
+  <details>
+    <summary>Sleep — the real project</summary>
+    <div class="d-body">
+      <p>Expect off sleep and <strong>vivid dreams for 4–6 weeks</strong> after zero. That's REM rebound — your brain rebooting dreaming after a decade of suppression. <span class="ok">It's a progress signal, not a problem.</span></p>
+      <p>Sleep kit runs the whole tail: magnesium glycinate, consistent wind-down, phone out of reach. You've built this toolkit before.</p>
+      <p>A random bad night at week 4 or 5 means nothing. Don't read into single nights.</p>
+    </div>
+  </details>
+  <details>
+    <summary>Structural supports</summary>
+    <div class="d-body">
+      <p><strong>Casita:</strong> stay through at least the first zero days. Before going home, have your place fully stripped — flower, pieces, papers — so home isn't a loaded environment.</p>
+      <p><strong>Friend is briefed:</strong> knows the zero date, won't enable a supply run, expects week one to be prickly.</p>
+      <p><strong>Professional support knows</strong> — before zero, not after it gets hard.</p>
+      <p><strong>Food:</strong> grabbable and easy, no forcing meals. Appetite returns around week two.</p>
+    </div>
+  </details>
+  <details>
+    <summary>If you slip</summary>
+    <div class="d-body">
+      <p>A day over cap — or a slip after zero — is <strong>data, not doom</strong>. Go back to the last cap you held, hold it one extra day, keep stepping down.</p>
+      <p>The trend line matters, not any single day. Ten years in; the exit doesn't have to be flawless to be final.</p>
+    </div>
+  </details>
+</div>
+
+<p class="footer">The cap only goes down.</p>
+
+<script>
+(function(){
+  var ZERO = new Date(2026,6,22); // Jul 22 2026
+  var phases = [
+    {start:new Date(2026,6,12), end:new Date(2026,6,13), cap:14, capText:"14", lbl:"Jul 12–13",
+     rule:"Max 3 hits/session · 3h between sessions",
+     desc:"Barely below where you are. Should feel almost easy — the point is starting the count and proving the system works."},
+    {start:new Date(2026,6,14), end:new Date(2026,6,15), cap:11, capText:"11", lbl:"Jul 14–15",
+     rule:"Max 3 hits/session · 3h spacing holds",
+     desc:"Cut the most mindless session of the day — the one that happens because it's just the time."},
+    {start:new Date(2026,6,16), end:new Date(2026,6,17), cap:8, capText:"8", lbl:"Jul 16–17",
+     rule:"Max 2 hits/session · spacing widens to 4h",
+     desc:"Roughly a third of where you started. Mild edge here is the taper working, not failing. The delay rule earns its keep."},
+    {start:new Date(2026,6,18), end:new Date(2026,6,19), cap:5, capText:"5", lbl:"Jul 18–19",
+     rule:"2–3 sessions max · drop all daytime",
+     desc:"Biggest structural cut, landed on the weekend on purpose. Keep only what's load-bearing — midday and the evening wind-down."},
+    {start:new Date(2026,6,20), end:new Date(2026,6,21), cap:3, capText:"2–3", lbl:"Jul 20–21",
+     rule:"Evening only · one session",
+     desc:"Functionally done all day and proving it. Start the sleep kit now so it's already running before zero."},
+    {start:ZERO, end:null, cap:0, capText:"0", lbl:"Jul 22 →",
+     rule:"Whatever's left goes in the trash the night before",
+     desc:"Zero. Not saved, not \u201cjust in case.\u201d The day counter starts here — and it only climbs."}
+  ];
+
+  function dayStart(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
+  function keyFor(d){return 'ttz-'+d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+  var msPer=86400000;
+  var today = dayStart(new Date());
+
+  function phaseIndexFor(d){
+    for(var i=0;i<phases.length;i++){
+      var p=phases[i];
+      var end = p.end ? p.end : new Date(2100,0,1);
+      if(d>=dayStart(p.start) && d<=dayStart(end)) return i;
+    }
+    return d < dayStart(phases[0].start) ? -1 : phases.length-1;
+  }
+  var idx = phaseIndexFor(today);
+  var isZeroEra = idx===phases.length-1 && today>=dayStart(ZERO);
+
+  // storage (localStorage on-device; in-memory fallback)
+  var mem={};
+  function store(k,v){try{localStorage.setItem(k,String(v));}catch(e){mem[k]=String(v);}}
+  function fetchVal(k){try{var v=localStorage.getItem(k);return v!==null?v:(k in mem?mem[k]:null);}catch(e){return k in mem?mem[k]:null;}}
+
+  // countdown
+  var cd=document.getElementById('countdown');
+  if(isZeroEra){
+    var daysFree=Math.floor((today-dayStart(ZERO))/msPer)+1;
+    cd.innerHTML="Zero date cleared. <strong>Day "+daysFree+"</strong> off.";
+  }else{
+    var left=Math.round((dayStart(ZERO)-today)/msPer);
+    cd.innerHTML="Zero date: <strong>Wednesday, July 22</strong> · "+left+" day"+(left===1?"":"s")+" out";
+  }
+
+  // staircase
+  var stairs=document.getElementById('stairs');
+  var maxCap=14;
+  phases.forEach(function(p,i){
+    var el=document.createElement('div');
+    el.className='step'+(i<idx?' past':'')+(i===idx?' now':'');
+    el.style.height=(34+(p.cap/maxCap)*116)+'px';
+    el.innerHTML='<span class="cap">'+p.capText+'</span><span class="lbl">'+p.lbl.split('–')[0].replace(' →','')+'</span>';
+    el.setAttribute('role','button');el.setAttribute('tabindex','0');
+    el.setAttribute('aria-label','Jump to '+p.lbl+' details');
+    function go(){document.getElementById('phase-'+i).scrollIntoView();}
+    el.addEventListener('click',go);
+    el.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+    stairs.appendChild(el);
+  });
+
+  // phase cards
+  var wrap=document.getElementById('phases');
+  phases.forEach(function(p,i){
+    var el=document.createElement('div');
+    el.className='phase'+(i<idx?' past':'')+(i===idx?' now':'')+(i===phases.length-1?' zero':'');
+    el.id='phase-'+i;
+    el.innerHTML=
+      '<div class="phase-top"><span class="phase-dates">'+p.lbl+(i===idx?' · now':'')+'</span>'+
+      '<span class="phase-cap">'+p.capText+'<small> '+(p.cap>0?'hits/day':'')+'</small></span></div>'+
+      '<p class="phase-rule">'+p.rule+'</p><p>'+p.desc+'</p>';
+    wrap.appendChild(el);
+  });
+
+  // today card + tally
+  var cap = idx>=0 ? phases[idx].cap : 14;
+  var count=0;
+  var countEl=document.getElementById('tallyCount');
+  var barFill=document.getElementById('barFill');
+  var barNote=document.getElementById('barNote');
+  var card=document.getElementById('todayCard');
+
+  function render(){
+    countEl.textContent=count;
+    var pct=cap>0?Math.min(100,(count/cap)*100):0;
+    barFill.style.width=pct+'%';
+    barFill.style.background = count>cap ? 'var(--clay)' : count>=cap*0.8 ? 'var(--amber)' : 'var(--sage)';
+    if(count>cap){barNote.textContent='Over today\u2019s cap. Tomorrow: hold this phase one extra day, then keep stepping down.';}
+    else if(count===cap){barNote.textContent='At the cap. That\u2019s the ceiling — you\u2019re done for today.';}
+    else{barNote.textContent=(cap-count)+' left under today\u2019s ceiling. Under is always fine.';}
+  }
+
+  if(isZeroEra){
+    card.classList.add('free');
+    document.getElementById('todayEyebrow').textContent='Days off';
+    var df=Math.floor((today-dayStart(ZERO))/msPer)+1;
+    countEl.textContent=df;
+    document.getElementById('capLabel').textContent='and climbing';
+    document.getElementById('tallyBtns').style.display='none';
+    document.querySelector('.delay-chip').textContent='Urge? It\u2019s the loop firing, not a need. Five minutes and it passes.';
+    barFill.style.width='100%';barFill.style.background='var(--sage)';
+    barNote.textContent='The counter only climbs.';
+    store(keyFor(today),0); // record zero-era days as clean
+  } else {
+    var phaseName = idx>=0 ? phases[idx].lbl : 'Starts Jul 12';
+    document.getElementById('todayEyebrow').textContent='Today \u00b7 '+phaseName;
+    document.getElementById('capLabel').textContent='of '+cap+' hits today';
+    var saved=fetchVal(keyFor(today));
+    if(saved!==null)count=parseInt(saved,10)||0;
+    document.getElementById('btnPlus').addEventListener('click',function(){count++;render();store(keyFor(today),count);renderHistory();});
+    document.getElementById('btnMinus').addEventListener('click',function(){if(count>0){count--;render();store(keyFor(today),count);renderHistory();}});
+    render();
+  }
+
+  // history
+  function renderHistory(){
+    var rowsEl=document.getElementById('historyRows');
+    var rows='';
+    var d=new Date(phases[0].start);
+    var shown=0;
+    while(d<=today){
+      var v=fetchVal(keyFor(d));
+      if(v!==null){
+        var dIdx=phaseIndexFor(dayStart(d));
+        var dCap=dIdx>=0?phases[dIdx].cap:14;
+        var n=parseInt(v,10)||0;
+        var isZ = dayStart(d)>=dayStart(ZERO);
+        var stat,cls;
+        if(isZ){stat='clean';cls='zero';}
+        else if(n>dCap){stat='over';cls='over';}
+        else if(n===dCap){stat='at cap';cls='at';}
+        else{stat='under';cls='under';}
+        var lbl=(d.getMonth()+1)+'/'+d.getDate();
+        rows='<div class="hrow"><span class="hdate">'+lbl+'</span>'+
+             '<span class="hcount">'+(isZ?'0':n)+(isZ?'':' <span style="color:var(--muted);font-size:12px">/ '+dCap+'</span>')+'</span>'+
+             '<span class="hstat '+cls+'">'+stat+'</span></div>' + rows;
+        shown++;
+      }
+      d=new Date(d.getTime()+msPer);
+    }
+    if(shown>0){rowsEl.innerHTML=rows;}
+  }
+  renderHistory();
+})();
+</script>
+</body>
+</html>
