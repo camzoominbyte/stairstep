@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Taper">
-<meta name="theme-color" content="#171B26">
+<meta name="theme-color" content="#20242F">
 <title>Taper to Zero</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
@@ -25,21 +25,24 @@
     font-weight:400 700;font-style:normal;font-display:swap;
   }
   :root{
-    --bg:#171B26;
-    --surface:#1F2433;
-    --surface2:#262C3E;
-    --line:#323A50;
-    --sand:#EADFC9;
-    --muted:#8B93A7;
-    --amber:#E0A458;
-    --sage:#A3B899;
-    --clay:#C97B63;
+    --bg:#20242F;
+    --surface:#293040;
+    --surface2:#343C51;
+    --line:#424C66;
+    --hair:rgba(255,255,255,.08);
+    --sand:#F4EBD9;
+    --ink:#D6DCE9;
+    --muted:#9CA6BC;
+    --amber:#EDB56D;
+    --sage:#B2C6A6;
+    --clay:#D98F75;
+    --shadow:0 12px 32px rgba(9,11,17,.35),0 2px 8px rgba(9,11,17,.25);
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html{scroll-behavior:smooth}
   @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto} *{transition:none!important;animation:none!important}}
   body{
-    background:var(--bg);
+    background:radial-gradient(130% 55% at 50% -8%, #2B3142 0%, var(--bg) 60%) no-repeat var(--bg);
     color:var(--sand);
     font-family:'Karla',sans-serif;
     font-size:16px;
@@ -63,12 +66,13 @@
 
   /* ---- hold banner ---- */
   .hold-banner{
-    display:none;background:linear-gradient(160deg,#33291F,#1F2433);
-    border:1px solid rgba(224,164,88,.5);border-radius:16px;
+    display:none;background:linear-gradient(160deg,#3E3324,#293040);
+    border:1px solid rgba(237,181,109,.5);border-radius:18px;
     padding:16px 18px;margin:-10px 0 24px;
+    box-shadow:var(--shadow);
   }
   .hold-banner.show{display:block}
-  .hold-banner p{font-size:14.5px;color:#C6CBDA;margin-bottom:12px}
+  .hold-banner p{font-size:14.5px;color:var(--ink);margin-bottom:12px}
   .hold-banner strong{color:var(--amber)}
   .hold-btns{display:flex;gap:10px}
   .hold-btns button{
@@ -79,29 +83,41 @@
   .hold-btns button.primary{border-color:var(--amber);color:var(--amber)}
 
   /* ---- staircase ---- */
-  .stairs{display:flex;align-items:flex-end;gap:6px;height:150px;margin:8px 0 6px}
+  .stairs{display:flex;gap:7px;margin:10px 0 6px}
+  .stepcol{
+    flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:7px;
+    height:162px;cursor:pointer;border-radius:10px;
+  }
+  .stepcol:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
   .step{
-    flex:1;border-radius:8px 8px 4px 4px;background:var(--surface2);
-    display:flex;flex-direction:column;justify-content:flex-start;align-items:center;
-    padding-top:8px;border:1px solid var(--line);color:var(--muted);cursor:pointer;
+    border-radius:10px 10px 5px 5px;background:var(--surface2);
+    border:1px solid var(--hair);color:var(--muted);
+    display:flex;justify-content:center;align-items:flex-start;padding-top:7px;
     transition:background .25s;
   }
   .step .cap{font-family:'Fraunces',serif;font-weight:600;font-size:20px;line-height:1}
-  .step .lbl{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;margin-top:3px}
-  .step.past{background:#20283A;color:#5E6679}
-  .step.past .cap{color:var(--sage)}
-  .step.now{
-    background:linear-gradient(180deg,#3A3149,#2C2A3C);
-    border-color:var(--amber);color:var(--sand);
-    box-shadow:0 0 22px rgba(224,164,88,.22);
+  .stepcol .lbl{
+    font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--muted);text-align:center;
   }
-  .step.now .cap{color:var(--amber)}
+  .stepcol.past .step{background:#2B3140;border-color:transparent}
+  .stepcol.past .cap{color:var(--sage);opacity:.7}
+  .stepcol.past .lbl{color:#6E788E}
+  .stepcol.now .step{
+    background:linear-gradient(180deg,#4A3F2C,#363D52);
+    border-color:var(--amber);
+    box-shadow:0 0 24px rgba(237,181,109,.25);
+  }
+  .stepcol.now .cap{color:var(--amber)}
+  .stepcol.now .lbl{color:var(--amber)}
   .stairs-note{font-size:12.5px;color:var(--muted);margin-bottom:30px}
 
   /* ---- today card ---- */
   .today{
-    background:var(--surface);border:1px solid var(--line);
-    border-radius:18px;padding:22px 20px;margin-bottom:14px;
+    background:linear-gradient(165deg,#2E3548,#282E3E);
+    border:1px solid var(--hair);
+    border-radius:20px;padding:24px 20px;margin-bottom:14px;
+    box-shadow:var(--shadow);
   }
   .today .eyebrow{color:var(--amber)}
   .today-cap-row{display:flex;align-items:baseline;gap:10px;margin:8px 0 2px}
@@ -114,10 +130,16 @@
   .tally-btns{display:flex;gap:12px;margin-top:18px}
   .tally-btns button{
     flex:1;font-family:'Karla',sans-serif;font-weight:700;font-size:16px;
-    padding:14px 0;border-radius:14px;border:1px solid var(--line);
-    background:var(--surface2);color:var(--sand);cursor:pointer;
+    padding:14px 0;border-radius:14px;border:1px solid var(--hair);
+    background:linear-gradient(180deg,#3B4459,#343C51);color:var(--sand);cursor:pointer;
+    box-shadow:0 2px 6px rgba(9,11,17,.25);
   }
-  .tally-btns button:active{background:#313950}
+  .tally-btns #btnPlus{
+    background:linear-gradient(180deg,#F2C083,#E19F49);
+    border-color:rgba(255,255,255,.28);color:#2C2214;
+    box-shadow:0 4px 16px rgba(224,164,88,.35);
+  }
+  .tally-btns button:active{filter:brightness(1.1)}
   .tally-btns button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
   .tally-btns .minus{flex:0 0 84px;color:var(--muted)}
   .delay-chip{
@@ -138,8 +160,9 @@
 
   /* ---- history ---- */
   .history{
-    background:var(--surface);border:1px solid var(--line);
-    border-radius:18px;padding:16px 20px;margin-bottom:34px;
+    background:var(--surface);border:1px solid var(--hair);
+    border-radius:20px;padding:18px 20px;margin-bottom:34px;
+    box-shadow:var(--shadow);
   }
   .history h3{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:2px}
   .history-hint{font-size:11.5px;color:var(--muted);margin-bottom:10px}
@@ -153,7 +176,7 @@
   .hstat.over{color:var(--clay)}
   .hstat.zero{color:var(--sage)}
   .hstat.slip{color:var(--clay)}
-  .hstat.nolog{color:#5E6679}
+  .hstat.nolog{color:#77819A}
   .hempty{color:var(--muted);font-size:14px}
   .hedit{display:flex;gap:8px;align-items:center}
   .hedit button{
@@ -163,7 +186,7 @@
   }
   .hedit button.hdone{width:auto;padding:0 12px;font-size:12px;color:var(--amber);border-color:var(--amber)}
   .hdetail{padding:2px 0 12px;font-size:13px}
-  .hses{display:flex;justify-content:space-between;color:#C6CBDA;padding:3px 0}
+  .hses{display:flex;justify-content:space-between;color:var(--ink);padding:3px 0}
   .hses .t{color:var(--muted)}
   .hnote-line{color:var(--muted);font-style:italic;padding:3px 0}
   .hdetail .hedit{margin-top:10px;justify-content:flex-end}
@@ -202,8 +225,9 @@
   /* ---- phase cards ---- */
   h2{font-family:'Fraunces',serif;font-weight:500;font-size:23px;margin:0 0 16px;letter-spacing:-.01em}
   .phase{
-    border:1px solid var(--line);background:var(--surface);border-radius:16px;
+    border:1px solid var(--hair);background:var(--surface);border-radius:18px;
     padding:16px 18px;margin-bottom:12px;scroll-margin-top:16px;
+    box-shadow:0 4px 14px rgba(9,11,17,.2);
   }
   .phase.now{border-color:var(--amber);box-shadow:0 0 18px rgba(224,164,88,.14)}
   .phase.past{opacity:.55}
@@ -214,12 +238,12 @@
   .phase-cap small{font-family:'Karla',sans-serif;font-size:12px;color:var(--muted);font-weight:400}
   .phase-rule{font-size:13px;color:var(--sage);margin:2px 0 6px;font-weight:500}
   .phase-held{font-size:12px;color:var(--amber);margin:0 0 6px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
-  .phase p{font-size:14.5px;color:#C6CBDA}
-  .phase.zero{background:linear-gradient(160deg,#233126,#1F2433);border-color:var(--sage)}
+  .phase p{font-size:14.5px;color:var(--ink)}
+  .phase.zero{background:linear-gradient(160deg,#2C3D30,#293040);border-color:var(--sage)}
   .phase.zero .phase-cap{color:var(--sage)}
 
   /* ---- collapsibles ---- */
-  details{border:1px solid var(--line);border-radius:16px;background:var(--surface);margin-bottom:12px;overflow:hidden}
+  details{border:1px solid var(--hair);border-radius:18px;background:var(--surface);margin-bottom:12px;overflow:hidden;box-shadow:0 4px 14px rgba(9,11,17,.2)}
   summary{
     list-style:none;cursor:pointer;padding:16px 18px;font-weight:700;font-size:15.5px;
     display:flex;justify-content:space-between;align-items:center;
@@ -228,7 +252,7 @@
   summary:focus-visible{outline:2px solid var(--amber);outline-offset:-2px}
   summary::after{content:"+";font-family:'Fraunces',serif;font-size:22px;color:var(--muted);font-weight:300}
   details[open] summary::after{content:"–"}
-  .d-body{padding:0 18px 18px;font-size:14.5px;color:#C6CBDA}
+  .d-body{padding:0 18px 18px;font-size:14.5px;color:var(--ink)}
   .d-body p{margin-bottom:10px}
   .d-body p:last-child{margin-bottom:0}
   .d-body strong{color:var(--sand)}
@@ -568,9 +592,10 @@
     sch.forEach(function(s,i){
       var p=BASE_PHASES[i];
       var el=document.createElement('div');
-      el.className='step'+(i<idx?' past':'')+(i===idx?' now':'');
-      el.style.height=(34+(p.cap/maxCap)*116)+'px';
-      el.innerHTML='<span class="cap">'+p.capText+'</span><span class="lbl">'+fmtShort(s.start)+'</span>';
+      el.className='stepcol'+(i<idx?' past':'')+(i===idx?' now':'');
+      var barH=Math.round(30+(p.cap/maxCap)*100);
+      el.innerHTML='<div class="step" style="height:'+barH+'px"><span class="cap">'+p.capText+'</span></div>'+
+        '<span class="lbl">'+fmtShort(s.start)+'</span>';
       el.setAttribute('role','button');el.setAttribute('tabindex','0');
       el.setAttribute('aria-label','Jump to '+s.lbl+' details');
       function go(){$('phase-'+i).scrollIntoView();}
@@ -723,7 +748,7 @@
         if(n>0){stat='slip';cls='slip';countHtml=String(n);}
         else{stat='clean';cls='zero';countHtml='0';}
       }else if(n===null&&key!==todayKey){
-        stat='no log';cls='nolog';countHtml='<span style="color:#5E6679">·</span>';
+        stat='no log';cls='nolog';countHtml='<span style="color:#77819A">·</span>';
       }else{
         var nn=n||0;
         if(nn>dCap){stat='over';cls='over';}
