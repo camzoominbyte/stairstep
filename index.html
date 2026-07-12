@@ -177,8 +177,17 @@
   .bar{height:8px;border-radius:99px;background:var(--surface2);overflow:hidden;margin:16px 0 6px}
   .bar>div{height:100%;border-radius:99px;background:var(--sage);width:0%;transition:width .3s,background .3s}
   .bar-note{font-size:12.5px;color:var(--muted)}
-  .session-note{font-size:12.5px;color:var(--sage);margin-top:4px;min-height:1em;font-weight:500}
-  .tally-btns{display:flex;gap:12px;margin-top:18px}
+  .stat-row{display:flex;gap:8px;margin:14px 0 10px}
+  .stat{
+    flex:1;background:#faf5ea;border:1px solid var(--hair);border-radius:12px;
+    padding:8px 4px;text-align:center;min-width:0;
+  }
+  .stat .sv{display:block;font-family:'Fraunces',serif;font-weight:600;font-size:20px;color:var(--sand);line-height:1.2}
+  .stat .sv.time{font-size:15.5px;padding-top:4px}
+  .stat .sl{display:block;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:1px}
+  .action-row{display:flex;gap:10px;margin-top:14px;align-items:center}
+  .action-row .delay-chip{margin-top:0;flex:1;text-align:center}
+  .tally-btns{display:flex;gap:12px;margin-top:16px}
   .tally-btns button{
     flex:1;font-family:'Karla',sans-serif;font-weight:700;font-size:16px;
     padding:14px 0;border-radius:14px;border:1px solid var(--line);
@@ -267,9 +276,9 @@
 
   /* ---- log-at-a-time ---- */
   .time-link{
-    display:block;background:none;border:none;color:var(--muted);
-    font-family:'Karla',sans-serif;font-size:13px;text-decoration:underline;
-    margin-top:14px;cursor:pointer;padding:0;
+    flex:0 0 auto;background:none;border:1px solid var(--line);border-radius:99px;
+    color:var(--muted);font-family:'Karla',sans-serif;font-size:13px;font-weight:700;
+    padding:6px 13px;cursor:pointer;
   }
   .earlier-row{display:flex;gap:10px;margin-top:10px;align-items:stretch}
   .earlier-row[hidden]{display:none}
@@ -283,7 +292,8 @@
     padding:10px 0;border-radius:12px;border:1px solid var(--line);
     background:#fff;color:var(--accent);cursor:pointer;box-shadow:var(--shadow-sm);
   }
-  #earlierMsg{font-size:12px;color:var(--muted);margin-top:6px;min-height:1em}
+  #earlierMsg{font-size:12px;color:var(--muted);margin-top:6px}
+  #earlierMsg[hidden]{display:none}
 
   /* ---- phase cards ---- */
   h2{font-family:'Fraunces',serif;font-weight:500;font-size:23px;margin:0 0 16px;letter-spacing:-.01em;color:var(--sand)}
@@ -337,6 +347,16 @@
   }
   #dataMsg{font-size:12.5px;color:var(--sage);margin-top:8px;min-height:1em}
 
+  .guide-link{
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+    background:linear-gradient(160deg,#f9efdd,#fffdf8);
+    border:1px solid rgba(165,104,31,.35);border-radius:18px;
+    padding:16px 18px;margin-bottom:12px;text-decoration:none;
+    color:var(--ink);box-shadow:var(--shadow-sm);
+  }
+  .guide-link strong{color:var(--sand);font-size:15.5px}
+  .guide-link small{font-size:13px;color:var(--muted)}
+  .guide-arrow{font-family:'Fraunces',serif;font-size:24px;color:var(--accent);flex:0 0 auto}
   .section{margin-bottom:36px}
   .footer{text-align:center;color:var(--muted);margin-top:44px;font-family:'Fraunces',serif;font-style:italic;font-size:15px}
 </style>
@@ -369,21 +389,26 @@
     <span class="of" id="capLabel"></span>
   </div>
   <div class="bar"><div id="barFill"></div></div>
+  <div class="stat-row" id="statRow">
+    <div class="stat"><span class="sv" id="stLeft">–</span><span class="sl">left today</span></div>
+    <div class="stat"><span class="sv" id="stSession">–</span><span class="sl" id="stSessionLbl">this session</span></div>
+    <div class="stat"><span class="sv time" id="stLast">–</span><span class="sl">last hit</span></div>
+  </div>
   <p class="bar-note" id="barNote"></p>
-  <p class="session-note" id="sessionNote"></p>
   <div class="tally-btns" id="tallyBtns">
     <button class="minus" id="btnMinus" aria-label="Remove one hit">−1</button>
     <button id="btnPlus">Log a hit</button>
   </div>
-  <button class="time-link" id="btnEarlier">Forgot to log? Add hits from earlier…</button>
+  <div class="action-row">
+    <button class="delay-chip" id="urgeChip">Urge? Start the 20-minute timer.</button>
+    <button class="time-link" id="btnEarlier" aria-label="Add hits from earlier at a chosen time">+ Earlier</button>
+    <button class="slip-btn" id="btnSlip">Slipped? Log it honestly</button>
+  </div>
   <div class="earlier-row" id="earlierRow" hidden>
     <input type="time" id="earlierTime" aria-label="Time the hit happened">
     <button id="btnAddEarlier">+ Add hit at this time</button>
   </div>
-  <p id="earlierMsg"></p>
-  <br>
-  <button class="delay-chip" id="urgeChip">Urge? Start the 20-minute timer.</button>
-  <button class="slip-btn" id="btnSlip">Slipped? Log it honestly</button>
+  <p id="earlierMsg" hidden></p>
 </div>
 
 <div class="history" id="trendCard">
@@ -405,6 +430,11 @@
 
 <div class="section">
   <h2>The system</h2>
+  <a class="guide-link" href="guide.html">
+    <span><strong>The deep guide</strong><br>
+    <small>What the research says about tapering, withdrawal, and staying quit — with sources.</small></span>
+    <span class="guide-arrow">→</span>
+  </a>
   <details>
     <summary>The three rules</summary>
     <div class="d-body">
@@ -696,12 +726,12 @@
     if(isZeroEra){
       card.classList.add('free');
       $('tallyBtns').style.display='none';
+      $('statRow').style.display='none';
       $('btnEarlier').style.display='none';
       $('earlierRow').hidden=true;
       $('todayEyebrow').textContent='Days off';
       $('tallyCount').textContent=Math.max(0,daysFree());
       $('capLabel').textContent='and climbing';
-      $('sessionNote').textContent='';
       if(count>0){
         $('barFill').style.width='100%';$('barFill').style.background='var(--clay)';
         $('barNote').textContent='Slip logged. Data, not doom — the trend line is what matters. Tomorrow is Day 1 again.';
@@ -714,7 +744,8 @@
     }else{
       card.classList.remove('free');
       $('tallyBtns').style.display='flex';
-      $('btnEarlier').style.display='block';
+      $('statRow').style.display='flex';
+      $('btnEarlier').style.display='';
       var sch=schedule();
       $('todayEyebrow').textContent=idx>=0?'Today · '+sch[idx].lbl:'Starts '+fmtShort(sch[0].start);
       $('tallyCount').textContent=count;
@@ -722,14 +753,31 @@
       var pct=cap>0?Math.min(100,(count/cap)*100):0;
       $('barFill').style.width=pct+'%';
       $('barFill').style.background=count>cap?'var(--clay)':count>=cap*0.8?'var(--amber)':'var(--sage)';
-      if(count>cap){$('barNote').textContent='Over today’s cap. Tomorrow: hold this phase one extra day, then keep stepping down.';}
+      if(count>cap){$('barNote').textContent='Over the cap — tomorrow, hold this phase one extra day, then keep stepping down.';}
       else if(count===cap){$('barNote').textContent='At the cap. That’s the ceiling — you’re done for today.';}
-      else{$('barNote').textContent=(cap-count)+' left under today’s ceiling. Under is always fine.';}
+      else{$('barNote').textContent='Under is always fine.';}
+      $('stLeft').textContent=Math.max(0,cap-count);
       var si=sessionInfo();
-      if(!si){$('sessionNote').textContent='';}
-      else if(phase.single){$('sessionNote').textContent='Last hit '+fmtTime(si.last)+' · evening only, one session.';}
-      else if(si.inSession>=phase.sessionMax){$('sessionNote').textContent='Last hit '+fmtTime(si.last)+' · session full — next opens '+fmtTime(si.nextOpen)+'.';}
-      else{$('sessionNote').textContent='Last hit '+fmtTime(si.last)+' · '+(phase.sessionMax-si.inSession)+' left this session.';}
+      if(!si){
+        $('stSession').className='sv';
+        $('stSession').textContent=phase.single?'1':phase.sessionMax;
+        $('stSessionLbl').textContent=phase.single?'evening session':'this session';
+        $('stLast').textContent='–';
+      }else{
+        $('stLast').textContent=fmtTime(si.last);
+        if(phase.single){
+          $('stSession').textContent='—';
+          $('stSessionLbl').textContent='evening only';
+        }else if(si.inSession>=phase.sessionMax){
+          $('stSession').textContent=fmtTime(si.nextOpen);
+          $('stSession').className='sv time';
+          $('stSessionLbl').textContent='next session';
+        }else{
+          $('stSession').textContent=phase.sessionMax-si.inSession;
+          $('stSession').className='sv';
+          $('stSessionLbl').textContent='left this session';
+        }
+      }
     }
   }
 
@@ -951,19 +999,19 @@
       var n=new Date();
       $('earlierTime').value=pad(n.getHours())+':'+pad(n.getMinutes());
     }
-    $('earlierMsg').textContent='';
+    $('earlierMsg').textContent='';$('earlierMsg').hidden=true;
   });
   $('btnAddEarlier').addEventListener('click',function(){
     var v=$('earlierTime').value;
-    if(!v){$('earlierMsg').textContent='Pick a time first.';return;}
+    if(!v){$('earlierMsg').textContent='Pick a time first.';$('earlierMsg').hidden=false;return;}
     var hm=v.split(':');
     // times before the 4am cutoff belong to tonight (next calendar day)
     var dayShift=(+hm[0]<DAY_CUTOFF_H)?1:0;
     var ts=new Date(today.getFullYear(),today.getMonth(),today.getDate()+dayShift,+hm[0],+hm[1]);
-    if(ts>new Date()){$('earlierMsg').textContent='That time hasn’t happened yet today.';return;}
+    if(ts>new Date()){$('earlierMsg').textContent='That time hasn’t happened yet today.';$('earlierMsg').hidden=false;return;}
     entryFor(todayKey,true).hits.push(ts.toISOString());
     save();renderAll();
-    $('earlierMsg').textContent='Added a hit at '+fmtTime(ts)+'. Tap again for another at the same time.';
+    $('earlierMsg').textContent='Added a hit at '+fmtTime(ts)+'. Tap again for another at the same time.';$('earlierMsg').hidden=false;
   });
   $('urgeChip').addEventListener('click',function(){
     if(!data.urgeStart){data.urgeStart=Date.now();}
