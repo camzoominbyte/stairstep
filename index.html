@@ -283,6 +283,12 @@
   <button class="slip-btn" id="btnSlip">Slipped? Log it honestly</button>
 </div>
 
+<div class="history" id="trendCard">
+  <h3>The trend</h3>
+  <p class="history-hint">Ghost steps are each day&rsquo;s cap · solid is what you logged.</p>
+  <div id="trendChart"></div>
+</div>
+
 <div class="history">
   <h3>The record</h3>
   <p class="history-hint">Tap any day to see its log or correct its count.</p>
@@ -623,6 +629,69 @@
     }
   }
 
+  function renderTrend(){
+    var el=$('trendChart');
+    var sch=schedule(), z=zeroDate(), start=sch[0].start;
+    if(today<start){el.innerHTML='<p class="hempty">The chart starts with day one.</p>';return;}
+    var endD=today>z?today:z;
+    var n=Math.round((endD-start)/MS_DAY)+1;
+    var vals=[], maxV=BASE_PHASES[0].cap;
+    var d=new Date(start);
+    while(d<=endD){
+      var key=dkeyOf(d), di=phaseIndexFor(d);
+      var c=countOf(key);
+      vals.push({date:new Date(d),cap:di>=0?BASE_PHASES[di].cap:BASE_PHASES[0].cap,
+                 count:c,isToday:key===todayKey,isZ:di===BASE_PHASES.length-1});
+      if(c>maxV)maxV=c;
+      d=addDays(d,1);
+    }
+    var W=340,H=120,padT=6,padB=16,scaleH=H-padT-padB;
+    var slotW=W/n, barW=Math.min(22,slotW*0.62);
+    function yv(v){return padT+scaleH*(1-v/maxV);}
+    function hv(v){return scaleH*(v/maxV);}
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Daily hits against each day’s cap">';
+    var labelEvery=n>16?3:2;
+    vals.forEach(function(v,i){
+      var cx=slotW*i+slotW/2, x=cx-barW/2;
+      if(v.cap>0){
+        svg+='<rect x="'+x.toFixed(1)+'" y="'+yv(v.cap).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+hv(v.cap).toFixed(1)+'" rx="3" fill="var(--surface2)"'+(v.isToday?' stroke="var(--amber)" stroke-opacity=".55"':'')+'/>';
+      }else{
+        svg+='<rect x="'+x.toFixed(1)+'" y="'+(padT+scaleH-2)+'" width="'+barW.toFixed(1)+'" height="2" rx="1" fill="var(--surface2)"/>';
+      }
+      if(v.count!==null&&v.count>0){
+        var col=(v.isZ||v.count>v.cap)?'var(--clay)':v.count===v.cap?'var(--amber)':'var(--sage)';
+        svg+='<rect x="'+x.toFixed(1)+'" y="'+yv(v.count).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+Math.max(2,hv(v.count)).toFixed(1)+'" rx="3" fill="'+col+'" fill-opacity=".9"/>';
+      }else if(v.isZ&&v.date<=today){
+        svg+='<circle cx="'+cx.toFixed(1)+'" cy="'+(padT+scaleH-4)+'" r="3" fill="var(--sage)"/>';
+      }
+      if(i%labelEvery===0){
+        svg+='<text x="'+cx.toFixed(1)+'" y="'+(H-3)+'" font-size="8.5" fill="var(--muted)" text-anchor="middle" font-family="Karla,sans-serif">'+(v.date.getMonth()+1)+'/'+v.date.getDate()+'</text>';
+      }
+    });
+    svg+='</svg>';
+    el.innerHTML=svg;
+  }
+
+  function daylineSVG(key){
+    var e=data.days[key];
+    if(!e||!e.hits||!e.hits.length)return '';
+    var b=dateOf(key);
+    var day4=new Date(b.getFullYear(),b.getMonth(),b.getDate(),DAY_CUTOFF_H).getTime();
+    var svg='<svg viewBox="0 0 340 30" width="100%" role="img" aria-label="When the hits landed across the day">';
+    svg+='<line x1="6" y1="15" x2="334" y2="15" stroke="var(--surface2)" stroke-width="2"/>';
+    [[8,'8a'],[12,'12p'],[16,'4p'],[20,'8p'],[24,'12a']].forEach(function(t){
+      var x=6+((t[0]-DAY_CUTOFF_H)/24)*328;
+      svg+='<line x1="'+x.toFixed(1)+'" y1="12" x2="'+x.toFixed(1)+'" y2="18" stroke="var(--line)" stroke-width="1"/>';
+      svg+='<text x="'+x.toFixed(1)+'" y="28" font-size="7.5" fill="var(--muted)" text-anchor="middle" font-family="Karla,sans-serif">'+t[1]+'</text>';
+    });
+    e.hits.forEach(function(iso){
+      var hrs=(new Date(iso).getTime()-day4)/3600000;
+      if(hrs<0)hrs=0;if(hrs>24)hrs=24;
+      svg+='<circle cx="'+(6+hrs/24*328).toFixed(1)+'" cy="15" r="4" fill="var(--amber)" fill-opacity=".9"/>';
+    });
+    return svg+'</svg>';
+  }
+
   function renderHistory(){
     var rowsEl=$('historyRows');
     var sch=schedule();
@@ -656,7 +725,7 @@
         '<span class="hdate">'+(d.getMonth()+1)+'/'+d.getDate()+'</span>'+
         '<span class="hcount">'+countHtml+'</span>'+right+'</div>';
       if(editingKey===key){
-        var detail='';
+        var detail=daylineSVG(key);
         sessionsFor(key).forEach(function(s){
           var t=fmtTime(s[0]);
           var t2=fmtTime(s[s.length-1]);
@@ -728,7 +797,7 @@
   function renderAll(){
     computeToday();
     renderCountdown();renderStairs();renderPhases();
-    renderToday();renderHistory();renderHoldBanner();renderUrge();
+    renderToday();renderTrend();renderHistory();renderHoldBanner();renderUrge();
   }
 
   /* ================= events ================= */
