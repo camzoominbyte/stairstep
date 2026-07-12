@@ -239,20 +239,16 @@
   .hedit button.hdone{width:auto;padding:0 12px;font-size:12px;color:#fff;background:var(--accent);border-color:var(--accent-deep)}
   .hdetail{padding:2px 0 12px;font-size:13px}
   .hrow.open .hdate{color:var(--accent);font-weight:700}
-  .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px}
-  .chip{
-    display:inline-flex;align-items:center;gap:7px;
-    background:#fff;border:1px solid var(--line);border-radius:99px;
-    padding:5px 6px 5px 11px;font-size:12.5px;color:var(--ink);font-weight:700;
+  .hgroup{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px dashed var(--surface2);font-size:14px}
+  .hgroup .ht{font-family:'Fraunces',serif;font-weight:600;font-size:15.5px;color:var(--sand);min-width:78px}
+  .hgroup .hn{color:var(--muted);flex:1}
+  .hgroup.notime .ht{font-family:'Karla',sans-serif;font-size:13px;font-style:italic;color:var(--muted);font-weight:500}
+  .hgroup button{
+    width:32px;height:29px;border-radius:9px;border:1px solid var(--line);
+    background:#fff;color:var(--ink);font-weight:700;font-size:15px;cursor:pointer;
     box-shadow:var(--shadow-sm);
   }
-  .chip button{
-    width:22px;height:22px;border-radius:50%;border:none;padding:0;
-    background:var(--surface2);color:var(--muted);
-    font-size:14px;line-height:22px;text-align:center;cursor:pointer;font-weight:700;
-  }
-  .chip button:active{background:var(--clay);color:#fff}
-  .chip.notime{color:var(--muted);font-style:italic;font-weight:500}
+  .hgroup button:active{background:var(--surface2)}
   .hses{display:flex;justify-content:space-between;color:var(--ink);padding:3px 0}
   .hses .t{color:var(--muted)}
   .hnote-line{color:var(--muted);font-style:italic;padding:3px 0}
@@ -398,7 +394,7 @@
 
 <div class="history">
   <h3>The record</h3>
-  <p class="history-hint">Tap a day to open its log · × removes a hit · add one with its time below.</p>
+  <p class="history-hint">Tap a day to open its log — each time with its hits.</p>
   <div id="historyRows"><p class="hempty">Your days will stack up here as you go.</p></div>
 </div>
 
@@ -834,21 +830,28 @@
         '<span class="hcount">'+countHtml+'</span>'+right+'</div>';
       if(editingKey===key){
         var detail=daylineSVG(key);
-        sessionsFor(key).forEach(function(s){
-          detail+='<div class="chips">'+s.map(function(hd){
-            return '<span class="chip">'+fmtTime(hd)+
-              '<button data-act="delhit" data-ts="'+hd.toISOString()+'" aria-label="Remove this hit">×</button></span>';
-          }).join('')+'</div>';
-        });
         var e=data.days[key];
+        // group hits by their minute — "5:22 AM · 3 hits"
+        var groups={},order=[];
+        (e&&e.hits?e.hits:[]).forEach(function(iso){
+          var hd=new Date(iso);
+          var gk=pad(hd.getHours())+':'+pad(hd.getMinutes());
+          if(!groups[gk]){groups[gk]={t:hd,n:0};order.push(gk);}
+          groups[gk].n++;
+        });
+        order.sort();
+        order.forEach(function(gk){
+          var g=groups[gk];
+          detail+='<div class="hgroup"><span class="ht">'+fmtTime(g.t)+'</span>'+
+            '<span class="hn">'+g.n+' hit'+(g.n>1?'s':'')+'</span>'+
+            '<button data-act="gdec" data-hm="'+gk+'" aria-label="One less at this time">−</button>'+
+            '<button data-act="ginc" data-hm="'+gk+'" aria-label="One more at this time">+</button></div>';
+        });
         var adj=e?(e.adj||0):0;
         if(adj>0){
-          var chips='';
-          for(var a=0;a<adj;a++){
-            chips+='<span class="chip notime">no time<button data-act="decadj" aria-label="Remove one untimed hit">×</button></span>';
-          }
-          detail+='<div class="chips">'+chips+'</div>'+
-            '<div class="hnote-line">Untimed — remove one, then re-add it below with its real time.</div>';
+          detail+='<div class="hgroup notime"><span class="ht">no time</span>'+
+            '<span class="hn">'+adj+' hit'+(adj>1?'s':'')+' — re-add below with a time</span>'+
+            '<button data-act="adjdec" aria-label="One less untimed">−</button></div>';
         }
         if(!detail)detail='<div class="hnote-line">Nothing logged this day yet.</div>';
         detail+='<div class="timefix"><input type="time" value="'+lastFixTime+'" aria-label="Time the hit happened">'+
@@ -993,16 +996,26 @@
         save();renderAll();
         return;
       }
-      if(act==='delhit'){
-        var e=data.days[key];
-        if(e&&e.hits){
-          var i=e.hits.indexOf(btn.dataset.ts);
-          if(i>-1){e.hits.splice(i,1);save();}
+      if(act==='gdec'||act==='ginc'){
+        var e=data.days[key], gm=btn.dataset.hm;
+        if(act==='gdec'&&e&&e.hits){
+          for(var i=0;i<e.hits.length;i++){
+            var hd=new Date(e.hits[i]);
+            if(pad(hd.getHours())+':'+pad(hd.getMinutes())===gm){e.hits.splice(i,1);save();break;}
+          }
+        }else if(act==='ginc'){
+          var gp=gm.split(':');
+          var gbd=dateOf(key);
+          var gshift=(+gp[0]<DAY_CUTOFF_H)?1:0;
+          var gts=new Date(gbd.getFullYear(),gbd.getMonth(),gbd.getDate()+gshift,+gp[0],+gp[1]);
+          if(gts>new Date()){fixMsg='That time hasn’t happened yet.';renderHistory();return;}
+          entryFor(key,true).hits.push(gts.toISOString());
+          save();
         }
         renderAll();
         return;
       }
-      if(act==='decadj'){
+      if(act==='adjdec'){
         var e2=data.days[key];
         if(e2&&(e2.adj||0)>0){e2.adj--;save();}
         renderAll();
