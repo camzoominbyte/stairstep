@@ -238,6 +238,21 @@
   }
   .hedit button.hdone{width:auto;padding:0 12px;font-size:12px;color:#fff;background:var(--accent);border-color:var(--accent-deep)}
   .hdetail{padding:2px 0 12px;font-size:13px}
+  .hrow.open .hdate{color:var(--accent);font-weight:700}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px}
+  .chip{
+    display:inline-flex;align-items:center;gap:7px;
+    background:#fff;border:1px solid var(--line);border-radius:99px;
+    padding:5px 6px 5px 11px;font-size:12.5px;color:var(--ink);font-weight:700;
+    box-shadow:var(--shadow-sm);
+  }
+  .chip button{
+    width:22px;height:22px;border-radius:50%;border:none;padding:0;
+    background:var(--surface2);color:var(--muted);
+    font-size:14px;line-height:22px;text-align:center;cursor:pointer;font-weight:700;
+  }
+  .chip button:active{background:var(--clay);color:#fff}
+  .chip.notime{color:var(--muted);font-style:italic;font-weight:500}
   .hses{display:flex;justify-content:space-between;color:var(--ink);padding:3px 0}
   .hses .t{color:var(--muted)}
   .hnote-line{color:var(--muted);font-style:italic;padding:3px 0}
@@ -367,7 +382,7 @@
   <button class="time-link" id="btnEarlier">Forgot to log? Add hits from earlier…</button>
   <div class="earlier-row" id="earlierRow" hidden>
     <input type="time" id="earlierTime" aria-label="Time the hit happened">
-    <button id="btnAddEarlier">+1 at this time</button>
+    <button id="btnAddEarlier">+ Add hit at this time</button>
   </div>
   <p id="earlierMsg"></p>
   <br>
@@ -383,7 +398,7 @@
 
 <div class="history">
   <h3>The record</h3>
-  <p class="history-hint">Tap any day to see its log or correct its count.</p>
+  <p class="history-hint">Tap a day to open its log · × removes a hit · add one with its time below.</p>
   <div id="historyRows"><p class="hempty">Your days will stack up here as you go.</p></div>
 </div>
 
@@ -814,30 +829,32 @@
         countHtml=nn+' <span style="color:var(--muted);font-size:12px">/ '+dCap+'</span>';
       }
       var right='<span class="hstat '+cls+'">'+stat+'</span>';
-      var rowHtml='<div class="hrow" data-key="'+key+'">'+
+      var rowHtml='<div class="hrow'+(editingKey===key?' open':'')+'" data-key="'+key+'">'+
         '<span class="hdate">'+(d.getMonth()+1)+'/'+d.getDate()+'</span>'+
         '<span class="hcount">'+countHtml+'</span>'+right+'</div>';
       if(editingKey===key){
         var detail=daylineSVG(key);
         sessionsFor(key).forEach(function(s){
-          var t=fmtTime(s[0]);
-          var t2=fmtTime(s[s.length-1]);
-          if(s.length>1&&t2!==t)t+=' – '+t2;
-          detail+='<div class="hses"><span class="t">'+t+'</span><span>'+s.length+' hit'+(s.length>1?'s':'')+'</span></div>';
+          detail+='<div class="chips">'+s.map(function(hd){
+            return '<span class="chip">'+fmtTime(hd)+
+              '<button data-act="delhit" data-ts="'+hd.toISOString()+'" aria-label="Remove this hit">×</button></span>';
+          }).join('')+'</div>';
         });
         var e=data.days[key];
         var adj=e?(e.adj||0):0;
         if(adj>0){
-          detail+='<div class="hnote-line">+'+adj+' logged without a time</div>';
-          detail+='<div class="timefix"><input type="time" value="'+lastFixTime+'" aria-label="Time this hit happened">'+
-                  '<button data-act="fixtime">Give one its time</button></div>';
-          if(fixMsg)detail+='<div class="hnote-line">'+fixMsg+'</div>';
+          var chips='';
+          for(var a=0;a<adj;a++){
+            chips+='<span class="chip notime">no time<button data-act="decadj" aria-label="Remove one untimed hit">×</button></span>';
+          }
+          detail+='<div class="chips">'+chips+'</div>'+
+            '<div class="hnote-line">Untimed — remove one, then re-add it below with its real time.</div>';
         }
-        if(!detail)detail='<div class="hnote-line">Nothing logged this day.</div>';
-        detail+='<div class="hedit">'+
-          '<button data-act="dec" aria-label="One less">−</button>'+
-          '<button data-act="inc" aria-label="One more">+</button>'+
-          '<button data-act="done" class="hdone">Done</button></div>';
+        if(!detail)detail='<div class="hnote-line">Nothing logged this day yet.</div>';
+        detail+='<div class="timefix"><input type="time" value="'+lastFixTime+'" aria-label="Time the hit happened">'+
+                '<button data-act="addat">+ Add hit</button></div>';
+        if(fixMsg)detail+='<div class="hnote-line">'+fixMsg+'</div>';
+        detail+='<div class="hedit"><button data-act="done" class="hdone">Done</button></div>';
         rowHtml+='<div class="hdetail" data-key="'+key+'">'+detail+'</div>';
       }
       rows=rowHtml+rows;
@@ -961,7 +978,8 @@
     var key=holder.dataset.key;
     if(!btn&&!holder.classList.contains('hrow'))return;
     if(btn){
-      if(btn.dataset.act==='fixtime'){
+      var act=btn.dataset.act;
+      if(act==='addat'){
         var inp=holder.querySelector('input[type=time]');
         var v=inp?inp.value:'';
         if(!v){fixMsg='Pick a time first.';renderHistory();return;}
@@ -970,20 +988,27 @@
         var shift=(+hm[0]<DAY_CUTOFF_H)?1:0;
         var ts=new Date(bd.getFullYear(),bd.getMonth(),bd.getDate()+shift,+hm[0],+hm[1]);
         if(ts>new Date()){fixMsg='That time hasn’t happened yet.';renderHistory();return;}
-        var e=data.days[key];
-        if(e&&(e.adj||0)>0){
-          e.adj--;
-          e.hits.push(ts.toISOString());
-          save();
-        }
+        entryFor(key,true).hits.push(ts.toISOString());
         lastFixTime=v;fixMsg='';
+        save();renderAll();
+        return;
+      }
+      if(act==='delhit'){
+        var e=data.days[key];
+        if(e&&e.hits){
+          var i=e.hits.indexOf(btn.dataset.ts);
+          if(i>-1){e.hits.splice(i,1);save();}
+        }
         renderAll();
         return;
       }
-      var n=countOf(key)||0;
-      if(btn.dataset.act==='inc'){setCount(key,n+1);}
-      else if(btn.dataset.act==='dec'){setCount(key,Math.max(0,n-1));}
-      else{editingKey=null;}
+      if(act==='decadj'){
+        var e2=data.days[key];
+        if(e2&&(e2.adj||0)>0){e2.adj--;save();}
+        renderAll();
+        return;
+      }
+      editingKey=null;fixMsg='';
       renderAll();
       return;
     }
