@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Taper">
-<meta name="theme-color" content="#f6f7f9">
+<meta name="theme-color" content="#faf6ee">
 <title>Taper to Zero</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
@@ -26,23 +26,23 @@
   }
   :root{
     color-scheme:light;
-    --bg:#f6f7f9;          /* paper */
-    --surface:#ffffff;
-    --surface2:#eceff3;    /* ink-100 */
-    --line:#d5dae3;        /* ink-200 */
-    --hair:rgba(15,20,34,.08);
-    --sand:#0f1422;        /* ink-900 — headings & numbers */
-    --ink:#3f4d66;         /* ink-600 — body */
-    --muted:#66738d;       /* ink-400 — secondary */
-    --faint:#b0b9c9;       /* ink-300 */
-    --accent:#3a5ef0;      /* cobalt — interactive */
-    --accent-deep:#2746d6;
-    --accent-soft:#dce7ff;
-    --amber:#b57a24;       /* status: at cap */
-    --sage:#5e7d4c;        /* status: under / clean */
-    --clay:#bc5b38;        /* status: over / slip */
-    --shadow:0 16px 40px -16px rgba(58,94,240,.22),0 6px 16px -8px rgba(15,20,34,.10);
-    --shadow-sm:0 4px 14px -6px rgba(15,20,34,.14);
+    --bg:#faf6ee;          /* warm cream paper */
+    --surface:#fffdf8;
+    --surface2:#f2ecdf;    /* warm 100 */
+    --line:#e6dcc8;        /* warm 200 */
+    --hair:rgba(59,43,20,.08);
+    --sand:#2e261a;        /* warm near-black — headings & numbers */
+    --ink:#5b5140;         /* warm brown-gray — body */
+    --muted:#8b7e67;       /* warm secondary */
+    --faint:#c6bba6;       /* warm 300 */
+    --accent:#a5681f;      /* rich amber — interactive */
+    --accent-deep:#8a5417;
+    --accent-soft:#f6e7d0;
+    --amber:#a5681f;       /* status: at cap */
+    --sage:#647d4b;        /* status: under / clean */
+    --clay:#b85335;        /* status: over / slip */
+    --shadow:0 16px 40px -16px rgba(165,104,31,.22),0 6px 16px -8px rgba(59,43,20,.10);
+    --shadow-sm:0 4px 14px -6px rgba(59,43,20,.14);
     --spring:cubic-bezier(.22,1,.36,1);
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -67,9 +67,9 @@
   body::before{
     content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;
     background:
-      radial-gradient(50% 42% at 18% 0%, rgba(98,134,251,.13), transparent 70%),
-      radial-gradient(48% 38% at 85% 8%, rgba(254,249,239,.85), transparent 65%),
-      radial-gradient(42% 32% at 70% 42%, rgba(220,231,255,.35), transparent 70%),
+      radial-gradient(50% 42% at 18% 0%, rgba(224,164,88,.18), transparent 70%),
+      radial-gradient(48% 38% at 85% 8%, rgba(255,252,244,.9), transparent 65%),
+      radial-gradient(42% 32% at 70% 42%, rgba(240,224,196,.4), transparent 70%),
       var(--bg);
   }
   /* grid + grain, dissolving away from the headline zone */
@@ -77,8 +77,8 @@
     content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
     background-image:
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
-      linear-gradient(to right, rgba(15,20,34,.045) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(15,20,34,.045) 1px, transparent 1px);
+      linear-gradient(to right, rgba(59,43,20,.045) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(59,43,20,.045) 1px, transparent 1px);
     background-size:160px 160px,32px 32px,32px 32px;
     -webkit-mask-image:radial-gradient(130% 60% at 50% 0%, black 22%, rgba(0,0,0,.35) 52%, transparent 78%);
     mask-image:radial-gradient(130% 60% at 50% 0%, black 22%, rgba(0,0,0,.35) 52%, transparent 78%);
@@ -101,9 +101,9 @@
     max-width:480px;margin:0 auto;
     display:flex;justify-content:space-between;align-items:center;gap:12px;
     padding:calc(10px + env(safe-area-inset-top)) 20px 10px;
-    background:rgba(246,247,249,.72);
+    background:rgba(250,246,238,.78);
     -webkit-backdrop-filter:blur(16px) saturate(1.4);backdrop-filter:blur(16px) saturate(1.4);
-    border-bottom:1px solid rgba(15,20,34,.07);
+    border-bottom:1px solid rgba(59,43,20,.07);
     transform:translateY(-110%);transition:transform .4s var(--spring);
     font-size:13px;color:var(--muted);font-weight:700;cursor:pointer;
   }
@@ -141,8 +141,8 @@
   }
   .stepcol:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .step{
-    border-radius:10px 10px 5px 5px;background:#e8ecf2;
-    border:1px solid rgba(15,20,34,.05);color:var(--muted);
+    border-radius:10px 10px 5px 5px;background:#efe8d6;
+    border:1px solid rgba(59,43,20,.05);color:var(--muted);
     display:flex;justify-content:center;align-items:flex-start;padding-top:7px;
     transition:background .25s,box-shadow .35s var(--spring);
   }
@@ -151,13 +151,13 @@
     font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
     color:var(--muted);text-align:center;
   }
-  .stepcol.past .step{background:#eef1f5;border-color:transparent}
+  .stepcol.past .step{background:#f2ecdd;border-color:transparent}
   .stepcol.past .cap{color:var(--sage);opacity:.7}
   .stepcol.past .lbl{color:var(--faint)}
   .stepcol.now .step{
-    background:#ffffff;
+    background:#fffdf8;
     border-color:var(--accent);
-    box-shadow:0 10px 24px -10px rgba(58,94,240,.45);
+    box-shadow:0 10px 24px -10px rgba(165,104,31,.45);
   }
   .stepcol.now .cap{color:var(--accent)}
   .stepcol.now .lbl{color:var(--accent)}
@@ -187,20 +187,20 @@
     transition:transform .25s var(--spring),box-shadow .25s var(--spring);
   }
   .tally-btns #btnPlus{
-    background:linear-gradient(180deg,#4b6cf4,#3352e4);
-    border-color:var(--accent-deep);color:#fff;
-    box-shadow:0 10px 24px -8px rgba(58,94,240,.5);
+    background:linear-gradient(180deg,#e9ad5e,#d3913c);
+    border-color:#c9853c;color:#3a2a12;
+    box-shadow:0 10px 24px -8px rgba(165,104,31,.5);
   }
   .tally-btns button:active{transform:translateY(1px) scale(.99)}
   .tally-btns button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .tally-btns .minus{flex:0 0 84px;color:var(--muted)}
   .delay-chip{
     display:inline-block;margin-top:16px;font-size:13px;color:var(--accent);font-weight:700;
-    border:1px dashed rgba(58,94,240,.45);border-radius:99px;padding:6px 14px;
+    border:1px dashed rgba(165,104,31,.45);border-radius:99px;padding:6px 14px;
     background:none;font-family:'Karla',sans-serif;cursor:pointer;text-align:left;
   }
   .delay-chip.running{border-style:solid;border-color:var(--accent);background:var(--accent-soft);font-variant-numeric:tabular-nums}
-  .delay-chip.done{border-style:solid;border-color:var(--sage);color:var(--sage);background:#eef4e9}
+  .delay-chip.done{border-style:solid;border-color:var(--sage);color:var(--sage);background:#eff2df}
   .delay-chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .slip-btn{
     display:none;margin-top:12px;font-size:13px;color:var(--muted);
@@ -297,7 +297,7 @@
     box-shadow:var(--shadow-sm);
     transition:transform .35s var(--spring),box-shadow .35s var(--spring),border-color .35s;
   }
-  .phase.now{border-color:var(--accent);box-shadow:0 16px 40px -16px rgba(58,94,240,.35),0 6px 16px -8px rgba(15,20,34,.08)}
+  .phase.now{border-color:var(--accent);box-shadow:0 16px 40px -16px rgba(165,104,31,.35),0 6px 16px -8px rgba(59,43,20,.08)}
   .phase.past{opacity:.6}
   .phase-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
   .phase-dates{font-size:12.5px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
@@ -307,7 +307,7 @@
   .phase-rule{font-size:13px;color:var(--sage);margin:2px 0 6px;font-weight:700}
   .phase-held{font-size:12px;color:var(--amber);margin:0 0 6px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
   .phase p{font-size:14.5px;color:var(--ink)}
-  .phase.zero{background:linear-gradient(160deg,#eef4e9,#ffffff);border-color:#b5c9a6}
+  .phase.zero{background:linear-gradient(160deg,#eff2df,#fffdf8);border-color:#c3cda4}
   .phase.zero .phase-cap{color:var(--sage)}
 
   /* ---- collapsibles ---- */
