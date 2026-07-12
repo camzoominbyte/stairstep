@@ -8,9 +8,22 @@
 <meta name="apple-mobile-web-app-title" content="Taper">
 <meta name="theme-color" content="#171B26">
 <title>Taper to Zero</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600&family=Karla:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <style>
+  @font-face{
+    font-family:'Fraunces';src:url('fonts/fraunces.woff2') format('woff2');
+    font-weight:300 600;font-style:normal;font-display:swap;
+  }
+  @font-face{
+    font-family:'Fraunces';src:url('fonts/fraunces-italic.woff2') format('woff2');
+    font-weight:300 600;font-style:italic;font-display:swap;
+  }
+  @font-face{
+    font-family:'Karla';src:url('fonts/karla.woff2') format('woff2');
+    font-weight:400 700;font-style:normal;font-display:swap;
+  }
   :root{
     --bg:#171B26;
     --surface:#1F2433;
@@ -48,6 +61,23 @@
   .countdown{color:var(--muted);font-size:15px;margin-bottom:26px}
   .countdown strong{color:var(--sand)}
 
+  /* ---- hold banner ---- */
+  .hold-banner{
+    display:none;background:linear-gradient(160deg,#33291F,#1F2433);
+    border:1px solid rgba(224,164,88,.5);border-radius:16px;
+    padding:16px 18px;margin:-10px 0 24px;
+  }
+  .hold-banner.show{display:block}
+  .hold-banner p{font-size:14.5px;color:#C6CBDA;margin-bottom:12px}
+  .hold-banner strong{color:var(--amber)}
+  .hold-btns{display:flex;gap:10px}
+  .hold-btns button{
+    flex:1;font-family:'Karla',sans-serif;font-weight:700;font-size:14px;
+    padding:11px 0;border-radius:12px;border:1px solid var(--line);
+    background:var(--surface2);color:var(--sand);cursor:pointer;
+  }
+  .hold-btns button.primary{border-color:var(--amber);color:var(--amber)}
+
   /* ---- staircase ---- */
   .stairs{display:flex;align-items:flex-end;gap:6px;height:150px;margin:8px 0 6px}
   .step{
@@ -80,6 +110,7 @@
   .bar{height:8px;border-radius:99px;background:var(--surface2);overflow:hidden;margin:16px 0 6px}
   .bar>div{height:100%;border-radius:99px;background:var(--sage);width:0%;transition:width .3s,background .3s}
   .bar-note{font-size:12.5px;color:var(--muted)}
+  .session-note{font-size:12.5px;color:var(--sage);margin-top:4px;min-height:1em}
   .tally-btns{display:flex;gap:12px;margin-top:18px}
   .tally-btns button{
     flex:1;font-family:'Karla',sans-serif;font-weight:700;font-size:16px;
@@ -92,16 +123,27 @@
   .delay-chip{
     display:inline-block;margin-top:16px;font-size:13px;color:var(--amber);
     border:1px dashed rgba(224,164,88,.45);border-radius:99px;padding:6px 14px;
+    background:none;font-family:'Karla',sans-serif;cursor:pointer;text-align:left;
+  }
+  .delay-chip.running{border-style:solid;border-color:var(--amber);font-variant-numeric:tabular-nums}
+  .delay-chip.done{border-style:solid;border-color:var(--sage);color:var(--sage)}
+  .delay-chip:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+  .slip-btn{
+    display:none;margin-top:12px;font-size:13px;color:var(--muted);
+    border:1px solid var(--line);border-radius:99px;padding:6px 14px;
+    background:none;font-family:'Karla',sans-serif;cursor:pointer;
   }
   .free .big{color:var(--sage);font-size:72px}
+  .free .slip-btn{display:inline-block}
 
   /* ---- history ---- */
   .history{
     background:var(--surface);border:1px solid var(--line);
     border-radius:18px;padding:16px 20px;margin-bottom:34px;
   }
-  .history h3{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:10px}
-  .hrow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-top:1px solid var(--surface2);font-size:14px}
+  .history h3{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:2px}
+  .history-hint{font-size:11.5px;color:var(--muted);margin-bottom:10px}
+  .hrow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-top:1px solid var(--surface2);font-size:14px;cursor:pointer}
   .hrow:first-of-type{border-top:none}
   .hdate{color:var(--muted)}
   .hcount{font-family:'Fraunces',serif;font-weight:600;font-size:17px}
@@ -110,7 +152,16 @@
   .hstat.at{color:var(--amber)}
   .hstat.over{color:var(--clay)}
   .hstat.zero{color:var(--sage)}
+  .hstat.slip{color:var(--clay)}
+  .hstat.nolog{color:#5E6679}
   .hempty{color:var(--muted);font-size:14px}
+  .hedit{display:flex;gap:8px;align-items:center}
+  .hedit button{
+    font-family:'Karla',sans-serif;font-weight:700;font-size:15px;
+    width:34px;height:30px;border-radius:9px;border:1px solid var(--line);
+    background:var(--surface2);color:var(--sand);cursor:pointer;
+  }
+  .hedit button.hdone{width:auto;padding:0 12px;font-size:12px;color:var(--amber);border-color:var(--amber)}
 
   /* ---- phase cards ---- */
   h2{font-family:'Fraunces',serif;font-weight:500;font-size:23px;margin:0 0 16px;letter-spacing:-.01em}
@@ -126,6 +177,7 @@
   .phase.now .phase-cap{color:var(--amber)}
   .phase-cap small{font-family:'Karla',sans-serif;font-size:12px;color:var(--muted);font-weight:400}
   .phase-rule{font-size:13px;color:var(--sage);margin:2px 0 6px;font-weight:500}
+  .phase-held{font-size:12px;color:var(--amber);margin:0 0 6px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
   .phase p{font-size:14.5px;color:#C6CBDA}
   .phase.zero{background:linear-gradient(160deg,#233126,#1F2433);border-color:var(--sage)}
   .phase.zero .phase-cap{color:var(--sage)}
@@ -147,6 +199,20 @@
   .d-body .hl{color:var(--amber)}
   .d-body .ok{color:var(--sage)}
 
+  /* ---- backup ---- */
+  .data-btns{display:flex;gap:10px;margin-bottom:10px}
+  .data-btns button{
+    flex:1;font-family:'Karla',sans-serif;font-weight:700;font-size:13.5px;
+    padding:11px 0;border-radius:12px;border:1px solid var(--line);
+    background:var(--surface2);color:var(--sand);cursor:pointer;
+  }
+  #dataBox{
+    width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;
+    color:var(--muted);font-size:11px;font-family:ui-monospace,monospace;
+    padding:10px;resize:vertical;-webkit-user-select:text;user-select:text;
+  }
+  #dataMsg{font-size:12.5px;color:var(--sage);margin-top:8px;min-height:1em}
+
   .section{margin-bottom:36px}
   .footer{text-align:center;color:var(--muted);margin-top:44px;font-family:'Fraunces',serif;font-style:italic;font-size:15px}
 </style>
@@ -156,6 +222,14 @@
 <p class="eyebrow">Ten days · flower only · cap only goes down</p>
 <h1>Taper to <em>zero</em></h1>
 <p class="countdown" id="countdown"></p>
+
+<div class="hold-banner" id="holdBanner">
+  <p id="holdText"></p>
+  <div class="hold-btns">
+    <button class="primary" id="btnHold">Hold cap +1 day</button>
+    <button id="btnKeep">Keep schedule</button>
+  </div>
+</div>
 
 <div class="stairs" id="stairs" aria-label="Step-down schedule"></div>
 <p class="stairs-note">Each step is your daily hit cap. Tap a step to jump to its details.</p>
@@ -168,15 +242,19 @@
   </div>
   <div class="bar"><div id="barFill"></div></div>
   <p class="bar-note" id="barNote"></p>
+  <p class="session-note" id="sessionNote"></p>
   <div class="tally-btns" id="tallyBtns">
     <button class="minus" id="btnMinus" aria-label="Remove one hit">−1</button>
     <button id="btnPlus">Log a hit</button>
   </div>
-  <span class="delay-chip">Urge? Start the 20-minute timer first.</span>
+  <br>
+  <button class="delay-chip" id="urgeChip">Urge? Start the 20-minute timer.</button>
+  <button class="slip-btn" id="btnSlip">Slipped? Log it honestly</button>
 </div>
 
 <div class="history">
   <h3>The record</h3>
+  <p class="history-hint">Tap any day to correct its count.</p>
   <div id="historyRows"><p class="hempty">Your days will stack up here as you go.</p></div>
 </div>
 
@@ -229,163 +307,459 @@
       <p>The trend line matters, not any single day. Ten years in; the exit doesn't have to be flawless to be final.</p>
     </div>
   </details>
+  <details>
+    <summary>Backup &amp; data</summary>
+    <div class="d-body">
+      <p>Everything lives on this device — nothing is sent anywhere. Copy a backup every few days and paste it into Notes, so a lost phone can't erase the record.</p>
+      <div class="data-btns">
+        <button id="btnExport">Copy backup</button>
+        <button id="btnImport">Import pasted backup</button>
+      </div>
+      <textarea id="dataBox" rows="4" placeholder="Your backup appears here — or paste one and tap Import."></textarea>
+      <p id="dataMsg"></p>
+    </div>
+  </details>
 </div>
 
 <p class="footer">The cap only goes down.</p>
 
 <script>
 (function(){
-  var ZERO = new Date(2026,6,22); // Jul 22 2026
-  var phases = [
-    {start:new Date(2026,6,12), end:new Date(2026,6,13), cap:14, capText:"14", lbl:"Jul 12–13",
+  'use strict';
+
+  /* ================= schedule ================= */
+  var TAPER_START = new Date(2026,6,12); // Jul 12 2026
+  var BASE_PHASES = [
+    {days:2, cap:14, capText:"14", sessionMax:3, spacingH:3,
      rule:"Max 3 hits/session · 3h between sessions",
      desc:"Barely below where you are. Should feel almost easy — the point is starting the count and proving the system works."},
-    {start:new Date(2026,6,14), end:new Date(2026,6,15), cap:11, capText:"11", lbl:"Jul 14–15",
+    {days:2, cap:11, capText:"11", sessionMax:3, spacingH:3,
      rule:"Max 3 hits/session · 3h spacing holds",
      desc:"Cut the most mindless session of the day — the one that happens because it's just the time."},
-    {start:new Date(2026,6,16), end:new Date(2026,6,17), cap:8, capText:"8", lbl:"Jul 16–17",
+    {days:2, cap:8, capText:"8", sessionMax:2, spacingH:4,
      rule:"Max 2 hits/session · spacing widens to 4h",
      desc:"Roughly a third of where you started. Mild edge here is the taper working, not failing. The delay rule earns its keep."},
-    {start:new Date(2026,6,18), end:new Date(2026,6,19), cap:5, capText:"5", lbl:"Jul 18–19",
+    {days:2, cap:5, capText:"5", sessionMax:2, spacingH:4,
      rule:"2–3 sessions max · drop all daytime",
      desc:"Biggest structural cut, landed on the weekend on purpose. Keep only what's load-bearing — midday and the evening wind-down."},
-    {start:new Date(2026,6,20), end:new Date(2026,6,21), cap:3, capText:"2–3", lbl:"Jul 20–21",
+    {days:2, cap:3, capText:"2–3", sessionMax:3, spacingH:0, single:true,
      rule:"Evening only · one session",
      desc:"Functionally done all day and proving it. Start the sleep kit now so it's already running before zero."},
-    {start:ZERO, end:null, cap:0, capText:"0", lbl:"Jul 22 →",
+    {days:null, cap:0, capText:"0",
      rule:"Whatever's left goes in the trash the night before",
-     desc:"Zero. Not saved, not \u201cjust in case.\u201d The day counter starts here — and it only climbs."}
+     desc:"Zero. Not saved, not “just in case.” The day counter starts here — and it only climbs."}
   ];
+  var MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var WEEKDAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var MS_DAY=86400000;
 
-  function dayStart(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
-  function keyFor(d){return 'ttz-'+d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
-  var msPer=86400000;
-  var today = dayStart(new Date());
-
-  function phaseIndexFor(d){
-    for(var i=0;i<phases.length;i++){
-      var p=phases[i];
-      var end = p.end ? p.end : new Date(2100,0,1);
-      if(d>=dayStart(p.start) && d<=dayStart(end)) return i;
-    }
-    return d < dayStart(phases[0].start) ? -1 : phases.length-1;
-  }
-  var idx = phaseIndexFor(today);
-  var isZeroEra = idx===phases.length-1 && today>=dayStart(ZERO);
-
-  // storage (localStorage on-device; in-memory fallback)
-  var mem={};
-  function store(k,v){try{localStorage.setItem(k,String(v));}catch(e){mem[k]=String(v);}}
-  function fetchVal(k){try{var v=localStorage.getItem(k);return v!==null?v:(k in mem?mem[k]:null);}catch(e){return k in mem?mem[k]:null;}}
-
-  // countdown
-  var cd=document.getElementById('countdown');
-  if(isZeroEra){
-    var daysFree=Math.floor((today-dayStart(ZERO))/msPer)+1;
-    cd.innerHTML="Zero date cleared. <strong>Day "+daysFree+"</strong> off.";
-  }else{
-    var left=Math.round((dayStart(ZERO)-today)/msPer);
-    cd.innerHTML="Zero date: <strong>Wednesday, July 22</strong> · "+left+" day"+(left===1?"":"s")+" out";
+  /* ================= day helpers =================
+     The "day" ends at 4am — a 1am session counts toward the
+     evening it belongs to, not tomorrow's cap. */
+  var DAY_CUTOFF_H = 4;
+  function pad(n){return ('0'+n).slice(-2);}
+  function logicalNow(){return new Date(Date.now() - DAY_CUTOFF_H*3600000);}
+  function dkeyOf(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+  function dateOf(key){var p=key.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
+  function addDays(d,n){return new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);}
+  function fmtShort(d){return MONTHS[d.getMonth()]+' '+d.getDate();}
+  function fmtTime(d){
+    var h=d.getHours()%12||12, ap=d.getHours()<12?'AM':'PM';
+    return h+':'+pad(d.getMinutes())+' '+ap;
   }
 
-  // staircase
-  var stairs=document.getElementById('stairs');
-  var maxCap=14;
-  phases.forEach(function(p,i){
-    var el=document.createElement('div');
-    el.className='step'+(i<idx?' past':'')+(i===idx?' now':'');
-    el.style.height=(34+(p.cap/maxCap)*116)+'px';
-    el.innerHTML='<span class="cap">'+p.capText+'</span><span class="lbl">'+p.lbl.split('–')[0].replace(' →','')+'</span>';
-    el.setAttribute('role','button');el.setAttribute('tabindex','0');
-    el.setAttribute('aria-label','Jump to '+p.lbl+' details');
-    function go(){document.getElementById('phase-'+i).scrollIntoView();}
-    el.addEventListener('click',go);
-    el.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
-    stairs.appendChild(el);
-  });
-
-  // phase cards
-  var wrap=document.getElementById('phases');
-  phases.forEach(function(p,i){
-    var el=document.createElement('div');
-    el.className='phase'+(i<idx?' past':'')+(i===idx?' now':'')+(i===phases.length-1?' zero':'');
-    el.id='phase-'+i;
-    el.innerHTML=
-      '<div class="phase-top"><span class="phase-dates">'+p.lbl+(i===idx?' · now':'')+'</span>'+
-      '<span class="phase-cap">'+p.capText+'<small> '+(p.cap>0?'hits/day':'')+'</small></span></div>'+
-      '<p class="phase-rule">'+p.rule+'</p><p>'+p.desc+'</p>';
-    wrap.appendChild(el);
-  });
-
-  // today card + tally
-  var cap = idx>=0 ? phases[idx].cap : 14;
-  var count=0;
-  var countEl=document.getElementById('tallyCount');
-  var barFill=document.getElementById('barFill');
-  var barNote=document.getElementById('barNote');
-  var card=document.getElementById('todayCard');
-
-  function render(){
-    countEl.textContent=count;
-    var pct=cap>0?Math.min(100,(count/cap)*100):0;
-    barFill.style.width=pct+'%';
-    barFill.style.background = count>cap ? 'var(--clay)' : count>=cap*0.8 ? 'var(--amber)' : 'var(--sage)';
-    if(count>cap){barNote.textContent='Over today\u2019s cap. Tomorrow: hold this phase one extra day, then keep stepping down.';}
-    else if(count===cap){barNote.textContent='At the cap. That\u2019s the ceiling — you\u2019re done for today.';}
-    else{barNote.textContent=(cap-count)+' left under today\u2019s ceiling. Under is always fine.';}
-  }
-
-  if(isZeroEra){
-    card.classList.add('free');
-    document.getElementById('todayEyebrow').textContent='Days off';
-    var df=Math.floor((today-dayStart(ZERO))/msPer)+1;
-    countEl.textContent=df;
-    document.getElementById('capLabel').textContent='and climbing';
-    document.getElementById('tallyBtns').style.display='none';
-    document.querySelector('.delay-chip').textContent='Urge? It\u2019s the loop firing, not a need. Five minutes and it passes.';
-    barFill.style.width='100%';barFill.style.background='var(--sage)';
-    barNote.textContent='The counter only climbs.';
-    store(keyFor(today),0); // record zero-era days as clean
-  } else {
-    var phaseName = idx>=0 ? phases[idx].lbl : 'Starts Jul 12';
-    document.getElementById('todayEyebrow').textContent='Today \u00b7 '+phaseName;
-    document.getElementById('capLabel').textContent='of '+cap+' hits today';
-    var saved=fetchVal(keyFor(today));
-    if(saved!==null)count=parseInt(saved,10)||0;
-    document.getElementById('btnPlus').addEventListener('click',function(){count++;render();store(keyFor(today),count);renderHistory();});
-    document.getElementById('btnMinus').addEventListener('click',function(){if(count>0){count--;render();store(keyFor(today),count);renderHistory();}});
-    render();
-  }
-
-  // history
-  function renderHistory(){
-    var rowsEl=document.getElementById('historyRows');
-    var rows='';
-    var d=new Date(phases[0].start);
-    var shown=0;
-    while(d<=today){
-      var v=fetchVal(keyFor(d));
-      if(v!==null){
-        var dIdx=phaseIndexFor(dayStart(d));
-        var dCap=dIdx>=0?phases[dIdx].cap:14;
-        var n=parseInt(v,10)||0;
-        var isZ = dayStart(d)>=dayStart(ZERO);
-        var stat,cls;
-        if(isZ){stat='clean';cls='zero';}
-        else if(n>dCap){stat='over';cls='over';}
-        else if(n===dCap){stat='at cap';cls='at';}
-        else{stat='under';cls='under';}
-        var lbl=(d.getMonth()+1)+'/'+d.getDate();
-        rows='<div class="hrow"><span class="hdate">'+lbl+'</span>'+
-             '<span class="hcount">'+(isZ?'0':n)+(isZ?'':' <span style="color:var(--muted);font-size:12px">/ '+dCap+'</span>')+'</span>'+
-             '<span class="hstat '+cls+'">'+stat+'</span></div>' + rows;
-        shown++;
+  /* ================= storage ================= */
+  function loadData(){
+    var raw=null;
+    try{raw=localStorage.getItem('ttz2');}catch(e){}
+    if(raw){try{return JSON.parse(raw);}catch(e){}}
+    // migrate v1 (per-day count keys, unpadded)
+    var d={days:{},holds:{},holdPrompts:{},urgeStart:null};
+    try{
+      for(var i=0;i<localStorage.length;i++){
+        var k=localStorage.key(i);
+        var m=k && k.match(/^ttz-(\d{4})-(\d{1,2})-(\d{1,2})$/);
+        if(m){
+          var n=parseInt(localStorage.getItem(k),10)||0;
+          d.days[m[1]+'-'+pad(+m[2])+'-'+pad(+m[3])]={hits:[],adj:n};
+        }
       }
-      d=new Date(d.getTime()+msPer);
-    }
-    if(shown>0){rowsEl.innerHTML=rows;}
+    }catch(e){}
+    return d;
   }
-  renderHistory();
+  var data=loadData();
+  function save(){
+    try{localStorage.setItem('ttz2',JSON.stringify(data));}catch(e){}
+  }
+
+  /* ================= derived schedule =================
+     Holding a phase (+1 day after an over-cap day) stretches that
+     phase and pushes every later phase — and the zero date — back. */
+  function schedule(){
+    var out=[], cur=new Date(TAPER_START);
+    for(var i=0;i<BASE_PHASES.length;i++){
+      var p=BASE_PHASES[i];
+      var dur=p.days ? p.days+(data.holds[i]||0) : null;
+      var start=new Date(cur);
+      var end=dur ? addDays(start,dur-1) : null;
+      var lbl;
+      if(!end){lbl=fmtShort(start)+' →';}
+      else if(start.getMonth()===end.getMonth()){lbl=fmtShort(start)+'–'+end.getDate();}
+      else{lbl=fmtShort(start)+'–'+fmtShort(end);}
+      out.push({start:start,end:end,lbl:lbl});
+      if(dur)cur=addDays(start,dur);
+    }
+    return out;
+  }
+  function phaseIndexFor(day){
+    var sch=schedule();
+    if(day<sch[0].start)return -1;
+    for(var i=0;i<sch.length;i++){
+      var end=sch[i].end||new Date(2100,0,1);
+      if(day>=sch[i].start && day<=end)return i;
+    }
+    return sch.length-1;
+  }
+  function zeroDate(){var s=schedule();return s[s.length-1].start;}
+
+  /* ================= counts ================= */
+  function entryFor(key,create){
+    if(!data.days[key] && create)data.days[key]={hits:[],adj:0};
+    return data.days[key]||null;
+  }
+  function countOf(key){
+    var e=data.days[key];
+    if(!e)return null;
+    return Math.max(0,(e.hits?e.hits.length:0)+(e.adj||0));
+  }
+  function setCount(key,n){
+    n=Math.max(0,n);
+    var e=entryFor(key,true);
+    var cur=countOf(key)||0;
+    if(n>cur){e.adj=(e.adj||0)+(n-cur);}
+    else{
+      var need=cur-n;
+      var adjCut=Math.min(need,Math.max(0,e.adj||0));
+      e.adj=(e.adj||0)-adjCut;need-=adjCut;
+      while(need>0&&e.hits.length){e.hits.pop();need--;}
+    }
+    save();
+  }
+
+  /* ================= today state ================= */
+  var todayKey, today, idx, isZeroEra, cap, phase;
+  function computeToday(){
+    var ln=logicalNow();
+    today=new Date(ln.getFullYear(),ln.getMonth(),ln.getDate());
+    todayKey=dkeyOf(today);
+    idx=phaseIndexFor(today);
+    isZeroEra=(idx===BASE_PHASES.length-1);
+    phase=idx>=0?BASE_PHASES[idx]:BASE_PHASES[0];
+    cap=idx>=0?phase.cap:BASE_PHASES[0].cap;
+  }
+
+  /* ================= sessions ================= */
+  function sessionInfo(){
+    var e=data.days[todayKey];
+    var hits=(e&&e.hits?e.hits:[]).map(function(t){return new Date(t);}).sort(function(a,b){return a-b;});
+    if(!hits.length)return null;
+    var spacing=(phase.spacingH||0)*3600000;
+    var inSession=1;
+    for(var i=1;i<hits.length;i++){
+      if(spacing>0 && (hits[i]-hits[i-1])>=spacing)inSession=1;else inSession++;
+    }
+    var last=hits[hits.length-1];
+    return {last:last,inSession:inSession,nextOpen:spacing>0?new Date(last.getTime()+spacing):null};
+  }
+
+  /* ================= rendering ================= */
+  function $(id){return document.getElementById(id);}
+  var editingKey=null;
+
+  function lastUseDay(){
+    var latest=null;
+    for(var k in data.days){
+      if(countOf(k)>0 && (!latest||k>latest))latest=k;
+    }
+    return latest?dateOf(latest):null;
+  }
+  function daysFree(){
+    var since=lastUseDay(), z=zeroDate();
+    var from=(since&&since>=addDays(z,-1))?addDays(since,1):z;
+    return Math.floor((today-from)/MS_DAY)+1;
+  }
+
+  function renderCountdown(){
+    var z=zeroDate();
+    if(isZeroEra){
+      var n=daysFree();
+      $('countdown').innerHTML='Zero date cleared. <strong>Day '+Math.max(0,n)+'</strong> off.';
+    }else{
+      var left=Math.round((z-today)/MS_DAY);
+      $('countdown').innerHTML='Zero date: <strong>'+WEEKDAYS[z.getDay()]+', '+fmtShort(z)+
+        '</strong> · '+left+' day'+(left===1?'':'s')+' out';
+    }
+  }
+
+  function renderStairs(){
+    var sch=schedule(), maxCap=BASE_PHASES[0].cap;
+    var stairs=$('stairs');stairs.innerHTML='';
+    sch.forEach(function(s,i){
+      var p=BASE_PHASES[i];
+      var el=document.createElement('div');
+      el.className='step'+(i<idx?' past':'')+(i===idx?' now':'');
+      el.style.height=(34+(p.cap/maxCap)*116)+'px';
+      el.innerHTML='<span class="cap">'+p.capText+'</span><span class="lbl">'+fmtShort(s.start)+'</span>';
+      el.setAttribute('role','button');el.setAttribute('tabindex','0');
+      el.setAttribute('aria-label','Jump to '+s.lbl+' details');
+      function go(){$('phase-'+i).scrollIntoView();}
+      el.addEventListener('click',go);
+      el.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+      stairs.appendChild(el);
+    });
+  }
+
+  function renderPhases(){
+    var sch=schedule();
+    var wrap=$('phases');wrap.innerHTML='';
+    sch.forEach(function(s,i){
+      var p=BASE_PHASES[i];
+      var el=document.createElement('div');
+      el.className='phase'+(i<idx?' past':'')+(i===idx?' now':'')+(i===sch.length-1?' zero':'');
+      el.id='phase-'+i;
+      var held=data.holds[i]?'<p class="phase-held">Held +'+data.holds[i]+' day'+(data.holds[i]>1?'s':'')+'</p>':'';
+      el.innerHTML=
+        '<div class="phase-top"><span class="phase-dates">'+s.lbl+(i===idx?' · now':'')+'</span>'+
+        '<span class="phase-cap">'+p.capText+'<small> '+(p.cap>0?'hits/day':'')+'</small></span></div>'+
+        held+'<p class="phase-rule">'+p.rule+'</p><p>'+p.desc+'</p>';
+      wrap.appendChild(el);
+    });
+  }
+
+  function renderToday(){
+    var card=$('todayCard');
+    var count=countOf(todayKey)||0;
+    if(isZeroEra){
+      card.classList.add('free');
+      $('tallyBtns').style.display='none';
+      $('todayEyebrow').textContent='Days off';
+      $('tallyCount').textContent=Math.max(0,daysFree());
+      $('capLabel').textContent='and climbing';
+      $('sessionNote').textContent='';
+      if(count>0){
+        $('barFill').style.width='100%';$('barFill').style.background='var(--clay)';
+        $('barNote').textContent='Slip logged. Data, not doom — the trend line is what matters. Tomorrow is Day 1 again.';
+        $('btnSlip').textContent='Logged '+count+' today — undo one';
+      }else{
+        $('barFill').style.width='100%';$('barFill').style.background='var(--sage)';
+        $('barNote').textContent='The counter only climbs.';
+        $('btnSlip').textContent='Slipped? Log it honestly';
+      }
+    }else{
+      card.classList.remove('free');
+      $('tallyBtns').style.display='flex';
+      var sch=schedule();
+      $('todayEyebrow').textContent=idx>=0?'Today · '+sch[idx].lbl:'Starts '+fmtShort(sch[0].start);
+      $('tallyCount').textContent=count;
+      $('capLabel').textContent='of '+cap+' hits today';
+      var pct=cap>0?Math.min(100,(count/cap)*100):0;
+      $('barFill').style.width=pct+'%';
+      $('barFill').style.background=count>cap?'var(--clay)':count>=cap*0.8?'var(--amber)':'var(--sage)';
+      if(count>cap){$('barNote').textContent='Over today’s cap. Tomorrow: hold this phase one extra day, then keep stepping down.';}
+      else if(count===cap){$('barNote').textContent='At the cap. That’s the ceiling — you’re done for today.';}
+      else{$('barNote').textContent=(cap-count)+' left under today’s ceiling. Under is always fine.';}
+      var si=sessionInfo();
+      if(!si){$('sessionNote').textContent='';}
+      else if(phase.single){$('sessionNote').textContent='Last hit '+fmtTime(si.last)+' · evening only, one session.';}
+      else if(si.inSession>=phase.sessionMax){$('sessionNote').textContent='Last hit '+fmtTime(si.last)+' · session full — next opens '+fmtTime(si.nextOpen)+'.';}
+      else{$('sessionNote').textContent='Last hit '+fmtTime(si.last)+' · '+(phase.sessionMax-si.inSession)+' left this session.';}
+    }
+  }
+
+  function renderHistory(){
+    var rowsEl=$('historyRows');
+    var sch=schedule();
+    if(today<sch[0].start){
+      rowsEl.innerHTML='<p class="hempty">Your days will stack up here as you go.</p>';
+      return;
+    }
+    var rows='';
+    var d=new Date(sch[0].start);
+    while(d<=today){
+      var key=dkeyOf(d);
+      var n=countOf(key);
+      var dIdx=phaseIndexFor(d);
+      var dCap=dIdx>=0?BASE_PHASES[dIdx].cap:BASE_PHASES[0].cap;
+      var isZ=dIdx===BASE_PHASES.length-1;
+      var stat,cls,countHtml;
+      if(isZ){
+        if(n>0){stat='slip';cls='slip';countHtml=String(n);}
+        else{stat='clean';cls='zero';countHtml='0';}
+      }else if(n===null&&key!==todayKey){
+        stat='no log';cls='nolog';countHtml='<span style="color:#5E6679">·</span>';
+      }else{
+        var nn=n||0;
+        if(nn>dCap){stat='over';cls='over';}
+        else if(nn===dCap){stat='at cap';cls='at';}
+        else{stat='under';cls='under';}
+        countHtml=nn+' <span style="color:var(--muted);font-size:12px">/ '+dCap+'</span>';
+      }
+      var right;
+      if(editingKey===key){
+        right='<span class="hedit">'+
+          '<button data-act="dec" aria-label="One less">−</button>'+
+          '<button data-act="inc" aria-label="One more">+</button>'+
+          '<button data-act="done" class="hdone">Done</button></span>';
+      }else{
+        right='<span class="hstat '+cls+'">'+stat+'</span>';
+      }
+      rows='<div class="hrow" data-key="'+key+'">'+
+        '<span class="hdate">'+(d.getMonth()+1)+'/'+d.getDate()+'</span>'+
+        '<span class="hcount">'+countHtml+'</span>'+right+'</div>'+rows;
+      d=addDays(d,1);
+    }
+    rowsEl.innerHTML=rows||'<p class="hempty">Your days will stack up here as you go.</p>';
+  }
+
+  /* ---- hold-the-phase banner ---- */
+  function renderHoldBanner(){
+    var b=$('holdBanner');
+    b.classList.remove('show');
+    if(isZeroEra||idx<0)return;
+    var yDate=addDays(today,-1);
+    if(yDate<schedule()[0].start)return;
+    var yKey=dkeyOf(yDate);
+    var yIdx=phaseIndexFor(yDate);
+    if(yIdx<0||yIdx===BASE_PHASES.length-1)return;
+    var yCount=countOf(yKey);
+    if(yCount===null||yCount<=BASE_PHASES[yIdx].cap)return;
+    if(data.holdPrompts[yKey])return;
+    $('holdText').innerHTML='<strong>Yesterday went over cap.</strong> The rule: hold this cap one extra day, then keep stepping down. Holding pushes every later step — including the zero date — back by one day.';
+    b.classList.add('show');
+    b.dataset.ykey=yKey;
+  }
+
+  /* ---- urge timer ---- */
+  var URGE_MS=20*60000, urgeTick=null;
+  function renderUrge(){
+    var chip=$('urgeChip');
+    if(urgeTick){clearInterval(urgeTick);urgeTick=null;}
+    if(!data.urgeStart){
+      chip.className='delay-chip';
+      chip.textContent=isZeroEra
+        ?'Urge? It’s the loop firing, not a need. Start the 20-minute timer.'
+        :'Urge? Start the 20-minute timer.';
+      return;
+    }
+    function tick(){
+      var left=URGE_MS-(Date.now()-data.urgeStart);
+      if(left<=0){
+        chip.className='delay-chip done';
+        chip.textContent='20 minutes survived — that one stayed banked. Tap to reset.';
+        if(urgeTick){clearInterval(urgeTick);urgeTick=null;}
+      }else{
+        var m=Math.floor(left/60000),s=Math.floor((left%60000)/1000);
+        chip.className='delay-chip running';
+        chip.textContent='Wave passing · '+m+':'+pad(s)+' · tap to cancel';
+      }
+    }
+    tick();
+    if(data.urgeStart)urgeTick=setInterval(tick,1000);
+  }
+
+  function renderAll(){
+    computeToday();
+    renderCountdown();renderStairs();renderPhases();
+    renderToday();renderHistory();renderHoldBanner();renderUrge();
+  }
+
+  /* ================= events ================= */
+  $('btnPlus').addEventListener('click',function(){
+    entryFor(todayKey,true).hits.push(new Date().toISOString());
+    save();renderAll();
+  });
+  $('btnMinus').addEventListener('click',function(){
+    var n=countOf(todayKey)||0;
+    if(n>0){setCount(todayKey,n-1);renderAll();}
+  });
+  $('btnSlip').addEventListener('click',function(){
+    var n=countOf(todayKey)||0;
+    if(n>0){setCount(todayKey,n-1);renderAll();return;}
+    if(confirm('Log a slip for today? It gets recorded honestly — data, not doom.')){
+      entryFor(todayKey,true).hits.push(new Date().toISOString());
+      save();renderAll();
+    }
+  });
+  $('btnHold').addEventListener('click',function(){
+    data.holds[idx]=(data.holds[idx]||0)+1;
+    data.holdPrompts[$('holdBanner').dataset.ykey]='held';
+    save();renderAll();
+  });
+  $('btnKeep').addEventListener('click',function(){
+    data.holdPrompts[$('holdBanner').dataset.ykey]='kept';
+    save();renderAll();
+  });
+  $('urgeChip').addEventListener('click',function(){
+    if(!data.urgeStart){data.urgeStart=Date.now();}
+    else if(Date.now()-data.urgeStart>=URGE_MS){data.urgeStart=null;}
+    else if(confirm('Cancel the 20-minute timer?')){data.urgeStart=null;}
+    else{return;}
+    save();renderUrge();
+  });
+
+  /* history editing */
+  $('historyRows').addEventListener('click',function(ev){
+    var row=ev.target.closest('.hrow');
+    if(!row)return;
+    var btn=ev.target.closest('button');
+    var key=row.dataset.key;
+    if(btn){
+      var n=countOf(key)||0;
+      if(btn.dataset.act==='inc'){setCount(key,n+1);}
+      else if(btn.dataset.act==='dec'){setCount(key,Math.max(0,n-1));}
+      else{editingKey=null;}
+      renderAll();
+      return;
+    }
+    editingKey=(editingKey===key)?null:key;
+    renderHistory();
+  });
+
+  /* backup */
+  $('btnExport').addEventListener('click',function(){
+    var json=JSON.stringify(data);
+    $('dataBox').value=json;
+    function fallback(){$('dataBox').select();$('dataMsg').textContent='Select-all and copy the text above.';}
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(json).then(function(){
+        $('dataMsg').textContent='Copied. Paste it somewhere safe (Notes works).';
+      },fallback);
+    }else{fallback();}
+  });
+  $('btnImport').addEventListener('click',function(){
+    var raw=$('dataBox').value.trim();
+    if(!raw){$('dataMsg').textContent='Paste a backup into the box first.';return;}
+    try{
+      var d=JSON.parse(raw);
+      if(!d||typeof d!=='object'||!d.days)throw new Error('bad');
+      if(!confirm('Replace everything on this device with the pasted backup?'))return;
+      d.holds=d.holds||{};d.holdPrompts=d.holdPrompts||{};
+      data=d;save();editingKey=null;renderAll();
+      $('dataMsg').textContent='Backup restored.';
+    }catch(e){$('dataMsg').textContent='That doesn’t look like a valid backup.';}
+  });
+
+  /* re-render when returning to the app (new day, timer state) */
+  document.addEventListener('visibilitychange',function(){
+    if(!document.hidden)renderAll();
+  });
+
+  renderAll();
+
+  /* offline support */
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  }
 })();
 </script>
 </body>
