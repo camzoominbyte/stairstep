@@ -331,6 +331,12 @@
     width:32px;height:29px;border-radius:9px;border:1px solid var(--line);
     background:#fff;color:var(--ink);font-weight:700;font-size:15px;cursor:pointer;box-shadow:var(--shadow-sm);
   }
+  .sgap{position:relative;margin:0 0 0 26px;padding:7px 0 7px 14px;font-size:12px;font-weight:700}
+  .sgap::before{content:"";position:absolute;left:0;top:3px;bottom:3px;width:2px;border-radius:2px;background:currentColor;opacity:.4}
+  .sgap.ok{color:var(--sage)}
+  .sgap.short{color:var(--clay)}
+  .sgap.live{color:var(--accent)}
+  .sgap small{font-weight:400;color:var(--muted)}
   .hses{display:flex;justify-content:space-between;color:var(--ink);padding:3px 0}
   .hses .t{color:var(--muted)}
   .hnote-line{color:var(--muted);font-style:italic;padding:3px 0}
@@ -581,6 +587,7 @@
   .taper-track{height:10px;border-radius:99px;background:var(--surface2);overflow:hidden;margin:8px 0 6px}
   .taper-track>div{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--sage),var(--accent));transition:width .6s var(--spring)}
   .chart-note{font-size:12.5px;color:var(--muted);margin:4px 0 0}
+  .chart-note strong{color:var(--sand)}
   .legend-dot{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:baseline;margin-right:3px}
   .detail-overlay{
     position:fixed;inset:0;z-index:80;background:var(--bg);overflow-y:auto;
@@ -2026,11 +2033,32 @@ try{
     set('wstatTrend','day '+Math.max(1,dayN));
     set('wstatStep',(idx>=0?BASE_PHASES[idx].capText:BASE_PHASES[0].capText)+' / day');
   }
+  function fmtDur(ms){
+    var m=Math.max(0,Math.floor(ms/60000)),h=Math.floor(m/60);
+    return h?h+'h '+pad(m%60)+'m':m+'m';
+  }
   function daySummaryHTML(key){
     var sessions=sessionsFor(key);
     if(!sessions.length)return '<p class="hnote-line">Nothing logged yet today.</p>';
+    var d=dateOf(key),di=phaseIndexFor(d);
+    var reqH=spacingHOn(d,di),reqMs=reqH*3600000;
+    var isTod=key===todayKey;
     var h=daylineSVG(key);
+    var gaps=[];
     sessions.forEach(function(sess,si){
+      // gap connector from the previous session
+      if(si>0){
+        var prev=sessions[si-1];
+        var gapMs=sess[0]-prev[prev.length-1];
+        gaps.push(gapMs);
+        if(reqMs>0){
+          var held=gapMs>=reqMs;
+          h+='<div class="sgap '+(held?'ok':'short')+'">'+fmtDur(gapMs)+' between'+
+            (held?' · held the '+fmtGapH(reqH)+' rule':' · '+fmtDur(reqMs-gapMs)+' short of the '+fmtGapH(reqH)+' rule')+'</div>';
+        }else{
+          h+='<div class="sgap ok">'+fmtDur(gapMs)+' between</div>';
+        }
+      }
       var block='<div class="hsession"><div class="hsession-head">'+
         '<span class="sn">Session '+(si+1)+'</span><span class="srange"></span>'+
         '<span class="stot">'+sess.length+' hit'+(sess.length>1?'s':'')+'</span></div>';
@@ -2048,6 +2076,24 @@ try{
       });
       h+=block+'</div>';
     });
+    // live gap since the last hit (today only)
+    if(isTod&&!isZeroEra){
+      var lastSess=sessions[sessions.length-1];
+      var sinceMs=Date.now()-lastSess[lastSess.length-1];
+      if(sinceMs>60000){
+        var open=reqMs>0?sinceMs>=reqMs:true;
+        h+='<div class="sgap live">'+fmtDur(sinceMs)+' since'+
+          (reqMs>0?(open?' — window open, every extra minute is banked':' — window opens at '+fmtTime(new Date(lastSess[lastSess.length-1].getTime()+reqMs))):'')+'</div>';
+      }
+    }
+    // gap summary
+    if(gaps.length){
+      var sum=0,longest=0;
+      gaps.forEach(function(g){sum+=g;if(g>longest)longest=g;});
+      h+='<p class="chart-note">Average gap '+(isTod?'today':'that day')+': <strong>'+fmtDur(sum/gaps.length)+'</strong>'+
+        (gaps.length>1?' · longest: <strong>'+fmtDur(longest)+'</strong>':'')+
+        (reqMs>0?' · the rule '+(isTod?'today':'that day')+': '+fmtGapH(reqH)+'.':'.')+'</p>';
+    }
     return h;
   }
   function renderXtras(){
