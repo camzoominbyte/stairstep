@@ -977,10 +977,13 @@ try{
   <details>
     <summary>Backup &amp; data</summary>
     <div class="d-body">
-      <p>Everything lives on this device — nothing is sent anywhere. Copy a backup every few days and paste it into Notes, so a lost phone can't erase the record.</p>
+      <p>Everything lives on this device — nothing is sent anywhere. Copy a backup every few days and paste it into Notes, so a lost phone can't erase the record. The app also keeps an <strong>automatic snapshot</strong> from the first open of each day, and restores it by itself if the saved data ever turns up damaged.</p>
       <div class="data-btns">
         <button id="btnExport">Copy backup</button>
         <button id="btnImport">Import pasted backup</button>
+      </div>
+      <div class="data-btns">
+        <button id="btnSnap">Restore today’s auto-snapshot</button>
       </div>
       <textarea id="dataBox" rows="4" placeholder="Your backup appears here — or paste one and tap Import."></textarea>
       <p id="dataMsg"></p>
@@ -1016,13 +1019,13 @@ try{
      desc:"Cut the most mindless session of the day — the one that happens because it's just the time. The space between sessions starts stretching every day from here.",
      why:"Lab trials show THC suppresses withdrawal dose-dependently — small steps keep the gap your receptors feel small.",
      ref:"taper"},
-    {days:2, cap:12, capText:"12", sessionMax:3, spacingH:[4.5,5],
-     rule:"Max 3 hits/session · gaps keep widening: 4½h, then 5h",
-     desc:"Well under half of baseline. Mild edge here is the taper working, not failing. The delay rule earns its keep.",
+    {days:2, cap:12, capText:"12", sessionMax:3, spacingH:[5,6],
+     rule:"Max 3 hits/session · past 4h the gap steps by the full hour: 5h, then 6h",
+     desc:"Well under half of baseline — and past the 4-hour mark, where it's gotten easier before. So the gap pushes by the hour now instead of the half. Mild edge here is the taper working, not failing.",
      why:"Cravings crest and pass in minutes — urge-delay is first-line behavioral treatment, and this stretch is where it earns its keep.",
      ref:"manage"},
-    {days:2, cap:8, capText:"8", sessionMax:3, spacingH:[5.5,6],
-     rule:"2–3 sessions max · gaps 5½h, then 6h · drop all daytime",
+    {days:2, cap:8, capText:"8", sessionMax:3, spacingH:[7,8],
+     rule:"2–3 sessions max · gaps 7h, then 8h · drop all daytime",
      desc:"Biggest structural cut, landed on the weekend on purpose. Keep only what's load-bearing — midday and the evening wind-down.",
      why:"Cues drive use as much as chemistry. Dropping whole sessions removes cue windows — the same target CBT and MET, the best-supported treatments, work on.",
      ref:"manage"},
@@ -1056,11 +1059,35 @@ try{
     return h+':'+pad(d.getMinutes())+' '+ap;
   }
 
-  /* ================= storage ================= */
+  /* ================= storage =================
+     Rule one: never silently overwrite data that might be recoverable. */
+  function validShape(d){
+    return !!(d&&typeof d==='object'&&d.days&&typeof d.days==='object'&&!(d.days instanceof Array));
+  }
+  var loadWarning=null;
   function loadData(){
     var raw=null;
     try{raw=localStorage.getItem('ttz2');}catch(e){}
-    if(raw){try{return JSON.parse(raw);}catch(e){}}
+    if(raw){
+      try{
+        var parsed=JSON.parse(raw);
+        if(validShape(parsed))return parsed;
+      }catch(e){}
+      // the stored record is damaged: preserve the evidence before anything
+      // can write over it, then try the automatic daily snapshot
+      try{localStorage.setItem('ttz2-corrupt',raw);}catch(e){}
+      try{
+        var snap=JSON.parse(localStorage.getItem('ttz2-snap')||'null');
+        if(snap&&snap.raw){
+          var sd=JSON.parse(snap.raw);
+          if(validShape(sd)){
+            loadWarning='Your saved data was unreadable, so the automatic snapshot from '+snap.t+' was restored. Anything logged after that snapshot is missing — the damaged copy was kept under the hood.';
+            return sd;
+          }
+        }
+      }catch(e){}
+      loadWarning='Your saved data was unreadable and no snapshot existed to restore. A copy of the damaged data was preserved. Starting fresh — sorry.';
+    }
     // migrate v1 (per-day count keys, unpadded)
     var d={days:{},holds:{},holdPrompts:{},urgeStart:null};
     try{
@@ -1078,8 +1105,33 @@ try{
   var data=loadData();
   data.holds=data.holds||{};data.holdPrompts=data.holdPrompts||{};
   data.urges=data.urges||[];data.dayCheers=data.dayCheers||{};data.ritual=data.ritual||{};
+  var saveFailed=false;
   function save(){
-    try{localStorage.setItem('ttz2',JSON.stringify(data));}catch(e){}
+    data._ts=Date.now();
+    try{
+      localStorage.setItem('ttz2',JSON.stringify(data));
+      saveFailed=false;
+    }catch(e){
+      if(!saveFailed){
+        saveFailed=true;
+        try{alert('Heads up — this device is refusing to save right now, so new logs may not survive closing the app. Copy a backup from The system → Backup & data as soon as you can.');}catch(e2){}
+      }
+    }
+  }
+  // ask the browser to protect this origin's storage from eviction
+  try{
+    if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(function(){});
+  }catch(e){}
+  // automatic once-a-day snapshot, taken before today's changes touch it
+  try{
+    var __snapKey=dkeyOf(new Date(Date.now()-DAY_CUTOFF_H*3600000));
+    var __snap=JSON.parse(localStorage.getItem('ttz2-snap')||'null');
+    if(!__snap||__snap.t!==__snapKey){
+      localStorage.setItem('ttz2-snap',JSON.stringify({t:__snapKey,raw:JSON.stringify(data)}));
+    }
+  }catch(e){}
+  if(loadWarning){
+    setTimeout(function(){try{alert(loadWarning);}catch(e){}},600);
   }
 
   /* ================= derived schedule =================
@@ -2623,11 +2675,14 @@ try{
     }
   }
 
+  // one broken section must never blank the whole app — isolate each render
+  function safe(fn){try{fn();}catch(e){try{console.error(e);}catch(e2){}}}
   function renderAll(){
     computeToday();
-    renderCountdown();renderStairs();renderPhases();renderSchedStrip();
-    renderToday();renderTrend();renderHistory();renderHoldBanner();renderDayHeld();renderRitual();renderUrge();renderGap();renderGlass();renderWidgets();
-    if(!$('detailOverlay').hidden)renderXtras();
+    [renderCountdown,renderStairs,renderPhases,renderSchedStrip,
+     renderToday,renderTrend,renderHistory,renderHoldBanner,renderDayHeld,
+     renderRitual,renderUrge,renderGap,renderGlass,renderWidgets].forEach(safe);
+    if(!$('detailOverlay').hidden)safe(renderXtras);
   }
 
   /* ================= events ================= */
@@ -2892,13 +2947,29 @@ try{
     if(!raw){$('dataMsg').textContent='Paste a backup into the box first.';return;}
     try{
       var d=JSON.parse(raw);
-      if(!d||typeof d!=='object'||!d.days)throw new Error('bad');
+      if(!validShape(d))throw new Error('bad');
       if(!confirm('Replace everything on this device with the pasted backup?'))return;
+      // stash what's being replaced, so a wrong import is recoverable
+      try{localStorage.setItem('ttz2-preimport',JSON.stringify(data));}catch(e2){}
       d.holds=d.holds||{};d.holdPrompts=d.holdPrompts||{};
       d.urges=d.urges||[];d.dayCheers=d.dayCheers||{};d.ritual=d.ritual||{};
       data=d;save();editingKey=null;renderAll();
-      $('dataMsg').textContent='Backup restored.';
+      $('dataMsg').textContent='Backup restored. (The data it replaced was stashed, just in case.)';
     }catch(e){$('dataMsg').textContent='That doesn’t look like a valid backup.';}
+  });
+  $('btnSnap').addEventListener('click',function(){
+    var snap=null;
+    try{snap=JSON.parse(localStorage.getItem('ttz2-snap')||'null');}catch(e){}
+    if(!snap||!snap.raw){$('dataMsg').textContent='No automatic snapshot on this device yet — one is taken at the first open of each day.';return;}
+    var sd=null;
+    try{sd=JSON.parse(snap.raw);}catch(e){}
+    if(!validShape(sd)){$('dataMsg').textContent='The snapshot on this device is unreadable.';return;}
+    if(!confirm('Replace current data with the automatic snapshot from '+snap.t+'? Anything logged since that snapshot is lost.'))return;
+    try{localStorage.setItem('ttz2-preimport',JSON.stringify(data));}catch(e){}
+    sd.holds=sd.holds||{};sd.holdPrompts=sd.holdPrompts||{};
+    sd.urges=sd.urges||[];sd.dayCheers=sd.dayCheers||{};sd.ritual=sd.ritual||{};
+    data=sd;save();editingKey=null;renderAll();
+    $('dataMsg').textContent='Snapshot from '+snap.t+' restored. (The data it replaced was stashed.)';
   });
 
   /* ---- glass bar ---- */
@@ -3034,9 +3105,23 @@ try{
     if(pw){pw.classList.add('reveal');io.observe(pw);}
   }
 
-  /* re-render when returning to the app (new day, timer state) */
+  /* re-render when returning to the app (new day, timer state) — and if
+     another context (Safari tab vs installed app) saved newer data while we
+     were hidden, adopt it instead of clobbering it with our stale copy */
   document.addEventListener('visibilitychange',function(){
-    if(!document.hidden)renderAll();
+    if(document.hidden)return;
+    try{
+      var raw=localStorage.getItem('ttz2');
+      if(raw){
+        var d=JSON.parse(raw);
+        if(validShape(d)&&(d._ts||0)>(data._ts||0)){
+          d.holds=d.holds||{};d.holdPrompts=d.holdPrompts||{};
+          d.urges=d.urges||[];d.dayCheers=d.dayCheers||{};d.ritual=d.ritual||{};
+          data=d;
+        }
+      }
+    }catch(e){}
+    renderAll();
   });
 
   renderAll();
