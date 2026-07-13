@@ -539,6 +539,44 @@
   .chip-slip{background:var(--clay);color:#fffdf8}
   .chip-nolog{background:none;border:1px dashed var(--line);color:var(--faint)}
   .chip-today{outline:2px solid var(--accent);outline-offset:1px}
+  /* interactive day-by-day schedule strip */
+  .sched-strip{
+    display:flex;gap:8px;overflow-x:auto;padding:4px 2px 12px;margin:0 -2px 2px;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;
+  }
+  .sched-strip::-webkit-scrollbar{display:none}
+  .sday{
+    flex:0 0 68px;border:1px solid var(--line);border-radius:14px;background:var(--surface);
+    padding:9px 4px 7px;text-align:center;cursor:pointer;box-shadow:var(--shadow-sm);
+    display:flex;flex-direction:column;gap:2px;align-items:center;
+    transition:transform .25s var(--spring),border-color .25s,box-shadow .25s;
+  }
+  .sday:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .sd-dow{font-size:8.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:700;white-space:nowrap}
+  .sd-cap{font-family:'Fraunces',serif;font-weight:600;font-size:21px;color:var(--sand);line-height:1.15}
+  .sd-gap{font-size:9px;color:var(--muted);font-weight:700;white-space:nowrap}
+  .sday.past{opacity:.8}
+  .sday.past.under .sd-cap,.sday.past.clean .sd-cap{color:var(--sage)}
+  .sday.past.at .sd-cap{color:var(--amber)}
+  .sday.past.over .sd-cap,.sday.past.slip .sd-cap{color:var(--clay)}
+  .sday.today{border-color:var(--accent)}
+  .sday.today .sd-dow{color:var(--accent)}
+  .sday.zeroday .sd-cap{color:var(--sage)}
+  .sday.sel{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 10px 22px -10px rgba(165,104,31,.45)}
+  .sched-detail{
+    background:#faf5ea;border:1px solid var(--hair);border-radius:14px;
+    padding:12px 14px;margin-bottom:12px;font-size:13.5px;color:var(--ink);line-height:1.55;
+  }
+  .sched-detail p{margin:3px 0}
+  .sched-detail strong{color:var(--sand)}
+  html.dark .sched-detail{background:#2b261c}
+  /* taper score contributors */
+  .contrib{margin:12px 0 2px}
+  .contrib-row{display:flex;align-items:center;gap:10px;padding:4px 0}
+  .contrib-row .cn{flex:0 0 100px;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+  .contrib-row .cb{flex:1;height:6px;border-radius:99px;background:var(--surface2);overflow:hidden}
+  .contrib-row .cb i{display:block;height:100%;border-radius:99px;transition:width .5s var(--spring)}
+  .contrib-row .cv{flex:0 0 30px;text-align:right;font-size:12.5px;font-weight:700;color:var(--sand)}
   /* taper progress track */
   .taper-track{height:10px;border-radius:99px;background:var(--surface2);overflow:hidden;margin:8px 0 6px}
   .taper-track>div{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--sage),var(--accent));transition:width .6s var(--spring)}
@@ -758,8 +796,9 @@ try{
   <button class="xopen" data-target="trendCard" data-title="The trend" aria-label="Open the trend in detail">⤢</button>
   <div class="wface"><span class="wicon">📈</span><span class="wname">The trend</span><span class="wstat" id="wstatTrend">–</span></div>
   <h3>The trend</h3>
-  <p class="history-hint">Ghost steps are each day&rsquo;s cap · solid is what you logged.</p>
+  <p class="history-hint">Ghost steps are each day&rsquo;s cap · solid is what you logged · tap a bar for that day.</p>
   <div id="trendChart"></div>
+  <p class="history-hint" id="trendDetail" style="margin:6px 0 0;color:var(--ink)" hidden></p>
   <p class="history-hint" id="trendInsight" style="margin:8px 0 0"></p>
   <div class="xtra" id="trendXtra"></div>
 </div>
@@ -777,6 +816,8 @@ try{
   <button class="xopen" data-target="stepSection" data-title="The step-down" aria-label="Open the step-down in detail">⤢</button>
   <div class="wface"><span class="wicon">🪜</span><span class="wname">Step-down</span><span class="wstat" id="wstatStep">–</span></div>
   <h2>The step-down</h2>
+  <div class="sched-strip" id="schedStrip" aria-label="Day-by-day schedule — tap a day for details"></div>
+  <div class="sched-detail" id="schedDetail" hidden></div>
   <div class="xtra" id="stepXtra"></div>
   <div id="phases"></div>
   <p class="d-evid" style="border-top:none;padding-top:0;margin-top:4px">Honest footnote: the research backs slow, stepped reduction over weeks, but no trial prescribes exact step sizes or session gaps — the caps carry the evidence-backed principle, and the daily-widening gaps are the structure that enforces it (each urge between windows is a wave the 20-minute rule already handles). That's why a hard day holds a step instead of breaking the plan — and a held day keeps its widest gap. <a class="dlink" href="guide.html#taper">The evidence →</a></p>
@@ -1015,13 +1056,15 @@ try{
   // Spacing can step up daily within a phase ([day1, day2] arrays). Held
   // days run past the array and clamp to the last (widest) value, so a
   // hold never loosens the structure.
-  function spacingHNow(){
-    var sp=phase.spacingH;
+  function spacingHOn(d,di){
+    if(di<0)di=0;
+    var sp=BASE_PHASES[di].spacingH;
     if(!sp)return 0;
-    if(!sp.length&&typeof sp==='number')return sp;
-    var di=idx>=0?Math.round((today-schedule()[idx].start)/MS_DAY):0;
-    return sp[Math.max(0,Math.min(sp.length-1,di))];
+    if(typeof sp==='number')return sp;
+    var off=Math.round((d-schedule()[di].start)/MS_DAY);
+    return sp[Math.max(0,Math.min(sp.length-1,off))];
   }
+  function spacingHNow(){return idx>=BASE_PHASES.length-1?0:spacingHOn(today,idx);}
   function fmtGapH(h){
     var w=Math.floor(h);
     return (h%1?(w?w:'')+'½':w)+'h';
@@ -1199,6 +1242,89 @@ try{
     });
   }
 
+  /* ---- interactive day-by-day schedule strip ---- */
+  var selSchedKey=null;
+  function renderSchedStrip(){
+    var el=$('schedStrip');if(!el)return;
+    var sch=schedule(),z=zeroDate();
+    var last=today>z?(addDays(z,21)<today?addDays(z,21):today):z;
+    var html='',d=new Date(sch[0].start);
+    while(d<=last){
+      var k=dkeyOf(d),di=phaseIndexFor(d),p=BASE_PHASES[di<0?0:di];
+      var isZ=di===BASE_PHASES.length-1;
+      var st=dayStatus(d);
+      var cls='sday';
+      if(d<today)cls+=' past '+st.cls;
+      if(k===todayKey)cls+=' today';
+      if(isZ)cls+=' zeroday';
+      if(selSchedKey===k)cls+=' sel';
+      var gap=isZ?(d<=today?st.stat:'zero'):(p.single?'evening':fmtGapH(spacingHOn(d,di))+' gap');
+      html+='<div class="'+cls+'" data-k="'+k+'" role="button" tabindex="0" aria-label="'+fmtShort(d)+' details">'+
+        '<span class="sd-dow">'+WEEKDAYS[d.getDay()].slice(0,3)+' '+(d.getMonth()+1)+'/'+d.getDate()+'</span>'+
+        '<span class="sd-cap">'+(isZ?'0':p.capText)+'</span>'+
+        '<span class="sd-gap">'+gap+'</span></div>';
+      d=addDays(d,1);
+    }
+    el.innerHTML=html;
+    renderSchedDetail(false);
+    var focus=el.querySelector('.sday.sel')||el.querySelector('.sday.today');
+    if(focus)el.scrollLeft=focus.offsetLeft-el.clientWidth/2+focus.clientWidth/2;
+  }
+  function renderSchedDetail(animate){
+    var box=$('schedDetail');if(!box)return;
+    if(!selSchedKey){box.hidden=true;return;}
+    var d=dateOf(selSchedKey),di=phaseIndexFor(d),p=BASE_PHASES[di<0?0:di];
+    var isZ=di===BASE_PHASES.length-1,st=dayStatus(d);
+    var head='<strong>'+WEEKDAYS[d.getDay()]+', '+fmtShort(d)+'</strong>';
+    var lines=[];
+    if(isZ){
+      var off=Math.round((d-zeroDate())/MS_DAY)+1;
+      head+=' · zero era, day '+off;
+      if(d<today)lines.push(st.cls==='clean'?'Clean — the streak held.':'Slip logged: '+st.c+'. Data, not doom.');
+      else if(selSchedKey===todayKey)lines.push((countOf(todayKey)||0)===0?'Clean so far today.':'Slip logged today: '+countOf(todayKey)+'.');
+      lines.push(off<=2?'Symptoms, if any, typically start in this window (24–48 h) — the tapered, blunted version.'
+        :off<=6?'The days-2–6 peak window the research maps, pre-shaved by the step-down.'
+        :off<=13?'Past the peak — the grade flattens from here.'
+        :off<=21?'Weeks 2–3: the climb back to baseline. Sleep settles last.'
+        :'Past the 3-week adjustment window.');
+    }else{
+      head+=' · cap '+p.capText;
+      lines.push('<strong>Structure:</strong> '+(p.single?'one evening session only':'max '+p.sessionMax+' hits per session · '+fmtGapH(spacingHOn(d,di))+' between sessions'));
+      if(d<today){
+        lines.push('<strong>Logged:</strong> '+(st.c===null?'nothing — no data that day':st.c+' of '+st.cap+' · '+st.stat));
+        var sess=sessionsFor(selSchedKey);
+        if(sess.length){
+          var ls=sess[sess.length-1];
+          lines.push('<strong>Sessions:</strong> '+sess.length+' · '+fmtTime(sess[0][0])+' → '+fmtTime(ls[ls.length-1]));
+        }
+      }else if(selSchedKey===todayKey){
+        var c=countOf(todayKey)||0;
+        lines.push('<strong>So far:</strong> '+c+' of '+cap+' · '+Math.max(0,cap-c)+' left today');
+      }else{
+        var inD=Math.round((d-today)/MS_DAY);
+        lines.push('<strong>In '+inD+' day'+(inD>1?'s':'')+'.</strong> '+p.desc);
+      }
+    }
+    box.innerHTML='<p>'+head+'</p>'+lines.map(function(l){return '<p>'+l+'</p>';}).join('');
+    box.hidden=false;
+    if(animate)expandEl(box);
+  }
+  $('schedStrip').addEventListener('click',function(ev){
+    var c=ev.target.closest('.sday');if(!c)return;
+    ev.stopPropagation();
+    var wasOpen=!!selSchedKey;
+    selSchedKey=selSchedKey===c.dataset.k?null:c.dataset.k;
+    renderSchedStrip();
+    if(selSchedKey&&!wasOpen)renderSchedDetail(true);
+  });
+  $('schedStrip').addEventListener('keydown',function(ev){
+    if(ev.key!=='Enter'&&ev.key!==' ')return;
+    var c=ev.target.closest('.sday');if(!c)return;
+    ev.preventDefault();
+    selSchedKey=selSchedKey===c.dataset.k?null:c.dataset.k;
+    renderSchedStrip();
+  });
+
   function renderToday(){
     var card=$('todayCard');
     var count=countOf(todayKey)||0;
@@ -1261,6 +1387,7 @@ try{
     }
   }
 
+  var trendSel=null;
   function renderTrend(){
     var el=$('trendChart');
     var sch=schedule(), z=zeroDate(), start=sch[0].start;
@@ -1272,7 +1399,7 @@ try{
     while(d<=endD){
       var key=dkeyOf(d), di=phaseIndexFor(d);
       var c=countOf(key);
-      vals.push({date:new Date(d),cap:di>=0?BASE_PHASES[di].cap:BASE_PHASES[0].cap,
+      vals.push({date:new Date(d),key:key,cap:di>=0?BASE_PHASES[di].cap:BASE_PHASES[0].cap,
                  count:c,isToday:key===todayKey,isZ:di===BASE_PHASES.length-1});
       if(c>maxV)maxV=c;
       d=addDays(d,1);
@@ -1281,27 +1408,31 @@ try{
     var slotW=W/n, barW=Math.min(22,slotW*0.62);
     function yv(v){return padT+scaleH*(1-v/maxV);}
     function hv(v){return scaleH*(v/maxV);}
-    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Daily hits against each day’s cap">';
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Daily hits against each day’s cap — tap a bar for details">';
     var labelEvery=n>16?3:2;
     vals.forEach(function(v,i){
       var cx=slotW*i+slotW/2, x=cx-barW/2;
+      var sel=trendSel===v.key;
+      // full-height invisible hit zone makes every day easy to tap
+      svg+='<rect x="'+(slotW*i).toFixed(1)+'" y="0" width="'+slotW.toFixed(1)+'" height="'+H+'" fill="transparent" data-k="'+v.key+'" style="cursor:pointer"/>';
       if(v.cap>0){
-        svg+='<rect x="'+x.toFixed(1)+'" y="'+yv(v.cap).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+hv(v.cap).toFixed(1)+'" rx="3" fill="var(--surface2)"'+(v.isToday?' stroke="var(--accent)" stroke-opacity=".6"':'')+'/>';
+        svg+='<rect x="'+x.toFixed(1)+'" y="'+yv(v.cap).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+hv(v.cap).toFixed(1)+'" rx="3" fill="var(--surface2)" pointer-events="none"'+((v.isToday||sel)?' stroke="var(--accent)" stroke-opacity="'+(sel?'1':'.6')+'"':'')+'/>';
       }else{
-        svg+='<rect x="'+x.toFixed(1)+'" y="'+(padT+scaleH-2)+'" width="'+barW.toFixed(1)+'" height="2" rx="1" fill="var(--surface2)"/>';
+        svg+='<rect x="'+x.toFixed(1)+'" y="'+(padT+scaleH-2)+'" width="'+barW.toFixed(1)+'" height="2" rx="1" fill="var(--surface2)" pointer-events="none"/>';
       }
       if(v.count!==null&&v.count>0){
         var col=(v.isZ||v.count>v.cap)?'var(--clay)':v.count===v.cap?'var(--amber)':'var(--sage)';
-        svg+='<rect x="'+x.toFixed(1)+'" y="'+yv(v.count).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+Math.max(2,hv(v.count)).toFixed(1)+'" rx="3" fill="'+col+'" fill-opacity=".9"/>';
+        svg+='<rect x="'+x.toFixed(1)+'" y="'+yv(v.count).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+Math.max(2,hv(v.count)).toFixed(1)+'" rx="3" fill="'+col+'" fill-opacity="'+(sel?'1':'.9')+'" pointer-events="none"/>';
       }else if(v.isZ&&v.date<=today){
-        svg+='<circle cx="'+cx.toFixed(1)+'" cy="'+(padT+scaleH-4)+'" r="3" fill="var(--sage)"/>';
+        svg+='<circle cx="'+cx.toFixed(1)+'" cy="'+(padT+scaleH-4)+'" r="3" fill="var(--sage)" pointer-events="none"/>';
       }
       if(i%labelEvery===0){
-        svg+='<text x="'+cx.toFixed(1)+'" y="'+(H-3)+'" font-size="8.5" fill="var(--muted)" text-anchor="middle" font-family="Karla,sans-serif">'+(v.date.getMonth()+1)+'/'+v.date.getDate()+'</text>';
+        svg+='<text x="'+cx.toFixed(1)+'" y="'+(H-3)+'" font-size="8.5" fill="'+(sel?'var(--accent)':'var(--muted)')+'" text-anchor="middle" font-family="Karla,sans-serif" pointer-events="none">'+(v.date.getMonth()+1)+'/'+v.date.getDate()+'</text>';
       }
     });
     svg+='</svg>';
     el.innerHTML=svg;
+    renderTrendDetail();
     var ti=$('trendInsight');
     if(ti){
       var th=timedHits();
@@ -1313,6 +1444,29 @@ try{
       }
     }
   }
+
+  function renderTrendDetail(){
+    var td=$('trendDetail');if(!td)return;
+    if(!trendSel){td.hidden=true;return;}
+    var d=dateOf(trendSel),st=dayStatus(d);
+    var bits=['<strong>'+WEEKDAYS[d.getDay()].slice(0,3)+' '+fmtShort(d)+'</strong>'];
+    if(st.cap>0)bits.push(st.c===null?'no log':st.c+' of '+st.cap+' · '+st.stat);
+    else if(d<=today)bits.push(st.cls==='clean'?'clean at zero':'slip · '+st.c);
+    else bits.push('zero day ahead');
+    var sess=sessionsFor(trendSel);
+    if(sess.length){
+      var ls=sess[sess.length-1];
+      bits.push(sess.length+' session'+(sess.length>1?'s':'')+' · '+fmtTime(sess[0][0])+' → '+fmtTime(ls[ls.length-1]));
+    }
+    td.innerHTML=bits.join(' · ');
+    td.hidden=false;
+  }
+  $('trendChart').addEventListener('click',function(ev){
+    var r=ev.target.closest('[data-k]');if(!r)return;
+    ev.stopPropagation();
+    trendSel=trendSel===r.dataset.k?null:r.dataset.k;
+    renderTrend();
+  });
 
   function daylineSVG(key){
     var e=data.days[key];
@@ -1629,6 +1783,50 @@ try{
     }
     return {avoided:avoided,cutPct:cutPct,streak:streak,tot:t.tot,logged:t.logged,under:t.under};
   }
+  /* Oura-style daily score: weighted contributors, all from logged data */
+  function scoreToday(){
+    var count=countOf(todayKey)||0;
+    if(isZeroEra){
+      var n=Math.max(0,daysFree());
+      var total=count>0?40:Math.min(100,80+n);
+      return {total:total,label:count>0?'Slip day — data, not doom':n>=21?'Clear':'Holding zero',parts:[
+        {name:'Clean today',score:count>0?30:100},
+        {name:'Streak',score:Math.min(100,Math.round(n/21*100))}
+      ]};
+    }
+    var capS=count<=cap?Math.round(100-(count/Math.max(1,cap))*40):Math.max(0,60-20*(count-cap));
+    var sess=sessionsFor(todayKey);
+    var maxSess=0;
+    sess.forEach(function(s){if(s.length>maxSess)maxSess=s.length;});
+    var sessS=!sess.length?100
+      :phase.single?(sess.length<=1?100:40)
+      :maxSess<=phase.sessionMax?100:Math.max(0,100-25*(maxSess-phase.sessionMax));
+    var req=spacingHNow()*3600000,minGap=null;
+    for(var i=1;i<sess.length;i++){
+      var g=sess[i][0]-sess[i-1][sess[i-1].length-1];
+      if(minGap===null||g<minGap)minGap=g;
+    }
+    var spaceS=(req<=0||minGap===null)?100:Math.min(100,Math.round(minGap/req*100));
+    var pv=paceVsYesterday();
+    var paceS=!pv?80:pv.t<pv.y?100:pv.t===pv.y?75:Math.max(40,75-10*(pv.t-pv.y));
+    var total2=Math.round(capS*0.4+spaceS*0.25+sessS*0.2+paceS*0.15);
+    return {total:total2,
+      label:total2>=85?'Locked in':total2>=70?'On track':total2>=55?'Holding':'Rough day — data, not doom',
+      parts:[
+        {name:'Cap margin',score:capS},
+        {name:'Session gaps',score:spaceS},
+        {name:'Session size',score:sessS},
+        {name:'Pace vs yesterday',score:paceS}
+      ]};
+  }
+  function scoreColor(v){return v>=70?'var(--sage)':v>=55?'var(--amber)':'var(--clay)';}
+  function contribHTML(parts){
+    return '<div class="contrib">'+parts.map(function(p){
+      return '<div class="contrib-row"><span class="cn">'+p.name+'</span>'+
+        '<span class="cb"><i style="width:'+p.score+'%;background:'+scoreColor(p.score)+'"></i></span>'+
+        '<span class="cv">'+p.score+'</span></div>';
+    }).join('')+'</div>';
+  }
   function cumPoints(key){
     var e=data.days[key];
     var hits=(e&&e.hits?e.hits:[]).map(function(t){return new Date(t);}).sort(function(a,b){return a-b;});
@@ -1858,14 +2056,21 @@ try{
       var html='';
       if(isZeroEra){
         var n=Math.max(0,daysFree());
+        var zs=scoreToday();
         html+='<h3 class="xtra-h">The adjustment, visually</h3>'+
           ringSVG(n/21,n,n===1?'DAY OFF':'DAYS OFF','var(--sage)')+
           '<p class="chart-note" style="text-align:center">'+
           (n>=21?'The 2–3 week adjustment window the research maps is behind you. From here it’s maintenance.'
-                :'Filling the 2–3 week receptor-adjustment window the research maps. Every day counts, and it only fills.')+'</p>';
+                :'Filling the 2–3 week receptor-adjustment window the research maps. Every day counts, and it only fills.')+'</p>'+
+          contribHTML(zs.parts);
       }else{
+        var sc=scoreToday();
+        html+='<h3 class="xtra-h">Today’s taper score</h3>'+
+          ringSVG(sc.total/100,sc.total,sc.label.split(' — ')[0].toUpperCase(),scoreColor(sc.total))+
+          contribHTML(sc.parts)+
+          '<p class="chart-note">Scored from your own log: room under the cap, gaps held, session size, and pace against yesterday.</p>';
         var pace=paceVsYesterday();
-        html+='<h3 class="xtra-h">Today’s pace</h3>'+paceChartSVG()+
+        html+='<h3 class="xtra-h" style="margin-top:16px">Today’s pace</h3>'+paceChartSVG()+
           '<p class="chart-note"><span class="legend-dot" style="background:var(--accent)"></span>today &nbsp;'+
           '<span class="legend-dot" style="background:var(--faint)"></span>yesterday &nbsp;'+
           '<span style="color:var(--amber)">┄</span> cap</p>';
@@ -2008,7 +2213,7 @@ try{
 
   function renderAll(){
     computeToday();
-    renderCountdown();renderStairs();renderPhases();
+    renderCountdown();renderStairs();renderPhases();renderSchedStrip();
     renderToday();renderTrend();renderHistory();renderHoldBanner();renderUrge();renderGap();renderGlass();renderWidgets();
     if(!$('detailOverlay').hidden)renderXtras();
   }
