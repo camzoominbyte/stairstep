@@ -452,6 +452,13 @@
   .expanded>h2{display:none}
   .expanded .xopen{display:none}
   .xtra-h{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:8px}
+  .insights{margin-top:12px}
+  .insight-line{font-size:13.5px;color:var(--ink);padding:5px 0 5px 15px;position:relative;line-height:1.5}
+  .insight-line::before{
+    content:"";position:absolute;left:0;top:13px;width:6px;height:6px;
+    border-radius:50%;background:var(--amber);
+  }
+  .insight-line strong{color:var(--sand)}
   .detail-overlay{
     position:fixed;inset:0;z-index:80;background:var(--bg);overflow-y:auto;
     -webkit-overflow-scrolling:touch;
@@ -565,6 +572,7 @@
   <h3>The trend</h3>
   <p class="history-hint">Ghost steps are each day&rsquo;s cap · solid is what you logged.</p>
   <div id="trendChart"></div>
+  <p class="history-hint" id="trendInsight" style="margin:8px 0 0"></p>
   <div class="xtra" id="trendXtra"></div>
 </div>
 
@@ -1041,6 +1049,16 @@
     });
     svg+='</svg>';
     el.innerHTML=svg;
+    var ti=$('trendInsight');
+    if(ti){
+      var th=timedHits();
+      if(th.length>=4){
+        var pk=peakWindow(hourHist(th),th.length);
+        ti.textContent=pk?('Heaviest window: '+pk.from+'–'+pk.to+' · '+pk.share+'% of hits — open ⤢ for the full patterns.'):'';
+      }else{
+        ti.textContent='';
+      }
+    }
   }
 
   function daylineSVG(key){
@@ -1188,6 +1206,96 @@
     if(data.urgeStart)urgeTick=setInterval(tick,1000);
   }
 
+  /* ---- pattern analytics (from timed hits) ---- */
+  function timedHits(){
+    var out=[];
+    for(var k in data.days){
+      (data.days[k].hits||[]).forEach(function(iso){out.push(new Date(iso));});
+    }
+    return out;
+  }
+  function logicalHourOf(t){return (t.getHours()-DAY_CUTOFF_H+24)%24;}
+  function fmtHourLbl(lh){
+    var h=(lh+DAY_CUTOFF_H)%24;
+    return (h%12||12)+(h<12?'a':'p');
+  }
+  function hourHist(hits){
+    var arr=[];for(var i=0;i<24;i++)arr.push(0);
+    hits.forEach(function(t){arr[logicalHourOf(t)]++;});
+    return arr;
+  }
+  function peakWindow(hist,total){
+    var best=0,bi=-1;
+    for(var i=0;i<23;i++){var s=hist[i]+hist[i+1];if(s>best){best=s;bi=i;}}
+    if(bi<0||!best)return null;
+    return {from:fmtHourLbl(bi),to:fmtHourLbl(bi+2),share:Math.round(best/total*100)};
+  }
+  function hourChartSVG(hist){
+    var max=1;hist.forEach(function(v){if(v>max)max=v;});
+    var maxIdx=hist.indexOf(max);
+    var W=340,base=58,bw=W/24;
+    var svg='<svg viewBox="0 0 340 76" width="100%" role="img" aria-label="Hits by time of day">';
+    hist.forEach(function(v,i){
+      if(v>0){
+        var hh=Math.max(3,(v/max)*46);
+        svg+='<rect x="'+(i*bw+1.5).toFixed(1)+'" y="'+(base-hh).toFixed(1)+'" width="'+(bw-3).toFixed(1)+'" height="'+hh.toFixed(1)+'" rx="2.5" fill="'+(i===maxIdx?'var(--accent)':'var(--amber)')+'" fill-opacity="'+(i===maxIdx?'1':'.5')+'"/>';
+      }else{
+        svg+='<rect x="'+(i*bw+1.5).toFixed(1)+'" y="'+(base-2)+'" width="'+(bw-3).toFixed(1)+'" height="2" rx="1" fill="var(--surface2)"/>';
+      }
+    });
+    [[4,'8a'],[8,'12p'],[12,'4p'],[16,'8p'],[20,'12a']].forEach(function(t){
+      svg+='<text x="'+(t[0]*bw+bw/2).toFixed(1)+'" y="72" font-size="8.5" fill="var(--muted)" text-anchor="middle" font-family="Karla,sans-serif">'+t[1]+'</text>';
+    });
+    return svg+'</svg>';
+  }
+  function sessionStatsAll(){
+    var totS=0,totHits=0,gaps=[],firsts=[],lasts=[];
+    for(var k in data.days){
+      var s=sessionsFor(k);
+      if(!s.length)continue;
+      totS+=s.length;
+      s.forEach(function(x){totHits+=x.length;});
+      for(var i=1;i<s.length;i++){
+        gaps.push((s[i][0]-s[i-1][s[i-1].length-1])/3600000);
+      }
+      firsts.push(s[0][0]);
+      lasts.push(s[s.length-1][s[s.length-1].length-1]);
+    }
+    function avgTime(arr){
+      if(!arr.length)return null;
+      var m=0;
+      arr.forEach(function(t){m+=((t.getHours()-DAY_CUTOFF_H+24)%24)*60+t.getMinutes();});
+      m=Math.round(m/arr.length);
+      var h=(Math.floor(m/60)+DAY_CUTOFF_H)%24;
+      return fmtTime(new Date(2000,0,1,h,m%60));
+    }
+    return {
+      sessions:totS,
+      perSession:totS?Math.round(totHits/totS*10)/10:0,
+      avgGap:gaps.length?Math.round(gaps.reduce(function(a,b){return a+b;},0)/gaps.length*10)/10:null,
+      firstAvg:avgTime(firsts),
+      lastAvg:avgTime(lasts)
+    };
+  }
+  function paceVsYesterday(){
+    var ye=data.days[dkeyOf(addDays(today,-1))];
+    if(!ye||((ye.hits||[]).length+(ye.adj||0))===0)return null;
+    var yCut=Date.now()-MS_DAY,yCount=0;
+    (ye.hits||[]).forEach(function(iso){if(new Date(iso).getTime()<=yCut)yCount++;});
+    return {y:yCount,t:countOf(todayKey)||0};
+  }
+  function dayTotals(){
+    var sch=schedule(),tot=0,logged=0,under=0;
+    var d=new Date(sch[0].start);
+    while(d<=today){
+      var k=dkeyOf(d),c=countOf(k);
+      var di=phaseIndexFor(d),cp=di>=0?BASE_PHASES[di].cap:BASE_PHASES[0].cap;
+      if(c!==null){logged++;tot+=c;if(c<=cp)under++;}
+      d=addDays(d,1);
+    }
+    return {tot:tot,logged:logged,under:under};
+  }
+
   /* ---- widget faces + detail extras ---- */
   function renderWidgets(){
     function set(id,v){var el=$(id);if(el)el.textContent=v;}
@@ -1229,21 +1337,41 @@
   }
   function renderXtras(){
     var tx=$('todayXtra');
-    if(tx)tx.innerHTML='<h3 class="xtra-h">Today’s sessions</h3>'+daySummaryHTML(todayKey);
+    if(tx){
+      var pace=paceVsYesterday();
+      var paceHtml=pace
+        ?'<div class="insights"><p class="insight-line">By this time yesterday you’d logged <strong>'+pace.y+'</strong> · today <strong>'+pace.t+'</strong>'+
+          (pace.t<pace.y?' — <strong>trending down.</strong>':pace.t>pace.y?' — running ahead of yesterday. The delay timer is right there.':' — even with yesterday.')+'</p></div>'
+        :'';
+      tx.innerHTML='<h3 class="xtra-h">Today’s sessions</h3>'+daySummaryHTML(todayKey)+paceHtml;
+    }
     var gx=$('trendXtra');
     if(gx){
-      var sch=schedule(),tot=0,logged=0,under=0;
-      var d=new Date(sch[0].start);
-      while(d<=today){
-        var k=dkeyOf(d),c=countOf(k);
-        var di=phaseIndexFor(d),cp=di>=0?BASE_PHASES[di].cap:BASE_PHASES[0].cap;
-        if(c!==null){logged++;tot+=c;if(c<=cp)under++;}
-        d=addDays(d,1);
+      var t=dayTotals();
+      var avg=t.logged?Math.round(t.tot/t.logged*10)/10:0;
+      var html='<h3 class="xtra-h">The numbers so far</h3><div class="stat-row" style="animation:none">'+
+        '<div class="stat" style="animation:none"><span class="sv">'+t.tot+'</span><span class="sl">total logged</span></div>'+
+        '<div class="stat" style="animation:none"><span class="sv">'+avg+'</span><span class="sl">avg / day</span></div>'+
+        '<div class="stat" style="animation:none"><span class="sv">'+t.under+'/'+t.logged+'</span><span class="sl">days under cap</span></div></div>';
+      var hits=timedHits();
+      if(hits.length>=4){
+        var hist=hourHist(hits);
+        html+='<h3 class="xtra-h" style="margin-top:16px">When you smoke</h3>'+hourChartSVG(hist);
+        var lines=[];
+        var pk=peakWindow(hist,hits.length);
+        if(pk)lines.push('Your heaviest window is <strong>'+pk.from+'–'+pk.to+'</strong> — <strong>'+pk.share+'%</strong> of every hit you’ve logged.');
+        var beforeNoon=0;
+        for(var i=0;i<8;i++)beforeNoon+=hist[i];
+        lines.push('<strong>'+Math.round(beforeNoon/hits.length*100)+'%</strong> of your hits land before noon.');
+        var ss=sessionStatsAll();
+        if(ss.firstAvg)lines.push('First hit of the day averages <strong>'+ss.firstAvg+'</strong> · last averages <strong>'+ss.lastAvg+'</strong>.');
+        if(ss.sessions)lines.push('You average <strong>'+ss.perSession+' hits per session</strong>'+(ss.avgGap!==null?' with about <strong>'+ss.avgGap+'h</strong> between sessions':'')+'.');
+        if(t.logged>=2)lines.push('Averaging <strong>'+avg+'/day</strong> — <strong>'+Math.max(0,Math.round((1-avg/30)*100))+'%</strong> below the ~30/day baseline.');
+        html+='<div class="insights">'+lines.map(function(l){return '<p class="insight-line">'+l+'</p>';}).join('')+'</div>';
+      }else{
+        html+='<p class="hnote-line" style="margin-top:10px">Patterns — your heaviest hours, session habits, pace — appear here once a few timed hits are logged.</p>';
       }
-      gx.innerHTML='<h3 class="xtra-h">The numbers so far</h3><div class="stat-row" style="animation:none">'+
-        '<div class="stat" style="animation:none"><span class="sv">'+tot+'</span><span class="sl">total logged</span></div>'+
-        '<div class="stat" style="animation:none"><span class="sv">'+(logged?Math.round(tot/logged*10)/10:0)+'</span><span class="sl">avg / day</span></div>'+
-        '<div class="stat" style="animation:none"><span class="sv">'+under+'/'+logged+'</span><span class="sl">days under cap</span></div></div>';
+      gx.innerHTML=html;
     }
   }
 
