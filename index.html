@@ -197,35 +197,37 @@
     transition:transform .25s var(--spring),box-shadow .25s var(--spring);
   }
   .tally-btns button:active{transform:scale(.95)}
-  .slide-log{
-    flex:1;position:relative;height:52px;border-radius:16px;
-    background:var(--surface2);border:1px solid var(--line);
-    overflow:hidden;cursor:grab;touch-action:none;
-    -webkit-user-select:none;user-select:none;
-    box-shadow:inset 0 2px 6px rgba(59,43,20,.08);
+  .tally-btns .hold-log{
+    flex:1;position:relative;height:54px;border-radius:16px;border:none;
+    background:linear-gradient(180deg,#e9ad5e,#d3913c);
+    color:#3a2a12;font-family:'Karla',sans-serif;font-weight:700;font-size:15px;
+    cursor:pointer;overflow:hidden;padding:0;
+    touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;
+    box-shadow:0 6px 18px -6px rgba(165,104,31,.5);
+    transition:transform .3s var(--spring),box-shadow .3s var(--spring),filter .2s;
   }
-  .slide-log:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .slide-fill{
-    position:absolute;top:0;left:0;bottom:0;width:0;border-radius:15px;
-    background:linear-gradient(90deg,#f4cf9a,#d3913c);
+  /* ember glow that builds while you hold */
+  .tally-btns .hold-log::before{
+    content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+    background:radial-gradient(70% 130% at 50% 108%, rgba(255,240,205,.95), rgba(236,146,58,.4) 55%, transparent 78%);
+    opacity:0;transition:opacity .2s;
   }
-  .slide-text{
-    position:absolute;top:0;bottom:0;left:51px;right:10px;
-    display:flex;align-items:center;justify-content:center;
-    font-weight:700;font-size:14px;color:var(--muted);pointer-events:none;
-    font-family:'Karla',sans-serif;transition:opacity .15s;white-space:nowrap;
+  .tally-btns .hold-log.holding{transform:scale(.965);box-shadow:0 3px 10px -4px rgba(165,104,31,.55)}
+  .tally-btns .hold-log.holding::before{opacity:1;transition:opacity .55s ease}
+  .tally-btns .hold-log.logged{transform:scale(1.02);filter:brightness(1.06)}
+  .tally-btns .hold-log.logged::before{opacity:1}
+  .hold-ring{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+  .hold-ring rect{
+    fill:none;stroke:#fff7ea;stroke-width:2.5;stroke-linecap:round;opacity:0;
+    filter:drop-shadow(0 0 3px rgba(255,244,214,.8));
   }
-  .slide-thumb{
-    position:absolute;top:4px;left:4px;width:43px;height:43px;border-radius:13px;
-    background:linear-gradient(180deg,#e9ad5e,#d3913c);color:#3a2a12;
-    display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;
-    box-shadow:0 4px 12px rgba(165,104,31,.4);will-change:transform;
+  .hold-label{position:relative;z-index:1;pointer-events:none;letter-spacing:.01em;transition:opacity .2s}
+  @keyframes emberIdle{
+    0%,100%{box-shadow:0 6px 18px -6px rgba(165,104,31,.45)}
+    50%{box-shadow:0 8px 26px -6px rgba(224,140,50,.72)}
   }
-  .slide-log.snap .slide-thumb{transition:transform .35s var(--spring)}
-  .slide-log.snap .slide-fill{transition:width .35s var(--spring)}
-  @keyframes thumbNudge{0%,86%,100%{transform:translateX(0)}91%{transform:translateX(8px)}96%{transform:translateX(0)}}
-  .slide-log.idle .slide-thumb{animation:thumbNudge 4.5s ease-in-out infinite}
-  @media (hover:hover){.slide-log:hover .slide-thumb{filter:brightness(1.07)}}
+  .tally-btns .hold-log.idle{animation:emberIdle 3.4s ease-in-out infinite}
+  @media (hover:hover){.tally-btns .hold-log:hover{filter:brightness(1.05)}}
   .tally-btns button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .tally-btns .minus{flex:0 0 84px;color:var(--muted)}
   .delay-chip{
@@ -372,8 +374,13 @@
   }
   summary::-webkit-details-marker{display:none}
   summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
-  summary::after{content:"+";font-family:'Fraunces',serif;font-size:22px;color:var(--faint);font-weight:300}
-  details[open] summary::after{content:"–"}
+  summary::after{
+    content:"+";font-family:'Fraunces',serif;font-size:22px;color:var(--faint);font-weight:300;
+    transition:transform .38s var(--spring),color .3s;
+  }
+  details[open] summary::after{transform:rotate(45deg);color:var(--accent)}
+  details[open] .d-body{animation:dbodyIn .5s var(--spring) both}
+  @keyframes dbodyIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
   .d-body{padding:0 18px 18px;font-size:14.5px;color:var(--ink)}
   .d-body p{margin-bottom:10px}
   .d-body p:last-child{margin-bottom:0}
@@ -485,11 +492,31 @@
     position:fixed;inset:0;z-index:80;background:var(--bg);overflow-y:auto;
     -webkit-overflow-scrolling:touch;
     padding:calc(14px + env(safe-area-inset-top)) 20px calc(60px + env(safe-area-inset-bottom));
-    transform:translateX(100%);transition:transform .38s var(--spring);
   }
-  .detail-overlay.show{transform:none}
   .detail-overlay[hidden]{display:none}
-  .detail-bar{display:flex;align-items:center;gap:12px;max-width:480px;margin:0 auto 16px}
+  /* fallback when View Transitions aren't supported: fade + gentle rise */
+  html.no-vt .detail-overlay{
+    opacity:0;transform:translateY(28px) scale(.985);
+    transition:opacity .3s ease,transform .44s var(--spring);
+  }
+  html.no-vt .detail-overlay.show{opacity:1;transform:none}
+  /* container transform: the tapped card morphs into the detail page */
+  ::view-transition-group(card){animation-duration:.48s;animation-timing-function:var(--spring)}
+  ::view-transition-old(card),::view-transition-new(card){animation-duration:.3s}
+  ::view-transition-old(root),::view-transition-new(root){animation-duration:.32s}
+  .detail-bar{
+    position:sticky;top:env(safe-area-inset-top,0px);z-index:3;
+    display:flex;align-items:center;gap:12px;max-width:480px;margin:0 auto 16px;
+    padding:8px 0;
+  }
+  .detail-bar::before{
+    content:"";position:absolute;pointer-events:none;
+    inset:calc(-14px - env(safe-area-inset-top,0px)) -20px -4px;
+    background:rgba(250,246,238,.8);
+    -webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);
+    -webkit-mask-image:linear-gradient(black 72%,transparent);mask-image:linear-gradient(black 72%,transparent);
+  }
+  .detail-bar>*{position:relative}
   #detailBack{
     border:1px solid var(--line);background:#fff;border-radius:99px;padding:7px 15px;
     font-weight:700;font-size:14px;color:var(--accent);font-family:'Karla',sans-serif;
@@ -579,7 +606,8 @@
   html.dark .theme-btn{background:#2e2920}
   html.dark .hedit button.hdone{color:#2e2410}
   html.dark .timefix input,html.dark .earlier-row input{background:#2e2920}
-  html.dark .slide-log{box-shadow:inset 0 2px 6px rgba(0,0,0,.4)}
+  html.dark .tally-btns .hold-log{background:linear-gradient(180deg,#e0a458,#c9853c);box-shadow:0 6px 18px -6px rgba(0,0,0,.5)}
+  html.dark .detail-bar::before{background:rgba(29,26,20,.8)}
   @media (hover:hover){
     html.dark .hrow:hover{background:rgba(255,244,222,.05)}
   }
@@ -646,11 +674,10 @@ try{
   <p class="bar-note" id="barNote"></p>
   <div class="tally-btns" id="tallyBtns">
     <button class="minus" id="btnMinus" aria-label="Remove one hit">−1</button>
-    <div class="slide-log" id="slideLog" role="button" tabindex="0" aria-label="Slide to log a hit, or press Enter">
-      <div class="slide-fill" id="slideFill"></div>
-      <span class="slide-text" id="slideText">Slide to log a hit&nbsp;&nbsp;→</span>
-      <div class="slide-thumb" id="slideThumb">＋</div>
-    </div>
+    <button class="hold-log" id="holdLog" aria-label="Press and hold to log a hit, or press Enter">
+      <svg class="hold-ring" aria-hidden="true"><rect id="holdRingRect" rx="14"/></svg>
+      <span class="hold-label" id="holdLabel">Hold to log a hit</span>
+    </button>
   </div>
   <div class="action-row">
     <button class="delay-chip" id="urgeChip">Urge? Start the 20-minute timer.</button>
@@ -931,7 +958,7 @@ try{
 
   /* ================= rendering ================= */
   function $(id){return document.getElementById(id);}
-  var editingKey=null, lastFixTime='', fixMsg='';
+  var editingKey=null, lastFixTime='', fixMsg='', histAnimKey=null;
 
   /* ---- motion helpers ---- */
   var booted=false;
@@ -956,13 +983,31 @@ try{
   }
   function plusOne(){
     if(!motionOK)return;
-    var card=$('todayCard'),b=$('slideLog');
+    var card=$('todayCard'),b=$('holdLog');
     var s=document.createElement('span');s.className='plusone';s.textContent='+1';
     var cr=card.getBoundingClientRect(),br=b.getBoundingClientRect();
     s.style.top=(br.top-cr.top-8)+'px';
     s.style.left=(br.left-cr.left+br.width/2)+'px';
     card.appendChild(s);
     setTimeout(function(){s.remove();},950);
+  }
+  /* spring-eased height reveal / collapse for accordion content */
+  function expandEl(el){
+    if(!motionOK||!el)return;
+    var h=el.offsetHeight;
+    el.style.height='0px';el.style.opacity='0';el.style.overflow='hidden';
+    void el.offsetHeight;
+    el.style.transition='height .34s var(--spring),opacity .3s ease .05s';
+    el.style.height=h+'px';el.style.opacity='1';
+    setTimeout(function(){el.style.cssText='';},360);
+  }
+  function collapseEl(el,cb){
+    if(!motionOK||!el){cb();return;}
+    el.style.height=el.offsetHeight+'px';el.style.overflow='hidden';
+    void el.offsetHeight;
+    el.style.transition='height .26s var(--spring),opacity .2s ease';
+    el.style.height='0px';el.style.opacity='0';
+    setTimeout(cb,270);
   }
   function sparks(anchor){
     if(!motionOK)return;
@@ -1256,6 +1301,11 @@ try{
       d=addDays(d,1);
     }
     rowsEl.innerHTML=rows||'<p class="hempty">Your days will stack up here as you go.</p>';
+    if(histAnimKey){
+      var openDet=rowsEl.querySelector('.hdetail[data-key="'+histAnimKey+'"]');
+      histAnimKey=null;
+      expandEl(openDet);
+    }
   }
 
   /* ---- hold-the-phase banner ---- */
@@ -1475,29 +1525,60 @@ try{
     }
   }
 
-  /* ---- detail overlay (section pages) ---- */
-  var detailFrom=null, detailNext=null;
+  /* ---- detail overlay (section pages) ----
+     The tapped card morphs into the detail page (View Transitions);
+     a placeholder holds its spot so the page never jumps behind it. */
+  var supportsVT=typeof document.startViewTransition==='function';
+  if(!supportsVT||!motionOK)document.documentElement.classList.add('no-vt');
+  var detailFrom=null, detailPh=null, detailBusy=false;
   function openDetail(el,title){
-    if(!el||$('detailBody').firstElementChild)return;
-    detailFrom=el.parentNode;detailNext=el.nextSibling;
-    $('detailBody').appendChild(el);
-    el.classList.add('expanded');
-    $('detailTitle').textContent=title;
+    if(!el||detailBusy||$('detailBody').firstElementChild)return;
+    detailBusy=true;
+    detailFrom=el.parentNode;
+    detailPh=document.createElement('div');
+    detailPh.setAttribute('aria-hidden','true');
+    detailPh.style.height=el.offsetHeight+'px';
+    detailPh.style.marginBottom=getComputedStyle(el).marginBottom;
     var ov=$('detailOverlay');
-    ov.hidden=false;ov.scrollTop=0;
-    requestAnimationFrame(function(){ov.classList.add('show');});
-    document.body.style.overflow='hidden';
-    renderXtras();
+    function doMove(){
+      detailFrom.insertBefore(detailPh,el);
+      $('detailBody').appendChild(el);
+      el.classList.add('expanded');
+      $('detailTitle').textContent=title;
+      ov.hidden=false;ov.scrollTop=0;
+      document.body.style.overflow='hidden';
+      renderXtras();
+    }
+    if(supportsVT&&motionOK){
+      el.style.viewTransitionName='card';
+      var t=document.startViewTransition(doMove);
+      t.finished.finally(function(){el.style.viewTransitionName='';detailBusy=false;});
+    }else{
+      doMove();
+      requestAnimationFrame(function(){ov.classList.add('show');});
+      setTimeout(function(){detailBusy=false;},450);
+    }
   }
   function closeDetail(){
+    var el=$('detailBody').firstElementChild;
+    if(!el||detailBusy)return;
+    detailBusy=true;
     var ov=$('detailOverlay');
-    ov.classList.remove('show');
-    setTimeout(function(){
-      ov.hidden=true;
-      var el=$('detailBody').firstElementChild;
-      if(el){el.classList.remove('expanded');detailFrom.insertBefore(el,detailNext);}
+    function doMove(){
+      ov.hidden=true;ov.classList.remove('show');
+      el.classList.remove('expanded');
+      detailFrom.insertBefore(el,detailPh);
+      if(detailPh){detailPh.remove();detailPh=null;}
       document.body.style.overflow='';
-    },390);
+    }
+    if(supportsVT&&motionOK){
+      el.style.viewTransitionName='card';
+      var t=document.startViewTransition(doMove);
+      t.finished.finally(function(){el.style.viewTransitionName='';detailBusy=false;});
+    }else{
+      ov.classList.remove('show');
+      setTimeout(function(){doMove();detailBusy=false;},420);
+    }
   }
 
   function renderAll(){
@@ -1512,73 +1593,95 @@ try{
     entryFor(todayKey,true).hits.push(new Date().toISOString());
     save();renderAll();
     plusOne();popBig();
-    if(navigator.vibrate)navigator.vibrate(8);
   }
 
-  /* slide-to-log */
+  /* hold-to-log: press and hold — an ember builds and a ring traces the
+     button; complete the hold and it logs. Deliberate on purpose. */
   (function(){
-    var track=$('slideLog'),thumb=$('slideThumb'),fill=$('slideFill'),txt=$('slideText');
-    var dragging=false,startX=0,curX=0,maxX=0,busy=false;
-    track.classList.add('idle');
-    function setX(x){
-      curX=Math.max(0,Math.min(maxX,x));
-      thumb.style.transform='translateX('+curX+'px)';
-      fill.style.width=(curX+51)+'px';
-      var o=1-(curX/(maxX||1))*1.5;
-      txt.style.opacity=String(o<0?0:o);
+    var btn=$('holdLog'),label=$('holdLabel'),rect=$('holdRingRect');
+    var HOLD=680, raf=null, doneT=null, t0=0, prog=0, perim=1, holding=false, busy=false, hintT=null;
+    btn.classList.add('idle');
+    function fitRing(){
+      var w=btn.clientWidth,h=btn.clientHeight,r=14,inset=1.5;
+      rect.setAttribute('x',inset);rect.setAttribute('y',inset);
+      rect.setAttribute('width',w-inset*2);rect.setAttribute('height',h-inset*2);
+      rect.setAttribute('rx',r);
+      perim=2*((w-inset*2)+(h-inset*2))-8*r+2*Math.PI*r;
+      rect.style.strokeDasharray=perim;
     }
-    function commit(){
-      busy=true;
-      track.classList.add('snap');
-      maxX=maxX||track.clientWidth-thumb.offsetWidth-8;
-      setX(maxX);
+    function setProg(p){
+      prog=p;
+      rect.style.opacity=p>0.01?'1':'0';
+      rect.style.strokeDashoffset=String(perim*(1-p));
+    }
+    function step(t){
+      raf=null;
+      var p=Math.min(1,(t-t0)/HOLD);
+      setProg(p);
+      if(p<1&&holding)raf=requestAnimationFrame(step);
+    }
+    function start(headStart){
+      if(busy||holding)return;
+      holding=true;
+      if(hintT){clearTimeout(hintT);hintT=null;label.textContent='Hold to log a hit';}
+      btn.classList.remove('idle');btn.classList.add('holding');
+      fitRing();
+      if(navigator.vibrate)navigator.vibrate(5);
+      t0=performance.now()-(headStart||0);
+      // the timer owns completion; rAF only paints the ring
+      doneT=setTimeout(complete,Math.max(0,HOLD-(headStart||0)));
+      raf=requestAnimationFrame(step);
+    }
+    function cancel(){
+      if(!holding)return;
+      holding=false;
+      if(doneT){clearTimeout(doneT);doneT=null;}
+      if(raf){cancelAnimationFrame(raf);raf=null;}
+      btn.classList.remove('holding');
+      // a quick tap gets a gentle nudge toward the gesture
+      if(prog<0.35){
+        label.textContent='Press & hold ✦';
+        hintT=setTimeout(function(){label.textContent='Hold to log a hit';hintT=null;},1100);
+      }
+      var from=prog,d0=performance.now();
+      (function drain(t){
+        if(holding||busy)return;
+        var q=Math.min(1,(t-d0)/160);
+        setProg(from*(1-q));
+        if(q<1)requestAnimationFrame(drain);
+        else btn.classList.add('idle');
+      })(d0);
+    }
+    function complete(){
+      holding=false;busy=true;
+      doneT=null;
+      if(raf){cancelAnimationFrame(raf);raf=null;}
+      btn.classList.remove('holding');btn.classList.add('logged');
+      setProg(1);
       logHit();
-      txt.textContent='Logged ✓';
-      txt.style.opacity='1';txt.style.color='#3a2a12';
+      sparks(btn);
+      if(navigator.vibrate)navigator.vibrate([12,60,16]);
+      label.textContent='Logged ✓';
       setTimeout(function(){
-        setX(0);
-        setTimeout(function(){
-          track.classList.remove('snap');
-          track.classList.add('idle');
-          txt.innerHTML='Slide to log a hit&nbsp;&nbsp;→';
-          txt.style.color='';txt.style.opacity='1';
-          busy=false;
-        },380);
-      },550);
+        btn.classList.remove('logged');
+        label.textContent='Hold to log a hit';
+        setProg(0);
+        btn.classList.add('idle');
+        busy=false;
+      },900);
     }
-    function reset(){
-      track.classList.add('snap');
-      setX(0);
-      txt.style.opacity='1';
-      setTimeout(function(){
-        track.classList.remove('snap');
-        track.classList.add('idle');
-      },380);
-    }
-    track.addEventListener('pointerdown',function(e){
-      if(busy)return;
-      dragging=true;
-      track.classList.remove('idle','snap');
-      maxX=track.clientWidth-thumb.offsetWidth-8;
-      startX=e.clientX-curX;
-      track.setPointerCapture(e.pointerId);
+    btn.addEventListener('pointerdown',function(e){
+      e.preventDefault();
+      try{btn.setPointerCapture(e.pointerId);}catch(err){}
+      start(0);
     });
-    track.addEventListener('pointermove',function(e){
-      if(!dragging)return;
-      setX(e.clientX-startX);
-    });
-    function release(){
-      if(!dragging)return;
-      dragging=false;
-      if(curX>=maxX*0.85)commit();else reset();
-    }
-    track.addEventListener('pointerup',release);
-    track.addEventListener('pointercancel',release);
-    track.addEventListener('keydown',function(e){
-      if((e.key==='Enter'||e.key===' ')&&!busy){
+    btn.addEventListener('pointerup',cancel);
+    btn.addEventListener('pointercancel',cancel);
+    btn.addEventListener('contextmenu',function(e){e.preventDefault();});
+    btn.addEventListener('keydown',function(e){
+      if((e.key==='Enter'||e.key===' ')&&!busy&&!holding&&!e.repeat){
         e.preventDefault();
-        maxX=track.clientWidth-thumb.offsetWidth-8;
-        commit();
+        start(HOLD*0.5); // keyboard: same ritual, half the wait
       }
     });
   })();
@@ -1680,13 +1783,24 @@ try{
         renderAll();
         return;
       }
-      editingKey=null;fixMsg='';
-      renderAll();
+      // Done — fold the day's log shut, then re-render
+      collapseEl(btn.closest('.hdetail'),function(){
+        editingKey=null;fixMsg='';
+        renderAll();
+      });
       return;
     }
-    editingKey=(editingKey===key)?null:key;
     fixMsg='';
-    renderHistory();
+    if(editingKey===key){
+      collapseEl(holder.parentNode.querySelector('.hdetail[data-key="'+key+'"]'),function(){
+        editingKey=null;
+        renderHistory();
+      });
+    }else{
+      editingKey=key;
+      histAnimKey=key;
+      renderHistory();
+    }
   });
 
   /* backup */
@@ -1747,6 +1861,39 @@ try{
         openDetail(op,op.dataset.title);
       }
     }
+  });
+
+  /* ---- smooth <details> accordions ---- */
+  document.querySelectorAll('details').forEach(function(d){
+    var sum=d.querySelector('summary');
+    if(!sum)return;
+    var anim=false;
+    sum.addEventListener('click',function(e){
+      e.preventDefault();
+      if(anim)return;
+      if(!motionOK){d.open=!d.open;return;}
+      var startH=d.offsetHeight;
+      anim=true;
+      if(!d.open){
+        d.open=true;
+        var endH=d.offsetHeight;
+        d.style.height=startH+'px';
+        void d.offsetHeight;
+        d.style.transition='height .38s var(--spring)';
+        d.style.height=endH+'px';
+        setTimeout(function(){d.style.height='';d.style.transition='';anim=false;},390);
+      }else{
+        var closedH=sum.offsetHeight+2; // + top/bottom border
+        d.style.height=startH+'px';
+        void d.offsetHeight;
+        d.style.transition='height .3s var(--spring)';
+        d.style.height=closedH+'px';
+        setTimeout(function(){
+          d.open=false;
+          d.style.height='';d.style.transition='';anim=false;
+        },310);
+      }
+    });
   });
 
   /* ---- scroll reveal ---- */
