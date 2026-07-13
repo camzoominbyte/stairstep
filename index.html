@@ -241,6 +241,28 @@
   .gap-chip[hidden]{display:none}
   .gap-chip.gap-wait{border-style:solid;border-color:var(--line);color:var(--muted);background:none}
   .gap-chip.gap-open{border-style:solid;border-color:var(--sage);color:var(--sage);background:#eff2df}
+  @keyframes gapFlash{0%{transform:scale(1)}28%{transform:scale(1.035)}100%{transform:scale(1)}}
+  .gap-chip.flash{animation:gapFlash .6s var(--spring)}
+  .gap-bell{
+    margin:8px 0 0;font-size:12.5px;color:var(--muted);
+    border:1px solid var(--line);border-radius:99px;padding:6px 13px;
+    background:none;font-family:'Karla',sans-serif;cursor:pointer;
+  }
+  .gap-bell[hidden]{display:none}
+  .gap-bell.on{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+  /* day-vs-adjacent comparison in the record detail */
+  .daycmp{margin:2px 0 6px}
+  .dc-row{padding:7px 9px;border-radius:11px;margin:5px 0;background:#faf5ea;border:1px solid var(--hair)}
+  .dc-row.cur{border-color:var(--accent);background:var(--accent-soft)}
+  .dc-hd{display:flex;align-items:baseline;gap:8px;margin-bottom:1px}
+  .dc-l{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);flex:1}
+  .dc-row.cur .dc-l{color:var(--accent)}
+  .dc-n{font-family:'Fraunces',serif;font-weight:600;font-size:14px;color:var(--sand)}
+  .dc-sum{font-size:12.5px;color:var(--muted);margin:6px 0 2px}
+  .dc-sum strong{color:var(--sand)}
+  .dc-sum .down{color:var(--sage);font-weight:700}
+  .dc-sum .up{color:var(--clay);font-weight:700}
+  html.dark .dc-row{background:#2b261c}
   /* the road ahead — running schedule */
   .road{margin-top:6px}
   .road-item{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--hair);font-size:13.5px;color:var(--ink);line-height:1.5}
@@ -791,6 +813,7 @@ try{
     <button class="slip-btn" id="btnSlip">Slipped? Log it honestly</button>
   </div>
   <div class="delay-chip gap-chip" id="gapChip" hidden role="status"></div>
+  <button class="gap-bell" id="gapBell" hidden></button>
   <div class="earlier-row" id="earlierRow" hidden>
     <input type="time" id="earlierTime" aria-label="Time the hit happened">
     <button id="btnAddEarlier">+ Add hit at this time</button>
@@ -1495,6 +1518,44 @@ try{
     return svg+'</svg>';
   }
 
+  /* a day's timeline stacked against the day before and the day after,
+     so the shift in time slots and count is visible at a glance */
+  function dayCompareHTML(key){
+    var d0=dateOf(key), start=schedule()[0].start;
+    var specs=[{off:-1,lbl:'Day before'},{off:0,lbl:'This day'},{off:1,lbl:'Next day'}];
+    var byOff={}, html='<div class="daycmp">';
+    specs.forEach(function(sp){
+      var dd=addDays(d0,sp.off);
+      if(dd<start||dd>today)return;
+      var k=dkeyOf(dd), st=dayStatus(dd), sess=sessionsFor(k);
+      byOff[sp.off]={d:dd,count:st.c,first:sess.length?sess[0][0]:null};
+      var countTxt=st.cap>0?(st.c===null?'·':st.c+' <span style="color:var(--muted);font-size:11px">/ '+st.cap+'</span>'):(st.c||0);
+      var line=daylineSVG(k)||'<div class="hnote-line" style="font-size:11.5px;padding:2px 0">no timed hits</div>';
+      html+='<div class="dc-row'+(sp.off===0?' cur':'')+'">'+
+        '<div class="dc-hd"><span class="dc-l">'+sp.lbl+' · '+WEEKDAYS[dd.getDay()].slice(0,3)+' '+fmtShort(dd)+'</span>'+
+        '<span class="dc-n">'+countTxt+'</span>'+
+        '<span class="hstat '+st.cls+'">'+st.stat+'</span></div>'+line+'</div>';
+    });
+    html+='</div>';
+    var t=byOff[0], p=byOff[-1], nx=byOff[1], sums=[];
+    if(p&&p.count!==null&&t.count!==null){
+      var dv=t.count-p.count;
+      sums.push(dv<0?'<span class="down">'+(-dv)+' fewer</span> than the day before'
+        :dv>0?'<span class="up">'+dv+' more</span> than the day before'
+        :'even with the day before');
+      if(p.first&&t.first){
+        var sh=(t.first.getHours()*60+t.first.getMinutes())-(p.first.getHours()*60+p.first.getMinutes());
+        if(Math.abs(sh)>=15)sums.push('first hit '+fmtDur(Math.abs(sh)*60000)+(sh>0?' later':' earlier'));
+      }
+    }
+    if(nx&&nx.count!==null&&t.count!==null){
+      var dn=nx.count-t.count;
+      if(dn!==0)sums.push('next day '+(dn<0?'dropped to '+nx.count:'rose to '+nx.count));
+    }
+    if(sums.length)html+='<p class="dc-sum">'+sums.join(' · ')+'.</p>';
+    return html;
+  }
+
   function renderHistory(){
     var rowsEl=$('historyRows');
     var sch=schedule();
@@ -1555,10 +1616,11 @@ try{
         (bits.length?'<div class="hrow2">'+bits.join(' · ')+'</div>':'')+
         '</div>';
       if(editingKey===key){
-        var detail=daylineSVG(key);
+        var detail=dayCompareHTML(key);
         var e=data.days[key];
         // split the day into sessions (by spacing), then group each session's hits by minute
         var sessions=sessionsFor(key);
+        if(sessions.length||( e&&(e.adj||0)>0))detail+='<p class="dc-sum" style="margin-top:10px;font-weight:700;color:var(--sand)">This day’s sessions — adjust below</p>';
         sessions.forEach(function(sess,si){
           var block='<div class="hsession"><div class="hsession-head">'+
             '<span class="sn">Session '+(si+1)+'</span>'+
@@ -1662,13 +1724,31 @@ try{
     var h=Math.floor(m/60),r=m%60;
     return 'Stretched '+h+'h'+(r?' '+r+'m':'')+' past the window — fewer, wider-spaced sessions is the taper working.';
   }
+  var winTimer=null, lastAlertedOpen=null;
+  function notifOK(){return data.notifyWindows&&'Notification' in window&&Notification.permission==='granted';}
+  function windowAlert(){
+    if(navigator.vibrate)navigator.vibrate([20,90,20,90,20]);
+    var chip=$('gapChip');
+    if(chip){chip.classList.remove('flash');void chip.offsetWidth;chip.classList.add('flash');}
+    if(!notifOK())return;
+    var body='The window’s open — but the taper lives in the waiting. Craving waves pass in minutes, and every extra minute you hold is banked.';
+    try{
+      if(navigator.serviceWorker&&navigator.serviceWorker.ready){
+        navigator.serviceWorker.ready.then(function(reg){
+          reg.showNotification('Try to stretch it a little longer',
+            {body:body,tag:'ttz-window',renotify:true,icon:'icons/icon-192.png',badge:'icons/icon-192.png'});
+        }).catch(function(){});
+      }else{new Notification('Try to stretch it a little longer',{body:body});}
+    }catch(e){}
+  }
   function renderGap(){
     if(gapTick){clearInterval(gapTick);gapTick=null;}
-    var chip=$('gapChip');
+    if(winTimer){clearTimeout(winTimer);winTimer=null;}
+    var chip=$('gapChip'),bell=$('gapBell');
     var count=countOf(todayKey)||0;
     var si=(!isZeroEra&&idx>=0&&!phase.single&&spacingHNow()>0&&count<cap)?sessionInfo():null;
-    if(!si||!si.nextOpen){chip.hidden=true;return;}
-    var nextOpen=si.nextOpen,gapH=spacingHNow();
+    if(!si||!si.nextOpen){chip.hidden=true;bell.hidden=true;return;}
+    var nextOpen=si.nextOpen,gapH=spacingHNow(),openTs=nextOpen.getTime();
     function tick(){
       var diff=nextOpen-Date.now();
       if(diff>0){
@@ -1678,11 +1758,28 @@ try{
       }else{
         chip.className='delay-chip gap-chip gap-open';
         chip.textContent=gapOpenMsg(Math.floor(-diff/60000));
+        // fire the "try to wait" alert once per window, when it first opens
+        if(lastAlertedOpen!==openTs){lastAlertedOpen=openTs;windowAlert();}
       }
     }
     chip.hidden=false;
     tick();
     gapTick=setInterval(tick,20000);
+    // precise foreground alert at the moment the window opens
+    var untilOpen=openTs-Date.now();
+    if(untilOpen>0&&untilOpen<24*3600000){
+      winTimer=setTimeout(function(){
+        if(lastAlertedOpen!==openTs){lastAlertedOpen=openTs;windowAlert();}
+        renderGap();
+      },untilOpen+400);
+    }
+    // bell toggle: opt in to a nudge-to-wait when the window opens
+    bell.hidden=false;
+    var on=notifOK();
+    bell.classList.toggle('on',on);
+    bell.textContent=on?'🔔 Window nudges on — I’ll remind you to wait'
+      :(('Notification' in window)?'🔕 Nudge me to wait when the window opens':'');
+    if(!('Notification' in window))bell.hidden=true;
   }
 
   /* ---- pattern analytics (from timed hits) ---- */
@@ -2409,6 +2506,18 @@ try{
     else if(confirm('Cancel the 20-minute timer?')){data.urgeStart=null;}
     else{return;}
     save();renderUrge();
+  });
+  $('gapBell').addEventListener('click',function(){
+    if(!('Notification' in window))return;
+    if(data.notifyWindows){data.notifyWindows=false;save();renderGap();return;}
+    if(Notification.permission==='granted'){data.notifyWindows=true;save();renderGap();return;}
+    if(Notification.permission==='denied'){
+      $('gapBell').textContent='Notifications are blocked in your browser settings';
+      return;
+    }
+    Notification.requestPermission().then(function(p){
+      data.notifyWindows=(p==='granted');save();renderGap();
+    }).catch(function(){});
   });
 
   /* history log + editing */
