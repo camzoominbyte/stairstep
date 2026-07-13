@@ -6,7 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Taper">
-<meta name="theme-color" content="#faf6ee">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#faf6ee">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1d1a14">
 <title>Taper to Zero</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
@@ -209,10 +210,10 @@
     background:linear-gradient(90deg,#f4cf9a,#d3913c);
   }
   .slide-text{
-    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-    padding-left:44px;
-    font-weight:700;font-size:15px;color:var(--muted);pointer-events:none;
-    font-family:'Karla',sans-serif;transition:opacity .15s;
+    position:absolute;top:0;bottom:0;left:51px;right:10px;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:14px;color:var(--muted);pointer-events:none;
+    font-family:'Karla',sans-serif;transition:opacity .15s;white-space:nowrap;
   }
   .slide-thumb{
     position:absolute;top:4px;left:4px;width:43px;height:43px;border-radius:13px;
@@ -528,6 +529,60 @@
 
   .section{margin-bottom:36px}
   .footer{text-align:center;color:var(--muted);margin-top:44px;font-family:'Fraunces',serif;font-style:italic;font-size:15px}
+
+  /* ---- dark mode (follows the phone's setting) ---- */
+  @media (prefers-color-scheme: dark){
+    :root{
+      color-scheme:dark;
+      --bg:#1d1a14;
+      --surface:#26221a;
+      --surface2:#332d22;
+      --line:#463e2d;
+      --hair:rgba(255,244,222,.09);
+      --sand:#f2e8d5;
+      --ink:#cfc4ad;
+      --muted:#9a8f78;
+      --faint:#6c6353;
+      --accent:#e0a458;
+      --accent-deep:#c9853c;
+      --accent-soft:#3d321e;
+      --amber:#e0a458;
+      --sage:#a3b899;
+      --clay:#d98f75;
+      --shadow:0 16px 40px -16px rgba(0,0,0,.5),0 6px 16px -8px rgba(0,0,0,.4);
+      --shadow-sm:0 4px 14px -6px rgba(0,0,0,.45);
+    }
+    body::before{
+      background:
+        radial-gradient(50% 42% at 18% 0%, rgba(224,164,88,.10), transparent 70%),
+        radial-gradient(48% 38% at 85% 8%, rgba(224,164,88,.05), transparent 65%),
+        var(--bg);
+    }
+    body::after{
+      background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+        linear-gradient(to right, rgba(242,232,213,.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(242,232,213,.04) 1px, transparent 1px);
+    }
+    .glassbar{background:rgba(29,26,20,.78);border-bottom:1px solid rgba(255,244,222,.08)}
+    .stat,.hsession{background:#2b261c}
+    .hnotime{background:#322a1b}
+    .step{background:#2e2920;border-color:rgba(255,244,222,.05)}
+    .stepcol.past .step{background:#272217}
+    .stepcol.now .step{background:#332d22}
+    .hold-banner{background:linear-gradient(160deg,#3a2f1b,#26221a)}
+    .guide-link{background:linear-gradient(160deg,#352c19,#26221a)}
+    .phase.zero{background:linear-gradient(160deg,#28301f,#26221a);border-color:#4c5a3b}
+    .delay-chip.done{background:#28301f}
+    .hold-btns button,.tally-btns button,.hedit button,.hgroup button,.hnotime button,
+    .timefix button,.earlier-row button,.data-btns button,#detailBack,.xopen{background:#2e2920}
+    .hedit button.hdone{color:#2e2410}
+    .timefix input,.earlier-row input{background:#2e2920}
+    .slide-log{box-shadow:inset 0 2px 6px rgba(0,0,0,.4)}
+    @media (hover:hover){
+      .hrow:hover{background:rgba(255,244,222,.05)}
+    }
+  }
 </style>
 </head>
 <body>
