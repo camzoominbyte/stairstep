@@ -237,6 +237,19 @@
   }
   .delay-chip.running{border-style:solid;border-color:var(--accent);background:var(--accent-soft);font-variant-numeric:tabular-nums}
   .delay-chip.done{border-style:solid;border-color:var(--sage);color:var(--sage);background:#eff2df}
+  .gap-chip{display:block;cursor:default;font-variant-numeric:tabular-nums;margin-top:12px}
+  .gap-chip[hidden]{display:none}
+  .gap-chip.gap-wait{border-style:solid;border-color:var(--line);color:var(--muted);background:none}
+  .gap-chip.gap-open{border-style:solid;border-color:var(--sage);color:var(--sage);background:#eff2df}
+  /* the road ahead — running schedule */
+  .road{margin-top:6px}
+  .road-item{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--hair);font-size:13.5px;color:var(--ink);line-height:1.5}
+  .road-item:first-child{border-top:none}
+  .road-date{flex:0 0 76px;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding-top:3px}
+  .road-txt{flex:1}
+  .road-txt strong{color:var(--sand)}
+  .road-item.cur .road-date{color:var(--accent)}
+  .road-item.cur .road-txt strong{color:var(--accent)}
   .delay-chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .slip-btn{
     display:none;margin-top:12px;font-size:13px;color:var(--muted);
@@ -525,9 +538,10 @@
   .legend-dot{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:baseline;margin-right:3px}
   .detail-overlay{
     position:fixed;inset:0;z-index:80;background:var(--bg);overflow-y:auto;
-    -webkit-overflow-scrolling:touch;
+    -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;
     padding:calc(14px + env(safe-area-inset-top)) 20px calc(60px + env(safe-area-inset-bottom));
   }
+  .detail-grab{width:42px;height:5px;border-radius:99px;background:var(--line);margin:-4px auto 8px}
   .detail-overlay[hidden]{display:none}
   /* fallback when View Transitions aren't supported: fade + gentle rise */
   html.no-vt .detail-overlay{
@@ -638,7 +652,7 @@
   html.dark .hold-banner{background:linear-gradient(160deg,#3a2f1b,#26221a)}
   html.dark .guide-link{background:linear-gradient(160deg,#352c19,#26221a)}
   html.dark .phase.zero{background:linear-gradient(160deg,#28301f,#26221a);border-color:#4c5a3b}
-  html.dark .delay-chip.done{background:#28301f}
+  html.dark .delay-chip.done,html.dark .gap-chip.gap-open{background:#28301f}
   html.dark .hold-btns button,html.dark .tally-btns button,html.dark .hedit button,
   html.dark .hgroup button,html.dark .hnotime button,html.dark .timefix button,
   html.dark .earlier-row button,html.dark .data-btns button,html.dark #detailBack,html.dark .xopen,
@@ -723,6 +737,7 @@ try{
     <button class="time-link" id="btnEarlier" aria-label="Add hits from earlier at a chosen time">+ Earlier</button>
     <button class="slip-btn" id="btnSlip">Slipped? Log it honestly</button>
   </div>
+  <div class="delay-chip gap-chip" id="gapChip" hidden role="status"></div>
   <div class="earlier-row" id="earlierRow" hidden>
     <input type="time" id="earlierTime" aria-label="Time the hit happened">
     <button id="btnAddEarlier">+ Add hit at this time</button>
@@ -780,7 +795,7 @@ try{
   <details>
     <summary>What zero week feels like</summary>
     <div class="d-body">
-      <p>You've done most of the receptor adjustment on the way down, so this is the blunted version. In pooled studies of over 20,000 regular users, about <strong>47%</strong> get clinically meaningful withdrawal — heavier, longer use sits at the higher end, which is why the taper exists.</p>
+      <p>First, the context that matters: <strong>the numbers below describe abrupt stops from heavy use.</strong> In pooled studies of over 20,000 regular users, about <strong>47%</strong> get clinically meaningful withdrawal — but the THC-dosing trials show symptom load tracks the <em>size of the drop</em>, and you'll be stepping off from 2–3 hits, not ~30. <span class="ok">You've done most of the receptor adjustment on the way down. Expect the blunted version of everything here.</span></p>
       <p><strong>First 24–48 hours:</strong> symptoms begin — restlessness, irritability, appetite dip. Cravings fire on old cue times; each wave passes in minutes.</p>
       <p><strong>Days 2–6:</strong> the peak, such as it is. The <span class="hl">"why am I doing this"</span> window. Clear it and the grade flattens.</p>
       <p><strong>Weeks 2–3:</strong> steady climb back to baseline. In long-term daily users symptoms can run the full 2–3 weeks or a little longer — give it the whole three.</p>
@@ -831,6 +846,7 @@ try{
 <p class="footer">The cap only goes down.</p>
 
 <div class="detail-overlay" id="detailOverlay" hidden>
+  <div class="detail-grab" aria-hidden="true"></div>
   <div class="detail-bar">
     <button id="detailBack">← Back</button>
     <span id="detailTitle"></span>
@@ -873,7 +889,7 @@ try{
     {days:null, cap:0, capText:"0",
      rule:"Whatever's left goes in the trash the night before",
      desc:"Zero. Not saved, not “just in case.” The day counter starts here — and it only climbs.",
-     why:"What to expect: symptoms begin in 24–48 h, peak days 2–6, fade over 2–3 weeks. About 47% of heavy users get meaningful withdrawal — none of it medically dangerous.",
+     why:"The withdrawal timeline (onset 24–48 h, peak days 2–6, fading over 2–3 weeks) is drawn from abrupt heavy stops. You step off from 2–3 hits, not ~30 — and easing the drop is exactly what the review says reduces the probability and severity.",
      ref:"withdrawal"}
   ];
   var MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -1101,9 +1117,9 @@ try{
   /* zero-era note keyed to the withdrawal timeline the research maps:
      onset 24–48h, peak days 2–6, fading over 2–3 weeks, sleep last. */
   function zeroTimelineNote(n){
-    if(n<=2)return 'Days 1–2 · symptoms typically begin 24–48 hours in — restlessness, irritability, appetite dip. Waves, not walls.';
-    if(n<=6)return 'Day '+n+' · inside the days-2–6 peak the research maps. This is as hard as it gets, and it passes.';
-    if(n<=13)return 'Day '+n+' · past the peak window. In heavy users withdrawal fades over 2–3 weeks — the grade flattens from here.';
+    if(n<=2)return 'Days 1–2 · if symptoms come, they start about now — and you arrive tapered, so expect the blunted version. Waves, not walls.';
+    if(n<=6)return 'Day '+n+' · the days-2–6 peak window — already shaved down by the step-down you did. This is as hard as it gets, and it passes.';
+    if(n<=13)return 'Day '+n+' · past the peak window. Withdrawal fades over 2–3 weeks — the grade flattens from here.';
     if(n<=21)return 'Day '+n+' · weeks 2–3, the climb back to baseline. Odd sleep and vivid dreams settle last — that’s recovery, not relapse risk.';
     return 'Past the three-week mark — the receptor adjustment the research tracks is largely done. The counter only climbs.';
   }
@@ -1425,6 +1441,40 @@ try{
     if(data.urgeStart)urgeTick=setInterval(tick,1000);
   }
 
+  /* ---- session-window chip: counts down to the next window, then counts
+     UP — stretching the gap past the mark is the taper mechanism itself. */
+  var gapTick=null;
+  function gapOpenMsg(m){
+    if(m<1)return 'Window open — every minute you stretch it is banked.';
+    if(m<15)return 'Window open '+m+' min — every minute you stretch it is a win.';
+    if(m<30)return 'Stretched '+m+' min past the window — craving waves pass in minutes, and you’re proving it.';
+    if(m<60)return 'Stretched '+m+' min past the window — that’s a banked half hour and counting.';
+    var h=Math.floor(m/60),r=m%60;
+    return 'Stretched '+h+'h'+(r?' '+r+'m':'')+' past the window — fewer, wider-spaced sessions is the taper working.';
+  }
+  function renderGap(){
+    if(gapTick){clearInterval(gapTick);gapTick=null;}
+    var chip=$('gapChip');
+    var count=countOf(todayKey)||0;
+    var si=(!isZeroEra&&idx>=0&&!phase.single&&(phase.spacingH||0)>0&&count<cap)?sessionInfo():null;
+    if(!si||!si.nextOpen){chip.hidden=true;return;}
+    var nextOpen=si.nextOpen;
+    function tick(){
+      var diff=nextOpen-Date.now();
+      if(diff>0){
+        var h=Math.floor(diff/3600000),m=Math.ceil(diff%3600000/60000);
+        chip.className='delay-chip gap-chip gap-wait';
+        chip.textContent='Next window opens '+fmtTime(nextOpen)+' · '+(h?h+'h ':'')+m+'m out. Urges before then get the 20-minute timer.';
+      }else{
+        chip.className='delay-chip gap-chip gap-open';
+        chip.textContent=gapOpenMsg(Math.floor(-diff/60000));
+      }
+    }
+    chip.hidden=false;
+    tick();
+    gapTick=setInterval(tick,20000);
+  }
+
   /* ---- pattern analytics (from timed hits) ---- */
   function timedHits(){
     var out=[];
@@ -1650,6 +1700,31 @@ try{
     }
     return '<div class="chipcal">'+chips+'</div>';
   }
+  /* the running schedule: remaining taper steps + the research's
+     withdrawal milestones, all pinned to the actual (hold-adjusted) zero date */
+  function roadAheadHTML(){
+    var sch=schedule(),z=zeroDate(),rows=[];
+    function fmtRange(a,b){
+      if(!b||dkeyOf(a)===dkeyOf(b))return fmtShort(a);
+      return fmtShort(a)+'–'+(a.getMonth()===b.getMonth()?b.getDate():fmtShort(b));
+    }
+    function add(a,b,txt){rows.push({a:a,b:b,txt:txt});}
+    for(var i=0;i<sch.length-1;i++){
+      if(sch[i].end&&sch[i].end<today)continue;
+      add(sch[i].start,sch[i].end,'<strong>Cap '+BASE_PHASES[i].capText+'</strong> · '+BASE_PHASES[i].rule);
+    }
+    add(z,null,'<strong>Zero day.</strong> The stash went out the night before. You step off from 2–3 hits, not ~30 — the drop your receptors feel is a fraction of cold turkey’s.');
+    add(addDays(z,1),addDays(z,2),'If symptoms come, they typically start here (24–48 h). The figures behind that are from abrupt heavy stops — tapering is the tool the review names for cutting their probability and severity.');
+    add(addDays(z,2),addDays(z,6),'<strong>The peak window</strong> (days 2–6) — the blunted version, pre-shaved by the step-down. Waves, not walls; each passes in minutes.');
+    add(addDays(z,7),addDays(z,13),'Past the peak. The grade flattens — mood and appetite recover first.');
+    add(addDays(z,14),addDays(z,21),'Weeks 2–3 · the climb back to baseline. The adjustment window closes around day 21.');
+    add(addDays(z,22),null,'Beyond · vivid dreams can outlast everything else (REM rebound) — a progress signal, not a warning.');
+    return '<div class="road">'+rows.map(function(r){
+      var endD=r.b||r.a;
+      var cur=today>=r.a&&today<=endD;
+      return '<div class="road-item'+(cur?' cur':'')+'"><span class="road-date">'+fmtRange(r.a,r.b)+(cur?' · now':'')+'</span><span class="road-txt">'+r.txt+'</span></div>';
+    }).join('')+'</div>';
+  }
 
   /* ---- widget faces + detail extras ---- */
   function renderWidgets(){
@@ -1766,19 +1841,21 @@ try{
     if(sx){
       var start=schedule()[0].start,z=zeroDate();
       var totalD=Math.max(1,Math.round((z-start)/MS_DAY));
+      var roadBlock='<h3 class="xtra-h" style="margin-top:16px">The running schedule</h3>'+roadAheadHTML()+
+        '<p class="chart-note">Dates ride on your actual progress — hold a step and everything below, zero day included, shifts with it. The milestones past zero are the research’s map, <a class="dlink" href="guide.html#withdrawal">cited here →</a></p>';
       if(isZeroEra){
         var nz=Math.max(0,daysFree());
         sx.innerHTML='<h3 class="xtra-h">The road</h3><div class="taper-track"><div style="width:100%"></div></div>'+
-          '<p class="chart-note">Taper complete — the cap walked '+BASE_PHASES[0].cap+' → 0 in '+totalD+' days. Day '+nz+' at zero, and the counter only climbs.</p>';
+          '<p class="chart-note">Taper complete — the cap walked '+BASE_PHASES[0].cap+' → 0 in '+totalD+' days. Day '+nz+' at zero, and the counter only climbs.</p>'+roadBlock;
       }else if(today>=start){
         var dayN=Math.min(totalD,Math.round((today-start)/MS_DAY)+1);
         var pct=Math.round(dayN/totalD*100);
         var dropStart=Math.round((1-cap/BASE_PHASES[0].cap)*100);
         var dropBase=Math.round((1-cap/BASELINE)*100);
         sx.innerHTML='<h3 class="xtra-h">The road</h3><div class="taper-track"><div style="width:'+pct+'%"></div></div>'+
-          '<p class="chart-note">Day <strong>'+dayN+' of '+totalD+'</strong> · '+pct+'% of the way to zero. Today’s cap of '+cap+' is <strong>'+dropBase+'% below baseline</strong>'+(dropStart>0?' and '+dropStart+'% below where the taper started':'')+'.</p>';
+          '<p class="chart-note">Day <strong>'+dayN+' of '+totalD+'</strong> · '+pct+'% of the way to zero. Today’s cap of '+cap+' is <strong>'+dropBase+'% below baseline</strong>'+(dropStart>0?' and '+dropStart+'% below where the taper started':'')+'.</p>'+roadBlock;
       }else{
-        sx.innerHTML='';
+        sx.innerHTML=roadBlock;
       }
     }
   }
@@ -1824,6 +1901,7 @@ try{
     var ov=$('detailOverlay');
     function doMove(){
       ov.hidden=true;ov.classList.remove('show');
+      ov.style.transform='';ov.style.transition='';ov.style.opacity='';
       el.classList.remove('expanded');
       detailFrom.insertBefore(el,detailPh);
       if(detailPh){detailPh.remove();detailPh=null;}
@@ -1842,7 +1920,7 @@ try{
   function renderAll(){
     computeToday();
     renderCountdown();renderStairs();renderPhases();
-    renderToday();renderTrend();renderHistory();renderHoldBanner();renderUrge();renderGlass();renderWidgets();
+    renderToday();renderTrend();renderHistory();renderHoldBanner();renderUrge();renderGap();renderGlass();renderWidgets();
     if(!$('detailOverlay').hidden)renderXtras();
   }
 
@@ -2103,6 +2181,49 @@ try{
   $('glassBar').addEventListener('click',function(){
     window.scrollTo({top:0,behavior:'smooth'});
   });
+
+  /* ---- pull down to dismiss the detail page ---- */
+  (function(){
+    var ov=$('detailOverlay');
+    var startY=0,dy=0,armed=false,dragging=false;
+    ov.addEventListener('touchstart',function(e){
+      if(detailBusy||ov.scrollTop>2){armed=false;return;}
+      startY=e.touches[0].clientY;
+      armed=true;dragging=false;dy=0;
+    },{passive:true});
+    ov.addEventListener('touchmove',function(e){
+      if(!armed)return;
+      dy=e.touches[0].clientY-startY;
+      if(dy<=0&&!dragging){armed=false;return;}
+      if(ov.scrollTop>0&&!dragging){armed=false;return;}
+      dragging=true;
+      e.preventDefault();
+      var t=Math.max(0,Math.min(dy*0.55,280));
+      ov.style.transition='none';
+      ov.style.transform='translateY('+t+'px)';
+    },{passive:false});
+    function end(){
+      if(!armed)return;
+      armed=false;
+      if(!dragging)return;
+      dragging=false;
+      var t=Math.max(0,Math.min(dy*0.55,280));
+      if(t>90){
+        if(!supportsVT||!motionOK){
+          ov.style.transition='transform .3s ease,opacity .25s ease';
+          ov.style.transform='translateY(105%)';
+          ov.style.opacity='0';
+        }
+        closeDetail();
+      }else{
+        ov.style.transition='transform .35s var(--spring)';
+        ov.style.transform='translateY(0)';
+        setTimeout(function(){ov.style.transition='';ov.style.transform='';},360);
+      }
+    }
+    ov.addEventListener('touchend',end);
+    ov.addEventListener('touchcancel',end);
+  })();
 
   /* ---- section pages ---- */
   $('detailBack').addEventListener('click',closeDetail);
