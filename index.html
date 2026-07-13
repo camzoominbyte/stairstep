@@ -248,16 +248,39 @@
   .hedit button.hdone{width:auto;padding:0 12px;font-size:12px;color:#fff;background:var(--accent);border-color:var(--accent-deep)}
   .hdetail{padding:2px 0 12px;font-size:13px}
   .hrow.open .hdate{color:var(--accent);font-weight:700}
-  .hgroup{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px dashed var(--surface2);font-size:14px}
-  .hgroup .ht{font-family:'Fraunces',serif;font-weight:600;font-size:15.5px;color:var(--sand);min-width:78px}
-  .hgroup .hn{color:var(--muted);flex:1}
-  .hgroup.notime .ht{font-family:'Karla',sans-serif;font-size:13px;font-style:italic;color:var(--muted);font-weight:500}
+  .hsession{
+    background:#faf5ea;border:1px solid var(--hair);border-radius:14px;
+    padding:4px 12px 8px;margin:10px 0;
+  }
+  .hsession-head{
+    display:flex;align-items:baseline;gap:8px;padding:8px 0 4px;
+  }
+  .hsession-head .sn{
+    font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;
+    color:var(--accent);
+  }
+  .hsession-head .srange{font-size:12px;color:var(--muted);flex:1}
+  .hsession-head .stot{font-family:'Fraunces',serif;font-weight:600;font-size:14px;color:var(--sand)}
+  .hgroup{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--hair);font-size:14px}
+  .hgroup:first-of-type{border-top:none}
+  .hgroup .ht{font-family:'Fraunces',serif;font-weight:600;font-size:15px;color:var(--sand);min-width:72px}
+  .hgroup .hn{color:var(--muted);flex:1;font-size:13px}
   .hgroup button{
     width:32px;height:29px;border-radius:9px;border:1px solid var(--line);
     background:#fff;color:var(--ink);font-weight:700;font-size:15px;cursor:pointer;
     box-shadow:var(--shadow-sm);
   }
   .hgroup button:active{background:var(--surface2)}
+  .hnotime{
+    display:flex;align-items:center;gap:10px;padding:8px 12px;margin:10px 0;
+    background:#f8efe0;border:1px dashed rgba(165,104,31,.35);border-radius:12px;font-size:13px;
+  }
+  .hnotime .ht{font-style:italic;color:var(--muted);font-weight:700;min-width:72px}
+  .hnotime .hn{color:var(--muted);flex:1}
+  .hnotime button{
+    width:32px;height:29px;border-radius:9px;border:1px solid var(--line);
+    background:#fff;color:var(--ink);font-weight:700;font-size:15px;cursor:pointer;box-shadow:var(--shadow-sm);
+  }
   .hses{display:flex;justify-content:space-between;color:var(--ink);padding:3px 0}
   .hses .t{color:var(--muted)}
   .hnote-line{color:var(--muted);font-style:italic;padding:3px 0}
@@ -356,7 +379,13 @@
   }
   .guide-link strong{color:var(--sand);font-size:15.5px}
   .guide-link small{font-size:13px;color:var(--muted)}
-  .guide-arrow{font-family:'Fraunces',serif;font-size:24px;color:var(--accent);flex:0 0 auto}
+  .guide-arrow{font-family:'Fraunces',serif;font-size:24px;color:var(--accent);flex:0 0 auto;animation:nudge 2.4s ease-in-out infinite}
+  @keyframes nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}}
+  .guide-link{transition:transform .3s var(--spring),box-shadow .3s var(--spring)}
+  .guide-link:active{transform:scale(.98)}
+  .phase{transition:transform .3s var(--spring),box-shadow .35s var(--spring),border-color .35s}
+  details{transition:transform .3s var(--spring)}
+  details:active{transform:scale(.995)}
   /* ---- motion ---- */
   @keyframes floaty{0%,100%{transform:translateY(-2px)}50%{transform:translateY(2.5px)}}
   @keyframes cardin{from{opacity:0;transform:translateY(12px) scale(.985)}to{opacity:1;transform:none}}
@@ -973,25 +1002,32 @@
       if(editingKey===key){
         var detail=daylineSVG(key);
         var e=data.days[key];
-        // group hits by their minute — "5:22 AM · 3 hits"
-        var groups={},order=[];
-        (e&&e.hits?e.hits:[]).forEach(function(iso){
-          var hd=new Date(iso);
-          var gk=pad(hd.getHours())+':'+pad(hd.getMinutes());
-          if(!groups[gk]){groups[gk]={t:hd,n:0};order.push(gk);}
-          groups[gk].n++;
-        });
-        order.sort();
-        order.forEach(function(gk){
-          var g=groups[gk];
-          detail+='<div class="hgroup"><span class="ht">'+fmtTime(g.t)+'</span>'+
-            '<span class="hn">'+g.n+' hit'+(g.n>1?'s':'')+'</span>'+
-            '<button data-act="gdec" data-hm="'+gk+'" aria-label="One less at this time">−</button>'+
-            '<button data-act="ginc" data-hm="'+gk+'" aria-label="One more at this time">+</button></div>';
+        // split the day into sessions (by spacing), then group each session's hits by minute
+        var sessions=sessionsFor(key);
+        sessions.forEach(function(sess,si){
+          var block='<div class="hsession"><div class="hsession-head">'+
+            '<span class="sn">Session '+(si+1)+'</span>'+
+            '<span class="srange"></span>'+
+            '<span class="stot">'+sess.length+' hit'+(sess.length>1?'s':'')+'</span></div>';
+          var groups={},order=[];
+          sess.forEach(function(hd){
+            var gk=pad(hd.getHours())+':'+pad(hd.getMinutes());
+            if(!groups[gk]){groups[gk]={t:hd,n:0};order.push(gk);}
+            groups[gk].n++;
+          });
+          order.sort();
+          order.forEach(function(gk){
+            var g=groups[gk];
+            block+='<div class="hgroup"><span class="ht">'+fmtTime(g.t)+'</span>'+
+              '<span class="hn">'+g.n+' hit'+(g.n>1?'s':'')+'</span>'+
+              '<button data-act="gdec" data-hm="'+gk+'" aria-label="One less at this time">−</button>'+
+              '<button data-act="ginc" data-hm="'+gk+'" aria-label="One more at this time">+</button></div>';
+          });
+          detail+=block+'</div>';
         });
         var adj=e?(e.adj||0):0;
         if(adj>0){
-          detail+='<div class="hgroup notime"><span class="ht">no time</span>'+
+          detail+='<div class="hnotime"><span class="ht">no time</span>'+
             '<span class="hn">'+adj+' hit'+(adj>1?'s':'')+' — re-add below with a time</span>'+
             '<button data-act="adjdec" aria-label="One less untimed">−</button></div>';
         }
@@ -1226,9 +1262,18 @@
         if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}
       });
     },{rootMargin:'0px 0px -8% 0px'});
-    document.querySelectorAll('.history,.section,.footer').forEach(function(el){
+    document.querySelectorAll('.history,.guide-link,details,.footer').forEach(function(el,i){
+      el.classList.add('reveal');
+      el.style.transitionDelay=((i%3)*0.06)+'s';
+      io.observe(el);
+    });
+    // section headings and phase lists reveal as blocks
+    document.querySelectorAll('.section > h2').forEach(function(el){
       el.classList.add('reveal');io.observe(el);
     });
+    // trend + record cards already covered by .history
+    var pw=$('phases');
+    if(pw){pw.classList.add('reveal');io.observe(pw);}
   }
 
   /* re-render when returning to the app (new day, timer state) */
