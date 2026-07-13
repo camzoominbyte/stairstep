@@ -2389,7 +2389,34 @@ try{
      a placeholder holds its spot so the page never jumps behind it. */
   var supportsVT=typeof document.startViewTransition==='function';
   if(!supportsVT||!motionOK)document.documentElement.classList.add('no-vt');
-  var detailFrom=null, detailPh=null, detailBusy=false;
+  var detailFrom=null, detailPh=null, detailBusy=false, activeVT=null;
+  /* Safari can freeze a view transition — and never settle `finished` — if the
+     app is backgrounded mid-animation. That left the overlay stuck half-drawn
+     with detailBusy wedged true (Back/drag dead). Run every card transition
+     through here: a watchdog force-finishes it, and visibilitychange skips it. */
+  function runCardVT(el,doMove){
+    var settled=false, watch=null;
+    function settle(){
+      if(settled)return;settled=true;
+      if(watch){clearTimeout(watch);watch=null;}
+      activeVT=null;
+      el.style.viewTransitionName='';
+      detailBusy=false;
+    }
+    el.style.viewTransitionName='card';
+    var t;
+    try{t=document.startViewTransition(doMove);}
+    catch(e){doMove();settle();return;}
+    activeVT=t;
+    t.finished.finally(settle);
+    watch=setTimeout(function(){
+      if(typeof t.skipTransition==='function')t.skipTransition();
+      settle();
+    },900);
+  }
+  document.addEventListener('visibilitychange',function(){
+    if(document.hidden&&activeVT&&typeof activeVT.skipTransition==='function')activeVT.skipTransition();
+  });
   function openDetail(el,title){
     if(!el||detailBusy||$('detailBody').firstElementChild)return;
     detailBusy=true;
@@ -2400,6 +2427,7 @@ try{
     detailPh.style.marginBottom=getComputedStyle(el).marginBottom;
     var ov=$('detailOverlay');
     function doMove(){
+      ov.style.transform='';ov.style.transition='';ov.style.opacity='';
       detailFrom.insertBefore(detailPh,el);
       $('detailBody').appendChild(el);
       el.classList.add('expanded');
@@ -2409,9 +2437,7 @@ try{
       renderXtras();
     }
     if(supportsVT&&motionOK){
-      el.style.viewTransitionName='card';
-      var t=document.startViewTransition(doMove);
-      t.finished.finally(function(){el.style.viewTransitionName='';detailBusy=false;});
+      runCardVT(el,doMove);
     }else{
       doMove();
       requestAnimationFrame(function(){ov.classList.add('show');});
@@ -2420,7 +2446,7 @@ try{
   }
   function closeDetail(){
     var el=$('detailBody').firstElementChild;
-    if(!el||detailBusy)return;
+    if(!el||detailBusy)return false;
     detailBusy=true;
     var ov=$('detailOverlay');
     function doMove(){
@@ -2432,13 +2458,12 @@ try{
       document.body.style.overflow='';
     }
     if(supportsVT&&motionOK){
-      el.style.viewTransitionName='card';
-      var t=document.startViewTransition(doMove);
-      t.finished.finally(function(){el.style.viewTransitionName='';detailBusy=false;});
+      runCardVT(el,doMove);
     }else{
       ov.classList.remove('show');
       setTimeout(function(){doMove();detailBusy=false;},420);
     }
+    return true;
   }
 
   function renderAll(){
@@ -2745,17 +2770,24 @@ try{
       if(!dragging)return;
       dragging=false;
       var t=Math.max(0,Math.min(dy*0.55,280));
+      var closed=false;
       if(t>90){
         if(!supportsVT||!motionOK){
           ov.style.transition='transform .3s ease,opacity .25s ease';
           ov.style.transform='translateY(105%)';
           ov.style.opacity='0';
         }
-        closeDetail();
-      }else{
+        closed=closeDetail();
+      }
+      /* closeDetail can refuse (mid-transition) — always snap back rather
+         than leave the overlay stranded partway down the screen */
+      if(!closed){
         ov.style.transition='transform .35s var(--spring)';
         ov.style.transform='translateY(0)';
-        setTimeout(function(){ov.style.transition='';ov.style.transform='';},360);
+        ov.style.opacity='';
+        setTimeout(function(){
+          if(!dragging){ov.style.transition='';ov.style.transform='';}
+        },360);
       }
     }
     ov.addEventListener('touchend',end);
