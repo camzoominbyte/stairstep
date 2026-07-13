@@ -14,9 +14,13 @@ A small personal PWA for tracking a 10-day cannabis taper (Jul 12–22, 2026), t
 - Per-hit timestamps drive the session rules ("max 3 hits/session · 3h between") — the today card shows when the next session opens
 - Working 20-minute urge delay timer (survives app close/reopen)
 - Flexible schedule: after an over-cap day the app offers to hold the current phase one extra day, pushing all later steps and the zero date back
-- Post-zero slip logging and an honest days-off counter
+- Post-zero slip logging with slip-resilient counters (current run, total clean days, best run — a slip never wipes the total)
+- Nightly check-in (sleep / mood / cravings, 1–5) from the final taper phase onward, with trend chart and insights
+- Flexible in both directions: a day already lived at the next cap can end its step a day early, pulling zero closer
+- "The story" capstone card in the zero era — the whole taper in numbers, shareable
+- Optional money-saved tracking (set a rough cost per hit in the trend detail)
 - Tap any history row to correct its count
-- Copy/import JSON backup
+- Copy/import JSON backup, share-sheet backup export, and a backup step in the zero-eve ritual
 
 ## Deploying
 

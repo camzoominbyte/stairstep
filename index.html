@@ -176,6 +176,37 @@
   .rit-row.on span:last-child{color:var(--muted)}
   .ritual.done .rit-lede{color:var(--sage);font-weight:700;font-size:15px;margin-bottom:0}
 
+  /* ---- nightly check-in (sleep · mood · cravings) ---- */
+  .checkin{
+    position:relative;background:linear-gradient(160deg,#eff2df,#fffdf8);
+    border:1px solid rgba(100,125,75,.45);border-radius:20px;
+    padding:18px;margin:-6px 0 24px;box-shadow:var(--shadow-sm);
+  }
+  .ck-row{display:flex;align-items:center;gap:10px;margin-top:10px}
+  .ck-lbl{font-family:'Karla',sans-serif;font-weight:700;font-size:14px;color:var(--ink);width:76px;flex:0 0 auto}
+  .ck-dots{display:flex;gap:9px}
+  .ck-dot{
+    width:30px;height:30px;border-radius:50%;border:2px solid var(--faint);
+    background:transparent;cursor:pointer;padding:0;
+    transition:background .2s,border-color .2s,transform .2s var(--spring);
+  }
+  .ck-dot.on{background:var(--sage);border-color:var(--sage)}
+  .ck-dot:active{transform:scale(.86)}
+  .ck-hint{font-size:10.5px;color:var(--muted);margin-left:auto;text-align:right;flex:0 1 auto}
+  .ck-note{font-size:12.5px;color:var(--muted);margin:12px 0 0}
+  .ck-note.done{color:var(--sage);font-weight:700}
+
+  /* ---- story card (zero-era capstone) ---- */
+  .story{
+    background:linear-gradient(160deg,#eff2df,#fffdf8);
+    border:1px solid rgba(100,125,75,.45);border-radius:20px;
+    padding:18px;margin-bottom:26px;box-shadow:var(--shadow);
+  }
+  .story h3{font-family:'Fraunces',serif;font-weight:600;font-size:21px;color:var(--sage);margin:2px 0 6px}
+
+  .gap-note{font-size:11.5px;color:var(--muted);margin:6px 0 0}
+  .linklike{background:none;border:none;padding:0;color:var(--accent);font-family:'Karla',sans-serif;font-size:12.5px;font-weight:700;cursor:pointer;text-decoration:underline}
+
   /* ---- staircase ---- */
   .stairs{display:flex;gap:7px;margin:10px 0 6px}
   .stepcol{
@@ -775,6 +806,7 @@
   html.dark .held-banner{background:linear-gradient(160deg,#28301f,#26221a)}
   html.dark .held-banner button,html.dark .rit-row{background:#2e2920}
   html.dark .ritual{background:linear-gradient(160deg,#3a2f1b,#26221a)}
+  html.dark .checkin,html.dark .story{background:linear-gradient(160deg,#28301f,#26221a)}
   html.dark .rit-row.on .rit-check{color:#1d1a14}
   html.dark .guide-link{background:linear-gradient(160deg,#352c19,#26221a)}
   html.dark .phase.zero{background:linear-gradient(160deg,#28301f,#26221a);border-color:#4c5a3b}
@@ -835,7 +867,10 @@ try{
 <div class="held-banner" id="heldBanner">
   <h4 id="heldTitle"></h4>
   <p id="heldBody"></p>
-  <button id="heldOk">Onward ↓</button>
+  <div class="hold-btns">
+    <button id="heldDrop" hidden>Step down a day early</button>
+    <button id="heldOk">Onward ↓</button>
+  </div>
 </div>
 
 <div id="stairsWrap">
@@ -875,6 +910,7 @@ try{
     <span class="gap-line gap-wait" id="gapChip" role="status"></span>
     <button class="gap-bell" id="gapBell" type="button" aria-label="Remind me to wait when the window opens">🔕</button>
   </div>
+  <p class="gap-note" id="gapNote" hidden>Heads-up: the reminder only rings while the app is open — nothing runs in the background, because nothing leaves this device.</p>
   <div class="action-row">
     <button class="delay-chip" id="urgeChip">Urge? Start the 20-minute timer.</button>
     <button class="time-link" id="btnEarlier" aria-label="Add hits from earlier at a chosen time">+ Earlier</button>
@@ -886,6 +922,13 @@ try{
   </div>
   <p id="earlierMsg" hidden></p>
   <div class="xtra" id="todayXtra"></div>
+</div>
+
+<div class="checkin" id="checkinCard" hidden>
+  <p class="eyebrow" style="color:var(--sage)">The nightly check-in</p>
+  <p class="rit-lede" id="ckLede"></p>
+  <div id="ckRows"></div>
+  <p class="ck-note" id="ckNote"></p>
 </div>
 
 <div class="history openable" id="trendCard" data-title="The trend">
@@ -906,6 +949,16 @@ try{
   <p class="history-hint">Tap a day to open its log — each time with its hits.</p>
   <div class="xtra" id="recordXtra"></div>
   <div id="historyRows"><p class="hempty">Your days will stack up here as you go.</p></div>
+</div>
+
+<div class="story" id="storyCard" hidden>
+  <p class="eyebrow" style="color:var(--sage)">The story</p>
+  <h3>From ~30 a day to zero</h3>
+  <div id="storyBody"></div>
+  <div class="data-btns" style="margin-top:12px">
+    <button id="btnShareStory">Share the story</button>
+  </div>
+  <p class="gap-note" id="storyMsg"></p>
 </div>
 
 <div class="section openable" id="stepSection" data-title="The step-down">
@@ -983,6 +1036,7 @@ try{
         <button id="btnImport">Import pasted backup</button>
       </div>
       <div class="data-btns">
+        <button id="btnShare">Share backup file</button>
         <button id="btnSnap">Restore today’s auto-snapshot</button>
       </div>
       <textarea id="dataBox" rows="4" placeholder="Your backup appears here — or paste one and tap Import."></textarea>
@@ -1105,6 +1159,7 @@ try{
   var data=loadData();
   data.holds=data.holds||{};data.holdPrompts=data.holdPrompts||{};
   data.urges=data.urges||[];data.dayCheers=data.dayCheers||{};data.ritual=data.ritual||{};
+  data.checkins=data.checkins||{};
   var saveFailed=false;
   function save(){
     data._ts=Date.now();
@@ -1141,7 +1196,7 @@ try{
     var out=[], cur=new Date(TAPER_START);
     for(var i=0;i<BASE_PHASES.length;i++){
       var p=BASE_PHASES[i];
-      var dur=p.days ? p.days+(data.holds[i]||0) : null;
+      var dur=p.days ? Math.max(1,p.days+(data.holds[i]||0)) : null;
       var start=new Date(cur);
       var end=dur ? addDays(start,dur-1) : null;
       var lbl;
@@ -1329,6 +1384,20 @@ try{
     return Math.floor((today-from)/MS_DAY)+1;
   }
 
+  /* slip-resilient zero-era counters: a slip resets the current run,
+     but total clean days and the best run are banked for good */
+  function zeroStats(){
+    var z=zeroDate();
+    if(today<z)return null;
+    var clean=0,run=0,best=0,slips=0,d=new Date(z);
+    while(d<=today){
+      if((countOf(dkeyOf(d))||0)>0){slips++;run=0;}
+      else{clean++;run++;if(run>best)best=run;}
+      d=addDays(d,1);
+    }
+    return {clean:clean,run:run,best:best,slips:slips};
+  }
+
   /* zero-era note keyed to the withdrawal timeline the research maps:
      onset 24–48h, peak days 2–6, fading over 2–3 weeks, sleep last. */
   function zeroTimelineNote(n){
@@ -1343,7 +1412,9 @@ try{
     var z=zeroDate();
     if(isZeroEra){
       var n=daysFree();
-      $('countdown').innerHTML='Zero date cleared. <strong>Day '+Math.max(0,n)+'</strong> off.';
+      var zs=zeroStats();
+      $('countdown').innerHTML='Zero date cleared. <strong>Day '+Math.max(0,n)+'</strong> off.'+
+        (zs&&zs.slips?' · '+zs.clean+' clean total · best run '+zs.best:'');
     }else{
       var left=Math.round((z-today)/MS_DAY);
       $('countdown').innerHTML='Zero date: <strong>'+WEEKDAYS[z.getDay()]+', '+fmtShort(z)+
@@ -1382,7 +1453,9 @@ try{
       var el=document.createElement('div');
       el.className='phase'+(i<idx?' past':'')+(i===idx?' now':'')+(i===sch.length-1?' zero':'');
       el.id='phase-'+i;
-      var held=data.holds[i]?'<p class="phase-held">Held +'+data.holds[i]+' day'+(data.holds[i]>1?'s':'')+'</p>':'';
+      var hv=data.holds[i]||0;
+      var held=hv>0?'<p class="phase-held">Held +'+hv+' day'+(hv>1?'s':'')+'</p>'
+        :hv<0?'<p class="phase-held">Finished '+(-hv)+' day'+(hv<-1?'s':'')+' early</p>':'';
       el.innerHTML=
         '<div class="phase-top"><span class="phase-dates">'+s.lbl+(i===idx?' · now':'')+'</span>'+
         '<span class="phase-cap">'+p.capText+'<small> '+(p.cap>0?'hits/day':'')+'</small></span></div>'+
@@ -1486,10 +1559,11 @@ try{
       $('earlierRow').hidden=true;
       $('todayEyebrow').textContent='Days off';
       setNum('tallyCount',Math.max(0,daysFree()),true);
-      $('capLabel').textContent='and climbing';
+      var zs0=zeroStats();
+      $('capLabel').textContent=(zs0&&zs0.slips)?'this run · '+zs0.clean+' clean in total':'and climbing';
       if(count>0){
         $('barFill').style.width='100%';$('barFill').style.background='var(--clay)';
-        $('barNote').textContent='Slip logged. Data, not doom — the trend line is what matters. Tomorrow is Day 1 again.';
+        $('barNote').textContent='Slip logged. Data, not doom — every clean day stays banked ('+(zs0?zs0.clean:0)+' so far). Tomorrow the run restarts; the total never resets.';
         $('btnSlip').textContent='Logged '+count+' today — undo one';
       }else{
         $('barFill').style.width='100%';$('barFill').style.background='var(--sage)';
@@ -1816,7 +1890,7 @@ try{
     if(yIdx<0)return;
     var isZ=yIdx===BASE_PHASES.length-1;
     var c=countOf(yKey);
-    var title,body;
+    var title,body,dropOK=false;
     if(isZ){
       if(c!==null&&c>0)return; // slip day — no shame banner, the record handles it
       title='Clean day banked ✓';
@@ -1830,7 +1904,18 @@ try{
       body='Yesterday: <strong>'+c+' of '+yCap+'</strong>'+
         (margin>0?' — <strong>'+margin+' under cap</strong>.':' — right at the ceiling, and the ceiling won.');
       if(!isZeroEra&&idx>yIdx)body+=' Today the cap steps down to <strong>'+BASE_PHASES[idx].capText+'</strong>.';
+      // the inverse of the hold: a day already lived at the next cap can
+      // end this step early and pull the zero date a day closer
+      if(!isZeroEra&&yIdx===idx&&idx<BASE_PHASES.length-1){
+        var pend=schedule()[idx].end,nxt=BASE_PHASES[idx+1];
+        if(pend&&pend>=today&&c<=nxt.cap&&(countOf(todayKey)||0)<=nxt.cap){
+          dropOK=true;
+          var when=pend>today?'Tomorrow':'Today';
+          body+=' And '+c+' is already at or under the <em>next</em> cap of <strong>'+nxt.capText+'</strong> — if it felt solid, you can end this step a day early. '+when+' drops to '+nxt.capText+' and the zero date moves a day closer.';
+        }
+      }
     }
+    $('heldDrop').hidden=!dropOK;
     $('heldTitle').textContent=title;
     $('heldBody').innerHTML=body;
     b.dataset.ykey=yKey;
@@ -1847,6 +1932,7 @@ try{
     {k:'flower',t:'The flower — in the trash, out of the house'},
     {k:'pieces',t:'Pieces, papers, grinder — gone or given away'},
     {k:'friend',t:'Friend reminded: tomorrow is zero day'},
+    {k:'backup',t:'Backup copied out to Notes — the record survives the phone'},
     {k:'sleep',t:'Sleep kit staged — wind-down ready, phone dock out of reach'}
   ];
   function renderRitual(){
@@ -1875,6 +1961,92 @@ try{
       return '<button class="rit-row'+(on?' on':'')+'" data-k="'+it.k+'" aria-pressed="'+(!!on)+'">'+
         '<span class="rit-check">✓</span><span>'+it.t+'</span></button>';
     }).join('');
+  }
+
+  /* ---- nightly check-in: sleep · mood · cravings, 1–5, higher is better.
+     Opens in the final taper phase — the guide says start the sleep kit
+     before zero — so zero week has a baseline, then runs the whole tail. ---- */
+  var CK_METRICS=[
+    {k:'sleep',t:'Sleep',hint:'rough → solid'},
+    {k:'mood',t:'Mood',hint:'heavy → steady'},
+    {k:'craving',t:'Cravings',hint:'loud → quiet'}
+  ];
+  function ckActive(){return idx>=BASE_PHASES.length-2;}
+  function ckComplete(e){return !!e&&CK_METRICS.every(function(m){return e[m.k]>0;});}
+  function renderCheckin(){
+    var card=$('checkinCard');if(!card)return;
+    if(!ckActive()){card.hidden=true;return;}
+    card.hidden=false;
+    var e=data.checkins[todayKey]||{};
+    $('ckLede').textContent=isZeroEra
+      ?'One honest reading a night. This is the record that shows the adjustment window closing — sleep is the one the research says settles last.'
+      :'Start the nightly reading now, before zero — so zero week has a baseline to measure against.';
+    $('ckRows').innerHTML=CK_METRICS.map(function(m){
+      var v=e[m.k]||0,dots='';
+      for(var i=1;i<=5;i++){
+        dots+='<button class="ck-dot'+(i<=v?' on':'')+'" data-v="'+i+'" aria-label="'+m.t+' '+i+' of 5"'+(i===v?' aria-pressed="true"':'')+'></button>';
+      }
+      return '<div class="ck-row"><span class="ck-lbl">'+m.t+'</span><div class="ck-dots" data-k="'+m.k+'">'+dots+'</div><span class="ck-hint">'+m.hint+'</span></div>';
+    }).join('');
+    var note=$('ckNote');
+    if(ckComplete(e)){note.className='ck-note done';note.textContent='✓ Logged for tonight — tap any dot to adjust.';}
+    else{note.className='ck-note';note.textContent='Tap a dot on each row: 1 is a rough one, 5 is a good one.';}
+  }
+  function ckSeries(){
+    var ks=Object.keys(data.checkins||{}).sort(),out=[];
+    ks.forEach(function(k){
+      var e=data.checkins[k];
+      if(ckComplete(e))out.push({k:k,sleep:e.sleep,mood:e.mood,craving:e.craving});
+    });
+    return out;
+  }
+  function checkinChartSVG(ser){
+    var n=Math.min(ser.length,21),s=ser.slice(-n);
+    var W=340,H=92,padL=14,padR=8,padT=8,padB=16;
+    function X(i){return padL+(i/(n-1))*(W-padL-padR);}
+    function Y(v){return padT+(1-(v-1)/4)*(H-padT-padB);}
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Nightly check-ins: sleep, mood, cravings">';
+    [1,3,5].forEach(function(g){
+      svg+='<line x1="'+padL+'" y1="'+Y(g).toFixed(1)+'" x2="'+(W-padR)+'" y2="'+Y(g).toFixed(1)+'" stroke="var(--surface2)" stroke-width="1"/>'+
+        '<text x="'+(padL-4)+'" y="'+(Y(g)+3).toFixed(1)+'" font-size="8" fill="var(--muted)" text-anchor="end" font-family="Karla,sans-serif">'+g+'</text>';
+    });
+    [['sleep','var(--accent)'],['mood','var(--sage)'],['craving','var(--clay)']].forEach(function(mc){
+      var pts=s.map(function(x,i){return X(i).toFixed(1)+','+Y(x[mc[0]]).toFixed(1);}).join(' ');
+      svg+='<polyline points="'+pts+'" fill="none" stroke="'+mc[1]+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'+
+        '<circle cx="'+X(n-1).toFixed(1)+'" cy="'+Y(s[n-1][mc[0]]).toFixed(1)+'" r="3" fill="'+mc[1]+'"/>';
+    });
+    svg+='<text x="'+padL+'" y="'+(H-3)+'" font-size="8.5" fill="var(--muted)" font-family="Karla,sans-serif">'+fmtShort(dateOf(s[0].k))+'</text>'+
+      '<text x="'+(W-padR)+'" y="'+(H-3)+'" font-size="8.5" fill="var(--muted)" text-anchor="end" font-family="Karla,sans-serif">'+fmtShort(dateOf(s[n-1].k))+'</text>';
+    return svg+'</svg>';
+  }
+  function checkinBlockHTML(){
+    var ser=ckSeries();if(!ser.length)return '';
+    var html='<h3 class="xtra-h" style="margin-top:16px">The nights</h3>';
+    if(ser.length>=2){
+      html+=checkinChartSVG(ser)+
+        '<p class="chart-note"><span class="legend-dot" style="background:var(--accent)"></span>sleep &nbsp;'+
+        '<span class="legend-dot" style="background:var(--sage)"></span>mood &nbsp;'+
+        '<span class="legend-dot" style="background:var(--clay)"></span>cravings (5 = quiet)</p>';
+    }
+    function avg(a){var t=0;a.forEach(function(v){t+=v;});return Math.round(t/a.length*10)/10;}
+    var lines=[];
+    if(ser.length>=5){
+      CK_METRICS.forEach(function(m){
+        var vals=ser.map(function(x){return x[m.k];});
+        var l3=avg(vals.slice(-3)),p=vals.length>=6?avg(vals.slice(-6,-3)):avg(vals.slice(0,-3));
+        var word;
+        if(l3>p)word=m.k==='craving'?'quieting':'climbing';
+        else if(l3<p)word=m.k==='craving'?'louder this stretch — waves, not walls'
+          :m.k==='sleep'?'dipped — the symptom that settles last':'dipped';
+        else word='steady';
+        lines.push('<strong>'+m.t+'</strong> averaging <strong>'+l3+'</strong> over the last 3 nights — '+word+(l3!==p?' (was '+p+')':'')+'.');
+      });
+    }else{
+      lines.push(ser.length+' night'+(ser.length>1?'s':'')+' logged — trends appear after a few more.');
+    }
+    html+='<div class="insights">'+lines.map(function(l){return '<p class="insight-line">'+l+'</p>';}).join('')+'</div>';
+    html+='<p class="chart-note">Odd nights and vivid dreams weeks in are REM rebound — a recovery signal, not relapse risk. <a class="dlink" href="guide.html#withdrawal">Sources →</a></p>';
+    return html;
   }
 
   /* ---- urge timer: every completed 20 minutes is BANKED, permanently ---- */
@@ -1983,7 +2155,7 @@ try{
     var wrap=$('gapStatus'),chip=$('gapChip'),bell=$('gapBell');
     var count=countOf(todayKey)||0;
     var si=(!isZeroEra&&idx>=0&&!phase.single&&spacingHNow()>0&&count<cap)?sessionInfo():null;
-    if(!si||!si.nextOpen){wrap.hidden=true;return;}
+    if(!si||!si.nextOpen){wrap.hidden=true;$('gapNote').hidden=true;return;}
     var nextOpen=si.nextOpen,gapH=spacingHNow(),openTs=nextOpen.getTime();
     function tick(){
       var diff=nextOpen-Date.now();
@@ -2010,12 +2182,14 @@ try{
       },untilOpen+400);
     }
     // bell: opt in to a nudge-to-wait when the window opens
-    if(!('Notification' in window)){bell.style.display='none';return;}
+    if(!('Notification' in window)){bell.style.display='none';$('gapNote').hidden=true;return;}
     bell.style.display='';
     var on=notifOK();
     bell.classList.toggle('on',on);
     bell.textContent=on?'🔔':'🔕';
     bell.setAttribute('aria-label',on?'Window reminders on — tap to turn off':'Remind me to wait when the window opens');
+    // honesty note: there is no server, so nothing can ring while the app is closed
+    $('gapNote').hidden=!on;
   }
 
   /* ---- pattern analytics (from timed hits) ---- */
@@ -2513,9 +2687,18 @@ try{
           ringSVG(n/21,n,n===1?'DAY OFF':'DAYS OFF','var(--sage)')+
           '<p class="chart-note" style="text-align:center">'+
           (n>=21?'The 2–3 week adjustment window the research maps is behind you. From here it’s maintenance.'
-                :'Filling the 2–3 week receptor-adjustment window the research maps. Every day counts, and it only fills.')+'</p>'+
-          contribHTML(zs.parts)+
-          urgeBlockHTML();
+                :'Filling the 2–3 week receptor-adjustment window the research maps. Every day counts, and it only fills.')+'</p>';
+        var zst=zeroStats();
+        if(zst&&zst.slips){
+          html+='<div class="stat-row" style="animation:none">'+
+            '<div class="stat" style="animation:none"><span class="sv" style="color:var(--sage)">'+zst.clean+'</span><span class="sl">clean days total</span></div>'+
+            '<div class="stat" style="animation:none"><span class="sv">'+zst.best+'</span><span class="sl">best run</span></div>'+
+            '<div class="stat" style="animation:none"><span class="sv" style="color:var(--clay)">'+zst.slips+'</span><span class="sl">slip day'+(zst.slips>1?'s':'')+'</span></div></div>'+
+            '<p class="chart-note">A slip dents the record — it doesn’t delete it. The clean total and best run are banked for good.</p>';
+        }
+        html+=contribHTML(zs.parts)+
+          urgeBlockHTML()+
+          checkinBlockHTML();
       }else{
         var sc=scoreToday();
         html+='<h3 class="xtra-h">Today’s taper score</h3>'+
@@ -2532,6 +2715,7 @@ try{
             (pace.t<pace.y?' — <strong>trending down.</strong>':pace.t>pace.y?' — running ahead of yesterday. The delay timer is right there.':' — even with yesterday.')+'</p></div>';
         }
         html+=urgeBlockHTML();
+        if(ckActive())html+=checkinBlockHTML();
         html+='<h3 class="xtra-h" style="margin-top:16px">Today’s sessions</h3>'+daySummaryHTML(todayKey);
       }
       html+=prevDaysHTML();
@@ -2546,6 +2730,9 @@ try{
         '<div class="stat" style="animation:none"><span class="sv" style="color:var(--sage)">'+ps.cutPct+'%</span><span class="sl">below baseline</span></div>'+
         '<div class="stat" style="animation:none"><span class="sv" style="color:var(--sage)">'+ps.avoided+'</span><span class="sl">hits not smoked</span></div>'+
         '<div class="stat" style="animation:none"><span class="sv">'+ps.streak+'</span><span class="sl">day streak held</span></div></div>';
+      html2+=(data.costPerHit&&ps.avoided>0)
+        ?'<p class="chart-note">≈ <strong style="color:var(--sage)">$'+Math.round(ps.avoided*data.costPerHit).toLocaleString()+'</strong> not spent vs the ~'+BASELINE+'/day baseline · <button class="linklike" id="costSet">edit cost</button></p>'
+        :'<p class="chart-note"><button class="linklike" id="costSet">Track money saved →</button></p>';
       var av=avoidedChartSVG();
       if(av){
         html2+='<h3 class="xtra-h" style="margin-top:16px">What you didn’t smoke</h3>'+av+
@@ -2676,12 +2863,56 @@ try{
   }
 
   // one broken section must never blank the whole app — isolate each render
+  /* ---- the story: zero-era capstone, built from the whole record ---- */
+  function storyStats(){
+    var sch=schedule(),start=sch[0].start,z=zeroDate();
+    var t=dayTotals(),ps=progressStats(),us=urgeStats(),ga=gapAnalytics(),zs=zeroStats();
+    var held=0,early=0;
+    for(var i in data.holds){var h=data.holds[i]||0;if(h>0)held+=h;else early-=h;}
+    return {start:start,z:z,totalD:Math.max(1,Math.round((z-start)/MS_DAY)),
+      t:t,ps:ps,us:us,ga:ga,zs:zs,held:held,early:early,
+      money:(data.costPerHit&&ps.avoided>0)?Math.round(ps.avoided*data.costPerHit):null};
+  }
+  function renderStory(){
+    var card=$('storyCard');if(!card)return;
+    if(!isZeroEra){card.hidden=true;return;}
+    card.hidden=false;
+    var s=storyStats();
+    function stat(v,l,c){return '<div class="stat" style="animation:none"><span class="sv"'+(c?' style="color:'+c+'"':'')+'>'+v+'</span><span class="sl">'+l+'</span></div>';}
+    var pc=punchcardSVG();
+    $('storyBody').innerHTML=
+      '<p class="chart-note" style="margin-top:0">Started <strong>'+fmtShort(s.start)+'</strong> from a ~'+BASELINE+'-a-day baseline · reached zero <strong>'+fmtShort(s.z)+'</strong> — '+s.totalD+' days of stepping down'+
+      (s.held?', '+s.held+' held day'+(s.held>1?'s':'')+' along the way':'')+
+      (s.early?', '+s.early+' step'+(s.early>1?'s':'')+' finished early':'')+'.</p>'+
+      '<div class="stat-row" style="animation:none">'+
+      stat(s.ps.avoided,'hits not smoked','var(--sage)')+
+      stat(s.t.tot,'logged honestly')+
+      stat(s.us?s.us.total:0,'urges outlasted','var(--sage)')+
+      '</div><div class="stat-row" style="animation:none">'+
+      stat(s.zs?s.zs.clean:0,'days at zero','var(--sage)')+
+      stat(s.zs?s.zs.best:0,'best run')+
+      stat(s.t.under+'/'+s.t.logged,'days under cap')+
+      '</div>'+
+      (s.ga?'<p class="chart-note">'+s.ga.adherence+'% of session gaps met the day’s rule, averaging '+fmtDur(s.ga.avg*3600000)+' apart'+(s.ga.widening?' — widening the whole way, exactly as designed':'')+'.</p>':'')+
+      (s.money!==null?'<p class="chart-note">≈ <strong style="color:var(--sage)">$'+s.money.toLocaleString()+'</strong> not spent.</p>':'')+
+      (pc?pc+'<p class="chart-note">Every day of the taper, side by side — fewer dots, drifting later, then none.</p>':'');
+  }
+  function storyText(){
+    var s=storyStats(),L=[];
+    L.push('The taper, in numbers —');
+    L.push('Started '+fmtShort(s.start)+' at ~'+BASELINE+' hits a day. Reached zero '+fmtShort(s.z)+' ('+s.totalD+' days).');
+    L.push(s.ps.avoided+' hits not smoked vs baseline · '+s.t.tot+' logged honestly · '+(s.us?s.us.total:0)+' urges outlasted with the 20-minute rule.');
+    if(s.zs)L.push(s.zs.clean+' day'+(s.zs.clean===1?'':'s')+' at zero'+(s.zs.best>1?' (best run '+s.zs.best+')':'')+' — and the counter only climbs.');
+    if(s.money!==null)L.push('About $'+s.money.toLocaleString()+' not spent.');
+    return L.join('\n');
+  }
+
   function safe(fn){try{fn();}catch(e){try{console.error(e);}catch(e2){}}}
   function renderAll(){
     computeToday();
     [renderCountdown,renderStairs,renderPhases,renderSchedStrip,
      renderToday,renderTrend,renderHistory,renderHoldBanner,renderDayHeld,
-     renderRitual,renderUrge,renderGap,renderGlass,renderWidgets].forEach(safe);
+     renderRitual,renderCheckin,renderStory,renderUrge,renderGap,renderGlass,renderWidgets].forEach(safe);
     if(!$('detailOverlay').hidden)safe(renderXtras);
   }
 
@@ -2835,6 +3066,47 @@ try{
     if(k)data.dayCheers[k]=1;
     save();renderDayHeld();
   });
+  $('heldDrop').addEventListener('click',function(){
+    var k=$('heldBanner').dataset.ykey;
+    if(k)data.dayCheers[k]=1;
+    data.holds[idx]=(data.holds[idx]||0)-1;
+    save();renderAll();
+  });
+  $('ckRows').addEventListener('click',function(ev){
+    var d=ev.target.closest('.ck-dot');
+    if(!d)return;
+    var k=d.parentNode.dataset.k,v=+d.dataset.v;
+    var e=data.checkins[todayKey]=data.checkins[todayKey]||{};
+    var was=ckComplete(e);
+    e[k]=v;
+    save();renderCheckin();
+    if(!was&&ckComplete(e)){
+      if(navigator.vibrate)navigator.vibrate([10,50,14]);
+      setTimeout(function(){sparks($('checkinCard'),$('checkinCard'));},250);
+    }
+    if(!$('detailOverlay').hidden)renderXtras();
+  });
+  $('btnShareStory').addEventListener('click',function(){
+    var txt=storyText();
+    if(navigator.share){navigator.share({text:txt}).catch(function(){});}
+    else if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){$('storyMsg').textContent='Copied — paste it anywhere.';},
+        function(){$('storyMsg').textContent=txt;});
+    }else{$('storyMsg').textContent=txt;}
+  });
+  /* money saved: opt-in, needs one rough number */
+  document.addEventListener('click',function(ev){
+    if(!ev.target.closest('#costSet'))return;
+    var cur=data.costPerHit||'';
+    var v=prompt('About how much does one hit cost, in dollars? Rough is fine — e.g. 0.50. Leave blank to stop tracking.',cur);
+    if(v===null)return;
+    var n=parseFloat(v);
+    if(String(v).trim()===''){delete data.costPerHit;}
+    else if(n>0){data.costPerHit=n;}
+    else return;
+    save();renderAll();
+    if(!$('detailOverlay').hidden)renderXtras();
+  });
   $('ritRows').addEventListener('click',function(ev){
     var row=ev.target.closest('.rit-row');
     if(!row)return;
@@ -2942,6 +3214,21 @@ try{
       },fallback);
     }else{fallback();}
   });
+  /* share the backup through the system share sheet — one tap to Notes/Files */
+  if(!navigator.share){$('btnShare').style.display='none';}
+  $('btnShare').addEventListener('click',function(){
+    if(!navigator.share)return;
+    var json=JSON.stringify(data);
+    var done=function(){$('dataMsg').textContent='Shared — Notes or Files both make a safe home.';};
+    try{
+      var f=new File([json],'taper-backup-'+todayKey+'.json',{type:'application/json'});
+      if(navigator.canShare&&navigator.canShare({files:[f]})){
+        navigator.share({files:[f]}).then(done).catch(function(){});
+        return;
+      }
+    }catch(e){}
+    navigator.share({title:'Taper backup',text:json}).then(done).catch(function(){});
+  });
   $('btnImport').addEventListener('click',function(){
     var raw=$('dataBox').value.trim();
     if(!raw){$('dataMsg').textContent='Paste a backup into the box first.';return;}
@@ -2953,6 +3240,7 @@ try{
       try{localStorage.setItem('ttz2-preimport',JSON.stringify(data));}catch(e2){}
       d.holds=d.holds||{};d.holdPrompts=d.holdPrompts||{};
       d.urges=d.urges||[];d.dayCheers=d.dayCheers||{};d.ritual=d.ritual||{};
+      d.checkins=d.checkins||{};
       data=d;save();editingKey=null;renderAll();
       $('dataMsg').textContent='Backup restored. (The data it replaced was stashed, just in case.)';
     }catch(e){$('dataMsg').textContent='That doesn’t look like a valid backup.';}
@@ -2968,6 +3256,7 @@ try{
     try{localStorage.setItem('ttz2-preimport',JSON.stringify(data));}catch(e){}
     sd.holds=sd.holds||{};sd.holdPrompts=sd.holdPrompts||{};
     sd.urges=sd.urges||[];sd.dayCheers=sd.dayCheers||{};sd.ritual=sd.ritual||{};
+    sd.checkins=sd.checkins||{};
     data=sd;save();editingKey=null;renderAll();
     $('dataMsg').textContent='Snapshot from '+snap.t+' restored. (The data it replaced was stashed.)';
   });
@@ -3117,6 +3406,7 @@ try{
         if(validShape(d)&&(d._ts||0)>(data._ts||0)){
           d.holds=d.holds||{};d.holdPrompts=d.holdPrompts||{};
           d.urges=d.urges||[];d.dayCheers=d.dayCheers||{};d.ritual=d.ritual||{};
+          d.checkins=d.checkins||{};
           data=d;
         }
       }
