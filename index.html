@@ -269,10 +269,18 @@
   }
   .history h3{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:2px}
   .history-hint{font-size:11.5px;color:var(--faint);margin-bottom:10px}
-  .hrow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-top:1px solid var(--surface2);font-size:14px;cursor:pointer}
+  .hrow{display:block;padding:8px 0;border-top:1px solid var(--surface2);font-size:14px;cursor:pointer}
   .hrow:first-of-type{border-top:none}
-  .hdate{color:var(--muted)}
-  .hcount{font-family:'Fraunces',serif;font-weight:600;font-size:17px;color:var(--sand)}
+  .hrow-main{display:flex;align-items:center;gap:10px}
+  .hdate{color:var(--muted);flex:0 0 76px;font-size:12.5px}
+  .hbar{flex:1;height:6px;border-radius:99px;background:var(--surface2);overflow:hidden}
+  .hbar i{display:block;height:100%;border-radius:99px;transition:width .5s var(--spring)}
+  .hcount{font-family:'Fraunces',serif;font-weight:600;font-size:17px;color:var(--sand);flex:0 0 auto;min-width:52px;text-align:right}
+  .hstat{flex:0 0 54px;text-align:right}
+  .hrow2{display:none;font-size:12px;color:var(--muted);margin-top:5px;padding-left:86px}
+  .hrow2 .up{color:var(--clay);font-weight:700}
+  .hrow2 .down{color:var(--sage);font-weight:700}
+  .expanded .hrow2{display:block}
   .hstat{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
   .hstat.under{color:var(--sage)}
   .hstat.at{color:var(--amber)}
@@ -1321,29 +1329,56 @@ try{
     }
     var rows='';
     var d=new Date(sch[0].start);
+    var prevLogged=null;
     while(d<=today){
       var key=dkeyOf(d);
       var n=countOf(key);
       var dIdx=phaseIndexFor(d);
       var dCap=dIdx>=0?BASE_PHASES[dIdx].cap:BASE_PHASES[0].cap;
       var isZ=dIdx===BASE_PHASES.length-1;
-      var stat,cls,countHtml;
+      var stat,cls,countHtml,barPct,barCol;
       if(isZ){
-        if(n>0){stat='slip';cls='slip';countHtml=String(n);}
-        else{stat='clean';cls='zero';countHtml='0';}
+        if(n>0){stat='slip';cls='slip';countHtml=String(n);barPct=100;barCol='var(--clay)';}
+        else{stat='clean';cls='zero';countHtml='0';barPct=100;barCol='var(--sage)';}
       }else if(n===null&&key!==todayKey){
-        stat='no log';cls='nolog';countHtml='<span style="color:var(--faint)">·</span>';
+        stat='no log';cls='nolog';countHtml='<span style="color:var(--faint)">·</span>';barPct=0;barCol='transparent';
       }else{
         var nn=n||0;
-        if(nn>dCap){stat='over';cls='over';}
-        else if(nn===dCap){stat='at cap';cls='at';}
-        else{stat='under';cls='under';}
+        if(nn>dCap){stat='over';cls='over';barCol='var(--clay)';}
+        else if(nn===dCap){stat='at cap';cls='at';barCol='var(--amber)';}
+        else{stat='under';cls='under';barCol='var(--sage)';}
+        barPct=dCap>0?Math.min(100,nn/dCap*100):0;
         countHtml=nn+' <span style="color:var(--muted);font-size:12px">/ '+dCap+'</span>';
       }
-      var right='<span class="hstat '+cls+'">'+stat+'</span>';
+      // second line (shown in the expanded page): sessions, span, delta
+      var bits=[];
+      if(!isZ&&n!==null){
+        var sess=sessionsFor(key);
+        if(sess.length){
+          bits.push(sess.length+' session'+(sess.length>1?'s':''));
+          var lastS=sess[sess.length-1];
+          bits.push(fmtTime(sess[0][0])+' → '+fmtTime(lastS[lastS.length-1]));
+        }
+        var eAdj=data.days[key]?(data.days[key].adj||0):0;
+        if(eAdj>0)bits.push(eAdj+' untimed');
+        if(prevLogged!==null&&key!==todayKey){
+          var dv=n-prevLogged;
+          bits.push(dv<0?'<span class="down">▾'+(-dv)+' vs day before</span>'
+                   :dv>0?'<span class="up">▴'+dv+' vs day before</span>'
+                   :'even with day before');
+        }
+        prevLogged=n;
+      }else if(isZ&&!n){
+        bits.push('nothing logged — the streak holds');
+      }
       var rowHtml='<div class="hrow'+(editingKey===key?' open':'')+'" data-key="'+key+'">'+
-        '<span class="hdate">'+(d.getMonth()+1)+'/'+d.getDate()+'</span>'+
-        '<span class="hcount">'+countHtml+'</span>'+right+'</div>';
+        '<div class="hrow-main">'+
+        '<span class="hdate">'+WEEKDAYS[d.getDay()].slice(0,3)+' '+(d.getMonth()+1)+'/'+d.getDate()+'</span>'+
+        '<span class="hbar"><i style="width:'+barPct+'%;background:'+barCol+'"></i></span>'+
+        '<span class="hcount">'+countHtml+'</span>'+
+        '<span class="hstat '+cls+'">'+stat+'</span></div>'+
+        (bits.length?'<div class="hrow2">'+bits.join(' · ')+'</div>':'')+
+        '</div>';
       if(editingKey===key){
         var detail=daylineSVG(key);
         var e=data.days[key];
@@ -1700,6 +1735,44 @@ try{
     }
     return '<div class="chipcal">'+chips+'</div>';
   }
+  function recordInsights(){
+    var sch=schedule(),days=[],lines=[];
+    var d=new Date(sch[0].start);
+    while(d<=today){
+      var k=dkeyOf(d),di=phaseIndexFor(d);
+      days.push({d:new Date(d),k:k,c:countOf(k),cap:di>=0?BASE_PHASES[di].cap:BASE_PHASES[0].cap,z:di===BASE_PHASES.length-1});
+      d=addDays(d,1);
+    }
+    // completed days only — today is still in progress and would flatter the stats
+    var logged=days.filter(function(x){return x.c!==null&&!x.z&&x.k!==todayKey;});
+    if(logged.length>=2){
+      var best=null;
+      logged.forEach(function(x){
+        var m=x.cap-x.c;
+        if(x.c<=x.cap&&(best===null||m>best.m))best={x:x,m:m};
+      });
+      if(best&&best.m>0)lines.push('Best day so far: <strong>'+fmtShort(best.x.d)+'</strong> — '+best.x.c+' of '+best.x.cap+', <strong>'+best.m+' under cap</strong>.');
+      var drop=null;
+      for(var i=1;i<logged.length;i++){
+        var dv=logged[i-1].c-logged[i].c;
+        if(drop===null||dv>drop.v)drop={v:dv,d:logged[i].d};
+      }
+      if(drop&&drop.v>0)lines.push('Biggest single-day cut: <strong>−'+drop.v+'</strong> into '+fmtShort(drop.d)+'.');
+      if(logged.length>=4){
+        var k3=Math.min(3,Math.floor(logged.length/2));
+        function avgOf(arr){var s=0;arr.forEach(function(x){s+=x.c;});return Math.round(s/arr.length*10)/10;}
+        var fa=avgOf(logged.slice(0,k3)),la=avgOf(logged.slice(-k3));
+        lines.push('First '+k3+' days averaged <strong>'+fa+'</strong> · last '+k3+' average <strong>'+la+'</strong>'+
+          (la<fa?' — <strong>the line is bending down.</strong>':'.'));
+      }
+    }
+    var zdays=days.filter(function(x){return x.z;});
+    if(zdays.length){
+      var clean=zdays.filter(function(x){return !x.c;}).length;
+      lines.push('<strong>'+clean+'</strong> of '+zdays.length+' zero-era day'+(zdays.length>1?'s':'')+' clean.');
+    }
+    return lines;
+  }
   /* the running schedule: remaining taper steps + the research's
      withdrawal milestones, all pinned to the actual (hold-adjusted) zero date */
   function roadAheadHTML(){
@@ -1832,10 +1905,12 @@ try{
     var rx=$('recordXtra');
     if(rx){
       var ps2=progressStats();
+      var ins=recordInsights();
       rx.innerHTML='<h3 class="xtra-h">At a glance</h3>'+chipCalHTML()+
         '<p class="chart-note">'+ps2.under+' of '+ps2.logged+' logged days under cap'+
         (ps2.streak>1?' · <strong style="color:var(--sage)">'+ps2.streak+' days held in a row</strong>':'')+
-        ' · '+ps2.avoided+' hits not smoked vs baseline.</p>';
+        ' · '+ps2.avoided+' hits not smoked vs baseline.</p>'+
+        (ins.length?'<div class="insights">'+ins.map(function(l){return '<p class="insight-line">'+l+'</p>';}).join('')+'</div>':'');
     }
     var sx=$('stepXtra');
     if(sx){
