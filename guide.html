@@ -9,62 +9,190 @@
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <style>
-  @font-face{
-    font-family:'Fraunces';src:url('fonts/fraunces.woff2') format('woff2');
-    font-weight:300 600;font-style:normal;font-display:swap;
-  }
-  @font-face{
-    font-family:'Fraunces';src:url('fonts/fraunces-italic.woff2') format('woff2');
-    font-weight:300 600;font-style:italic;font-display:swap;
-  }
-  @font-face{
-    font-family:'Karla';src:url('fonts/karla.woff2') format('woff2');
-    font-weight:400 700;font-style:normal;font-display:swap;
-  }
+  @font-face{font-family:'Fraunces';src:url('fonts/fraunces.woff2') format('woff2');font-weight:300 600;font-style:normal;font-display:swap}
+  @font-face{font-family:'Fraunces';src:url('fonts/fraunces-italic.woff2') format('woff2');font-weight:300 600;font-style:italic;font-display:swap}
+  @font-face{font-family:'Karla';src:url('fonts/karla.woff2') format('woff2');font-weight:400 700;font-style:normal;font-display:swap}
   :root{
     color-scheme:light;
     --bg:#faf6ee;--surface:#fffdf8;--surface2:#f2ecdf;--line:#e6dcc8;
-    --hair:rgba(59,43,20,.08);--sand:#2e261a;--ink:#5b5140;--muted:#8b7e67;
-    --accent:#a5681f;--sage:#647d4b;
+    --hair:rgba(59,43,20,.08);--sand:#2e261a;--ink:#5b5140;--muted:#8b7e67;--faint:#c6bba6;
+    --accent:#a5681f;--sage:#647d4b;--clay:#b85335;
     --shadow-sm:0 4px 14px -6px rgba(59,43,20,.14);
-  }
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{
-    background:var(--bg);color:var(--ink);font-family:'Karla',sans-serif;
-    font-size:16px;line-height:1.6;max-width:480px;margin:0 auto;
-    padding:calc(24px + env(safe-area-inset-top)) 20px 80px;
-  }
-  .back{display:inline-block;color:var(--accent);font-weight:700;font-size:14px;text-decoration:none;margin-bottom:18px}
-  h1{font-family:'Fraunces',serif;font-weight:300;font-size:34px;line-height:1.1;color:var(--sand);margin-bottom:6px}
-  .card{
-    background:var(--surface);border:1px solid var(--line);border-radius:18px;
-    padding:20px;margin-top:24px;box-shadow:var(--shadow-sm);
   }
   html.dark{
     color-scheme:dark;
     --bg:#1d1a14;--surface:#26221a;--surface2:#332d22;--line:#463e2d;
-    --hair:rgba(255,244,222,.09);--sand:#f2e8d5;--ink:#cfc4ad;--muted:#9a8f78;
-    --accent:#e0a458;--sage:#a3b899;
+    --hair:rgba(255,244,222,.09);--sand:#f2e8d5;--ink:#cfc4ad;--muted:#9a8f78;--faint:#6c6353;
+    --accent:#e0a458;--sage:#a3b899;--clay:#d98f75;
     --shadow-sm:0 4px 14px -6px rgba(0,0,0,.45);
   }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto} *{transition:none!important;animation:none!important}}
+  body{
+    background:var(--bg);color:var(--ink);font-family:'Karla',sans-serif;
+    font-size:16px;line-height:1.62;max-width:520px;margin:0 auto;
+    padding:calc(20px + env(safe-area-inset-top)) 20px calc(70px + env(safe-area-inset-bottom));
+  }
+  .back{display:inline-block;color:var(--accent);font-weight:700;font-size:14px;text-decoration:none;margin-bottom:16px}
+  .eyebrow{font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  h1{font-family:'Fraunces',serif;font-weight:300;font-size:34px;line-height:1.08;color:var(--sand);margin:6px 0 6px;letter-spacing:-.01em}
+  h1 em{font-style:italic;color:var(--accent)}
+  .lede{color:var(--muted);font-size:15px;margin-bottom:8px}
+  .toc{
+    background:var(--surface);border:1px solid var(--line);border-radius:16px;
+    padding:14px 18px;margin:20px 0 8px;box-shadow:var(--shadow-sm);
+  }
+  .toc a{display:block;color:var(--ink);text-decoration:none;padding:5px 0;font-weight:700;font-size:14.5px;border-top:1px solid var(--hair)}
+  .toc a:first-of-type{border-top:none}
+  .toc a::before{content:"→ ";color:var(--accent)}
+  section{
+    background:var(--surface);border:1px solid var(--line);border-radius:18px;
+    padding:20px;margin-top:16px;box-shadow:var(--shadow-sm);scroll-margin-top:14px;
+  }
+  h2{font-family:'Fraunces',serif;font-weight:500;font-size:22px;color:var(--sand);margin-bottom:4px;letter-spacing:-.01em}
+  h2 .num{color:var(--accent);font-style:italic;margin-right:6px}
+  .sub{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:16px 0 6px}
+  p{margin:9px 0}
+  strong{color:var(--sand)}
+  .hl{color:var(--accent);font-weight:700}
+  ul{margin:8px 0 8px 2px;list-style:none}
+  li{position:relative;padding:5px 0 5px 18px}
+  li::before{content:"";position:absolute;left:0;top:14px;width:6px;height:6px;border-radius:50%;background:var(--amber,var(--accent))}
+  .timeline li::before{background:var(--accent)}
+  .callout{
+    background:var(--surface2);border-left:3px solid var(--accent);border-radius:0 12px 12px 0;
+    padding:12px 16px;margin:14px 0;font-size:14.5px;
+  }
+  .callout.warn{border-left-color:var(--clay)}
+  .callout.ok{border-left-color:var(--sage)}
+  .cite{color:var(--muted);font-size:12.5px;font-style:italic}
+  sup a{color:var(--accent);text-decoration:none;font-weight:700;font-style:normal}
+  .resource{
+    display:block;border:1px solid var(--line);border-radius:14px;padding:13px 16px;margin:9px 0;
+    text-decoration:none;color:var(--ink);background:var(--bg);
+  }
+  .resource b{color:var(--sand);display:block;font-size:15px}
+  .resource span{font-size:13px;color:var(--muted)}
+  .refs{margin-top:16px}
+  .refs ol{margin-left:18px;font-size:12.5px;color:var(--muted);line-height:1.5}
+  .refs li{padding:6px 0 6px 4px}
+  .refs li::before{display:none}
+  .refs a{color:var(--accent);text-decoration:none;word-break:break-word}
+  .disclaimer{font-size:12.5px;color:var(--muted);margin-top:22px;padding:14px 16px;background:var(--surface2);border-radius:12px}
+  .footer{text-align:center;color:var(--muted);margin-top:26px;font-family:'Fraunces',serif;font-style:italic;font-size:15px}
 </style>
 <script>
-try{
-  var __t=localStorage.getItem('ttz-theme');
-  if(__t==='dark'||(__t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches)){
-    document.documentElement.classList.add('dark');
-  }
-}catch(e){}
+try{var __t=localStorage.getItem('ttz-theme');if(__t==='dark'||(__t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark');}catch(e){}
 </script>
 </head>
 <body>
+
 <a class="back" href="index.html">← Back to the taper</a>
-<h1>The deep guide</h1>
-<p style="color:var(--muted)">Research-backed handbook for this taper.</p>
-<div class="card">
-  <p>The full guide is being researched and written — evidence on tapering, the withdrawal
-  timeline, what helps, and vetted resources, all with sources you can click.</p>
-  <p style="margin-top:10px;color:var(--muted)">Check back after the next app update.</p>
+<p class="eyebrow">Evidence-based · THC / cannabis only</p>
+<h1>The deep guide to <em>quitting THC</em></h1>
+<p class="lede">What the research actually says about tapering off cannabis, the withdrawal you'll meet, what helps, and where to get support — written for a long-term daily flower smoker, cited throughout.</p>
+
+<div class="toc">
+  <a href="#taper">Does tapering beat quitting cold turkey?</a>
+  <a href="#withdrawal">The withdrawal timeline</a>
+  <a href="#manage">What actually helps</a>
+  <a href="#relapse">Staying quit</a>
+  <a href="#resources">Resources &amp; helplines</a>
 </div>
+
+<section id="taper">
+  <h2><span class="num">1</span>The taper vs. cold turkey</h2>
+  <p>The clinical literature leans toward what you're already doing. A 2021 review in <em>Addiction</em> concludes that, as with other substances, <span class="hl">"an incremental and slow reduction in cannabis intake and/or use of lower-THC products over an extended period (weeks) may reduce the probability and severity of withdrawal symptoms."</span><sup><a href="#r1">1</a></sup> That is the direct evidentiary basis for a stepped cap like this one.</p>
+
+  <p class="sub">The catch, stated honestly</p>
+  <p>There is <strong>no single validated taper schedule</strong> — no study prescribes "cut 25% every two days." The support for tapering is mechanistic and clinical-consensus rather than a proven protocol, so your 22 → 16 → 12 → 8 → 2–3 → 0 plan is a reasonable, literature-consistent structure, not a number handed down from a trial. That's fine; it's why the app lets you hold a step when a day runs over.</p>
+
+  <div class="callout">
+    <strong>Why reducing THC gradually works, biologically.</strong> Human lab studies show that oral THC (dronabinol) <span class="hl">dose-dependently suppresses cannabis withdrawal</span> — higher doses blunt the most symptoms, with few side effects.<sup><a href="#r2">2</a></sup> Chronic THC dosing likewise reduces withdrawal and self-administration in daily users.<sup><a href="#r3">3</a></sup> In plain terms: withdrawal is driven by the brain adjusting to <em>less</em> THC, so easing the drop gives your receptors time to catch up instead of hitting them with the full gap at once.</p>
+  </div>
+</section>
+
+<section id="withdrawal">
+  <h2><span class="num">2</span>Cannabis withdrawal — the real timeline</h2>
+  <p>Cannabis withdrawal is real, formally recognized (DSM-5), and — for a ten-year daily user — expected. A meta-analysis pooling <strong>&gt;20,000</strong> regular and dependent users found roughly <span class="hl">47% experience clinically meaningful withdrawal</span> on standardized scales.<sup><a href="#r1">1</a></sup> Heavier, longer use sits at the higher end of that risk. None of it is medically dangerous in an otherwise-healthy adult — the worst of it reads like a rough flu week.</p>
+
+  <p class="sub">When it hits, and for how long</p>
+  <ul class="timeline">
+    <li><strong>First 24–48 hours:</strong> symptoms begin.<sup><a href="#r1">1</a></sup> Since your zero date is July 22, expect the first ripples on the 23rd–24th.</li>
+    <li><strong>Days 2–6: the peak.</strong> Most symptoms are strongest here<sup><a href="#r1">1</a></sup> — the "why am I doing this" window. Lab data agrees peak effects land around days 2–4.<sup><a href="#r2">2</a></sup> Clear this and the grade flattens.</li>
+    <li><strong>Weeks 2–3: the climb back.</strong> In heavy users symptoms can run <span class="hl">2–3 weeks or longer</span>.<sup><a href="#r1">1</a></sup> Ten years daily — give it the full three weeks.</li>
+    <li><strong>Sleep is the long tail.</strong> Sleep disturbance (and vivid dreams — REM rebound after years of suppression) <span class="hl">may persist for several weeks or more</span>,<sup><a href="#r1">1</a></sup> outlasting everything else. A bad night at week four means nothing.</li>
+  </ul>
+
+  <p class="sub">The symptoms themselves</p>
+  <p>The common ones: irritability, anxiety/nervousness, sleep trouble and strange dreams, reduced appetite, restlessness, depressed mood, and cravings — plus sometimes physical notes like headache, sweating, or stomach upset. This is the exact cluster the taper and the app's 20-minute delay are built to shave down. The dronabinol trials specifically show the biggest levers are <strong>mood, irritability, sleep difficulty, and craving</strong>,<sup><a href="#r3">3</a></sup> so those are what to watch and support.</p>
+
+  <div class="callout ok">Because the peak is days 2–6, front-load your support there: clear your calendar where you can, line up food and sleep aids <em>before</em> zero, and treat that first week as the project — not the weeks after.</div>
+</section>
+
+<section id="manage">
+  <h2><span class="num">3</span>What actually helps</h2>
+  <p class="sub">Behavioral — the first line</p>
+  <p>The review is blunt: <span class="hl">no medication is approved for cannabis withdrawal</span>, so supportive counselling and psychoeducation (knowing what's coming — which is the point of this page) are the first-line approach.<sup><a href="#r1">1</a></sup> The two most effective stand-alone psychological treatments are <strong>cognitive-behavioral therapy (CBT)</strong> and <strong>motivational enhancement therapy (MET)</strong>, and they work best combined; <strong>contingency management</strong> (concrete rewards for clean time) is an effective add-on.<sup><a href="#r1">1</a></sup></p>
+  <ul>
+    <li><strong>Delay every urge.</strong> Cravings fire on old cue-times and pass in minutes — the app's 20-minute timer is this, operationalized.</li>
+    <li><strong>Reward the streak.</strong> Give yourself something real for each day held. That's contingency management in miniature.</li>
+    <li><strong>Guard sleep deliberately</strong> — consistent wind-down, phone out of reach, magnesium if it's part of your kit. Sleep is the symptom most likely to send people back.</li>
+    <li><strong>Move.</strong> Exercise is a low-risk, broadly-recommended aid for mood and sleep during withdrawal.</li>
+  </ul>
+
+  <p class="sub">Medication — proceed only with a clinician</p>
+  <p>Nothing here is a prescription; it's what the evidence shows, to discuss with a doctor. Trials of <strong>gabapentin</strong> and <strong>nabiximols</strong> (a THC/CBD spray) have reduced withdrawal or use, but in <span class="hl">small, largely unreplicated studies</span> — promising, not settled.<sup><a href="#r1">1</a></sup> <strong>N-acetylcysteine (NAC)</strong> is popular and low-risk but has mixed evidence, especially in adults. Over-the-counter sleep aids get used short-term for the sleep tail. <span class="hl">Bottom line: none is proven enough to self-medicate a 10-day taper — behavioral tools are the backbone.</span></p>
+  <div class="callout warn">You're doing this self-directed and healthy, which is reasonable for cannabis. But if withdrawal becomes unmanageable, or there's heavy alcohol or other drug use in the mix, that changes the risk picture — loop in a clinician rather than pushing through alone.</div>
+</section>
+
+<section id="relapse">
+  <h2><span class="num">4</span>Staying quit</h2>
+  <p>Quitting cannabis after years of daily use is genuinely hard and lapses are common — that's the norm, not a personal failure. What the evidence and the app's philosophy share: <strong>the trend line matters, not any single day.</strong></p>
+  <ul>
+    <li><strong>A slip is data, not doom.</strong> Go back to the last cap you held, hold it an extra day, keep stepping down. The app builds this in.</li>
+    <li><strong>Strip the environment.</strong> The night before zero, clear the flower, pieces, and papers, so home isn't a loaded cue during the days 2–6 peak.</li>
+    <li><strong>Tell someone.</strong> Social support and knowing the timeline are protective — a briefed friend who won't enable a supply run is worth a lot in week one.</li>
+    <li><strong>Expect the sleep tail and don't over-read it.</strong> Weeks of odd sleep and vivid dreams are the recovery, not a relapse warning.</li>
+  </ul>
+</section>
+
+<section id="resources">
+  <h2><span class="num">5</span>Resources &amp; helplines</h2>
+  <p class="cite">Tap to open. US-focused; free and confidential unless noted.</p>
+  <a class="resource" href="https://www.samhsa.gov/find-help/national-helpline" target="_blank" rel="noopener">
+    <b>SAMHSA National Helpline — 1-800-662-4357</b>
+    <span>Free, confidential, 24/7 treatment referral and information (English/Spanish).</span></a>
+  <a class="resource" href="https://www.marijuana-anonymous.org/" target="_blank" rel="noopener">
+    <b>Marijuana Anonymous</b>
+    <span>12-step fellowship specifically for cannabis; in-person and online meetings, phone meetings, and a reading library.</span></a>
+  <a class="resource" href="https://www.reddit.com/r/leaves/" target="_blank" rel="noopener">
+    <b>r/leaves</b>
+    <span>Large, active peer community for quitting weed — day-count posts, withdrawal check-ins, and a lot of "you're not alone."</span></a>
+  <a class="resource" href="https://988lifeline.org/" target="_blank" rel="noopener">
+    <b>988 Suicide &amp; Crisis Lifeline — call or text 988</b>
+    <span>If withdrawal mood dips into a crisis, this is 24/7 support. Use it without hesitation.</span></a>
+  <a class="resource" href="https://www.cdc.gov/cannabis/about/index.html" target="_blank" rel="noopener">
+    <b>CDC — Cannabis &amp; Public Health</b>
+    <span>Plain-language health-agency information on cannabis effects and dependence.</span></a>
+
+  <div class="refs">
+    <p class="sub">Sources</p>
+    <ol>
+      <li id="r1">Connor JP, Stjepanović D, Budney AJ, Le Foll B, Hall WD. <em>Clinical management of cannabis withdrawal.</em> Addiction, 2022. <a href="https://onlinelibrary.wiley.com/doi/full/10.1111/add.15743" target="_blank" rel="noopener">onlinelibrary.wiley.com/doi/full/10.1111/add.15743</a></li>
+      <li id="r2">Vandrey R, et al. Human lab study of oral THC (dronabinol) and cannabis withdrawal. <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3546149/" target="_blank" rel="noopener">pmc.ncbi.nlm.nih.gov/articles/PMC3546149</a></li>
+      <li id="r3">Dronabinol effects on withdrawal, craving, and cannabis self-administration in daily users. <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5959782/" target="_blank" rel="noopener">pmc.ncbi.nlm.nih.gov/articles/PMC5959782</a></li>
+    </ol>
+    <p class="cite">Claims above were drawn from these peer-reviewed sources and verified against them; the taper-schedule numbers in this app are a reasonable structure, not a figure from any single trial.</p>
+  </div>
+</section>
+
+<div class="disclaimer">
+  <strong>Not medical advice.</strong> This is an educational summary of published research about THC/cannabis, assembled for one person's self-directed taper. It doesn't replace a clinician. Cannabis withdrawal in a healthy adult is uncomfortable but not typically dangerous; other substances (especially alcohol and benzodiazepines) can be, so don't generalize this to them. If anything feels beyond what you can manage, talk to a doctor.
+</div>
+
+<p class="footer">The cap only goes down.</p>
+
 </body>
 </html>
