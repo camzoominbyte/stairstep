@@ -399,7 +399,8 @@
   .stat:nth-child(2){animation-delay:1.2s}
   .stat:nth-child(3){animation-delay:2.4s}
   .action-row .delay-chip{animation:floaty 5.5s ease-in-out infinite}
-  .stepcol.now .step{animation:floaty 5s ease-in-out infinite}
+  @keyframes floatyBig{0%,100%{transform:translateY(-4px)}50%{transform:translateY(4px)}}
+  .stepcol.now .step{animation:floatyBig 2.6s ease-in-out infinite}
   .stairs.anim .step{transform-origin:bottom;animation:growup .55s var(--spring) both}
   .stairs.anim .stepcol:nth-child(2) .step{animation-delay:.07s}
   .stairs.anim .stepcol:nth-child(3) .step{animation-delay:.14s}
@@ -423,8 +424,79 @@
     background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);
     transform:translateX(-110%);animation:sheen 3.8s ease-in-out infinite;
   }
-  button{transition:transform .16s var(--spring)}
+  button{transition:transform .16s var(--spring),box-shadow .2s var(--spring),filter .2s}
   button:active{transform:scale(.95)}
+  @media (hover:hover){
+    button:hover{transform:translateY(-1.5px)}
+    .tally-btns #btnPlus:hover{filter:brightness(1.06);box-shadow:0 14px 30px -8px rgba(165,104,31,.55)}
+    .hrow:hover{background:rgba(59,43,20,.035);border-radius:8px}
+    .stepcol:hover .step{filter:brightness(1.05)}
+    .guide-link:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+    summary:hover{color:var(--accent)}
+    .xopen:hover{color:var(--accent)}
+    .glassbar:hover .gbzero{text-decoration:underline}
+  }
+  @keyframes pressbounce{0%{transform:scale(1)}30%{transform:scale(.9)}60%{transform:scale(1.05)}100%{transform:scale(1)}}
+  #btnPlus.pushed{animation:pressbounce .4s var(--spring)}
+
+  /* ---- expandable sections + detail overlay ---- */
+  .today,.history,.section{position:relative}
+  .xopen{
+    position:absolute;top:14px;right:14px;z-index:2;
+    width:30px;height:30px;border-radius:50%;border:1px solid var(--line);
+    background:#fff;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;
+    box-shadow:var(--shadow-sm);
+  }
+  .xtra{display:none}
+  .expanded .xtra{display:block;margin-top:16px}
+  .expanded>h2{display:none}
+  .expanded .xopen{display:none}
+  .xtra-h{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:8px}
+  .detail-overlay{
+    position:fixed;inset:0;z-index:80;background:var(--bg);overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    padding:calc(14px + env(safe-area-inset-top)) 20px calc(60px + env(safe-area-inset-bottom));
+    transform:translateX(100%);transition:transform .38s var(--spring);
+  }
+  .detail-overlay.show{transform:none}
+  .detail-overlay[hidden]{display:none}
+  .detail-bar{display:flex;align-items:center;gap:12px;max-width:480px;margin:0 auto 16px}
+  #detailBack{
+    border:1px solid var(--line);background:#fff;border-radius:99px;padding:7px 15px;
+    font-weight:700;font-size:14px;color:var(--accent);font-family:'Karla',sans-serif;
+    cursor:pointer;box-shadow:var(--shadow-sm);
+  }
+  #detailTitle{font-family:'Fraunces',serif;font-size:21px;color:var(--sand);font-weight:500}
+  .detail-body{max-width:480px;margin:0 auto}
+
+  /* ---- widget faces (landscape dashboard) ---- */
+  .wface{display:none;flex-direction:column;gap:4px;align-items:flex-start;justify-content:space-between;min-height:96px}
+  .wicon{font-size:24px;line-height:1}
+  .wname{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .wstat{font-family:'Fraunces',serif;font-weight:600;font-size:24px;color:var(--sand)}
+  @media (orientation:landscape){
+    body{
+      max-width:960px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+      align-items:stretch;padding-top:calc(16px + env(safe-area-inset-top));
+    }
+    #hero{grid-column:1/-1}
+    #hero h1{font-size:30px}
+    .countdown{margin-bottom:4px}
+    .hold-banner{grid-column:1/-1;margin:0}
+    #stairsWrap{grid-column:1/-1}
+    .stairs-note{display:none}
+    .today,.history,.section{margin-bottom:0}
+    .footer{grid-column:1/-1;margin-top:8px}
+    .openable:not(.expanded){padding:16px;min-height:128px;cursor:pointer}
+    .section.openable:not(.expanded){
+      background:var(--surface);border:1px solid var(--line);
+      border-radius:20px;box-shadow:var(--shadow-sm);
+    }
+    .openable:not(.expanded)>*:not(.wface){display:none!important}
+    .openable:not(.expanded) .wface{display:flex}
+    .openable:not(.expanded):active{transform:scale(.98)}
+    .today.openable:not(.expanded){animation:none}
+  }
 
   .section{margin-bottom:36px}
   .footer{text-align:center;color:var(--muted);margin-top:44px;font-family:'Fraunces',serif;font-style:italic;font-size:15px}
@@ -436,9 +508,11 @@
   <span id="gbToday"></span><span class="gbzero" id="gbZero"></span>
 </div>
 
-<p class="eyebrow">Ten days · flower only · cap only goes down</p>
-<h1>Taper to <em>zero</em></h1>
-<p class="countdown" id="countdown"></p>
+<header id="hero">
+  <p class="eyebrow">Ten days · flower only · cap only goes down</p>
+  <h1>Taper to <em>zero</em></h1>
+  <p class="countdown" id="countdown"></p>
+</header>
 
 <div class="hold-banner" id="holdBanner">
   <p id="holdText"></p>
@@ -448,10 +522,14 @@
   </div>
 </div>
 
-<div class="stairs" id="stairs" aria-label="Step-down schedule"></div>
-<p class="stairs-note">Each step is your daily hit cap. Tap a step to jump to its details.</p>
+<div id="stairsWrap">
+  <div class="stairs" id="stairs" aria-label="Step-down schedule"></div>
+  <p class="stairs-note">Each step is your daily hit cap. Tap a step to jump to its details.</p>
+</div>
 
-<div class="today" id="todayCard">
+<div class="today openable" id="todayCard" data-title="Today">
+  <button class="xopen" data-target="todayCard" data-title="Today" aria-label="Open today in detail">⤢</button>
+  <div class="wface"><span class="wicon">☀️</span><span class="wname">Today</span><span class="wstat" id="wstatToday">–</span></div>
   <p class="eyebrow" id="todayEyebrow">Today</p>
   <div class="today-cap-row">
     <span class="big" id="tallyCount">0</span>
@@ -478,26 +556,36 @@
     <button id="btnAddEarlier">+ Add hit at this time</button>
   </div>
   <p id="earlierMsg" hidden></p>
+  <div class="xtra" id="todayXtra"></div>
 </div>
 
-<div class="history" id="trendCard">
+<div class="history openable" id="trendCard" data-title="The trend">
+  <button class="xopen" data-target="trendCard" data-title="The trend" aria-label="Open the trend in detail">⤢</button>
+  <div class="wface"><span class="wicon">📈</span><span class="wname">The trend</span><span class="wstat" id="wstatTrend">–</span></div>
   <h3>The trend</h3>
   <p class="history-hint">Ghost steps are each day&rsquo;s cap · solid is what you logged.</p>
   <div id="trendChart"></div>
+  <div class="xtra" id="trendXtra"></div>
 </div>
 
-<div class="history">
+<div class="history openable" id="recordCard" data-title="The record">
+  <button class="xopen" data-target="recordCard" data-title="The record" aria-label="Open the record in detail">⤢</button>
+  <div class="wface"><span class="wicon">📓</span><span class="wname">The record</span><span class="wstat" id="wstatRecord">–</span></div>
   <h3>The record</h3>
   <p class="history-hint">Tap a day to open its log — each time with its hits.</p>
   <div id="historyRows"><p class="hempty">Your days will stack up here as you go.</p></div>
 </div>
 
-<div class="section">
+<div class="section openable" id="stepSection" data-title="The step-down">
+  <button class="xopen" data-target="stepSection" data-title="The step-down" aria-label="Open the step-down in detail">⤢</button>
+  <div class="wface"><span class="wicon">🪜</span><span class="wname">Step-down</span><span class="wstat" id="wstatStep">–</span></div>
   <h2>The step-down</h2>
   <div id="phases"></div>
 </div>
 
-<div class="section">
+<div class="section openable" id="systemSection" data-title="The system">
+  <button class="xopen" data-target="systemSection" data-title="The system" aria-label="Open the system in detail">⤢</button>
+  <div class="wface"><span class="wicon">🧭</span><span class="wname">The system</span><span class="wstat" style="font-size:15px;padding-top:6px">rules · guide · backup</span></div>
   <h2>The system</h2>
   <a class="guide-link" href="guide.html">
     <span><strong>The deep guide</strong><br>
@@ -561,6 +649,14 @@
 </div>
 
 <p class="footer">The cap only goes down.</p>
+
+<div class="detail-overlay" id="detailOverlay" hidden>
+  <div class="detail-bar">
+    <button id="detailBack">← Back</button>
+    <span id="detailTitle"></span>
+  </div>
+  <div class="detail-body" id="detailBody"></div>
+</div>
 
 <script>
 (function(){
@@ -1092,10 +1188,95 @@
     if(data.urgeStart)urgeTick=setInterval(tick,1000);
   }
 
+  /* ---- widget faces + detail extras ---- */
+  function renderWidgets(){
+    function set(id,v){var el=$(id);if(el)el.textContent=v;}
+    var c=countOf(todayKey)||0;
+    if(isZeroEra){
+      set('wstatToday',Math.max(0,daysFree())+' off');
+      set('wstatRecord',c>0?'slip':'clean');
+    }else{
+      set('wstatToday',c+' / '+cap);
+      set('wstatRecord',c>cap?'over':c===cap?'at cap':'under');
+    }
+    var dayN=Math.round((today-schedule()[0].start)/MS_DAY)+1;
+    set('wstatTrend','day '+Math.max(1,dayN));
+    set('wstatStep',(idx>=0?BASE_PHASES[idx].capText:BASE_PHASES[0].capText)+' / day');
+  }
+  function daySummaryHTML(key){
+    var sessions=sessionsFor(key);
+    if(!sessions.length)return '<p class="hnote-line">Nothing logged yet today.</p>';
+    var h=daylineSVG(key);
+    sessions.forEach(function(sess,si){
+      var block='<div class="hsession"><div class="hsession-head">'+
+        '<span class="sn">Session '+(si+1)+'</span><span class="srange"></span>'+
+        '<span class="stot">'+sess.length+' hit'+(sess.length>1?'s':'')+'</span></div>';
+      var groups={},order=[];
+      sess.forEach(function(hd){
+        var gk=pad(hd.getHours())+':'+pad(hd.getMinutes());
+        if(!groups[gk]){groups[gk]={t:hd,n:0};order.push(gk);}
+        groups[gk].n++;
+      });
+      order.sort();
+      order.forEach(function(gk){
+        var g=groups[gk];
+        block+='<div class="hgroup"><span class="ht">'+fmtTime(g.t)+'</span>'+
+          '<span class="hn">'+g.n+' hit'+(g.n>1?'s':'')+'</span></div>';
+      });
+      h+=block+'</div>';
+    });
+    return h;
+  }
+  function renderXtras(){
+    var tx=$('todayXtra');
+    if(tx)tx.innerHTML='<h3 class="xtra-h">Today’s sessions</h3>'+daySummaryHTML(todayKey);
+    var gx=$('trendXtra');
+    if(gx){
+      var sch=schedule(),tot=0,logged=0,under=0;
+      var d=new Date(sch[0].start);
+      while(d<=today){
+        var k=dkeyOf(d),c=countOf(k);
+        var di=phaseIndexFor(d),cp=di>=0?BASE_PHASES[di].cap:BASE_PHASES[0].cap;
+        if(c!==null){logged++;tot+=c;if(c<=cp)under++;}
+        d=addDays(d,1);
+      }
+      gx.innerHTML='<h3 class="xtra-h">The numbers so far</h3><div class="stat-row" style="animation:none">'+
+        '<div class="stat" style="animation:none"><span class="sv">'+tot+'</span><span class="sl">total logged</span></div>'+
+        '<div class="stat" style="animation:none"><span class="sv">'+(logged?Math.round(tot/logged*10)/10:0)+'</span><span class="sl">avg / day</span></div>'+
+        '<div class="stat" style="animation:none"><span class="sv">'+under+'/'+logged+'</span><span class="sl">days under cap</span></div></div>';
+    }
+  }
+
+  /* ---- detail overlay (section pages) ---- */
+  var detailFrom=null, detailNext=null;
+  function openDetail(el,title){
+    if(!el||$('detailBody').firstElementChild)return;
+    detailFrom=el.parentNode;detailNext=el.nextSibling;
+    $('detailBody').appendChild(el);
+    el.classList.add('expanded');
+    $('detailTitle').textContent=title;
+    var ov=$('detailOverlay');
+    ov.hidden=false;ov.scrollTop=0;
+    requestAnimationFrame(function(){ov.classList.add('show');});
+    document.body.style.overflow='hidden';
+    renderXtras();
+  }
+  function closeDetail(){
+    var ov=$('detailOverlay');
+    ov.classList.remove('show');
+    setTimeout(function(){
+      ov.hidden=true;
+      var el=$('detailBody').firstElementChild;
+      if(el){el.classList.remove('expanded');detailFrom.insertBefore(el,detailNext);}
+      document.body.style.overflow='';
+    },390);
+  }
+
   function renderAll(){
     computeToday();
     renderCountdown();renderStairs();renderPhases();
-    renderToday();renderTrend();renderHistory();renderHoldBanner();renderUrge();renderGlass();
+    renderToday();renderTrend();renderHistory();renderHoldBanner();renderUrge();renderGlass();renderWidgets();
+    if(!$('detailOverlay').hidden)renderXtras();
   }
 
   /* ================= events ================= */
@@ -1103,6 +1284,8 @@
     entryFor(todayKey,true).hits.push(new Date().toISOString());
     save();renderAll();
     plusOne();popBig();
+    var b=$('btnPlus');
+    b.classList.remove('pushed');void b.offsetWidth;b.classList.add('pushed');
     if(navigator.vibrate)navigator.vibrate(8);
   });
   $('btnMinus').addEventListener('click',function(){
@@ -1253,6 +1436,23 @@
   },{passive:true});
   $('glassBar').addEventListener('click',function(){
     window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  /* ---- section pages ---- */
+  $('detailBack').addEventListener('click',closeDetail);
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'&&!$('detailOverlay').hidden)closeDetail();
+  });
+  document.addEventListener('click',function(ev){
+    var xb=ev.target.closest('.xopen');
+    if(xb){openDetail($(xb.dataset.target),xb.dataset.title);return;}
+    var op=ev.target.closest('.openable');
+    if(op&&!op.classList.contains('expanded')){
+      var face=op.querySelector('.wface');
+      if(face&&getComputedStyle(face).display!=='none'){
+        openDetail(op,op.dataset.title);
+      }
+    }
   });
 
   /* ---- scroll reveal ---- */
