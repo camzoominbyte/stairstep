@@ -901,27 +901,29 @@ try{
   }
 
   /* ================= sessions ================= */
+  // A sitting is short: hits more than 30 minutes apart are separate sessions.
+  var SESSION_GAP=30*60000;
   function sessionInfo(){
     var e=data.days[todayKey];
     var hits=(e&&e.hits?e.hits:[]).map(function(t){return new Date(t);}).sort(function(a,b){return a-b;});
     if(!hits.length)return null;
-    var spacing=(phase.spacingH||0)*3600000;
+    // current session = the last run of hits within 30 min of each other
     var inSession=1;
-    for(var i=1;i<hits.length;i++){
-      if(spacing>0 && (hits[i]-hits[i-1])>=spacing)inSession=1;else inSession++;
+    for(var i=hits.length-1;i>0;i--){
+      if(hits[i]-hits[i-1]<=SESSION_GAP)inSession++;else break;
     }
     var last=hits[hits.length-1];
+    // spacing rule (how long to wait before the *next* session) still comes from the phase
+    var spacing=(phase.spacingH||0)*3600000;
     return {last:last,inSession:inSession,nextOpen:spacing>0?new Date(last.getTime()+spacing):null};
   }
   function sessionsFor(key){
     var e=data.days[key];
     if(!e||!e.hits||!e.hits.length)return [];
     var hits=e.hits.map(function(t){return new Date(t);}).sort(function(a,b){return a-b;});
-    var dIdx=phaseIndexFor(dateOf(key));
-    var sp=((dIdx>=0&&BASE_PHASES[dIdx].spacingH)||3)*3600000;
     var out=[[hits[0]]];
     for(var i=1;i<hits.length;i++){
-      if(hits[i]-hits[i-1]>=sp)out.push([hits[i]]);
+      if(hits[i]-hits[i-1]>SESSION_GAP)out.push([hits[i]]);
       else out[out.length-1].push(hits[i]);
     }
     return out;
