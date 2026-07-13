@@ -244,7 +244,9 @@
     background:none;font-family:'Karla',sans-serif;cursor:pointer;
   }
   .free .big{color:var(--sage);font-size:72px}
-  .free .slip-btn{display:inline-block}
+  .free .slip-btn{display:inline-block;margin-top:0}
+  .free .action-row{flex-wrap:wrap}
+  .free .action-row .delay-chip{flex:1 1 100%;border-radius:14px}
 
   /* ---- history ---- */
   .history{
@@ -497,6 +499,30 @@
     border-radius:50%;background:var(--amber);
   }
   .insight-line strong{color:var(--sand)}
+  /* prior-day cards inside the Today detail */
+  .daycard{background:#faf5ea;border:1px solid var(--hair);border-radius:14px;padding:10px 12px;margin:8px 0}
+  .daycard-head{display:flex;align-items:baseline;gap:10px;margin-bottom:2px}
+  .dc-date{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);flex:1}
+  .dc-count{font-family:'Fraunces',serif;font-weight:600;font-size:16px;color:var(--sand)}
+  .dc-count small{font-family:'Karla',sans-serif;font-size:11px;color:var(--muted);font-weight:400}
+  /* day-status chip calendar */
+  .chipcal{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 6px}
+  .chip{
+    width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    font-size:12.5px;font-weight:700;border:1px solid transparent;
+  }
+  .chip-under{background:#eef2e2;color:var(--sage)}
+  .chip-at{background:#f9edd8;color:var(--amber)}
+  .chip-over{background:#f7e3da;color:var(--clay)}
+  .chip-clean{background:var(--sage);color:#fffdf8}
+  .chip-slip{background:var(--clay);color:#fffdf8}
+  .chip-nolog{background:none;border:1px dashed var(--line);color:var(--faint)}
+  .chip-today{outline:2px solid var(--accent);outline-offset:1px}
+  /* taper progress track */
+  .taper-track{height:10px;border-radius:99px;background:var(--surface2);overflow:hidden;margin:8px 0 6px}
+  .taper-track>div{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--sage),var(--accent));transition:width .6s var(--spring)}
+  .chart-note{font-size:12.5px;color:var(--muted);margin:4px 0 0}
+  .legend-dot{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:baseline;margin-right:3px}
   .detail-overlay{
     position:fixed;inset:0;z-index:80;background:var(--bg);overflow-y:auto;
     -webkit-overflow-scrolling:touch;
@@ -600,7 +626,11 @@
       linear-gradient(to bottom, rgba(242,232,213,.04) 1px, transparent 1px);
   }
   html.dark .glassbar{background:rgba(29,26,20,.78);border-bottom:1px solid rgba(255,244,222,.08)}
-  html.dark .stat,html.dark .hsession{background:#2b261c}
+  html.dark .stat,html.dark .hsession,html.dark .daycard{background:#2b261c}
+  html.dark .chip-under{background:#2c331f}
+  html.dark .chip-at{background:#3d321e}
+  html.dark .chip-over{background:#40281e}
+  html.dark .chip-clean,html.dark .chip-slip{color:#1d1a14}
   html.dark .hnotime{background:#322a1b}
   html.dark .step{background:#2e2920;border-color:rgba(255,244,222,.05)}
   html.dark .stepcol.past .step{background:#272217}
@@ -716,6 +746,7 @@ try{
   <div class="wface"><span class="wicon">📓</span><span class="wname">The record</span><span class="wstat" id="wstatRecord">–</span></div>
   <h3>The record</h3>
   <p class="history-hint">Tap a day to open its log — each time with its hits.</p>
+  <div class="xtra" id="recordXtra"></div>
   <div id="historyRows"><p class="hempty">Your days will stack up here as you go.</p></div>
 </div>
 
@@ -723,6 +754,7 @@ try{
   <button class="xopen" data-target="stepSection" data-title="The step-down" aria-label="Open the step-down in detail">⤢</button>
   <div class="wface"><span class="wicon">🪜</span><span class="wname">Step-down</span><span class="wstat" id="wstatStep">–</span></div>
   <h2>The step-down</h2>
+  <div class="xtra" id="stepXtra"></div>
   <div id="phases"></div>
   <p class="d-evid" style="border-top:none;padding-top:0;margin-top:4px">Honest footnote: the research backs slow, stepped reduction over weeks, but no trial prescribes exact step sizes — these numbers are a reasonable structure, not a protocol. That's why a hard day holds a step instead of breaking the plan. <a class="dlink" href="guide.html#taper">The evidence →</a></p>
 </div>
@@ -1482,6 +1514,142 @@ try{
     }
     return {tot:tot,logged:logged,under:under};
   }
+  var BASELINE=30; // the ~30/day starting point the copy references
+  function progressStats(){
+    var t=dayTotals();
+    var avoided=Math.max(0,t.logged*BASELINE-t.tot);
+    var cutPct=t.logged?Math.max(0,Math.round((1-(t.tot/t.logged)/BASELINE)*100)):0;
+    var streak=0,d=new Date(today),start=schedule()[0].start;
+    while(d>=start){
+      var k=dkeyOf(d),c=countOf(k),di=phaseIndexFor(d);
+      var cp=di>=0?BASE_PHASES[di].cap:BASE_PHASES[0].cap;
+      var isZ=di===BASE_PHASES.length-1;
+      var ok=isZ?(c===null||c===0):(k===todayKey?(c||0)<=cp:(c!==null&&c<=cp));
+      if(!ok)break;
+      streak++;d=addDays(d,-1);
+    }
+    return {avoided:avoided,cutPct:cutPct,streak:streak,tot:t.tot,logged:t.logged,under:t.under};
+  }
+  function cumPoints(key){
+    var e=data.days[key];
+    var hits=(e&&e.hits?e.hits:[]).map(function(t){return new Date(t);}).sort(function(a,b){return a-b;});
+    var b=dateOf(key);
+    var day4=new Date(b.getFullYear(),b.getMonth(),b.getDate(),DAY_CUTOFF_H).getTime();
+    return hits.map(function(h,i){
+      var x=(h-day4)/3600000;
+      return {x:x<0?0:x>24?24:x,y:i+1};
+    });
+  }
+  /* today's cumulative line vs yesterday's, under the cap line */
+  function paceChartSVG(){
+    var W=340,H=150,padL=10,padR=10,padT=16,padB=20;
+    var tPts=cumPoints(todayKey);
+    var yDate=addDays(today,-1);
+    var yPts=yDate>=schedule()[0].start?cumPoints(dkeyOf(yDate)):[];
+    var tTot=tPts.length?tPts[tPts.length-1].y:0;
+    var yTot=yPts.length?yPts[yPts.length-1].y:0;
+    var maxY=Math.max(cap||1,tTot,yTot,1)*1.1;
+    var nowX=(Date.now()-new Date(today.getFullYear(),today.getMonth(),today.getDate(),DAY_CUTOFF_H).getTime())/3600000;
+    if(nowX<0)nowX=0;if(nowX>24)nowX=24;
+    function X(h){return padL+(h/24)*(W-padL-padR);}
+    function Y(v){return padT+(1-v/maxY)*(H-padT-padB);}
+    function stepPath(pts,endH){
+      var d='M'+X(pts[0].x).toFixed(1)+' '+Y(0).toFixed(1),cur=0;
+      pts.forEach(function(p){
+        d+=' L'+X(p.x).toFixed(1)+' '+Y(cur).toFixed(1)+' L'+X(p.x).toFixed(1)+' '+Y(p.y).toFixed(1);
+        cur=p.y;
+      });
+      if(endH>pts[pts.length-1].x)d+=' L'+X(endH).toFixed(1)+' '+Y(cur).toFixed(1);
+      return d;
+    }
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Cumulative hits today versus yesterday, under the cap line">';
+    [[4,'8a'],[8,'12p'],[12,'4p'],[16,'8p'],[20,'12a']].forEach(function(t){
+      var x=X(t[0]);
+      svg+='<line x1="'+x.toFixed(1)+'" y1="'+padT+'" x2="'+x.toFixed(1)+'" y2="'+(H-padB)+'" stroke="var(--surface2)" stroke-width="1"/>';
+      svg+='<text x="'+x.toFixed(1)+'" y="'+(H-6)+'" font-size="8.5" fill="var(--muted)" text-anchor="middle" font-family="Karla,sans-serif">'+t[1]+'</text>';
+    });
+    if(cap>0){
+      svg+='<line x1="'+X(0).toFixed(1)+'" y1="'+Y(cap).toFixed(1)+'" x2="'+X(24).toFixed(1)+'" y2="'+Y(cap).toFixed(1)+'" stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="5 4" stroke-opacity=".65"/>';
+      svg+='<text x="'+X(24).toFixed(1)+'" y="'+(Y(cap)-4).toFixed(1)+'" font-size="9" fill="var(--amber)" text-anchor="end" font-weight="700" font-family="Karla,sans-serif">cap '+cap+'</text>';
+    }
+    if(yPts.length){
+      svg+='<path d="'+stepPath(yPts,24)+'" fill="none" stroke="var(--faint)" stroke-width="2" stroke-linejoin="round"/>';
+    }
+    if(tPts.length){
+      var pd=stepPath(tPts,nowX);
+      svg+='<path d="'+pd+' L'+X(nowX).toFixed(1)+' '+Y(0).toFixed(1)+' Z" fill="var(--accent)" fill-opacity=".09" stroke="none"/>';
+      svg+='<path d="'+pd+'" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>';
+    }
+    svg+='<circle cx="'+X(nowX).toFixed(1)+'" cy="'+Y(tTot).toFixed(1)+'" r="4" fill="var(--accent)"/>';
+    return svg+'</svg>';
+  }
+  /* progress ring (zero era: days through the 21-day adjustment window) */
+  function ringSVG(pct,center,label,color){
+    pct=Math.max(0,Math.min(1,pct));
+    var R=54,C=2*Math.PI*R;
+    return '<svg viewBox="0 0 140 140" width="150" style="display:block;margin:4px auto" role="img" aria-label="'+center+' '+label+'">'+
+      '<circle cx="70" cy="70" r="'+R+'" fill="none" stroke="var(--surface2)" stroke-width="11"/>'+
+      '<circle cx="70" cy="70" r="'+R+'" fill="none" stroke="'+color+'" stroke-width="11" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+(C*(1-pct)).toFixed(1)+'" transform="rotate(-90 70 70)"/>'+
+      '<text x="70" y="70" text-anchor="middle" font-family="Fraunces,serif" font-size="34" font-weight="600" fill="var(--sand)">'+center+'</text>'+
+      '<text x="70" y="90" text-anchor="middle" font-family="Karla,sans-serif" font-size="8.5" letter-spacing="1.2" font-weight="700" fill="var(--muted)">'+label+'</text></svg>';
+  }
+  /* cumulative hits-not-smoked vs the ~30/day baseline — only ever rises */
+  function avoidedChartSVG(){
+    var sch=schedule(),pts=[],cum=0;
+    var d=new Date(sch[0].start);
+    while(d<=today){
+      var c=countOf(dkeyOf(d));
+      if(c!==null)cum+=Math.max(0,BASELINE-c);
+      else if(phaseIndexFor(d)===BASE_PHASES.length-1)cum+=BASELINE; // clean zero day
+      pts.push(cum);
+      d=addDays(d,1);
+    }
+    var maxV=pts[pts.length-1];
+    if(!pts.length||maxV<=0)return '';
+    var W=340,H=110,padL=10,padR=14,padT=26,padB=14;
+    function X(i){return padL+(pts.length===1?1:(i/(pts.length-1)))*(W-padL-padR);}
+    function Y(v){return padT+(1-v/maxV)*(H-padT-padB);}
+    var line='M'+X(0).toFixed(1)+' '+Y(pts[0]).toFixed(1);
+    for(var i=1;i<pts.length;i++)line+=' L'+X(i).toFixed(1)+' '+Y(pts[i]).toFixed(1);
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Cumulative hits not smoked versus baseline">';
+    svg+='<path d="'+line+' L'+X(pts.length-1).toFixed(1)+' '+(H-padB)+' L'+X(0).toFixed(1)+' '+(H-padB)+' Z" fill="var(--sage)" fill-opacity=".14"/>';
+    svg+='<path d="'+line+'" fill="none" stroke="var(--sage)" stroke-width="2.5" stroke-linejoin="round"/>';
+    svg+='<circle cx="'+X(pts.length-1).toFixed(1)+'" cy="'+Y(maxV).toFixed(1)+'" r="4" fill="var(--sage)"/>';
+    svg+='<text x="'+X(pts.length-1).toFixed(1)+'" y="'+(Y(maxV)-9).toFixed(1)+'" text-anchor="end" font-family="Fraunces,serif" font-size="15" font-weight="600" fill="var(--sage)">'+maxV+' not smoked</text>';
+    return svg+'</svg>';
+  }
+  function dayStatus(d){
+    var k=dkeyOf(d),c=countOf(k),di=phaseIndexFor(d);
+    var cp=di>=0?BASE_PHASES[di].cap:BASE_PHASES[0].cap;
+    if(di===BASE_PHASES.length-1)return c>0?{cls:'slip',stat:'slip',c:c,cap:0}:{cls:'clean',stat:'clean',c:0,cap:0};
+    if(c===null&&k!==todayKey)return {cls:'nolog',stat:'no log',c:null,cap:cp};
+    var n=c||0;
+    return n>cp?{cls:'over',stat:'over',c:n,cap:cp}:n===cp?{cls:'at',stat:'at cap',c:n,cap:cp}:{cls:'under',stat:'under',c:n,cap:cp};
+  }
+  function prevDaysHTML(){
+    var start=schedule()[0].start,html='',shown=0;
+    var d=addDays(today,-1);
+    while(d>=start&&shown<14){
+      var k=dkeyOf(d),s=dayStatus(d);
+      html+='<div class="daycard"><div class="daycard-head">'+
+        '<span class="dc-date">'+WEEKDAYS[d.getDay()].slice(0,3)+' '+fmtShort(d)+'</span>'+
+        '<span class="dc-count">'+(s.c===null?'·':(s.cap>0?s.c+'<small> / '+s.cap+'</small>':s.c))+'</span>'+
+        '<span class="hstat '+s.cls+'">'+s.stat+'</span></div>'+
+        daylineSVG(k)+'</div>';
+      shown++;d=addDays(d,-1);
+    }
+    return html?'<h3 class="xtra-h" style="margin-top:18px">The days before</h3>'+html:'';
+  }
+  function chipCalHTML(){
+    var start=schedule()[0].start,chips='';
+    var d=new Date(start);
+    while(d<=today){
+      var s=dayStatus(d);
+      chips+='<span class="chip chip-'+s.cls+(dkeyOf(d)===todayKey?' chip-today':'')+'" title="'+fmtShort(d)+' · '+s.stat+'">'+d.getDate()+'</span>';
+      d=addDays(d,1);
+    }
+    return '<div class="chipcal">'+chips+'</div>';
+  }
 
   /* ---- widget faces + detail extras ---- */
   function renderWidgets(){
@@ -1525,25 +1693,51 @@ try{
   function renderXtras(){
     var tx=$('todayXtra');
     if(tx){
-      var pace=paceVsYesterday();
-      var paceHtml=pace
-        ?'<div class="insights"><p class="insight-line">By this time yesterday you’d logged <strong>'+pace.y+'</strong> · today <strong>'+pace.t+'</strong>'+
-          (pace.t<pace.y?' — <strong>trending down.</strong>':pace.t>pace.y?' — running ahead of yesterday. The delay timer is right there.':' — even with yesterday.')+'</p></div>'
-        :'';
-      tx.innerHTML='<h3 class="xtra-h">Today’s sessions</h3>'+daySummaryHTML(todayKey)+paceHtml;
+      var html='';
+      if(isZeroEra){
+        var n=Math.max(0,daysFree());
+        html+='<h3 class="xtra-h">The adjustment, visually</h3>'+
+          ringSVG(n/21,n,n===1?'DAY OFF':'DAYS OFF','var(--sage)')+
+          '<p class="chart-note" style="text-align:center">'+
+          (n>=21?'The 2–3 week adjustment window the research maps is behind you. From here it’s maintenance.'
+                :'Filling the 2–3 week receptor-adjustment window the research maps. Every day counts, and it only fills.')+'</p>';
+      }else{
+        var pace=paceVsYesterday();
+        html+='<h3 class="xtra-h">Today’s pace</h3>'+paceChartSVG()+
+          '<p class="chart-note"><span class="legend-dot" style="background:var(--accent)"></span>today &nbsp;'+
+          '<span class="legend-dot" style="background:var(--faint)"></span>yesterday &nbsp;'+
+          '<span style="color:var(--amber)">┄</span> cap</p>';
+        if(pace){
+          html+='<div class="insights"><p class="insight-line">By this time yesterday you’d logged <strong>'+pace.y+'</strong> · today <strong>'+pace.t+'</strong>'+
+            (pace.t<pace.y?' — <strong>trending down.</strong>':pace.t>pace.y?' — running ahead of yesterday. The delay timer is right there.':' — even with yesterday.')+'</p></div>';
+        }
+        html+='<h3 class="xtra-h" style="margin-top:16px">Today’s sessions</h3>'+daySummaryHTML(todayKey);
+      }
+      html+=prevDaysHTML();
+      tx.innerHTML=html;
     }
     var gx=$('trendXtra');
     if(gx){
       var t=dayTotals();
+      var ps=progressStats();
       var avg=t.logged?Math.round(t.tot/t.logged*10)/10:0;
-      var html='<h3 class="xtra-h">The numbers so far</h3><div class="stat-row" style="animation:none">'+
+      var html2='<h3 class="xtra-h">The progress</h3><div class="stat-row" style="animation:none">'+
+        '<div class="stat" style="animation:none"><span class="sv" style="color:var(--sage)">'+ps.cutPct+'%</span><span class="sl">below baseline</span></div>'+
+        '<div class="stat" style="animation:none"><span class="sv" style="color:var(--sage)">'+ps.avoided+'</span><span class="sl">hits not smoked</span></div>'+
+        '<div class="stat" style="animation:none"><span class="sv">'+ps.streak+'</span><span class="sl">day streak held</span></div></div>';
+      var av=avoidedChartSVG();
+      if(av){
+        html2+='<h3 class="xtra-h" style="margin-top:16px">What you didn’t smoke</h3>'+av+
+          '<p class="chart-note">Every hit under the ~'+BASELINE+'/day baseline, stacking up since day one. This line only rises.</p>';
+      }
+      html2+='<h3 class="xtra-h" style="margin-top:16px">The numbers so far</h3><div class="stat-row" style="animation:none">'+
         '<div class="stat" style="animation:none"><span class="sv">'+t.tot+'</span><span class="sl">total logged</span></div>'+
         '<div class="stat" style="animation:none"><span class="sv">'+avg+'</span><span class="sl">avg / day</span></div>'+
         '<div class="stat" style="animation:none"><span class="sv">'+t.under+'/'+t.logged+'</span><span class="sl">days under cap</span></div></div>';
       var hits=timedHits();
       if(hits.length>=4){
         var hist=hourHist(hits);
-        html+='<h3 class="xtra-h" style="margin-top:16px">When you smoke</h3>'+hourChartSVG(hist);
+        html2+='<h3 class="xtra-h" style="margin-top:16px">When you smoke</h3>'+hourChartSVG(hist);
         var lines=[];
         var pk=peakWindow(hist,hits.length);
         if(pk)lines.push('Your heaviest window is <strong>'+pk.from+'–'+pk.to+'</strong> — <strong>'+pk.share+'%</strong> of every hit you’ve logged.');
@@ -1553,12 +1747,39 @@ try{
         var ss=sessionStatsAll();
         if(ss.firstAvg)lines.push('First hit of the day averages <strong>'+ss.firstAvg+'</strong> · last averages <strong>'+ss.lastAvg+'</strong>.');
         if(ss.sessions)lines.push('You average <strong>'+ss.perSession+' hits per session</strong>'+(ss.avgGap!==null?' with about <strong>'+ss.avgGap+'h</strong> between sessions':'')+'.');
-        if(t.logged>=2)lines.push('Averaging <strong>'+avg+'/day</strong> — <strong>'+Math.max(0,Math.round((1-avg/30)*100))+'%</strong> below the ~30/day baseline.');
-        html+='<div class="insights">'+lines.map(function(l){return '<p class="insight-line">'+l+'</p>';}).join('')+'</div>';
+        if(t.logged>=2)lines.push('Averaging <strong>'+avg+'/day</strong> — <strong>'+ps.cutPct+'%</strong> below the ~30/day baseline.');
+        html2+='<div class="insights">'+lines.map(function(l){return '<p class="insight-line">'+l+'</p>';}).join('')+'</div>';
       }else{
-        html+='<p class="hnote-line" style="margin-top:10px">Patterns — your heaviest hours, session habits, pace — appear here once a few timed hits are logged.</p>';
+        html2+='<p class="hnote-line" style="margin-top:10px">Patterns — your heaviest hours, session habits, pace — appear here once a few timed hits are logged.</p>';
       }
-      gx.innerHTML=html;
+      gx.innerHTML=html2;
+    }
+    var rx=$('recordXtra');
+    if(rx){
+      var ps2=progressStats();
+      rx.innerHTML='<h3 class="xtra-h">At a glance</h3>'+chipCalHTML()+
+        '<p class="chart-note">'+ps2.under+' of '+ps2.logged+' logged days under cap'+
+        (ps2.streak>1?' · <strong style="color:var(--sage)">'+ps2.streak+' days held in a row</strong>':'')+
+        ' · '+ps2.avoided+' hits not smoked vs baseline.</p>';
+    }
+    var sx=$('stepXtra');
+    if(sx){
+      var start=schedule()[0].start,z=zeroDate();
+      var totalD=Math.max(1,Math.round((z-start)/MS_DAY));
+      if(isZeroEra){
+        var nz=Math.max(0,daysFree());
+        sx.innerHTML='<h3 class="xtra-h">The road</h3><div class="taper-track"><div style="width:100%"></div></div>'+
+          '<p class="chart-note">Taper complete — the cap walked '+BASE_PHASES[0].cap+' → 0 in '+totalD+' days. Day '+nz+' at zero, and the counter only climbs.</p>';
+      }else if(today>=start){
+        var dayN=Math.min(totalD,Math.round((today-start)/MS_DAY)+1);
+        var pct=Math.round(dayN/totalD*100);
+        var dropStart=Math.round((1-cap/BASE_PHASES[0].cap)*100);
+        var dropBase=Math.round((1-cap/BASELINE)*100);
+        sx.innerHTML='<h3 class="xtra-h">The road</h3><div class="taper-track"><div style="width:'+pct+'%"></div></div>'+
+          '<p class="chart-note">Day <strong>'+dayN+' of '+totalD+'</strong> · '+pct+'% of the way to zero. Today’s cap of '+cap+' is <strong>'+dropBase+'% below baseline</strong>'+(dropStart>0?' and '+dropStart+'% below where the taper started':'')+'.</p>';
+      }else{
+        sx.innerHTML='';
+      }
     }
   }
 
