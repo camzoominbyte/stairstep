@@ -779,7 +779,7 @@ try{
   <h2>The step-down</h2>
   <div class="xtra" id="stepXtra"></div>
   <div id="phases"></div>
-  <p class="d-evid" style="border-top:none;padding-top:0;margin-top:4px">Honest footnote: the research backs slow, stepped reduction over weeks, but no trial prescribes exact step sizes — these numbers are a reasonable structure, not a protocol. That's why a hard day holds a step instead of breaking the plan. <a class="dlink" href="guide.html#taper">The evidence →</a></p>
+  <p class="d-evid" style="border-top:none;padding-top:0;margin-top:4px">Honest footnote: the research backs slow, stepped reduction over weeks, but no trial prescribes exact step sizes or session gaps — the caps carry the evidence-backed principle, and the daily-widening gaps are the structure that enforces it (each urge between windows is a wave the 20-minute rule already handles). That's why a hard day holds a step instead of breaking the plan — and a held day keeps its widest gap. <a class="dlink" href="guide.html#taper">The evidence →</a></p>
 </div>
 
 <div class="section openable" id="systemSection" data-title="The system">
@@ -874,18 +874,18 @@ try{
      desc:"A quarter down from the ~30 baseline. The cut is real but holdable — the point is proving the count works.",
      why:"The clinical review's core finding: slow, stepped reduction over weeks lowers the odds and severity of withdrawal.",
      ref:"taper"},
-    {days:2, cap:16, capText:"16", sessionMax:4, spacingH:3,
-     rule:"Max 4 hits/session · 3h spacing holds",
-     desc:"Cut the most mindless session of the day — the one that happens because it's just the time.",
+    {days:2, cap:16, capText:"16", sessionMax:4, spacingH:[3.5,4],
+     rule:"Max 4 hits/session · gap widens daily: 3½h, then 4h",
+     desc:"Cut the most mindless session of the day — the one that happens because it's just the time. The space between sessions starts stretching every day from here.",
      why:"Lab trials show THC suppresses withdrawal dose-dependently — small steps keep the gap your receptors feel small.",
      ref:"taper"},
-    {days:2, cap:12, capText:"12", sessionMax:3, spacingH:4,
-     rule:"Max 3 hits/session · spacing widens to 4h",
+    {days:2, cap:12, capText:"12", sessionMax:3, spacingH:[4.5,5],
+     rule:"Max 3 hits/session · gaps keep widening: 4½h, then 5h",
      desc:"Well under half of baseline. Mild edge here is the taper working, not failing. The delay rule earns its keep.",
      why:"Cravings crest and pass in minutes — urge-delay is first-line behavioral treatment, and this stretch is where it earns its keep.",
      ref:"manage"},
-    {days:2, cap:8, capText:"8", sessionMax:3, spacingH:4,
-     rule:"2–3 sessions max · drop all daytime",
+    {days:2, cap:8, capText:"8", sessionMax:3, spacingH:[5.5,6],
+     rule:"2–3 sessions max · gaps 5½h, then 6h · drop all daytime",
      desc:"Biggest structural cut, landed on the weekend on purpose. Keep only what's load-bearing — midday and the evening wind-down.",
      why:"Cues drive use as much as chemistry. Dropping whole sessions removes cue windows — the same target CBT and MET, the best-supported treatments, work on.",
      ref:"manage"},
@@ -1012,6 +1012,20 @@ try{
   /* ================= sessions ================= */
   // A sitting is short: hits more than 30 minutes apart are separate sessions.
   var SESSION_GAP=30*60000;
+  // Spacing can step up daily within a phase ([day1, day2] arrays). Held
+  // days run past the array and clamp to the last (widest) value, so a
+  // hold never loosens the structure.
+  function spacingHNow(){
+    var sp=phase.spacingH;
+    if(!sp)return 0;
+    if(!sp.length&&typeof sp==='number')return sp;
+    var di=idx>=0?Math.round((today-schedule()[idx].start)/MS_DAY):0;
+    return sp[Math.max(0,Math.min(sp.length-1,di))];
+  }
+  function fmtGapH(h){
+    var w=Math.floor(h);
+    return (h%1?(w?w:'')+'½':w)+'h';
+  }
   function sessionInfo(){
     var e=data.days[todayKey];
     var hits=(e&&e.hits?e.hits:[]).map(function(t){return new Date(t);}).sort(function(a,b){return a-b;});
@@ -1022,8 +1036,8 @@ try{
       if(hits[i]-hits[i-1]<=SESSION_GAP)inSession++;else break;
     }
     var last=hits[hits.length-1];
-    // spacing rule (how long to wait before the *next* session) still comes from the phase
-    var spacing=(phase.spacingH||0)*3600000;
+    // spacing rule (how long to wait before the *next* session) is day-aware
+    var spacing=spacingHNow()*3600000;
     return {last:last,inSession:inSession,nextOpen:spacing>0?new Date(last.getTime()+spacing):null};
   }
   function sessionsFor(key){
@@ -1491,15 +1505,15 @@ try{
     if(gapTick){clearInterval(gapTick);gapTick=null;}
     var chip=$('gapChip');
     var count=countOf(todayKey)||0;
-    var si=(!isZeroEra&&idx>=0&&!phase.single&&(phase.spacingH||0)>0&&count<cap)?sessionInfo():null;
+    var si=(!isZeroEra&&idx>=0&&!phase.single&&spacingHNow()>0&&count<cap)?sessionInfo():null;
     if(!si||!si.nextOpen){chip.hidden=true;return;}
-    var nextOpen=si.nextOpen;
+    var nextOpen=si.nextOpen,gapH=spacingHNow();
     function tick(){
       var diff=nextOpen-Date.now();
       if(diff>0){
         var h=Math.floor(diff/3600000),m=Math.ceil(diff%3600000/60000);
         chip.className='delay-chip gap-chip gap-wait';
-        chip.textContent='Next window opens '+fmtTime(nextOpen)+' · '+(h?h+'h ':'')+m+'m out. Urges before then get the 20-minute timer.';
+        chip.textContent='Next window opens '+fmtTime(nextOpen)+' · '+(h?h+'h ':'')+m+'m out (today’s gap: '+fmtGapH(gapH)+'). Urges before then get the 20-minute timer.';
       }else{
         chip.className='delay-chip gap-chip gap-open';
         chip.textContent=gapOpenMsg(Math.floor(-diff/60000));
