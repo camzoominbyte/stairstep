@@ -200,7 +200,7 @@
     border-color:#c9853c;color:#3a2a12;
     box-shadow:0 10px 24px -8px rgba(165,104,31,.5);
   }
-  .tally-btns button:active{transform:translateY(1px) scale(.99)}
+  .tally-btns button:active{transform:scale(.95)}
   .tally-btns button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .tally-btns .minus{flex:0 0 84px;color:var(--muted)}
   .delay-chip{
@@ -357,6 +357,46 @@
   .guide-link strong{color:var(--sand);font-size:15.5px}
   .guide-link small{font-size:13px;color:var(--muted)}
   .guide-arrow{font-family:'Fraunces',serif;font-size:24px;color:var(--accent);flex:0 0 auto}
+  /* ---- motion ---- */
+  @keyframes floaty{0%,100%{transform:translateY(-2px)}50%{transform:translateY(2.5px)}}
+  @keyframes cardin{from{opacity:0;transform:translateY(12px) scale(.985)}to{opacity:1;transform:none}}
+  @keyframes growup{from{transform:scaleY(.35);opacity:0}to{transform:scaleY(1);opacity:1}}
+  @keyframes pulsePop{0%{transform:scale(1)}35%{transform:scale(1.16)}100%{transform:scale(1)}}
+  @keyframes floatUp{0%{opacity:0;transform:translate(-50%,0) scale(.7)}18%{opacity:1}100%{opacity:0;transform:translate(-50%,-72px) scale(1.2)}}
+  @keyframes sparkfly{from{transform:translate(0,0) scale(1);opacity:1}to{transform:translate(var(--dx),var(--dy)) scale(.3);opacity:0}}
+  @keyframes sheen{0%,55%{transform:translateX(-110%)}100%{transform:translateX(110%)}}
+  .today{animation:cardin .55s var(--spring) both;position:relative}
+  .stat{animation:floaty 7s ease-in-out infinite}
+  .stat:nth-child(2){animation-delay:1.2s}
+  .stat:nth-child(3){animation-delay:2.4s}
+  .action-row .delay-chip{animation:floaty 5.5s ease-in-out infinite}
+  .stepcol.now .step{animation:floaty 5s ease-in-out infinite}
+  .stairs.anim .step{transform-origin:bottom;animation:growup .55s var(--spring) both}
+  .stairs.anim .stepcol:nth-child(2) .step{animation-delay:.07s}
+  .stairs.anim .stepcol:nth-child(3) .step{animation-delay:.14s}
+  .stairs.anim .stepcol:nth-child(4) .step{animation-delay:.21s}
+  .stairs.anim .stepcol:nth-child(5) .step{animation-delay:.28s}
+  .stairs.anim .stepcol:nth-child(6) .step{animation-delay:.35s}
+  .big{display:inline-block}
+  .big.pop{animation:pulsePop .45s var(--spring)}
+  .plusone{
+    position:absolute;left:50%;font-family:'Fraunces',serif;font-weight:600;
+    font-size:24px;color:var(--accent);pointer-events:none;z-index:5;
+    animation:floatUp .9s var(--spring) forwards;
+  }
+  .spark{
+    position:absolute;width:7px;height:7px;border-radius:50%;
+    pointer-events:none;z-index:5;animation:sparkfly .8s ease-out forwards;
+  }
+  .bar>div{position:relative;overflow:hidden}
+  .bar>div::after{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);
+    transform:translateX(-110%);animation:sheen 3.8s ease-in-out infinite;
+  }
+  button{transition:transform .16s var(--spring)}
+  button:active{transform:scale(.95)}
+
   .section{margin-bottom:36px}
   .footer{text-align:center;color:var(--muted);margin-top:44px;font-family:'Fraunces',serif;font-style:italic;font-size:15px}
 </style>
@@ -659,6 +699,55 @@
   function $(id){return document.getElementById(id);}
   var editingKey=null, lastFixTime='', fixMsg='';
 
+  /* ---- motion helpers ---- */
+  var booted=false;
+  var motionOK=!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+  var lastNums={};
+  function setNum(id,val,slow){
+    var el=$(id),from=lastNums[id];
+    lastNums[id]=val;
+    if(!motionOK||from===undefined||from===val){el.textContent=val;return;}
+    var t0=performance.now(),dur=slow?650:380;
+    (function f(t){
+      var p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3);
+      el.textContent=Math.round(from+(val-from)*e);
+      if(p<1)requestAnimationFrame(f);
+    })(t0);
+  }
+  function setTxt(id,val){lastNums[id]=undefined;$(id).textContent=val;}
+  function popBig(){
+    if(!motionOK)return;
+    var el=$('tallyCount');
+    el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');
+  }
+  function plusOne(){
+    if(!motionOK)return;
+    var card=$('todayCard'),b=$('btnPlus');
+    var s=document.createElement('span');s.className='plusone';s.textContent='+1';
+    var cr=card.getBoundingClientRect(),br=b.getBoundingClientRect();
+    s.style.top=(br.top-cr.top-8)+'px';
+    s.style.left=(br.left-cr.left+br.width/2)+'px';
+    card.appendChild(s);
+    setTimeout(function(){s.remove();},950);
+  }
+  function sparks(anchor){
+    if(!motionOK)return;
+    var card=$('todayCard');
+    var cr=card.getBoundingClientRect(),ar=anchor.getBoundingClientRect();
+    var colors=['#8fae7c','#e0a458','#a5681f','#c9853c'];
+    for(var i=0;i<14;i++){
+      var p=document.createElement('span');p.className='spark';
+      p.style.background=colors[i%colors.length];
+      p.style.top=(ar.top-cr.top+ar.height/2)+'px';
+      p.style.left=(ar.left-cr.left+16+Math.random()*Math.max(20,ar.width-32))+'px';
+      var ang=Math.random()*Math.PI*2,d=32+Math.random()*48;
+      p.style.setProperty('--dx',(Math.cos(ang)*d)+'px');
+      p.style.setProperty('--dy',(-Math.abs(Math.sin(ang))*d-16)+'px');
+      card.appendChild(p);
+      (function(el){setTimeout(function(){el.remove();},850);})(p);
+    }
+  }
+
   function lastUseDay(){
     var latest=null;
     for(var k in data.days){
@@ -687,6 +776,10 @@
   function renderStairs(){
     var sch=schedule(), maxCap=BASE_PHASES[0].cap;
     var stairs=$('stairs');stairs.innerHTML='';
+    if(!booted&&motionOK){
+      stairs.classList.add('anim');
+      setTimeout(function(){stairs.classList.remove('anim');},1200);
+    }
     sch.forEach(function(s,i){
       var p=BASE_PHASES[i];
       var el=document.createElement('div');
@@ -730,7 +823,7 @@
       $('btnEarlier').style.display='none';
       $('earlierRow').hidden=true;
       $('todayEyebrow').textContent='Days off';
-      $('tallyCount').textContent=Math.max(0,daysFree());
+      setNum('tallyCount',Math.max(0,daysFree()),true);
       $('capLabel').textContent='and climbing';
       if(count>0){
         $('barFill').style.width='100%';$('barFill').style.background='var(--clay)';
@@ -748,7 +841,7 @@
       $('btnEarlier').style.display='';
       var sch=schedule();
       $('todayEyebrow').textContent=idx>=0?'Today · '+sch[idx].lbl:'Starts '+fmtShort(sch[0].start);
-      $('tallyCount').textContent=count;
+      setNum('tallyCount',count,!booted);
       $('capLabel').textContent='of '+cap+' hits today';
       var pct=cap>0?Math.min(100,(count/cap)*100):0;
       $('barFill').style.width=pct+'%';
@@ -756,25 +849,26 @@
       if(count>cap){$('barNote').textContent='Over the cap — tomorrow, hold this phase one extra day, then keep stepping down.';}
       else if(count===cap){$('barNote').textContent='At the cap. That’s the ceiling — you’re done for today.';}
       else{$('barNote').textContent='Under is always fine.';}
-      $('stLeft').textContent=Math.max(0,cap-count);
+      setNum('stLeft',Math.max(0,cap-count),!booted);
       var si=sessionInfo();
       if(!si){
         $('stSession').className='sv';
-        $('stSession').textContent=phase.single?'1':phase.sessionMax;
+        setNum('stSession',phase.single?1:phase.sessionMax);
         $('stSessionLbl').textContent=phase.single?'evening session':'this session';
-        $('stLast').textContent='–';
+        setTxt('stLast','–');
       }else{
-        $('stLast').textContent=fmtTime(si.last);
+        setTxt('stLast',fmtTime(si.last));
         if(phase.single){
-          $('stSession').textContent='—';
+          setTxt('stSession','—');
+          $('stSession').className='sv';
           $('stSessionLbl').textContent='evening only';
         }else if(si.inSession>=phase.sessionMax){
-          $('stSession').textContent=fmtTime(si.nextOpen);
+          setTxt('stSession',fmtTime(si.nextOpen));
           $('stSession').className='sv time';
           $('stSessionLbl').textContent='next session';
         }else{
-          $('stSession').textContent=phase.sessionMax-si.inSession;
           $('stSession').className='sv';
+          setNum('stSession',phase.sessionMax-si.inSession);
           $('stSessionLbl').textContent='left this session';
         }
       }
@@ -947,9 +1041,11 @@
     function tick(){
       var left=URGE_MS-(Date.now()-data.urgeStart);
       if(left<=0){
+        var wasRunning=chip.classList.contains('running');
         chip.className='delay-chip done';
         chip.textContent='20 minutes survived — that one stayed banked. Tap to reset.';
         if(urgeTick){clearInterval(urgeTick);urgeTick=null;}
+        if(wasRunning){sparks(chip);if(navigator.vibrate)navigator.vibrate([15,60,15]);}
       }else{
         var m=Math.floor(left/60000),s=Math.floor((left%60000)/1000);
         chip.className='delay-chip running';
@@ -970,6 +1066,8 @@
   $('btnPlus').addEventListener('click',function(){
     entryFor(todayKey,true).hits.push(new Date().toISOString());
     save();renderAll();
+    plusOne();popBig();
+    if(navigator.vibrate)navigator.vibrate(8);
   });
   $('btnMinus').addEventListener('click',function(){
     var n=countOf(todayKey)||0;
@@ -1139,6 +1237,7 @@
   });
 
   renderAll();
+  booted=true;
 
   /* offline support */
   if('serviceWorker' in navigator){
