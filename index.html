@@ -684,6 +684,21 @@
   .section{margin-bottom:36px}
   .footer{text-align:center;color:var(--muted);margin-top:44px;font-family:'Fraunces',serif;font-style:italic;font-size:15px}
 
+  /* ---- rotating tip chips: tap to shuffle to the next one ---- */
+  .tip-chip{
+    display:block;width:100%;text-align:left;margin-top:14px;position:relative;
+    background:linear-gradient(160deg,#fdf3e2,#fffdf8);
+    border:1px dashed rgba(165,104,31,.4);border-radius:14px;
+    padding:10px 13px;font-family:'Karla',sans-serif;font-size:13px;line-height:1.5;
+    color:var(--ink);cursor:pointer;
+  }
+  .tip-chip .tip-tag{display:block;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:2px}
+  .tip-chip .tip-txt strong{color:var(--sand)}
+  .tip-chip .tip-next{display:block;font-size:10.5px;color:var(--muted);margin-top:3px;font-style:italic}
+  @keyframes tipFlip{0%{transform:scale(1)}35%{transform:scale(.965)}100%{transform:scale(1)}}
+  .tip-chip.tipflip{animation:tipFlip .4s var(--spring)}
+  .tip-chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
   /* ---- dark mode (system-following via .dark class, plus in-app toggle) ---- */
   html.dark{
     color-scheme:dark;
@@ -729,6 +744,7 @@
   html.dark .stepcol.now .step{background:#332d22}
   html.dark .hold-banner{background:linear-gradient(160deg,#3a2f1b,#26221a)}
   html.dark .guide-link{background:linear-gradient(160deg,#352c19,#26221a)}
+  html.dark .tip-chip{background:linear-gradient(160deg,#3a2f1b,#26221a)}
   html.dark .phase.zero{background:linear-gradient(160deg,#28301f,#26221a);border-color:#4c5a3b}
   html.dark .delay-chip.done,html.dark .gap-line.gap-open{background:#28301f}
   html.dark .gap-line{background:#2b261c}
@@ -825,6 +841,7 @@ try{
     <button id="btnAddEarlier">+ Add hit at this time</button>
   </div>
   <p id="earlierMsg" hidden></p>
+  <div id="todayTip"></div>
   <div class="xtra" id="todayXtra"></div>
 </div>
 
@@ -1332,6 +1349,13 @@ try{
         if(sess.length){
           var ls=sess[sess.length-1];
           lines.push('<strong>Sessions:</strong> '+sess.length+' · '+fmtTime(sess[0][0])+' → '+fmtTime(ls[ls.length-1]));
+          var sg=dayGaps(selSchedKey);
+          if(sg.length){
+            var sgSum=0,sgMax=0;
+            sg.forEach(function(g){sgSum+=g;if(g>sgMax)sgMax=g;});
+            var srH=p.single?0:spacingHOn(d,di);
+            lines.push('<strong>Gaps:</strong> avg '+fmtDur(sgSum/sg.length)+(sg.length>1?' · longest '+fmtDur(sgMax):'')+(srH>0?' · rule was '+fmtGapH(srH):''));
+          }
         }
       }else if(selSchedKey===todayKey){
         var c=countOf(todayKey)||0;
@@ -1421,6 +1445,8 @@ try{
         }
       }
     }
+    var tt=$('todayTip');
+    if(tt)tt.innerHTML=tipHTML(isZeroEra?'zero':'today','Try this');
   }
 
   var trendSel=null;
@@ -1493,6 +1519,11 @@ try{
     if(sess.length){
       var ls=sess[sess.length-1];
       bits.push(sess.length+' session'+(sess.length>1?'s':'')+' · '+fmtTime(sess[0][0])+' → '+fmtTime(ls[ls.length-1]));
+      var tg=dayGaps(trendSel);
+      if(tg.length){
+        var tgSum=0;tg.forEach(function(g){tgSum+=g;});
+        bits.push('avg gap '+fmtDur(tgSum/tg.length));
+      }
     }
     td.innerHTML=bits.join(' · ');
     td.hidden=false;
@@ -1600,6 +1631,11 @@ try{
           bits.push(sess.length+' session'+(sess.length>1?'s':''));
           var lastS=sess[sess.length-1];
           bits.push(fmtTime(sess[0][0])+' → '+fmtTime(lastS[lastS.length-1]));
+          var hg=dayGaps(key);
+          if(hg.length){
+            var hgSum=0;hg.forEach(function(g){hgSum+=g;});
+            bits.push('avg gap '+fmtDur(hgSum/hg.length));
+          }
         }
         var eAdj=data.days[key]?(data.days[key].adj||0):0;
         if(eAdj>0)bits.push(eAdj+' untimed');
@@ -1627,10 +1663,25 @@ try{
         // split the day into sessions (by spacing), then group each session's hits by minute
         var sessions=sessionsFor(key);
         if(sessions.length||( e&&(e.adj||0)>0))detail+='<p class="dc-sum" style="margin-top:10px;font-weight:700;color:var(--sand)">This day’s sessions — adjust below</p>';
+        var eReqH=(dIdx>=0&&dIdx<BASE_PHASES.length-1&&!BASE_PHASES[dIdx].single)?spacingHOn(d,dIdx):0;
+        var eReqMs=eReqH*3600000,eGaps=[];
         sessions.forEach(function(sess,si){
+          if(si>0){
+            var prevS=sessions[si-1];
+            var gapMs=sess[0]-prevS[prevS.length-1];
+            eGaps.push(gapMs);
+            if(eReqMs>0){
+              var held=gapMs>=eReqMs;
+              detail+='<div class="sgap '+(held?'ok':'short')+'">'+fmtDur(gapMs)+' between'+
+                (held?' · held the '+fmtGapH(eReqH)+' rule':' · '+fmtDur(eReqMs-gapMs)+' short of the '+fmtGapH(eReqH)+' rule')+'</div>';
+            }else{
+              detail+='<div class="sgap ok">'+fmtDur(gapMs)+' between</div>';
+            }
+          }
+          var span=sess[sess.length-1]-sess[0];
           var block='<div class="hsession"><div class="hsession-head">'+
             '<span class="sn">Session '+(si+1)+'</span>'+
-            '<span class="srange"></span>'+
+            '<span class="srange">'+fmtTime(sess[0])+(span>60000?' → '+fmtTime(sess[sess.length-1])+' · '+fmtDur(span):'')+'</span>'+
             '<span class="stot">'+sess.length+' hit'+(sess.length>1?'s':'')+'</span></div>';
           var groups={},order=[];
           sess.forEach(function(hd){
@@ -1647,6 +1698,13 @@ try{
           });
           detail+=block+'</div>';
         });
+        if(eGaps.length){
+          var eSum=0,eMax=0;
+          eGaps.forEach(function(g){eSum+=g;if(g>eMax)eMax=g;});
+          detail+='<p class="chart-note">Average gap: <strong>'+fmtDur(eSum/eGaps.length)+'</strong>'+
+            (eGaps.length>1?' · longest: <strong>'+fmtDur(eMax)+'</strong>':'')+
+            (eReqMs>0?' · the rule this day: '+fmtGapH(eReqH)+'.':'.')+'</p>';
+        }
         var adj=e?(e.adj||0):0;
         if(adj>0){
           detail+='<div class="hnotime"><span class="ht">no time</span>'+
@@ -1654,6 +1712,7 @@ try{
             '<button data-act="adjdec" aria-label="One less untimed">−</button></div>';
         }
         if(!detail)detail='<div class="hnote-line">Nothing logged this day yet.</div>';
+        detail+=tipHTML('editor','Log tip');
         detail+='<div class="timefix"><input type="time" value="'+lastFixTime+'" aria-label="Time the hit happened">'+
                 '<button data-act="addat">+ Add hit</button></div>';
         if(fixMsg)detail+='<div class="hnote-line">'+fixMsg+'</div>';
@@ -1755,6 +1814,7 @@ try{
     var si=(!isZeroEra&&idx>=0&&!phase.single&&spacingHNow()>0&&count<cap)?sessionInfo():null;
     if(!si||!si.nextOpen){wrap.hidden=true;return;}
     var nextOpen=si.nextOpen,gapH=spacingHNow(),openTs=nextOpen.getTime();
+    var rec=gapRecords();
     function tick(){
       var diff=nextOpen-Date.now();
       if(diff>0){
@@ -1763,7 +1823,14 @@ try{
         chip.textContent='Next window ~'+fmtTime(nextOpen)+' · '+(h?h+'h ':'')+m+'m · gap '+fmtGapH(gapH);
       }else{
         chip.className='gap-line gap-open';
-        chip.textContent=gapOpenMsg(Math.floor(-diff/60000));
+        var liveMs=Date.now()-si.last.getTime();
+        if(rec&&liveMs>rec.ms){
+          chip.textContent='🏆 '+fmtDur(liveMs)+' since the last hit — your longest gap on record, still growing.';
+        }else if(rec&&rec.ms-liveMs<=3600000){
+          chip.textContent=gapOpenMsg(Math.floor(-diff/60000))+' Record gap '+fmtDur(rec.ms)+' is '+fmtDur(rec.ms-liveMs)+' away 🏆';
+        }else{
+          chip.textContent=gapOpenMsg(Math.floor(-diff/60000));
+        }
         // fire the "try to wait" alert once per window, when it first opens
         if(lastAlertedOpen!==openTs){lastAlertedOpen=openTs;windowAlert();}
       }
@@ -1884,6 +1951,62 @@ try{
     return {count:recs.length,avg:sum/recs.length,adherence:Math.round(okc/recs.length*100),
       early:early,recent:recent,widening:(early!==null&&recent>early+0.15)};
   }
+  /* gaps between a day's sessions, in ms */
+  function dayGaps(key){
+    var s=sessionsFor(key),out=[];
+    for(var i=1;i<s.length;i++)out.push(s[i][0]-s[i-1][s[i-1].length-1]);
+    return out;
+  }
+  /* the longest completed gap ever logged — the record worth chasing */
+  function gapRecords(){
+    var best=0,bestKey=null;
+    for(var k in data.days){
+      dayGaps(k).forEach(function(g){if(g>best){best=g;bestKey=k;}});
+    }
+    return best>0?{ms:best,key:bestKey}:null;
+  }
+  /* each day's average gap as a bar, that day's spacing rule as a dashed
+     step line — bars climbing over the line is the taper holding */
+  function gapChartSVG(){
+    var sch=schedule(),days=[];
+    var d=new Date(sch[0].start);
+    while(d<=today){
+      var di=phaseIndexFor(d);
+      if(di===BASE_PHASES.length-1)break;
+      var k=dkeyOf(d),gaps=dayGaps(k);
+      var avg=gaps.length?gaps.reduce(function(a,b){return a+b;},0)/gaps.length/3600000:null;
+      days.push({d:new Date(d),k:k,avg:avg,req:(di>=0&&!BASE_PHASES[di].single)?spacingHOn(d,di):0});
+      d=addDays(d,1);
+    }
+    if(days.filter(function(x){return x.avg!==null;}).length<2)return '';
+    var maxV=0.5;
+    days.forEach(function(x){if(x.avg&&x.avg>maxV)maxV=x.avg;if(x.req>maxV)maxV=x.req;});
+    maxV*=1.15;
+    var W=340,H=120,padT=8,padB=16,plotH=H-padT-padB;
+    var slotW=W/days.length,barW=Math.min(20,slotW*0.6);
+    function Y(v){return padT+plotH*(1-v/maxV);}
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Average time between sessions, day by day, against each day’s rule">';
+    var lineD='';
+    days.forEach(function(x,i){
+      if(x.req>0){
+        var y=Y(x.req);
+        lineD+=(lineD?' L':'M')+(slotW*i).toFixed(1)+' '+y.toFixed(1)+' L'+(slotW*(i+1)).toFixed(1)+' '+y.toFixed(1);
+      }
+    });
+    if(lineD)svg+='<path d="'+lineD+'" fill="none" stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="4 3" stroke-opacity=".7"/>';
+    var labelEvery=days.length>16?3:2;
+    days.forEach(function(x,i){
+      var cx=slotW*i+slotW/2;
+      if(x.avg!==null){
+        var col=(x.req<=0||x.avg>=x.req)?'var(--sage)':x.avg>=x.req*0.7?'var(--amber)':'var(--clay)';
+        svg+='<rect x="'+(cx-barW/2).toFixed(1)+'" y="'+Y(x.avg).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+Math.max(2,plotH*(x.avg/maxV)).toFixed(1)+'" rx="3" fill="'+col+'" fill-opacity=".9"'+(x.k===todayKey?' stroke="var(--accent)"':'')+'/>';
+      }else{
+        svg+='<rect x="'+(cx-barW/2).toFixed(1)+'" y="'+(padT+plotH-2)+'" width="'+barW.toFixed(1)+'" height="2" rx="1" fill="var(--surface2)"/>';
+      }
+      if(i%labelEvery===0)svg+='<text x="'+cx.toFixed(1)+'" y="'+(H-3)+'" font-size="8.5" fill="'+(x.k===todayKey?'var(--accent)':'var(--muted)')+'" text-anchor="middle" font-family="Karla,sans-serif">'+(x.d.getMonth()+1)+'/'+x.d.getDate()+'</text>';
+    });
+    return svg+'</svg>';
+  }
   function sessionRhythmHTML(){
     var g=gapAnalytics();
     if(!g)return '';
@@ -1892,13 +2015,107 @@ try{
       ?(g.widening?'Your gaps are <strong>widening</strong> — early average '+fmtDur(g.early*3600000)+', lately '+fmtDur(g.recent*3600000)+'. That’s the taper working.'
                   :'Your gaps are holding around '+fmtDur(g.avg*3600000)+' — the rule keeps stepping up, so keep stretching them.')
       :'';
+    var rec=gapRecords(),chart=gapChartSVG();
     return '<h3 class="xtra-h" style="margin-top:16px">Time between sessions</h3>'+
       '<div class="stat-row" style="animation:none">'+
       '<div class="stat" style="animation:none"><span class="sv" style="font-size:16px;padding-top:4px">'+fmtDur(g.avg*3600000)+'</span><span class="sl">avg gap</span></div>'+
       '<div class="stat" style="animation:none"><span class="sv" style="color:'+col+'">'+g.adherence+'%</span><span class="sl">met the rule</span></div>'+
-      '<div class="stat" style="animation:none"><span class="sv">'+g.count+'</span><span class="sl">gaps logged</span></div></div>'+
-      (note?'<p class="chart-note">'+note+'</p>':'');
+      '<div class="stat" style="animation:none"><span class="sv" style="font-size:16px;padding-top:4px">'+(rec?fmtDur(rec.ms):'–')+'</span><span class="sl">longest ever</span></div></div>'+
+      (chart?chart+'<p class="chart-note">Each bar is a day’s <strong>average gap</strong> · <span style="color:var(--amber)">┄</span> that day’s rule. Bars climbing over the dashed line is the taper holding.</p>':'')+
+      (note?'<p class="chart-note">'+note+'</p>':'')+
+      (rec?'<p class="chart-note">Longest gap on record: <strong>'+fmtDur(rec.ms)+'</strong> ('+fmtShort(dateOf(rec.key))+') — the one record that loves being broken.</p>':'');
   }
+
+  /* ---- rotating tip chips: contextual pools, tap for the next one ---- */
+  var TIP_POOLS={
+    today:[
+      '☀️ The first gap of the day sets the rhythm — front-load the waiting while willpower is freshest.',
+      '🍊 Give the hand-to-mouth loop a different job: cold drink, toothpick, anything. Cues love an empty hand.',
+      '🛋️ Urge stuck to a place? Change rooms. Cues live in places — leave the place, strand the cue.',
+      '🎯 Under the cap counts double on a hard day. <strong>Under is always fine.</strong>',
+      '⏱️ Every urge waits 20 minutes before it counts — half the time the wave passes and you banked a hit.'
+    ],
+    gap:[
+      '💧 Urge mid-gap? A slow glass of water first — most waves break before the glass is empty.',
+      '🌊 Craving waves crest and pass in minutes whether you smoke or not. Time one — it changes how they feel.',
+      '⏱️ The gap <strong>is</strong> the taper. A few minutes past the rule today makes tomorrow’s wider rule feel normal.',
+      '🚶 Movement beats willpower — a five-minute walk outlasts most urges.',
+      '🏆 Your longest-ever gap is the one record that loves being broken. Take a run at it.',
+      '📵 If urges arrive with the phone in hand, park it in another room for one song.'
+    ],
+    editor:[
+      '🕐 Honest timestamps make honest analytics — each gap runs from a session’s last hit to the next one’s first.',
+      '✂️ Sessions split after 30 quiet minutes — hits closer together than that count as one sitting.',
+      '➕ Remembered an earlier hit? Add it with its real time and it slots into the right session automatically.',
+      '📏 The “between” labels judge each gap against that day’s spacing rule — sage held it, clay fell short.'
+    ],
+    step:[
+      '🪜 The caps carry the evidence; the widening gaps do the enforcing. Hold the gap and the cap holds itself.',
+      '🧱 Brutal day? Hold the step, don’t break the plan. One extra day at this cap beats one day over it.',
+      '📆 Every date here rides on your actual progress — the schedule bends, it doesn’t break.',
+      '🌅 Each phase drops a session before it drops the count — losing a cue window is worth more than losing a hit.'
+    ],
+    trend:[
+      '📉 Judge the week, not the day. One bar never tells the story — the slope does.',
+      '👻 Ghost steps are each day’s cap; solid bars living below them is the whole game.',
+      '🔍 Tap any bar for that day’s count, sessions, and average gap.',
+      '🧮 “Hits not smoked” only rises — on a rough day, watch that line instead of the bars.'
+    ],
+    record:[
+      '📓 What gets counted gets controlled — an honest log is the strongest tool in the kit.',
+      '🔎 Tap any day to open its log, fix times, and see its gaps — accurate history keeps the analytics honest.',
+      '🗓️ In the chip calendar, sage means held, amber at cap, clay over — the streak at a glance.',
+      '📈 Watch first-hit times drift later day over day — that drift is the taper compounding.'
+    ],
+    zero:[
+      '😴 Guard sleep like it’s the whole project — it’s the symptom most likely to send people back.',
+      '🌙 Vivid dreams are REM rebound: your brain rebooting dreaming. Progress signal, not a problem.',
+      '🌊 Post-zero urges are old cue times firing on schedule. Each wave is shorter than the last.',
+      '📞 A hard hour is exactly what the briefed friend is for. That’s why the brief happened.',
+      '🥣 Appetite comes back around week two — keep food grabbable and easy till then.'
+    ]
+  };
+  var tipIdx={};
+  function tipHTML(pool,tag){
+    var tips=TIP_POOLS[pool];
+    if(!tips||!tips.length)return '';
+    if(tipIdx[pool]===undefined)tipIdx[pool]=Math.floor(Math.random()*tips.length);
+    var i=tipIdx[pool]%tips.length;
+    return '<button type="button" class="tip-chip" data-pool="'+pool+'" aria-label="Tip — tap for another">'+
+      '<span class="tip-tag">'+(tag||'Tip')+' '+(i+1)+' of '+tips.length+'</span>'+
+      '<span class="tip-txt">'+tips[i]+'</span>'+
+      '<span class="tip-next">tap for another →</span></button>';
+  }
+  function miniSparks(el){
+    if(!motionOK)return;
+    var colors=['#8fae7c','#e0a458','#a5681f','#c9853c'];
+    for(var i=0;i<8;i++){
+      var p=document.createElement('span');p.className='spark';
+      p.style.background=colors[i%colors.length];
+      p.style.top='55%';
+      p.style.left=(10+Math.random()*80)+'%';
+      var ang=Math.random()*Math.PI*2,dd=26+Math.random()*40;
+      p.style.setProperty('--dx',(Math.cos(ang)*dd)+'px');
+      p.style.setProperty('--dy',(-Math.abs(Math.sin(ang))*dd-12)+'px');
+      el.appendChild(p);
+      (function(s){setTimeout(function(){s.remove();},850);})(p);
+    }
+  }
+  // capture phase: tip chips live inside cards/rows whose own click handlers
+  // (openable, history editor "Done") must never see this tap
+  document.addEventListener('click',function(ev){
+    var chip=ev.target.closest('.tip-chip');
+    if(!chip)return;
+    ev.stopPropagation();ev.preventDefault();
+    var pool=chip.dataset.pool,tips=TIP_POOLS[pool];
+    if(!tips)return;
+    tipIdx[pool]=((tipIdx[pool]||0)+1)%tips.length;
+    chip.querySelector('.tip-tag').textContent=chip.querySelector('.tip-tag').textContent.replace(/\d+ of/,(tipIdx[pool]+1)+' of');
+    chip.querySelector('.tip-txt').innerHTML=tips[tipIdx[pool]];
+    chip.classList.remove('tipflip');void chip.offsetWidth;chip.classList.add('tipflip');
+    miniSparks(chip);
+    if(navigator.vibrate)navigator.vibrate(5);
+  },true);
   /* all days side by side: columns = days, top→bottom = 4am→4am, dots = hits */
   function punchcardSVG(){
     var sch=schedule(),days=[];
@@ -2235,8 +2452,10 @@ try{
           h+='<div class="sgap ok">'+fmtDur(gapMs)+' between</div>';
         }
       }
+      var span=sess[sess.length-1]-sess[0];
       var block='<div class="hsession"><div class="hsession-head">'+
-        '<span class="sn">Session '+(si+1)+'</span><span class="srange"></span>'+
+        '<span class="sn">Session '+(si+1)+'</span>'+
+        '<span class="srange">'+fmtTime(sess[0])+(span>60000?' → '+fmtTime(sess[sess.length-1])+' · '+fmtDur(span):'')+'</span>'+
         '<span class="stot">'+sess.length+' hit'+(sess.length>1?'s':'')+'</span></div>';
       var groups={},order=[];
       sess.forEach(function(hd){
@@ -2269,6 +2488,12 @@ try{
       h+='<p class="chart-note">Average gap '+(isTod?'today':'that day')+': <strong>'+fmtDur(sum/gaps.length)+'</strong>'+
         (gaps.length>1?' · longest: <strong>'+fmtDur(longest)+'</strong>':'')+
         (reqMs>0?' · the rule '+(isTod?'today':'that day')+': '+fmtGapH(reqH)+'.':'.')+'</p>';
+      if(isTod){
+        var rec=gapRecords();
+        if(rec)h+='<p class="chart-note">'+(longest>=rec.ms
+          ?'🏆 Today holds your <strong>longest gap on record</strong> — '+fmtDur(longest)+'.'
+          :'Longest gap on record: <strong>'+fmtDur(rec.ms)+'</strong> · today’s best is '+fmtDur(longest)+'. Beatable.')+'</p>';
+      }
     }
     return h;
   }
@@ -2301,6 +2526,7 @@ try{
             (pace.t<pace.y?' — <strong>trending down.</strong>':pace.t>pace.y?' — running ahead of yesterday. The delay timer is right there.':' — even with yesterday.')+'</p></div>';
         }
         html+='<h3 class="xtra-h" style="margin-top:16px">Today’s sessions</h3>'+daySummaryHTML(todayKey);
+        html+=tipHTML('gap','Gap tip');
       }
       html+=prevDaysHTML();
       tx.innerHTML=html;
@@ -2342,6 +2568,7 @@ try{
         html2+='<p class="hnote-line" style="margin-top:10px">Patterns — your heaviest hours, session habits, pace — appear here once a few timed hits are logged.</p>';
       }
       html2+=sessionRhythmHTML();
+      html2+=tipHTML('trend','Chart tip');
       gx.innerHTML=html2;
     }
     var rx=$('recordXtra');
@@ -2356,7 +2583,8 @@ try{
         (pc?'<h3 class="xtra-h" style="margin-top:16px">Every day, side by side</h3>'+pc+
             '<p class="chart-note">Each column is a day, top to bottom is 4am → 4am. Scan across to see the pattern shift — fewer dots, drifting later. Timed hits only.</p>':'')+
         sessionRhythmHTML()+
-        (ins.length?'<h3 class="xtra-h" style="margin-top:16px">What stands out</h3><div class="insights">'+ins.map(function(l){return '<p class="insight-line">'+l+'</p>';}).join('')+'</div>':'');
+        (ins.length?'<h3 class="xtra-h" style="margin-top:16px">What stands out</h3><div class="insights">'+ins.map(function(l){return '<p class="insight-line">'+l+'</p>';}).join('')+'</div>':'')+
+        tipHTML('record','Record tip');
     }
     var sx=$('stepXtra');
     if(sx){
@@ -2366,7 +2594,8 @@ try{
       var spacingBlock=ga?'<h3 class="xtra-h" style="margin-top:16px">Holding the spacing</h3>'+
         '<p class="chart-note"><strong style="color:'+(ga.adherence>=70?'var(--sage)':ga.adherence>=50?'var(--amber)':'var(--clay)')+'">'+ga.adherence+'%</strong> of your '+ga.count+' session gaps have met that day’s rule · averaging '+fmtDur(ga.avg*3600000)+' apart'+(ga.widening?' · <strong>widening as designed</strong>':'')+'. The rule steps up daily — that’s the ratchet.</p>':'';
       var roadBlock=spacingBlock+'<h3 class="xtra-h" style="margin-top:16px">The running schedule</h3>'+roadAheadHTML()+
-        '<p class="chart-note">Dates ride on your actual progress — hold a step and everything below, zero day included, shifts with it. The milestones past zero are the research’s map, <a class="dlink" href="guide.html#withdrawal">cited here →</a></p>';
+        '<p class="chart-note">Dates ride on your actual progress — hold a step and everything below, zero day included, shifts with it. The milestones past zero are the research’s map, <a class="dlink" href="guide.html#withdrawal">cited here →</a></p>'+
+        tipHTML('step','Step tip');
       if(isZeroEra){
         var nz=Math.max(0,daysFree());
         sx.innerHTML='<h3 class="xtra-h">The road</h3><div class="taper-track"><div style="width:100%"></div></div>'+
