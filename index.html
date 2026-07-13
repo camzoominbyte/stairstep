@@ -195,12 +195,36 @@
     box-shadow:var(--shadow-sm);
     transition:transform .25s var(--spring),box-shadow .25s var(--spring);
   }
-  .tally-btns #btnPlus{
-    background:linear-gradient(180deg,#e9ad5e,#d3913c);
-    border-color:#c9853c;color:#3a2a12;
-    box-shadow:0 10px 24px -8px rgba(165,104,31,.5);
-  }
   .tally-btns button:active{transform:scale(.95)}
+  .slide-log{
+    flex:1;position:relative;height:52px;border-radius:16px;
+    background:var(--surface2);border:1px solid var(--line);
+    overflow:hidden;cursor:grab;touch-action:none;
+    -webkit-user-select:none;user-select:none;
+    box-shadow:inset 0 2px 6px rgba(59,43,20,.08);
+  }
+  .slide-log:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .slide-fill{
+    position:absolute;top:0;left:0;bottom:0;width:0;border-radius:15px;
+    background:linear-gradient(90deg,#f4cf9a,#d3913c);
+  }
+  .slide-text{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    padding-left:44px;
+    font-weight:700;font-size:15px;color:var(--muted);pointer-events:none;
+    font-family:'Karla',sans-serif;transition:opacity .15s;
+  }
+  .slide-thumb{
+    position:absolute;top:4px;left:4px;width:43px;height:43px;border-radius:13px;
+    background:linear-gradient(180deg,#e9ad5e,#d3913c);color:#3a2a12;
+    display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;
+    box-shadow:0 4px 12px rgba(165,104,31,.4);will-change:transform;
+  }
+  .slide-log.snap .slide-thumb{transition:transform .35s var(--spring)}
+  .slide-log.snap .slide-fill{transition:width .35s var(--spring)}
+  @keyframes thumbNudge{0%,86%,100%{transform:translateX(0)}91%{transform:translateX(8px)}96%{transform:translateX(0)}}
+  .slide-log.idle .slide-thumb{animation:thumbNudge 4.5s ease-in-out infinite}
+  @media (hover:hover){.slide-log:hover .slide-thumb{filter:brightness(1.07)}}
   .tally-btns button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .tally-btns .minus{flex:0 0 84px;color:var(--muted)}
   .delay-chip{
@@ -428,7 +452,6 @@
   button:active{transform:scale(.95)}
   @media (hover:hover){
     button:hover{transform:translateY(-1.5px)}
-    .tally-btns #btnPlus:hover{filter:brightness(1.06);box-shadow:0 14px 30px -8px rgba(165,104,31,.55)}
     .hrow:hover{background:rgba(59,43,20,.035);border-radius:8px}
     .stepcol:hover .step{filter:brightness(1.05)}
     .guide-link:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
@@ -436,8 +459,6 @@
     .xopen:hover{color:var(--accent)}
     .glassbar:hover .gbzero{text-decoration:underline}
   }
-  @keyframes pressbounce{0%{transform:scale(1)}30%{transform:scale(.9)}60%{transform:scale(1.05)}100%{transform:scale(1)}}
-  #btnPlus.pushed{animation:pressbounce .4s var(--spring)}
 
   /* ---- expandable sections + detail overlay ---- */
   .today,.history,.section{position:relative}
@@ -551,7 +572,11 @@
   <p class="bar-note" id="barNote"></p>
   <div class="tally-btns" id="tallyBtns">
     <button class="minus" id="btnMinus" aria-label="Remove one hit">−1</button>
-    <button id="btnPlus">Log a hit</button>
+    <div class="slide-log" id="slideLog" role="button" tabindex="0" aria-label="Slide to log a hit, or press Enter">
+      <div class="slide-fill" id="slideFill"></div>
+      <span class="slide-text" id="slideText">Slide to log a hit&nbsp;&nbsp;→</span>
+      <div class="slide-thumb" id="slideThumb">＋</div>
+    </div>
   </div>
   <div class="action-row">
     <button class="delay-chip" id="urgeChip">Urge? Start the 20-minute timer.</button>
@@ -855,7 +880,7 @@
   }
   function plusOne(){
     if(!motionOK)return;
-    var card=$('todayCard'),b=$('btnPlus');
+    var card=$('todayCard'),b=$('slideLog');
     var s=document.createElement('span');s.className='plusone';s.textContent='+1';
     var cr=card.getBoundingClientRect(),br=b.getBoundingClientRect();
     s.style.top=(br.top-cr.top-8)+'px';
@@ -1408,14 +1433,80 @@
   }
 
   /* ================= events ================= */
-  $('btnPlus').addEventListener('click',function(){
+  function logHit(){
     entryFor(todayKey,true).hits.push(new Date().toISOString());
     save();renderAll();
     plusOne();popBig();
-    var b=$('btnPlus');
-    b.classList.remove('pushed');void b.offsetWidth;b.classList.add('pushed');
     if(navigator.vibrate)navigator.vibrate(8);
-  });
+  }
+
+  /* slide-to-log */
+  (function(){
+    var track=$('slideLog'),thumb=$('slideThumb'),fill=$('slideFill'),txt=$('slideText');
+    var dragging=false,startX=0,curX=0,maxX=0,busy=false;
+    track.classList.add('idle');
+    function setX(x){
+      curX=Math.max(0,Math.min(maxX,x));
+      thumb.style.transform='translateX('+curX+'px)';
+      fill.style.width=(curX+51)+'px';
+      var o=1-(curX/(maxX||1))*1.5;
+      txt.style.opacity=String(o<0?0:o);
+    }
+    function commit(){
+      busy=true;
+      track.classList.add('snap');
+      maxX=maxX||track.clientWidth-thumb.offsetWidth-8;
+      setX(maxX);
+      logHit();
+      txt.textContent='Logged ✓';
+      txt.style.opacity='1';txt.style.color='#3a2a12';
+      setTimeout(function(){
+        setX(0);
+        setTimeout(function(){
+          track.classList.remove('snap');
+          track.classList.add('idle');
+          txt.innerHTML='Slide to log a hit&nbsp;&nbsp;→';
+          txt.style.color='';txt.style.opacity='1';
+          busy=false;
+        },380);
+      },550);
+    }
+    function reset(){
+      track.classList.add('snap');
+      setX(0);
+      txt.style.opacity='1';
+      setTimeout(function(){
+        track.classList.remove('snap');
+        track.classList.add('idle');
+      },380);
+    }
+    track.addEventListener('pointerdown',function(e){
+      if(busy)return;
+      dragging=true;
+      track.classList.remove('idle','snap');
+      maxX=track.clientWidth-thumb.offsetWidth-8;
+      startX=e.clientX-curX;
+      track.setPointerCapture(e.pointerId);
+    });
+    track.addEventListener('pointermove',function(e){
+      if(!dragging)return;
+      setX(e.clientX-startX);
+    });
+    function release(){
+      if(!dragging)return;
+      dragging=false;
+      if(curX>=maxX*0.85)commit();else reset();
+    }
+    track.addEventListener('pointerup',release);
+    track.addEventListener('pointercancel',release);
+    track.addEventListener('keydown',function(e){
+      if((e.key==='Enter'||e.key===' ')&&!busy){
+        e.preventDefault();
+        maxX=track.clientWidth-thumb.offsetWidth-8;
+        commit();
+      }
+    });
+  })();
   $('btnMinus').addEventListener('click',function(){
     var n=countOf(todayKey)||0;
     if(n>0){setCount(todayKey,n-1);renderAll();}
