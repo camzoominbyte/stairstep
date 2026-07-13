@@ -237,19 +237,23 @@
   }
   .delay-chip.running{border-style:solid;border-color:var(--accent);background:var(--accent-soft);font-variant-numeric:tabular-nums}
   .delay-chip.done{border-style:solid;border-color:var(--sage);color:var(--sage);background:#eff2df}
-  .gap-chip{display:block;cursor:default;font-variant-numeric:tabular-nums;margin-top:12px}
-  .gap-chip[hidden]{display:none}
-  .gap-chip.gap-wait{border-style:solid;border-color:var(--line);color:var(--muted);background:none}
-  .gap-chip.gap-open{border-style:solid;border-color:var(--sage);color:var(--sage);background:#eff2df}
-  @keyframes gapFlash{0%{transform:scale(1)}28%{transform:scale(1.035)}100%{transform:scale(1)}}
-  .gap-chip.flash{animation:gapFlash .6s var(--spring)}
-  .gap-bell{
-    margin:8px 0 0;font-size:12.5px;color:var(--muted);
-    border:1px solid var(--line);border-radius:99px;padding:6px 13px;
-    background:none;font-family:'Karla',sans-serif;cursor:pointer;
+  .gap-status{display:flex;align-items:center;gap:8px;margin-top:12px}
+  .gap-status[hidden]{display:none}
+  .gap-line{
+    flex:1;font-size:12px;font-weight:600;line-height:1.4;
+    padding:8px 12px;border-radius:11px;
+    background:var(--surface2);color:var(--muted);
+    font-variant-numeric:tabular-nums;
   }
-  .gap-bell[hidden]{display:none}
-  .gap-bell.on{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+  .gap-line.gap-open{background:#eff2df;color:var(--sage)}
+  @keyframes gapFlash{0%{transform:scale(1)}28%{transform:scale(1.02)}100%{transform:scale(1)}}
+  .gap-status.flash{animation:gapFlash .6s var(--spring)}
+  .gap-bell{
+    flex:0 0 auto;width:38px;height:38px;border-radius:11px;
+    border:1px solid var(--line);background:none;cursor:pointer;
+    font-size:16px;line-height:1;color:var(--muted);padding:0;
+  }
+  .gap-bell.on{border-color:var(--accent);background:var(--accent-soft)}
   /* day-vs-adjacent comparison in the record detail */
   .daycmp{margin:2px 0 6px}
   .dc-row{padding:7px 9px;border-radius:11px;margin:5px 0;background:#faf5ea;border:1px solid var(--hair)}
@@ -490,7 +494,6 @@
   .stat{animation:floaty 7s ease-in-out infinite}
   .stat:nth-child(2){animation-delay:1.2s}
   .stat:nth-child(3){animation-delay:2.4s}
-  .action-row .delay-chip{animation:floaty 5.5s ease-in-out infinite}
   @keyframes floatyBig{0%,100%{transform:translateY(-4px)}50%{transform:translateY(4px)}}
   .stepcol.now .step{animation:floatyBig 2.6s ease-in-out infinite}
   .stairs.anim .step{transform-origin:bottom;animation:growup .55s var(--spring) both}
@@ -727,7 +730,8 @@
   html.dark .hold-banner{background:linear-gradient(160deg,#3a2f1b,#26221a)}
   html.dark .guide-link{background:linear-gradient(160deg,#352c19,#26221a)}
   html.dark .phase.zero{background:linear-gradient(160deg,#28301f,#26221a);border-color:#4c5a3b}
-  html.dark .delay-chip.done,html.dark .gap-chip.gap-open{background:#28301f}
+  html.dark .delay-chip.done,html.dark .gap-line.gap-open{background:#28301f}
+  html.dark .gap-line{background:#2b261c}
   html.dark .hold-btns button,html.dark .tally-btns button,html.dark .hedit button,
   html.dark .hgroup button,html.dark .hnotime button,html.dark .timefix button,
   html.dark .earlier-row button,html.dark .data-btns button,html.dark #detailBack,html.dark .xopen,
@@ -807,13 +811,15 @@ try{
       <span class="hold-label" id="holdLabel">Hold to log a hit</span>
     </button>
   </div>
+  <div class="gap-status" id="gapStatus" hidden>
+    <span class="gap-line gap-wait" id="gapChip" role="status"></span>
+    <button class="gap-bell" id="gapBell" type="button" aria-label="Remind me to wait when the window opens">🔕</button>
+  </div>
   <div class="action-row">
     <button class="delay-chip" id="urgeChip">Urge? Start the 20-minute timer.</button>
     <button class="time-link" id="btnEarlier" aria-label="Add hits from earlier at a chosen time">+ Earlier</button>
     <button class="slip-btn" id="btnSlip">Slipped? Log it honestly</button>
   </div>
-  <div class="delay-chip gap-chip" id="gapChip" hidden role="status"></div>
-  <button class="gap-bell" id="gapBell" hidden></button>
   <div class="earlier-row" id="earlierRow" hidden>
     <input type="time" id="earlierTime" aria-label="Time the hit happened">
     <button id="btnAddEarlier">+ Add hit at this time</button>
@@ -1728,8 +1734,8 @@ try{
   function notifOK(){return data.notifyWindows&&'Notification' in window&&Notification.permission==='granted';}
   function windowAlert(){
     if(navigator.vibrate)navigator.vibrate([20,90,20,90,20]);
-    var chip=$('gapChip');
-    if(chip){chip.classList.remove('flash');void chip.offsetWidth;chip.classList.add('flash');}
+    var wrap=$('gapStatus');
+    if(wrap){wrap.classList.remove('flash');void wrap.offsetWidth;wrap.classList.add('flash');}
     if(!notifOK())return;
     var body='The window’s open — but the taper lives in the waiting. Craving waves pass in minutes, and every extra minute you hold is banked.';
     try{
@@ -1744,25 +1750,25 @@ try{
   function renderGap(){
     if(gapTick){clearInterval(gapTick);gapTick=null;}
     if(winTimer){clearTimeout(winTimer);winTimer=null;}
-    var chip=$('gapChip'),bell=$('gapBell');
+    var wrap=$('gapStatus'),chip=$('gapChip'),bell=$('gapBell');
     var count=countOf(todayKey)||0;
     var si=(!isZeroEra&&idx>=0&&!phase.single&&spacingHNow()>0&&count<cap)?sessionInfo():null;
-    if(!si||!si.nextOpen){chip.hidden=true;bell.hidden=true;return;}
+    if(!si||!si.nextOpen){wrap.hidden=true;return;}
     var nextOpen=si.nextOpen,gapH=spacingHNow(),openTs=nextOpen.getTime();
     function tick(){
       var diff=nextOpen-Date.now();
       if(diff>0){
         var h=Math.floor(diff/3600000),m=Math.ceil(diff%3600000/60000);
-        chip.className='delay-chip gap-chip gap-wait';
-        chip.textContent='Next window opens '+fmtTime(nextOpen)+' · '+(h?h+'h ':'')+m+'m out (today’s gap: '+fmtGapH(gapH)+'). Urges before then get the 20-minute timer.';
+        chip.className='gap-line gap-wait';
+        chip.textContent='Next window ~'+fmtTime(nextOpen)+' · '+(h?h+'h ':'')+m+'m · gap '+fmtGapH(gapH);
       }else{
-        chip.className='delay-chip gap-chip gap-open';
+        chip.className='gap-line gap-open';
         chip.textContent=gapOpenMsg(Math.floor(-diff/60000));
         // fire the "try to wait" alert once per window, when it first opens
         if(lastAlertedOpen!==openTs){lastAlertedOpen=openTs;windowAlert();}
       }
     }
-    chip.hidden=false;
+    wrap.hidden=false;
     tick();
     gapTick=setInterval(tick,20000);
     // precise foreground alert at the moment the window opens
@@ -1773,13 +1779,13 @@ try{
         renderGap();
       },untilOpen+400);
     }
-    // bell toggle: opt in to a nudge-to-wait when the window opens
-    bell.hidden=false;
+    // bell: opt in to a nudge-to-wait when the window opens
+    if(!('Notification' in window)){bell.style.display='none';return;}
+    bell.style.display='';
     var on=notifOK();
     bell.classList.toggle('on',on);
-    bell.textContent=on?'🔔 Window nudges on — I’ll remind you to wait'
-      :(('Notification' in window)?'🔕 Nudge me to wait when the window opens':'');
-    if(!('Notification' in window))bell.hidden=true;
+    bell.textContent=on?'🔔':'🔕';
+    bell.setAttribute('aria-label',on?'Window reminders on — tap to turn off':'Remind me to wait when the window opens');
   }
 
   /* ---- pattern analytics (from timed hits) ---- */
@@ -2512,7 +2518,8 @@ try{
     if(data.notifyWindows){data.notifyWindows=false;save();renderGap();return;}
     if(Notification.permission==='granted'){data.notifyWindows=true;save();renderGap();return;}
     if(Notification.permission==='denied'){
-      $('gapBell').textContent='Notifications are blocked in your browser settings';
+      var line=$('gapChip');
+      if(line){line.textContent='Notifications are blocked in your browser settings.';setTimeout(renderGap,3000);}
       return;
     }
     Notification.requestPermission().then(function(p){
