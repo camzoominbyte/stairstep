@@ -530,60 +530,78 @@
   .section{margin-bottom:36px}
   .footer{text-align:center;color:var(--muted);margin-top:44px;font-family:'Fraunces',serif;font-style:italic;font-size:15px}
 
-  /* ---- dark mode (follows the phone's setting) ---- */
-  @media (prefers-color-scheme: dark){
-    :root{
-      color-scheme:dark;
-      --bg:#1d1a14;
-      --surface:#26221a;
-      --surface2:#332d22;
-      --line:#463e2d;
-      --hair:rgba(255,244,222,.09);
-      --sand:#f2e8d5;
-      --ink:#cfc4ad;
-      --muted:#9a8f78;
-      --faint:#6c6353;
-      --accent:#e0a458;
-      --accent-deep:#c9853c;
-      --accent-soft:#3d321e;
-      --amber:#e0a458;
-      --sage:#a3b899;
-      --clay:#d98f75;
-      --shadow:0 16px 40px -16px rgba(0,0,0,.5),0 6px 16px -8px rgba(0,0,0,.4);
-      --shadow-sm:0 4px 14px -6px rgba(0,0,0,.45);
-    }
-    body::before{
-      background:
-        radial-gradient(50% 42% at 18% 0%, rgba(224,164,88,.10), transparent 70%),
-        radial-gradient(48% 38% at 85% 8%, rgba(224,164,88,.05), transparent 65%),
-        var(--bg);
-    }
-    body::after{
-      background-image:
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
-        linear-gradient(to right, rgba(242,232,213,.04) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(242,232,213,.04) 1px, transparent 1px);
-    }
-    .glassbar{background:rgba(29,26,20,.78);border-bottom:1px solid rgba(255,244,222,.08)}
-    .stat,.hsession{background:#2b261c}
-    .hnotime{background:#322a1b}
-    .step{background:#2e2920;border-color:rgba(255,244,222,.05)}
-    .stepcol.past .step{background:#272217}
-    .stepcol.now .step{background:#332d22}
-    .hold-banner{background:linear-gradient(160deg,#3a2f1b,#26221a)}
-    .guide-link{background:linear-gradient(160deg,#352c19,#26221a)}
-    .phase.zero{background:linear-gradient(160deg,#28301f,#26221a);border-color:#4c5a3b}
-    .delay-chip.done{background:#28301f}
-    .hold-btns button,.tally-btns button,.hedit button,.hgroup button,.hnotime button,
-    .timefix button,.earlier-row button,.data-btns button,#detailBack,.xopen{background:#2e2920}
-    .hedit button.hdone{color:#2e2410}
-    .timefix input,.earlier-row input{background:#2e2920}
-    .slide-log{box-shadow:inset 0 2px 6px rgba(0,0,0,.4)}
-    @media (hover:hover){
-      .hrow:hover{background:rgba(255,244,222,.05)}
-    }
+  /* ---- dark mode (system-following via .dark class, plus in-app toggle) ---- */
+  html.dark{
+    color-scheme:dark;
+    --bg:#1d1a14;
+    --surface:#26221a;
+    --surface2:#332d22;
+    --line:#463e2d;
+    --hair:rgba(255,244,222,.09);
+    --sand:#f2e8d5;
+    --ink:#cfc4ad;
+    --muted:#9a8f78;
+    --faint:#6c6353;
+    --accent:#e0a458;
+    --accent-deep:#c9853c;
+    --accent-soft:#3d321e;
+    --amber:#e0a458;
+    --sage:#a3b899;
+    --clay:#d98f75;
+    --shadow:0 16px 40px -16px rgba(0,0,0,.5),0 6px 16px -8px rgba(0,0,0,.4);
+    --shadow-sm:0 4px 14px -6px rgba(0,0,0,.45);
+  }
+  html.dark body::before{
+    background:
+      radial-gradient(50% 42% at 18% 0%, rgba(224,164,88,.10), transparent 70%),
+      radial-gradient(48% 38% at 85% 8%, rgba(224,164,88,.05), transparent 65%),
+      var(--bg);
+  }
+  html.dark body::after{
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+      linear-gradient(to right, rgba(242,232,213,.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(242,232,213,.04) 1px, transparent 1px);
+  }
+  html.dark .glassbar{background:rgba(29,26,20,.78);border-bottom:1px solid rgba(255,244,222,.08)}
+  html.dark .stat,html.dark .hsession{background:#2b261c}
+  html.dark .hnotime{background:#322a1b}
+  html.dark .step{background:#2e2920;border-color:rgba(255,244,222,.05)}
+  html.dark .stepcol.past .step{background:#272217}
+  html.dark .stepcol.now .step{background:#332d22}
+  html.dark .hold-banner{background:linear-gradient(160deg,#3a2f1b,#26221a)}
+  html.dark .guide-link{background:linear-gradient(160deg,#352c19,#26221a)}
+  html.dark .phase.zero{background:linear-gradient(160deg,#28301f,#26221a);border-color:#4c5a3b}
+  html.dark .delay-chip.done{background:#28301f}
+  html.dark .hold-btns button,html.dark .tally-btns button,html.dark .hedit button,
+  html.dark .hgroup button,html.dark .hnotime button,html.dark .timefix button,
+  html.dark .earlier-row button,html.dark .data-btns button,html.dark #detailBack,html.dark .xopen,
+  html.dark .theme-btn{background:#2e2920}
+  html.dark .hedit button.hdone{color:#2e2410}
+  html.dark .timefix input,html.dark .earlier-row input{background:#2e2920}
+  html.dark .slide-log{box-shadow:inset 0 2px 6px rgba(0,0,0,.4)}
+  @media (hover:hover){
+    html.dark .hrow:hover{background:rgba(255,244,222,.05)}
+  }
+
+  /* ---- theme toggle button ---- */
+  #hero{position:relative}
+  #hero .eyebrow{padding-right:44px}
+  .theme-btn{
+    position:absolute;top:2px;right:0;z-index:2;
+    width:34px;height:34px;border-radius:50%;border:1px solid var(--line);
+    background:#fff;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;
+    box-shadow:var(--shadow-sm);font-family:'Karla',sans-serif;
   }
 </style>
+<script>
+try{
+  var __t=localStorage.getItem('ttz-theme');
+  if(__t==='dark'||(__t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches)){
+    document.documentElement.classList.add('dark');
+  }
+}catch(e){}
+</script>
 </head>
 <body>
 
@@ -592,6 +610,7 @@
 </div>
 
 <header id="hero">
+  <button class="theme-btn" id="themeBtn" aria-label="Theme: auto — tap to change">◐</button>
   <p class="eyebrow">Ten days · flower only · cap only goes down</p>
   <h1>Taper to <em>zero</em></h1>
   <p class="countdown" id="countdown"></p>
@@ -1214,8 +1233,7 @@
             var g=groups[gk];
             block+='<div class="hgroup"><span class="ht">'+fmtTime(g.t)+'</span>'+
               '<span class="hn">'+g.n+' hit'+(g.n>1?'s':'')+'</span>'+
-              '<button data-act="gdec" data-hm="'+gk+'" aria-label="One less at this time">−</button>'+
-              '<button data-act="ginc" data-hm="'+gk+'" aria-label="One more at this time">+</button></div>';
+              '<button data-act="gdec" data-hm="'+gk+'" aria-label="Remove one at this time">−</button></div>';
           });
           detail+=block+'</div>';
         });
@@ -1757,6 +1775,34 @@
 
   renderAll();
   booted=true;
+
+  /* theme toggle: auto -> dark -> light -> auto */
+  (function(){
+    var btn=$('themeBtn');
+    var mq=matchMedia('(prefers-color-scheme: dark)');
+    function pref(){try{return localStorage.getItem('ttz-theme');}catch(e){return null;}}
+    function apply(){
+      var p=pref();
+      var dark=p==='dark'||(p!=='light'&&mq.matches);
+      document.documentElement.classList.toggle('dark',dark);
+      document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){
+        m.setAttribute('content',dark?'#1d1a14':'#faf6ee');
+      });
+      btn.textContent=p==='dark'?'☾':p==='light'?'☀':'◐';
+      btn.setAttribute('aria-label','Theme: '+(p||'auto')+' — tap to change');
+    }
+    btn.addEventListener('click',function(){
+      var p=pref();
+      var next=p==='dark'?'light':p==='light'?null:'dark';
+      try{
+        if(next)localStorage.setItem('ttz-theme',next);
+        else localStorage.removeItem('ttz-theme');
+      }catch(e){}
+      apply();
+    });
+    if(mq.addEventListener)mq.addEventListener('change',apply);
+    apply();
+  })();
 
   /* offline support */
   if('serviceWorker' in navigator){

@@ -40,16 +40,22 @@
     background:var(--surface);border:1px solid var(--line);border-radius:18px;
     padding:20px;margin-top:24px;box-shadow:var(--shadow-sm);
   }
-  @media (prefers-color-scheme: dark){
-    :root{
-      color-scheme:dark;
-      --bg:#1d1a14;--surface:#26221a;--surface2:#332d22;--line:#463e2d;
-      --hair:rgba(255,244,222,.09);--sand:#f2e8d5;--ink:#cfc4ad;--muted:#9a8f78;
-      --accent:#e0a458;--sage:#a3b899;
-      --shadow-sm:0 4px 14px -6px rgba(0,0,0,.45);
-    }
+  html.dark{
+    color-scheme:dark;
+    --bg:#1d1a14;--surface:#26221a;--surface2:#332d22;--line:#463e2d;
+    --hair:rgba(255,244,222,.09);--sand:#f2e8d5;--ink:#cfc4ad;--muted:#9a8f78;
+    --accent:#e0a458;--sage:#a3b899;
+    --shadow-sm:0 4px 14px -6px rgba(0,0,0,.45);
   }
 </style>
+<script>
+try{
+  var __t=localStorage.getItem('ttz-theme');
+  if(__t==='dark'||(__t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches)){
+    document.documentElement.classList.add('dark');
+  }
+}catch(e){}
+</script>
 </head>
 <body>
 <a class="back" href="index.html">← Back to the taper</a>
