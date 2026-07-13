@@ -134,6 +134,48 @@
   }
   .hold-btns button.primary{border-color:var(--amber);color:var(--amber)}
 
+  /* ---- day-held banner (restraint gets the celebration) ---- */
+  .held-banner{
+    display:none;position:relative;
+    background:linear-gradient(160deg,#eff2df,#fffdf8);
+    border:1px solid rgba(100,125,75,.45);border-radius:18px;
+    padding:16px 18px;margin:-10px 0 24px;
+    box-shadow:var(--shadow-sm);
+  }
+  .held-banner.show{display:block;animation:cardin .5s var(--spring) both}
+  .held-banner h4{font-family:'Fraunces',serif;font-weight:600;font-size:19px;color:var(--sage);margin-bottom:3px}
+  .held-banner p{font-size:14px;color:var(--ink);margin-bottom:11px}
+  .held-banner p strong{color:var(--sand)}
+  .held-banner button{
+    font-family:'Karla',sans-serif;font-weight:700;font-size:13.5px;
+    padding:9px 18px;border-radius:12px;border:1px solid rgba(100,125,75,.5);
+    background:#fff;color:var(--sage);cursor:pointer;box-shadow:var(--shadow-sm);
+  }
+  /* ---- zero-eve ritual ---- */
+  .ritual{
+    position:relative;background:linear-gradient(160deg,#fdf3e2,#fffdf8);
+    border:1px solid rgba(181,122,36,.45);border-radius:20px;
+    padding:18px;margin-bottom:14px;box-shadow:var(--shadow);
+  }
+  .rit-lede{font-size:14px;color:var(--ink);margin:6px 0 4px;line-height:1.55}
+  .rit-row{
+    display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+    padding:12px 13px;border-radius:14px;border:1px solid var(--line);
+    background:var(--surface);margin:8px 0 0;cursor:pointer;
+    font-family:'Karla',sans-serif;font-size:14.5px;font-weight:700;color:var(--ink);
+    transition:border-color .25s,transform .25s var(--spring);
+  }
+  .rit-check{
+    width:26px;height:26px;border-radius:50%;border:2px solid var(--faint);
+    display:flex;align-items:center;justify-content:center;flex:0 0 auto;
+    color:transparent;font-size:14px;font-weight:700;
+    transition:background .25s,border-color .25s,color .25s;
+  }
+  .rit-row.on{border-color:var(--sage)}
+  .rit-row.on .rit-check{background:var(--sage);border-color:var(--sage);color:#fffdf8}
+  .rit-row.on span:last-child{color:var(--muted)}
+  .ritual.done .rit-lede{color:var(--sage);font-weight:700;font-size:15px;margin-bottom:0}
+
   /* ---- staircase ---- */
   .stairs{display:flex;gap:7px;margin:10px 0 6px}
   .stepcol{
@@ -666,6 +708,8 @@
     #hero h1{font-size:30px}
     .countdown{margin-bottom:4px}
     .hold-banner{grid-column:1/-1;margin:0}
+    .held-banner{grid-column:1/-1;margin:0}
+    #ritualCard{grid-column:1/-1;margin:0}
     #stairsWrap{grid-column:1/-1}
     .stairs-note{display:none}
     .today,.history,.section{margin-bottom:0}
@@ -728,6 +772,10 @@
   html.dark .stepcol.past .step{background:#272217}
   html.dark .stepcol.now .step{background:#332d22}
   html.dark .hold-banner{background:linear-gradient(160deg,#3a2f1b,#26221a)}
+  html.dark .held-banner{background:linear-gradient(160deg,#28301f,#26221a)}
+  html.dark .held-banner button,html.dark .rit-row{background:#2e2920}
+  html.dark .ritual{background:linear-gradient(160deg,#3a2f1b,#26221a)}
+  html.dark .rit-row.on .rit-check{color:#1d1a14}
   html.dark .guide-link{background:linear-gradient(160deg,#352c19,#26221a)}
   html.dark .phase.zero{background:linear-gradient(160deg,#28301f,#26221a);border-color:#4c5a3b}
   html.dark .delay-chip.done,html.dark .gap-line.gap-open{background:#28301f}
@@ -784,9 +832,21 @@ try{
   </div>
 </div>
 
+<div class="held-banner" id="heldBanner">
+  <h4 id="heldTitle"></h4>
+  <p id="heldBody"></p>
+  <button id="heldOk">Onward ↓</button>
+</div>
+
 <div id="stairsWrap">
   <div class="stairs" id="stairs" aria-label="Step-down schedule"></div>
   <p class="stairs-note">Each step is your daily hit cap. Tap a step to jump to its details.</p>
+</div>
+
+<div class="ritual" id="ritualCard" hidden>
+  <p class="eyebrow" style="color:var(--accent)">The night-before ritual</p>
+  <p class="rit-lede" id="ritLede"></p>
+  <div id="ritRows"></div>
 </div>
 
 <div class="today openable" id="todayCard" data-title="Today">
@@ -1016,6 +1076,8 @@ try{
     return d;
   }
   var data=loadData();
+  data.holds=data.holds||{};data.holdPrompts=data.holdPrompts||{};
+  data.urges=data.urges||[];data.dayCheers=data.dayCheers||{};data.ritual=data.ritual||{};
   function save(){
     try{localStorage.setItem('ttz2',JSON.stringify(data));}catch(e){}
   }
@@ -1184,9 +1246,9 @@ try{
     el.style.height='0px';el.style.opacity='0';
     setTimeout(cb,270);
   }
-  function sparks(anchor){
+  function sparks(anchor,host){
     if(!motionOK)return;
-    var card=$('todayCard');
+    var card=host||$('todayCard');
     var cr=card.getBoundingClientRect(),ar=anchor.getBoundingClientRect();
     var colors=['#8fae7c','#e0a458','#a5681f','#c9853c'];
     for(var i=0;i<14;i++){
@@ -1689,31 +1751,147 @@ try{
     b.dataset.ykey=yKey;
   }
 
-  /* ---- urge timer ---- */
-  var URGE_MS=20*60000, urgeTick=null;
+  /* ---- day-held banner: restraint gets the celebration ---- */
+  var cheeredKeys={};
+  function renderDayHeld(){
+    var b=$('heldBanner');
+    b.classList.remove('show');
+    var yDate=addDays(today,-1);
+    if(yDate<schedule()[0].start)return;
+    var yKey=dkeyOf(yDate);
+    if(data.dayCheers[yKey])return;
+    var yIdx=phaseIndexFor(yDate);
+    if(yIdx<0)return;
+    var isZ=yIdx===BASE_PHASES.length-1;
+    var c=countOf(yKey);
+    var title,body;
+    if(isZ){
+      if(c!==null&&c>0)return; // slip day — no shame banner, the record handles it
+      title='Clean day banked ✓';
+      body='Yesterday stayed at zero. The counter only climbs — and so does every urge you outlasted.';
+    }else{
+      if(c===null)return;
+      var yCap=BASE_PHASES[yIdx].cap;
+      if(c>yCap)return; // over — the hold banner owns that conversation
+      var margin=yCap-c;
+      title='Day held ✓';
+      body='Yesterday: <strong>'+c+' of '+yCap+'</strong>'+
+        (margin>0?' — <strong>'+margin+' under cap</strong>.':' — right at the ceiling, and the ceiling won.');
+      if(!isZeroEra&&idx>yIdx)body+=' Today the cap steps down to <strong>'+BASE_PHASES[idx].capText+'</strong>.';
+    }
+    $('heldTitle').textContent=title;
+    $('heldBody').innerHTML=body;
+    b.dataset.ykey=yKey;
+    b.classList.add('show');
+    if(!cheeredKeys[yKey]){
+      cheeredKeys[yKey]=1;
+      setTimeout(function(){sparks(b,b);},400);
+      if(navigator.vibrate)navigator.vibrate([10,50,14]);
+    }
+  }
+
+  /* ---- zero-eve ritual: strip the environment the night before ---- */
+  var RITUAL_ITEMS=[
+    {k:'flower',t:'The flower — in the trash, out of the house'},
+    {k:'pieces',t:'Pieces, papers, grinder — gone or given away'},
+    {k:'friend',t:'Friend reminded: tomorrow is zero day'},
+    {k:'sleep',t:'Sleep kit staged — wind-down ready, phone dock out of reach'}
+  ];
+  function renderRitual(){
+    var card=$('ritualCard');
+    var z=zeroDate();
+    var onEve=todayKey===dkeyOf(addDays(z,-1));
+    var onZ=todayKey===dkeyOf(z);
+    if(!(onEve||onZ)){card.hidden=true;return;}
+    card.hidden=false;
+    var r=data.ritual;
+    if(r.completedAt){
+      card.classList.add('done');
+      $('ritRows').innerHTML='';
+      $('ritLede').textContent=onZ
+        ?'✓ Ritual complete — zero day starts on a clean runway.'
+        :'✓ Ritual complete — clean runway for tomorrow. Sleep well.';
+      return;
+    }
+    card.classList.remove('done');
+    $('ritLede').innerHTML=(onZ
+      ?'Zero day. Before anything else, finish stripping the environment — home shouldn’t be a loaded cue during the peak window. '
+      :'Tomorrow the counter flips to days off. Tonight, strip the environment — cues drive use as much as chemistry. ')+
+      '<a class="dlink" href="guide.html#relapse">The research →</a>';
+    $('ritRows').innerHTML=RITUAL_ITEMS.map(function(it){
+      var on=r.done&&r.done[it.k];
+      return '<button class="rit-row'+(on?' on':'')+'" data-k="'+it.k+'" aria-pressed="'+(!!on)+'">'+
+        '<span class="rit-check">✓</span><span>'+it.t+'</span></button>';
+    }).join('');
+  }
+
+  /* ---- urge timer: every completed 20 minutes is BANKED, permanently ---- */
+  var URGE_MS=20*60000, urgeTick=null, urgeBankedUntil=0;
+  function urgeStats(){
+    var u=data.urges||[];
+    if(!u.length)return null;
+    var now=Date.now(),today0=0,last7=0,prev7=0;
+    u.forEach(function(iso){
+      var t=new Date(iso).getTime();
+      if(dkeyOf(new Date(t-DAY_CUTOFF_H*3600000))===todayKey)today0++;
+      var age=now-t;
+      if(age<7*MS_DAY)last7++;else if(age<14*MS_DAY)prev7++;
+    });
+    return {total:u.length,today:today0,last7:last7,prev7:prev7};
+  }
+  function urgeBlockHTML(){
+    var us=urgeStats();
+    if(!us)return '';
+    var note;
+    if(us.prev7>0){
+      note=us.last7<us.prev7
+        ?'Down from <strong>'+us.prev7+'</strong> the week before — the waves are thinning, right on the research’s curve.'
+        :us.last7>us.prev7
+        ?'Up from '+us.prev7+' the week before — more waves came, and you outlasted them.'
+        :'Even with the week before — and every one outlasted.';
+    }else{
+      note='Each one is a hit that never happened.';
+    }
+    return '<h3 class="xtra-h" style="margin-top:16px">Urges outlasted</h3>'+
+      '<div class="stat-row" style="animation:none">'+
+      '<div class="stat" style="animation:none"><span class="sv" style="color:var(--sage)">'+us.total+'</span><span class="sl">all time</span></div>'+
+      '<div class="stat" style="animation:none"><span class="sv">'+us.last7+'</span><span class="sl">last 7 days</span></div>'+
+      '<div class="stat" style="animation:none"><span class="sv">'+us.today+'</span><span class="sl">today</span></div></div>'+
+      '<p class="chart-note">'+note+'</p>';
+  }
   function renderUrge(){
     var chip=$('urgeChip');
     if(urgeTick){clearInterval(urgeTick);urgeTick=null;}
     if(!data.urgeStart){
+      if(Date.now()<urgeBankedUntil){
+        chip.className='delay-chip done';
+        chip.textContent='Outlasted ✓ · '+data.urges.length+' banked — a hit that never happened. Tap for another.';
+        return;
+      }
       chip.className='delay-chip';
-      chip.textContent=isZeroEra
-        ?'Urge? It’s the loop firing, not a need. Start the 20-minute timer.'
-        :'Urge? Start the 20-minute timer.';
+      var n=data.urges.length;
+      chip.textContent=(isZeroEra?'Urge? It’s the loop firing, not a need. ':'Urge? ')+
+        'Start the 20-minute timer.'+(n?' · '+n+' outlasted':'');
       return;
     }
     function tick(){
       var left=URGE_MS-(Date.now()-data.urgeStart);
       if(left<=0){
         var wasRunning=chip.classList.contains('running');
-        chip.className='delay-chip done';
-        chip.textContent='20 minutes survived — that one stayed banked. Tap to reset.';
+        // bank the survived urge — this counter only climbs
+        data.urges.push(new Date(data.urgeStart+URGE_MS).toISOString());
+        data.urgeStart=null;
+        save();
+        urgeBankedUntil=Date.now()+9000;
         if(urgeTick){clearInterval(urgeTick);urgeTick=null;}
-        if(wasRunning){sparks(chip);if(navigator.vibrate)navigator.vibrate([15,60,15]);}
-      }else{
-        var m=Math.floor(left/60000),s=Math.floor((left%60000)/1000);
-        chip.className='delay-chip running';
-        chip.textContent='Wave passing · '+m+':'+pad(s)+' · tap to cancel';
+        if(wasRunning){sparks(chip);if(navigator.vibrate)navigator.vibrate([15,60,15,60,25]);}
+        renderUrge();
+        if(!$('detailOverlay').hidden)renderXtras();
+        return;
       }
+      var m=Math.floor(left/60000),s=Math.floor((left%60000)/1000);
+      chip.className='delay-chip running';
+      chip.textContent='Wave passing · '+m+':'+pad(s)+' · tap to cancel';
     }
     tick();
     if(data.urgeStart)urgeTick=setInterval(tick,1000);
@@ -2284,7 +2462,8 @@ try{
           '<p class="chart-note" style="text-align:center">'+
           (n>=21?'The 2–3 week adjustment window the research maps is behind you. From here it’s maintenance.'
                 :'Filling the 2–3 week receptor-adjustment window the research maps. Every day counts, and it only fills.')+'</p>'+
-          contribHTML(zs.parts);
+          contribHTML(zs.parts)+
+          urgeBlockHTML();
       }else{
         var sc=scoreToday();
         html+='<h3 class="xtra-h">Today’s taper score</h3>'+
@@ -2300,6 +2479,7 @@ try{
           html+='<div class="insights"><p class="insight-line">By this time yesterday you’d logged <strong>'+pace.y+'</strong> · today <strong>'+pace.t+'</strong>'+
             (pace.t<pace.y?' — <strong>trending down.</strong>':pace.t>pace.y?' — running ahead of yesterday. The delay timer is right there.':' — even with yesterday.')+'</p></div>';
         }
+        html+=urgeBlockHTML();
         html+='<h3 class="xtra-h" style="margin-top:16px">Today’s sessions</h3>'+daySummaryHTML(todayKey);
       }
       html+=prevDaysHTML();
@@ -2342,6 +2522,8 @@ try{
         html2+='<p class="hnote-line" style="margin-top:10px">Patterns — your heaviest hours, session habits, pace — appear here once a few timed hits are logged.</p>';
       }
       html2+=sessionRhythmHTML();
+      var us2=urgeStats();
+      if(us2)html2+='<p class="chart-note" style="margin-top:14px"><strong style="color:var(--sage)">'+us2.total+' urge'+(us2.total>1?'s':'')+' outlasted</strong> with the 20-minute timer — hits that never happened.</p>';
       gx.innerHTML=html2;
     }
     var rx=$('recordXtra');
@@ -2444,7 +2626,7 @@ try{
   function renderAll(){
     computeToday();
     renderCountdown();renderStairs();renderPhases();renderSchedStrip();
-    renderToday();renderTrend();renderHistory();renderHoldBanner();renderUrge();renderGap();renderGlass();renderWidgets();
+    renderToday();renderTrend();renderHistory();renderHoldBanner();renderDayHeld();renderRitual();renderUrge();renderGap();renderGlass();renderWidgets();
     if(!$('detailOverlay').hidden)renderXtras();
   }
 
@@ -2519,8 +2701,7 @@ try{
       btn.classList.remove('holding');btn.classList.add('logged');
       setProg(1);
       logHit();
-      sparks(btn);
-      if(navigator.vibrate)navigator.vibrate([12,60,16]);
+      if(navigator.vibrate)navigator.vibrate(10);
       label.textContent='Logged ✓';
       setTimeout(function(){
         btn.classList.remove('logged');
@@ -2593,6 +2774,25 @@ try{
     else if(confirm('Cancel the 20-minute timer?')){data.urgeStart=null;}
     else{return;}
     save();renderUrge();
+  });
+  $('heldOk').addEventListener('click',function(){
+    var k=$('heldBanner').dataset.ykey;
+    if(k)data.dayCheers[k]=1;
+    save();renderDayHeld();
+  });
+  $('ritRows').addEventListener('click',function(ev){
+    var row=ev.target.closest('.rit-row');
+    if(!row)return;
+    var r=data.ritual;
+    r.done=r.done||{};
+    r.done[row.dataset.k]=!r.done[row.dataset.k];
+    var all=RITUAL_ITEMS.every(function(it){return r.done[it.k];});
+    if(all){
+      r.completedAt=new Date().toISOString();
+      if(navigator.vibrate)navigator.vibrate([15,60,15,60,25]);
+      setTimeout(function(){sparks($('ritualCard'),$('ritualCard'));},300);
+    }
+    save();renderRitual();
   });
   $('gapBell').addEventListener('click',function(){
     if(!('Notification' in window))return;
@@ -2695,6 +2895,7 @@ try{
       if(!d||typeof d!=='object'||!d.days)throw new Error('bad');
       if(!confirm('Replace everything on this device with the pasted backup?'))return;
       d.holds=d.holds||{};d.holdPrompts=d.holdPrompts||{};
+      d.urges=d.urges||[];d.dayCheers=d.dayCheers||{};d.ritual=d.ritual||{};
       data=d;save();editingKey=null;renderAll();
       $('dataMsg').textContent='Backup restored.';
     }catch(e){$('dataMsg').textContent='That doesn’t look like a valid backup.';}
