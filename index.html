@@ -4083,8 +4083,21 @@ try{
     renderAll();
   });
 
+  /* clock tick: "left this session", "next session", and the 4am day
+     boundary are all time-driven — without this they only refresh on an
+     interaction or a tab switch, so a screen left open shows a session
+     as still open hours after its 30-minute window closed */
+  var tickKey=null;
+  setInterval(function(){
+    if(document.hidden)return;
+    computeToday();
+    if(todayKey!==tickKey){tickKey=todayKey;renderAll();return;}
+    safe(renderToday);
+  },30000);
+
   renderAll();
   booted=true;
+  tickKey=todayKey;
 
   /* theme toggle: auto -> dark -> light -> auto */
   (function(){
