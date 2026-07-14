@@ -201,35 +201,34 @@
   .gap-note{font-size:11.5px;color:var(--muted);margin:6px 0 0}
   .linklike{background:none;border:none;padding:0;color:var(--accent);font-family:'Karla',sans-serif;font-size:12.5px;font-weight:700;cursor:pointer;text-decoration:underline}
 
-  /* ---- staircase ---- */
-  .stairs{display:flex;gap:7px;margin:10px 0 6px}
+  /* ---- staircase: a colour-coded descent, warm at the top → sage at zero ---- */
+  .stairs{display:flex;gap:4px;margin:16px 0 34px;align-items:flex-end}
   .stepcol{
-    flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:7px;
-    height:162px;cursor:pointer;border-radius:10px;
+    flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:9px;
+    height:172px;cursor:pointer;position:relative;
   }
-  .stepcol:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .stepcol:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
   .step{
-    border-radius:10px 10px 5px 5px;background:#efe8d6;
-    border:1px solid rgba(59,43,20,.05);color:var(--muted);
-    display:flex;justify-content:center;align-items:flex-start;padding-top:7px;
-    transition:background .25s,box-shadow .35s var(--spring);
+    border-radius:11px 11px 3px 3px;
+    display:flex;justify-content:center;align-items:flex-start;padding-top:9px;
+    transition:transform .4s var(--spring),box-shadow .4s var(--spring),filter .25s;
   }
-  .step .cap{font-family:'Fraunces',serif;font-weight:600;font-size:20px;line-height:1}
+  .step .cap{font-family:'Fraunces',serif;font-weight:600;font-size:21px;line-height:1;transition:color .3s}
   .stepcol .lbl{
-    font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
-    color:var(--muted);text-align:center;
+    font-size:9px;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--muted);text-align:center;font-weight:700;transition:color .3s;
   }
-  .stepcol.past .step{background:#f2ecdd;border-color:transparent}
-  .stepcol.past .cap{color:var(--sage);opacity:.7}
-  .stepcol.past .lbl{color:var(--faint)}
-  .stepcol.now .step{
-    background:#fffdf8;
-    border-color:var(--accent);
-    box-shadow:0 10px 24px -10px rgba(165,104,31,.45);
+  .stepcol.past{opacity:.9}
+  .stepcol.now{z-index:2}
+  .stepcol.now .step{transform:translateY(-7px);box-shadow:0 14px 30px -12px rgba(59,43,20,.4)}
+  .stepcol.now .lbl{color:var(--sand)}
+  /* the "you are here" pip riding above the current step */
+  .stepcol.now::before{
+    content:"";position:absolute;top:-2px;left:50%;width:7px;height:7px;margin-left:-3.5px;
+    border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--bg);
+    animation:nowPulse 2.4s ease-in-out infinite;
   }
-  .stepcol.now .cap{color:var(--accent)}
-  .stepcol.now .lbl{color:var(--accent)}
-  .stairs-note{font-size:12.5px;color:var(--muted);margin-bottom:30px}
+  @keyframes nowPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.65}}
 
   /* ---- today card ---- */
   .today{
@@ -964,8 +963,7 @@ try{
 </div>
 
 <div id="stairsWrap">
-  <div class="stairs" id="stairs" aria-label="Step-down schedule"></div>
-  <p class="stairs-note">Each step is your daily hit cap. Tap a step to jump to its details.</p>
+  <div class="stairs" id="stairs" aria-label="Step-down schedule — daily hit cap, tap a step for details"></div>
 </div>
 
 <div class="ritual" id="ritualCard" hidden>
@@ -1023,7 +1021,7 @@ try{
 <div class="history openable" id="trendCard" data-title="The trend">
   <button class="xopen" data-target="trendCard" data-title="The trend" aria-label="Open the trend in detail">⤢</button>
   <h3>The trend</h3>
-  <p class="history-hint">Ghost steps are each day&rsquo;s cap · solid is what you logged · tap a bar for that day.</p>
+  <p class="history-hint">Ghost = cap · solid = logged · tap a bar.</p>
   <div id="trendChart"></div>
   <p class="history-hint" id="trendDetail" style="margin:6px 0 0;color:var(--ink)" hidden></p>
   <p class="history-hint" id="trendInsight" style="margin:8px 0 0"></p>
@@ -1524,6 +1522,18 @@ try{
     }
   }
 
+  /* ---- the taper spectrum: warm amber at a high cap → sage at zero.
+     One meaningful colour journey the whole app can lean on. ---- */
+  function _lerp(a,b,t){return Math.round(a+(b-a)*t);}
+  function capRGB(ratio){
+    ratio=Math.max(0,Math.min(1,ratio));
+    var hi=[189,120,44], lo=[100,125,75];   // amber → sage
+    return [_lerp(lo[0],hi[0],ratio),_lerp(lo[1],hi[1],ratio),_lerp(lo[2],hi[2],ratio)];
+  }
+  function _paper(){return document.documentElement.classList.contains('dark')?[43,38,29]:[250,246,238];}
+  function mixPaper(rgb,amt){var p=_paper();return [_lerp(rgb[0],p[0],amt),_lerp(rgb[1],p[1],amt),_lerp(rgb[2],p[2],amt)];}
+  function rgbStr(a){return 'rgb('+a[0]+','+a[1]+','+a[2]+')';}
+
   function renderStairs(){
     var sch=schedule(), maxCap=BASE_PHASES[0].cap;
     var stairs=$('stairs');stairs.innerHTML='';
@@ -1534,9 +1544,16 @@ try{
     sch.forEach(function(s,i){
       var p=BASE_PHASES[i];
       var el=document.createElement('div');
-      el.className='stepcol'+(i<idx?' past':'')+(i===idx?' now':'');
+      var isNow=i===idx, isPast=i<idx;
+      el.className='stepcol'+(isPast?' past':'')+(isNow?' now':'');
       var barH=Math.round(30+(p.cap/maxCap)*100);
-      el.innerHTML='<div class="step" style="height:'+barH+'px"><span class="cap">'+p.capText+'</span></div>'+
+      var col=capRGB(p.cap/maxCap);
+      var bg,num;
+      if(isNow){bg=rgbStr(col);num=rgbStr(mixPaper(col,.86));}          // saturated fill, cream number
+      else if(isPast){bg=rgbStr(mixPaper(col,.7));num=rgbStr(mixPaper(col,.15));}
+      else{bg=rgbStr(mixPaper(col,.82));num=rgbStr(mixPaper(col,.05));} // soft tint, saturated number
+      el.innerHTML='<div class="step" style="height:'+barH+'px;background:'+bg+'">'+
+        '<span class="cap" style="color:'+num+'">'+p.capText+'</span></div>'+
         '<span class="lbl">'+fmtShort(s.start)+'</span>';
       el.setAttribute('role','button');el.setAttribute('tabindex','0');
       el.setAttribute('aria-label','Jump to '+s.lbl+' details');
@@ -1558,9 +1575,10 @@ try{
       var hv=data.holds[i]||0;
       var held=hv>0?'<p class="phase-held">Held +'+hv+' day'+(hv>1?'s':'')+'</p>'
         :hv<0?'<p class="phase-held">Finished '+(-hv)+' day'+(hv<-1?'s':'')+' early</p>':'';
+      var capCol=rgbStr(capRGB(p.cap/BASE_PHASES[0].cap));
       el.innerHTML=
         '<div class="phase-top"><span class="phase-dates">'+s.lbl+(i===idx?' · now':'')+'</span>'+
-        '<span class="phase-cap">'+p.capText+'<small> '+(p.cap>0?'hits/day':'')+'</small></span></div>'+
+        '<span class="phase-cap" style="color:'+capCol+'">'+p.capText+'<small> '+(p.cap>0?'hits/day':'')+'</small></span></div>'+
         held+'<p class="phase-rule">'+p.rule+'</p><p>'+p.desc+'</p>'+
         (p.why?'<p class="phase-evid">'+p.why+' <a href="guide.html#'+p.ref+'">sources →</a></p>':'');
       wrap.appendChild(el);
@@ -1661,6 +1679,7 @@ try{
       $('earlierRow').hidden=true;
       $('todayEyebrow').textContent='Days off';
       setNum('tallyCount',Math.max(0,daysFree()),true);
+      $('tallyCount').style.color=count>0?'var(--clay)':'var(--sage)';
       var zs0=zeroStats();
       $('capLabel').textContent=(zs0&&zs0.slips)?'this run · '+zs0.clean+' clean in total':'and climbing';
       if(count>0){
@@ -1682,8 +1701,11 @@ try{
       setNum('tallyCount',count,!booted);
       $('capLabel').textContent='of '+cap+' hits today';
       var pct=cap>0?Math.min(100,(count/cap)*100):0;
+      var statusCol=count>cap?'var(--clay)':count>=cap*0.8?'var(--amber)':'var(--sage)';
       $('barFill').style.width=pct+'%';
-      $('barFill').style.background=count>cap?'var(--clay)':count>=cap*0.8?'var(--amber)':'var(--sage)';
+      $('barFill').style.background=statusCol;
+      // the hero number stays confident-neutral while under, warms as you climb
+      $('tallyCount').style.color=count>cap?'var(--clay)':count>=cap*0.8?'var(--amber)':'var(--sand)';
       if(count>cap){$('barNote').textContent='Over the cap — tomorrow, hold this phase one extra day, then keep stepping down.';}
       else if(count===cap){$('barNote').textContent='At the cap. That’s the ceiling — you’re done for today.';}
       else{$('barNote').textContent='Under is always fine.';}
@@ -3283,7 +3305,7 @@ try{
       var av=avoidedChartSVG();
       if(av){
         html2+='<h3 class="xtra-h" style="margin-top:16px">What you didn’t smoke</h3>'+zoomable('avoided',av)+
-          '<p class="chart-note">Every hit under the ~'+BASELINE+'/day baseline. This line only rises.</p>';
+          '<p class="chart-note">vs the ~'+BASELINE+'/day baseline — and it only rises.</p>';
       }
       html2+='<h3 class="xtra-h" style="margin-top:16px">The numbers so far</h3><div class="stat-row" style="animation:none">'+
         '<div class="stat" style="animation:none"><span class="sv">'+t.tot+'</span><span class="sl">total logged</span></div>'+

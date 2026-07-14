@@ -10,7 +10,7 @@ A small personal PWA for tracking a 10-day cannabis taper (Jul 12–22, 2026), t
 
 ## Features
 
-- Daily hit tally against a stepping-down cap (14 → 11 → 8 → 5 → 2–3 → 0)
+- Daily hit tally against a stepping-down cap, visualized as a colour-coded descent (warm amber at a high cap → sage at zero) that the phase cards and hero number share
 - Per-hit timestamps drive the session rules ("max 3 hits/session · 3h between") — the today card shows when the next session opens
 - Working 20-minute urge delay timer (survives app close/reopen)
 - Flexible schedule: after an over-cap day the app offers to hold the current phase one extra day, pushing all later steps and the zero date back
