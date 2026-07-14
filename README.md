@@ -19,7 +19,8 @@ A small personal PWA for tracking a 10-day cannabis taper (Jul 12–22, 2026), t
 - Flexible in both directions: a day already lived at the next cap can end its step a day early, pulling zero closer
 - "The story" capstone card in the zero era — the whole taper in numbers, shareable
 - Optional money-saved tracking (set a rough cost per hit in the trend detail)
-- Every chart is tap-to-expand (⤢) into a full-screen, fully labeled version — hour histogram, day punchcard, pace, avoided, day-vs-cap, nightly check-ins, and session gaps
+- Every chart is tap-to-expand (⤢) into a full-screen, fully labeled version — hour histogram, day punchcard, pace, avoided, day-vs-cap, nightly check-ins, and session gaps; swipe sideways (or tap the dots) to page between them, and lines draw themselves in
+- Rotate the phone for the cockpit: a full-bleed six-tile live dashboard (today, taper score ring, next-window countdown, urge timer, the week, zero day) — every tile taps through to its detail page
 - Tap any history row to correct its count
 - Copy/import JSON backup, share-sheet backup export, and a backup step in the zero-eve ritual
 
