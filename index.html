@@ -731,6 +731,25 @@
   .do-list li::before{content:"";position:absolute;left:3px;top:12px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
   .sched-detail .wins{margin:6px 0 2px}
   .sched-detail .do-list{margin-bottom:2px}
+  /* ---- how the day may feel: a forecast of the predictable rough patches ---- */
+  .tp-feel{padding:12px 0 2px;border-bottom:1px solid var(--hair)}
+  .feel-intro{font-size:13px;color:var(--ink);line-height:1.5;margin:7px 0 10px}
+  .feel-rows{display:flex;flex-direction:column;gap:1px;border-radius:10px;overflow:hidden}
+  .feel-row{display:flex;gap:11px;padding:9px 11px;background:var(--surface);border-left:3px solid var(--hair);transition:background .3s ease}
+  .feel-row.live{background:var(--accent-soft);border-left-color:var(--accent)}
+  .fr-t{flex:0 0 62px;font-size:11px;font-weight:800;letter-spacing:.02em;color:var(--muted);padding-top:1px;font-variant-numeric:tabular-nums}
+  .feel-row.live .fr-t{color:var(--accent)}
+  .fr-b{font-size:12.5px;line-height:1.5;color:var(--ink)}
+  .fr-b b{color:var(--sand);font-weight:800}
+  .fr-fix{display:block;font-size:12px;color:var(--sage);font-weight:700;margin-top:3px}
+  .feel-row.ghost{border-left-color:var(--accent)}
+  .feel-row.edge{border-left-color:var(--amber)}
+  .feel-row.dip{border-left-color:var(--clay)}
+  .feel-row.night{border-left-color:var(--sage)}
+  .feel-row.am,.feel-row.waves{border-left-color:var(--sand)}
+  .feel-row.ghost .fr-t{color:var(--accent)}
+  .feel-src{font-size:11.5px;color:var(--muted);line-height:1.5;margin:9px 0 0;font-style:italic}
+  .sched-detail .tp-feel{border-bottom:none;padding-bottom:0}
   .tp-vs{font-size:13.5px;color:var(--ink);line-height:1.5;margin:11px 0}
   .tp-vs b{color:var(--sand);font-weight:700}
   .tp-vs-k{display:inline-block;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;font-weight:800;padding:1px 7px;border-radius:99px;margin-right:5px;vertical-align:1px}
@@ -1575,6 +1594,177 @@ try{
     var w=Math.floor(h);
     return (h%1?(w?w:'')+'½':w)+'h';
   }
+
+  /* ================= how the day may feel =================
+     A forecast of each day's predictable rough patches: ghost windows
+     (cues still firing at deleted session times), the hard stretch of
+     each gap, the evening dip, and the night — each with its
+     counter-move. Pattern-mapping from the withdrawal research plus
+     this taper's own logs, not a diagnosis. */
+  function parseWin(t){
+    var m=/^(\d{1,2})(?::(\d{2}))?(a|p)$/.exec(t);
+    if(!m)return null;
+    return ((+m[1])%12+(m[3]==='p'?12:0))*60+(+(m[2]||0));
+  }
+  function fmtMin(min){
+    min=((min%1440)+1440)%1440;
+    var h=Math.floor(min/60),mm=min%60;
+    return (h%12||12)+(mm?':'+pad(mm):'')+(h<12?'a':'p');
+  }
+  /* windows that existed in the last two days' plans but not today's —
+     a deleted window keeps firing its craving on schedule for a few
+     days. A ghost is suppressed if a surviving window sits close by,
+     or opened within the previous two hours (you're still sated). */
+  function ghostWins(d,di){
+    var pl=dayPlanOf(d,di);
+    var twins=(pl&&pl.w?pl.w:[]).map(parseWin);
+    var start=schedule()[0].start,out=[];
+    for(var back=1;back<=2;back++){
+      var pd=addDays(d,-back);
+      if(pd<start)break;
+      var pdi=phaseIndexFor(pd);
+      var ppl=dayPlanOf(pd,pdi<0?0:pdi);
+      if(!ppl||!ppl.w)continue;
+      for(var i=0;i<ppl.w.length;i++){
+        var m=parseWin(ppl.w[i]);
+        if(m==null)continue;
+        var near=twins.some(function(x){return x!=null&&(Math.abs(x-m)<=75||(m>x&&m-x<=120));});
+        var dup=out.some(function(g){return Math.abs(g.m-m)<=60;});
+        if(!near&&!dup)out.push({m:m,back:back});
+      }
+    }
+    return out.sort(function(a,b){return a.m-b.m;});
+  }
+  function feelForecast(d,di){
+    if(di<0)return null;
+    var p=BASE_PHASES[di],slots=[];
+    if(p.cap<=0){
+      // zero era: keyed to days off, mirroring the guide's timeline
+      var off=Math.round((d-zeroDate())/MS_DAY)+1;
+      if(off>21)return null;
+      if(off<=6)slots.push({s:null,t:'waves',kind:'edge',
+        head:'Waves, not walls.',
+        body:(off<=2?'First ripples land in this 24–48h window':'This is the days-2–6 peak the research maps')+' — irritability, restlessness, low appetite. Each wave crests and passes in minutes, and you arrive tapered: expect the blunted version.',
+        fix:'Move every day, eat at the old session times, keep the calendar boring.'});
+      if(off<=5)slots.push({s:1245,e:1320,t:'~9p',kind:'ghost',
+        head:'The ghost window.',
+        body:'The old evening sitting is the last cue standing — it fires on schedule for the first several nights'+(off>=4?', and it’s fading now':'')+'. It crests in minutes and is gone in 20.',
+        fix:'Start the 20-minute timer the moment it lands. It has never outlasted you.'});
+      slots.push({s:null,t:'night',kind:'night',
+        head:'Sleep, the long tail.',
+        body:off<=6?'Falling asleep may be the hardest part of the day — the sleep system is relearning to run itself. Vivid dreams are REM waking back up.'
+          :'Odd sleep and vivid dreams settle last — weeks, not days. A bad night this far in means nothing.',
+        fix:'Run the sleep kit every night, no exceptions — sleep is the symptom most likely to send people back.'});
+      return {intro:'',slots:slots};
+    }
+    var pl=dayPlanOf(d,di);
+    var wins=(pl&&pl.w?pl.w:[]).map(parseWin).filter(function(x){return x!=null;}).sort(function(a,b){return a-b;});
+    var intro=[
+      'Mildest stretch of the plan — today is cue-fighting, not chemistry. The count is the only battle.',
+      'Still mostly cue work, with the first taste of real edge late in the gaps as they stretch.',
+      'First genuinely chemical day — restlessness and a shorter fuse are the taper working, not failing. Appetite may dim: eat at the old times anyway.',
+      'The biggest structural cut. A foggy, unsettled afternoon and maybe a dull headache — water and movement carry today.',
+      'Withdrawal-lite all day, on purpose: the taper’s peak. Edgy, restless, appetite low — all expected, all temporary, all smaller than the cliff you’re not jumping off.'
+    ][Math.min(di,4)];
+    // wake → first window: the wait is habit, not withdrawal. Only when the
+    // first window sits in the morning/early-afternoon — an evening-only day's
+    // daytime is covered by the "long fade" row instead.
+    if(!p.single&&wins.length&&wins[0]>=570&&wins[0]<=840){
+      slots.push({s:Math.max(300,wins[0]-240),e:wins[0],t:'wake–'+fmtMin(wins[0]),kind:'am',
+        head:'The morning wait.',
+        body:'Cue, not chemistry — you already run an 8–10h gap every night; this only adds daylight to it.',
+        fix:'Hand the morning a script — coffee, shower, out the door — so the clock isn’t the show.'});
+    }
+    // ghost windows from the last two days
+    ghostWins(d,di).forEach(function(g){
+      slots.push({s:g.m-15,e:g.m+45,t:'~'+fmtMin(g.m),kind:'ghost',
+        head:'Ghost window.',
+        body:(g.back===2?'Deleted two days ago and fading — one more day and it’s quiet.':'A sitting lived here yesterday, so the cue still fires on schedule.')+' It crests in minutes and is gone in 20.',
+        fix:'Start the 20-minute timer the moment it lands; feed it motion or food, not negotiation.'});
+    });
+    // the hard stretch of each gap — past ~4h the hump is hours 3–4,
+    // under it the ramp is the last hour (this taper's own logged pattern)
+    if(p.single){
+      slots.push({s:960,e:1200,t:'4–8p',kind:'edge',
+        head:'The long fade.',
+        body:'No daytime windows at all now — a foggy, restless late afternoon is chemical and expected. The evening sitting is coming; nothing needs defending.',
+        fix:'Motion, water, a real dinner. This stretch is the proof, not the price.'});
+    }else if(wins.length>=2){
+      var gaps=[];
+      for(var i=0;i<wins.length-1;i++)gaps.push({from:wins[i],to:wins[i+1],min:wins[i+1]-wins[i]});
+      if(gaps.length>=3){
+        slots.push({s:null,t:'each gap',kind:'edge',
+          head:'The last stretch of every gap.',
+          body:'Restlessness ramps in the final ~45 minutes before each window opens — that edge is the taper doing its work.',
+          fix:'Park easy, physical tasks there; anything sharper is the urge timer’s job.'});
+      }else{
+        gaps.forEach(function(g){
+          if(g.min>255){
+            slots.push({s:g.from+180,e:g.from+240,t:fmtMin(g.from+180)+'–'+fmtMin(g.from+240),kind:'edge',
+              head:'The hump of the '+fmtGapH(g.min/60)+' gap.',
+              body:'Your own logs say hours 3–4 of a gap are the hardest — then it eases before the window even opens.',
+              fix:'Put motion or a meal at '+fmtMin(g.from+180)+' and the back half of the gap is downhill.'});
+          }else{
+            slots.push({s:g.to-60,e:g.to,t:fmtMin(g.to-60)+'–'+fmtMin(g.to),kind:'edge',
+              head:'The ramp into '+fmtMin(g.to)+'.',
+              body:'The last hour of the gap is where restlessness peaks.',
+              fix:'Easy tasks only here — the window opens on its own.'});
+          }
+        });
+      }
+    }
+    // evenings run on less than the brain budgeted
+    if(di>=1&&!p.single){
+      slots.push({s:1260,e:1425,t:'9p–12a',kind:'dip',
+        head:'The debt hour.',
+        body:'The day ran below what your brain budgeted, so patience is thinnest at night — snappishness here is scheduled, not personal.',
+        fix:'Warn the house, keep the evening low-stakes, and let bed end the argument.'});
+    }
+    slots.push({s:null,t:'night',kind:'night',
+      head:'Sleep.',
+      body:di<=1?'Should mostly hold — the evening window still does its old job.'
+        :di<=3?'Falling asleep may take longer and dreams start turning vivid — REM waking back up. Recovery, not a warning.'
+        :'The sleep kit starts tonight, before zero — sleep is the symptom the research says lasts longest, so it gets support first.',
+      fix:di<=1?'Keep the wind-down consistent anyway — it’s rehearsal for zero.'
+        :di<=3?'Screens down early; a hot shower is the cheapest sleep aid there is.'
+        :'Run the whole ritual even if you feel fine.'});
+    // chronological, with untimed rows anchored where they belong
+    slots.sort(function(a,b){
+      var ka=a.s!=null?a.s:(a.kind==='night'?1439:720);
+      var kb=b.s!=null?b.s:(b.kind==='night'?1439:720);
+      return ka-kb;
+    });
+    return {intro:intro,slots:slots};
+  }
+  function feelHTML(d,di,compact){
+    var fc=feelForecast(d,di);
+    if(!fc||!fc.slots.length)return '';
+    var rows=fc.slots.map(function(sl){
+      return '<div class="feel-row '+sl.kind+'"'+(sl.s!=null?' data-s="'+sl.s+'" data-e="'+sl.e+'"':'')+'>'+
+        '<span class="fr-t">'+sl.t+'</span>'+
+        '<div class="fr-b"><b>'+sl.head+'</b> '+sl.body+
+        (sl.fix?'<span class="fr-fix">'+sl.fix+'</span>':'')+'</div></div>';
+    }).join('');
+    return '<div class="tp-feel"><div class="tp-day-k">'+
+      (dkeyOf(d)===todayKey?'How today may feel':'How this day may feel')+'</div>'+
+      (fc.intro?'<p class="feel-intro">'+fc.intro+'</p>':'')+
+      '<div class="feel-rows">'+rows+'</div>'+
+      (compact?'':'<p class="feel-src">Pattern-mapping, not diagnosis — a day that ignores the forecast is still a good day. <a class="dlink" href="guide.html#withdrawal">The evidence →</a></p>')+
+      '</div>';
+  }
+  /* keep the "now" highlight honest on an idle screen — a cheap class
+     toggle on the clock tick, no re-render */
+  function feelLive(){
+    var rows=document.querySelectorAll('.feel-row[data-s]');
+    if(!rows.length)return;
+    var n=new Date(),m=n.getHours()*60+n.getMinutes();
+    for(var i=0;i<rows.length;i++){
+      var r=rows[i];
+      var isToday=!!r.closest('#todayPlan')||(selSchedKey===todayKey&&!!r.closest('#schedDetail'));
+      r.classList.toggle('live',isToday&&m>=+r.dataset.s&&m<+r.dataset.e);
+    }
+  }
+
   function sessionInfo(){
     var e=data.days[todayKey];
     var hits=(e&&e.hits?e.hits:[]).map(function(t){return new Date(t);}).sort(function(a,b){return a-b;});
@@ -1841,7 +2031,8 @@ try{
         '<div class="tp-goal">'+dayGoal(start,0)+'</div>'+
         '<div class="tp-struct">'+dayStructure(start,0)+'</div>'+
         (pl0?'<div class="tp-day"><div class="tp-day-k">Day one, laid out</div>'+winsHTML(pl0)+
-          (pl0.note?'<p class="win-note">'+pl0.note+'</p>':'')+doListHTML(pl0)+'</div>':'');
+          (pl0.note?'<p class="win-note">'+pl0.note+'</p>':'')+doListHTML(pl0)+'</div>':'')+
+        feelHTML(start,0,false);
       return;
     }
     var totalD=Math.max(1,Math.round((z-start)/MS_DAY));
@@ -1854,6 +2045,7 @@ try{
         '<div class="tp-eyebrow">Zero era · <b>day '+n+'</b> off</div>'+
         '<div class="tp-goal">'+dayGoal(today,BASE_PHASES.length-1)+'</div>'+
         '<div class="tp-struct">'+zeroTimelineNote(n)+'</div>'+
+        feelHTML(today,BASE_PHASES.length-1,false)+
         (zs&&zs.slips?'<div class="tp-vs"><span class="tp-vs-k">Banked</span> '+zs.clean+' clean days total · best run '+zs.best+' — a slip never wipes the total.</div>':'')+
         '<div class="tp-arc"><div class="tp-track done"><i style="width:100%"></i></div>'+
         '<div class="tp-arc-lbl">Walked <b>'+BASE_PHASES[0].capText+' → 0</b> in '+totalD+' days. The counter only climbs now.</div></div>';
@@ -1926,6 +2118,7 @@ try{
       '<div class="tp-goal">'+dayGoal(today,idx)+'</div>'+
       '<div class="tp-struct">'+struct+'</div>'+
       dayPlanHTML+
+      feelHTML(today,idx,false)+
       vs+
       '<div class="tp-arc">'+
         '<div class="tp-track"><i style="width:'+journey+'%"></i><span class="tp-here" style="left:'+journey+'%"></span></div>'+
@@ -1979,6 +2172,7 @@ try{
         :off<=13?'Past the peak — the grade flattens from here.'
         :off<=21?'Weeks 2–3: the climb back to baseline. Sleep settles last.'
         :'Past the 3-week adjustment window.');
+      if(d>=today){var fz=feelHTML(d,BASE_PHASES.length-1,true);if(fz)lines.push(fz);}
     }else{
       var schD=schedule(),dayNum=Math.round((d-schD[0].start)/MS_DAY)+1;
       head+=' · day '+dayNum+' · cap '+p.capText;
@@ -1989,6 +2183,7 @@ try{
         lines.push(winsHTML(pl)+(pl.note?'<span class="win-note">'+pl.note+'</span>':''));
         if(d>=today)lines.push(doListHTML(pl));
       }
+      if(d>=today){var ff=feelHTML(d,di,true);if(ff)lines.push(ff);}
       if(d<today){
         lines.push('<strong>Logged:</strong> '+(st.c===null?'nothing — no data that day':st.c+' of '+st.cap+' · '+st.stat));
         var sess=sessionsFor(selSchedKey);
@@ -2037,6 +2232,7 @@ try{
     selSchedKey=selSchedKey===c.dataset.k?null:c.dataset.k;
     renderSchedStrip();
     if(selSchedKey&&!wasOpen)renderSchedDetail(true);
+    safe(feelLive);
   });
   $('schedStrip').addEventListener('keydown',function(ev){
     if(ev.key!=='Enter'&&ev.key!==' ')return;
@@ -2044,6 +2240,7 @@ try{
     ev.preventDefault();
     selSchedKey=selSchedKey===c.dataset.k?null:c.dataset.k;
     renderSchedStrip();
+    safe(feelLive);
   });
 
   function renderToday(){
@@ -3944,6 +4141,7 @@ try{
      renderToday,renderTrend,renderHistory,renderHoldBanner,renderDayHeld,
      renderRitual,renderCheckin,renderStory,renderUrge,renderGap,renderGlass,renderDash].forEach(safe);
     if(!$('detailOverlay').hidden)safe(renderXtras);
+    safe(feelLive);
   }
 
   /* ================= events ================= */
@@ -4568,6 +4766,7 @@ try{
     computeToday();
     if(todayKey!==tickKey){tickKey=todayKey;renderAll();return;}
     safe(renderToday);
+    safe(feelLive);
   },30000);
 
   renderAll();
