@@ -107,6 +107,7 @@
   .glassbar.show{transform:translateY(0)}
   .glassbar .gbnum{font-family:'Fraunces',serif;font-weight:600;font-size:18px;color:var(--sand)}
   .glassbar .gbzero{color:var(--accent)}
+  .glassbar .gbwin{font-size:12px;color:var(--sage);font-variant-numeric:tabular-nums;white-space:nowrap}
 
   /* ---- scroll reveal ---- */
   .reveal{opacity:0;transform:translateY(16px);transition:opacity .65s var(--spring),transform .65s var(--spring)}
@@ -204,8 +205,8 @@
   /* ---- staircase: a colour-coded descent, warm at the top → sage at zero ---- */
   .stairs{display:flex;gap:4px;margin:16px 0 34px;align-items:flex-end}
   .stepcol{
-    flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:9px;
-    height:172px;cursor:pointer;position:relative;
+    flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:8px;
+    height:184px;cursor:pointer;position:relative;
   }
   .stepcol:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
   .step{
@@ -218,6 +219,11 @@
     font-size:9px;letter-spacing:.07em;text-transform:uppercase;
     color:var(--muted);text-align:center;font-weight:700;transition:color .3s;
   }
+  .stepcol .glbl{
+    font-size:8.5px;letter-spacing:.04em;text-transform:uppercase;
+    text-align:center;font-weight:800;margin-top:-5px;white-space:nowrap;
+  }
+  .stepcol.now .glbl{color:var(--accent)}
   .stepcol.past{opacity:.9}
   .stepcol.now{z-index:2}
   .stepcol.now .step{transform:translateY(-7px);box-shadow:0 14px 30px -12px rgba(59,43,20,.4)}
@@ -238,6 +244,8 @@
   }
   .today .eyebrow{color:var(--accent)}
   .today-cap-row{display:flex;align-items:baseline;gap:10px;margin:8px 0 2px}
+  .today-sched{font-size:13px;color:var(--sage);font-weight:700;margin:2px 0 4px}
+  .today-sched[hidden]{display:none}
   .big{font-family:'Fraunces',serif;font-weight:600;font-size:64px;line-height:1;color:var(--sand)}
   .of{color:var(--muted);font-size:15px}
   .bar{height:8px;border-radius:99px;background:var(--surface2);overflow:hidden;margin:16px 0 6px}
@@ -296,17 +304,31 @@
   }
   .delay-chip.running{border-style:solid;border-color:var(--accent);background:var(--accent-soft);font-variant-numeric:tabular-nums}
   .delay-chip.done{border-style:solid;border-color:var(--sage);color:var(--sage);background:#eff2df}
-  .gap-status{display:flex;align-items:center;gap:8px;margin-top:12px}
-  .gap-status[hidden]{display:none}
-  .gap-line{
-    flex:1;font-size:12px;font-weight:600;line-height:1.4;
-    padding:8px 12px;border-radius:11px;
-    background:var(--surface2);color:var(--muted);
-    font-variant-numeric:tabular-nums;
+  /* ---- the gap hero: time between sessions is the main event ---- */
+  .gap-hero{
+    position:relative;background:#faf5ea;border:1px solid var(--hair);
+    border-left:3px solid var(--accent);border-radius:14px;
+    padding:12px 14px;margin-top:14px;
   }
-  .gap-line.gap-open{background:#eff2df;color:var(--sage)}
+  .gap-hero[hidden]{display:none}
+  .gap-hero.open{border-left-color:var(--sage)}
+  .gh-head{display:flex;align-items:baseline;gap:8px}
+  .gh-lbl{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700;flex:1}
+  .gh-rule{font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;font-weight:800;color:var(--accent)}
+  .gh-row{display:flex;align-items:center;gap:10px;margin:3px 0 9px}
+  .gh-time{
+    font-family:'Fraunces',serif;font-weight:600;font-size:36px;line-height:1;
+    color:var(--sand);font-variant-numeric:tabular-nums;flex:1;
+  }
+  .gap-hero.open .gh-time{color:var(--sage)}
+  .gh-track{position:relative;height:8px;border-radius:99px;background:var(--surface2);overflow:hidden}
+  .gh-track>i{display:block;height:100%;border-radius:99px;background:var(--accent);transition:width .5s var(--spring),background .3s}
+  .gap-hero.open .gh-track>i{background:var(--sage)}
+  .gh-note{font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.5;font-variant-numeric:tabular-nums}
+  .gh-note strong{color:var(--sand)}
+  .gap-hero.open .gh-note{color:var(--sage);font-weight:700}
   @keyframes gapFlash{0%{transform:scale(1)}28%{transform:scale(1.02)}100%{transform:scale(1)}}
-  .gap-status.flash{animation:gapFlash .6s var(--spring)}
+  .gap-hero.flash{animation:gapFlash .6s var(--spring)}
   .gap-bell{
     flex:0 0 auto;width:38px;height:38px;border-radius:11px;
     border:1px solid var(--line);background:none;cursor:pointer;
@@ -478,6 +500,13 @@
   .phase-rule{font-size:13px;color:var(--sage);margin:2px 0 6px;font-weight:700}
   .phase-held{font-size:12px;color:var(--amber);margin:0 0 6px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
   .phase p{font-size:14.5px;color:var(--ink)}
+  .phase-days{margin:9px 0 4px;border-top:1px solid var(--hair)}
+  .pd-row{display:flex;align-items:baseline;gap:9px;padding:6px 0;border-bottom:1px solid var(--hair)}
+  .pd-date{flex:0 0 54px;font-size:10.5px;color:var(--muted);font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+  .pd-wins{flex:1;font-size:13px;color:var(--sand);font-weight:700;letter-spacing:.01em}
+  .pd-gap{font-size:11px;color:var(--sage);font-weight:800;white-space:nowrap}
+  .pd-row.past{opacity:.5}
+  .pd-row.today .pd-date,.pd-row.today .pd-wins{color:var(--accent)}
   .phase-evid{
     font-size:12.5px;color:var(--muted);font-style:italic;line-height:1.5;
     margin-top:9px;padding-top:9px;border-top:1px dashed var(--line);
@@ -642,7 +671,9 @@
   .sday:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .sd-dow{font-size:8.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:700;white-space:nowrap}
   .sd-cap{font-family:'Fraunces',serif;font-weight:600;font-size:21px;color:var(--sand);line-height:1.15}
-  .sd-gap{font-size:9px;color:var(--muted);font-weight:700;white-space:nowrap}
+  .sd-gap{font-size:10.5px;color:var(--accent);font-weight:800;white-space:nowrap}
+  .sday.past .sd-gap{color:var(--muted)}
+  .sday.zeroday .sd-gap{color:var(--sage)}
   .sday.past{opacity:.8}
   .sday.past.under .sd-cap,.sday.past.clean .sd-cap{color:var(--sage)}
   .sday.past.at .sd-cap{color:var(--amber)}
@@ -657,7 +688,65 @@
   }
   .sched-detail p{margin:3px 0}
   .sched-detail strong{color:var(--sand)}
+  .sched-detail .sd-goal{font-family:'Fraunces',serif;font-size:16px;line-height:1.4;color:var(--sand);font-weight:500}
+  .sched-detail .sd-cmp{display:block;font-size:12.5px;color:var(--muted);margin-top:3px}
+  .sched-detail .sd-cmp strong,.sched-detail .sd-cmp .down,.sched-detail .sd-cmp .up{color:var(--sand)}
+  .sched-detail .down{color:var(--sage);font-weight:700}
+  .sched-detail .up{color:var(--clay);font-weight:700}
   html.dark .sched-detail{background:#2b261c}
+  .sched-cap{font-size:11.5px;color:var(--muted);margin:2px 0 6px}
+  /* ---- the focal "where I'm at today" plan card ---- */
+  .tplan{
+    border:1px solid var(--line);border-left:3px solid var(--accent);
+    border-radius:16px;background:var(--surface);box-shadow:var(--shadow-sm);
+    padding:15px 17px 16px;margin:2px 0 14px;
+  }
+  .tplan.zero{border-left-color:var(--sage)}
+  .tp-eyebrow{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .tp-eyebrow b{color:var(--accent)}
+  .tplan.zero .tp-eyebrow b{color:var(--sage)}
+  .tp-goal{font-family:'Fraunces',serif;font-size:21px;line-height:1.28;color:var(--sand);font-weight:500;margin:6px 0 11px;letter-spacing:-.01em}
+  .tp-struct{display:flex;align-items:center;gap:11px;padding-bottom:12px;border-bottom:1px solid var(--hair)}
+  .tp-cap{font-family:'Fraunces',serif;font-weight:600;font-size:34px;line-height:1}
+  .tp-gap{
+    font-family:'Fraunces',serif;font-weight:600;font-size:34px;line-height:1;
+    color:var(--accent);padding-left:13px;border-left:1px solid var(--hair);
+  }
+  .tp-struct-txt{font-size:13px;color:var(--sage);font-weight:700;line-height:1.35}
+  .tp-struct-txt small{display:block;font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+  .tplan.zero .tp-struct{color:var(--ink);font-size:13.5px;line-height:1.5;display:block}
+  /* ---- the day, laid out: session windows + do-list ---- */
+  .tp-day{padding:12px 0 2px;border-bottom:1px solid var(--hair)}
+  .tp-day-k{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:800}
+  .wins{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px}
+  .win{
+    font-size:12.5px;font-weight:800;color:var(--accent);white-space:nowrap;
+    background:rgba(165,104,31,.09);border:1px solid rgba(165,104,31,.28);
+    border-radius:99px;padding:3px 11px;
+  }
+  html.dark .win{background:rgba(224,164,88,.12);border-color:rgba(224,164,88,.35)}
+  .win-note{display:block;font-size:12.5px;color:var(--muted);line-height:1.5;margin:6px 0 0;font-style:italic}
+  .do-list{list-style:none;margin:9px 0 10px;padding:0}
+  .do-list li{position:relative;padding:4px 0 4px 19px;font-size:13.5px;line-height:1.5;color:var(--ink)}
+  .do-list li::before{content:"";position:absolute;left:3px;top:12px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+  .sched-detail .wins{margin:6px 0 2px}
+  .sched-detail .do-list{margin-bottom:2px}
+  .tp-vs{font-size:13.5px;color:var(--ink);line-height:1.5;margin:11px 0}
+  .tp-vs b{color:var(--sand);font-weight:700}
+  .tp-vs-k{display:inline-block;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;font-weight:800;padding:1px 7px;border-radius:99px;margin-right:5px;vertical-align:1px}
+  .tp-vs-k.down{color:var(--sage);background:rgba(100,125,75,.13)}
+  .tp-vs-k.hold{color:var(--amber);background:rgba(165,104,31,.13)}
+  .tp-vs-k.up{color:var(--clay);background:rgba(184,83,53,.13)}
+  .tp-arc{margin-top:12px;padding-top:12px;border-top:1px solid var(--hair)}
+  .tp-track{position:relative;height:9px;border-radius:99px;background:var(--surface2);overflow:visible}
+  .tp-track>i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--amber),var(--sage));transition:width .6s var(--spring)}
+  .tp-track.done>i{background:var(--sage)}
+  .tp-here{position:absolute;top:50%;width:15px;height:15px;border-radius:50%;background:var(--surface);border:3px solid var(--accent);transform:translate(-50%,-50%);box-shadow:0 2px 6px -1px rgba(59,43,20,.4)}
+  .tp-arc-ends{display:flex;justify-content:space-between;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:7px}
+  .tp-arc-lbl{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:5px}
+  .tp-arc-lbl b{color:var(--sand);font-weight:700}
+  html.dark .tp-vs-k.down{background:rgba(163,184,153,.16)}
+  html.dark .tp-vs-k.hold{background:rgba(224,164,88,.16)}
   /* taper score contributors */
   .contrib{margin:12px 0 2px}
   .contrib-row{display:flex;align-items:center;gap:10px;padding:4px 0}
@@ -861,8 +950,8 @@
   html.dark .held-banner button,html.dark .rit-row{background:#2e2920}
   html.dark .rit-row.on .rit-check{color:#1d1a14}
   html.dark .phase.zero{border-color:#4c5a3b}
-  html.dark .delay-chip.done,html.dark .gap-line.gap-open{background:#28301f}
-  html.dark .gap-line{background:#2b261c}
+  html.dark .delay-chip.done{background:#28301f}
+  html.dark .gap-hero{background:#2b261c}
   html.dark .hold-btns button,html.dark .tally-btns button,html.dark .hedit button,
   html.dark .hgroup button,html.dark .hnotime button,html.dark .timefix button,
   html.dark .earlier-row button,html.dark .data-btns button,html.dark #detailBack,html.dark .xopen,
@@ -897,7 +986,7 @@ try{
 <body>
 
 <div class="glassbar" id="glassBar" role="button" tabindex="0" aria-label="Back to top">
-  <span id="gbToday"></span><span class="gbzero" id="gbZero"></span>
+  <span id="gbToday"></span><span class="gbwin" id="gbWin"></span><span class="gbzero" id="gbZero"></span>
 </div>
 
 <div id="dash" aria-label="Landscape dashboard">
@@ -912,14 +1001,14 @@ try{
       <p class="dt-sub" id="dhNote"></p>
     </div>
   </button>
-  <button class="dtile" id="dtScore" aria-label="Open the taper score in detail">
-    <span class="dt-eyebrow">Taper score</span>
-    <div class="dt-ring" id="dhRing"></div>
-  </button>
   <button class="dtile" id="dtWindow" aria-label="Open today in detail">
     <span class="dt-eyebrow" id="dhWinLbl">Next window</span>
     <div class="dt-mid" id="dhWin">–</div>
     <p class="dt-sub" id="dhWinSub"></p>
+  </button>
+  <button class="dtile" id="dtScore" aria-label="Open the taper score in detail">
+    <span class="dt-eyebrow">Taper score</span>
+    <div class="dt-ring" id="dhRing"></div>
   </button>
   <button class="dtile" id="dtUrge" aria-label="Start or check the urge timer">
     <span class="dt-eyebrow">Urges outlasted</span>
@@ -940,7 +1029,7 @@ try{
 
 <header id="hero">
   <button class="theme-btn" id="themeBtn" aria-label="Theme: auto — tap to change">◐</button>
-  <p class="eyebrow">Ten days · flower only · cap only goes down</p>
+  <p class="eyebrow">Ten days · fewer hits · wider gaps</p>
   <h1>Taper to <em>zero</em></h1>
   <p class="countdown" id="countdown"></p>
 </header>
@@ -979,6 +1068,7 @@ try{
     <span class="big" id="tallyCount">0</span>
     <span class="of" id="capLabel"></span>
   </div>
+  <p class="today-sched" id="todaySched" hidden></p>
   <div class="bar"><div id="barFill"></div></div>
   <div class="stat-row" id="statRow">
     <div class="stat"><span class="sv" id="stLeft">–</span><span class="sl">left today</span></div>
@@ -993,9 +1083,17 @@ try{
       <span class="hold-label" id="holdLabel">Hold to log a hit</span>
     </button>
   </div>
-  <div class="gap-status" id="gapStatus" hidden>
-    <span class="gap-line gap-wait" id="gapChip" role="status"></span>
-    <button class="gap-bell" id="gapBell" type="button" aria-label="Remind me to wait when the window opens">🔕</button>
+  <div class="gap-hero" id="gapHero" hidden>
+    <div class="gh-head">
+      <span class="gh-lbl" id="ghLbl">Since the last hit</span>
+      <span class="gh-rule" id="ghRule"></span>
+    </div>
+    <div class="gh-row">
+      <span class="gh-time" id="ghSince" role="status">–</span>
+      <button class="gap-bell" id="gapBell" type="button" aria-label="Remind me to wait when the window opens">🔕</button>
+    </div>
+    <div class="gh-track"><i id="ghFill"></i></div>
+    <p class="gh-note" id="ghNote"></p>
   </div>
   <p class="gap-note" id="gapNote" hidden>Heads-up: the reminder only rings while the app is open — nothing runs in the background, because nothing leaves this device.</p>
   <div class="action-row">
@@ -1049,6 +1147,8 @@ try{
 <div class="section openable" id="stepSection" data-title="The step-down">
   <button class="xopen" data-target="stepSection" data-title="The step-down" aria-label="Open the step-down in detail">⤢</button>
   <h2>The step-down</h2>
+  <div class="tplan" id="todayPlan"></div>
+  <p class="sched-cap">The whole descent — tap any day for its full plan. <a class="dlink" href="guide.html#playbook">The written playbook →</a></p>
   <div class="sched-strip" id="schedStrip" aria-label="Day-by-day schedule — tap a day for details"></div>
   <div class="sched-detail" id="schedDetail" hidden></div>
   <div class="xtra" id="stepXtra"></div>
@@ -1061,7 +1161,7 @@ try{
   <h2>The system</h2>
   <a class="guide-link" href="guide.html">
     <span><strong>The deep guide</strong><br>
-    <small>What the research says about tapering, withdrawal, and staying quit — with sources.</small></span>
+    <small>The full day-by-day playbook, plus what the research says about tapering, withdrawal, and staying quit — with sources.</small></span>
     <span class="guide-arrow">→</span>
   </a>
   <details>
@@ -1128,7 +1228,7 @@ try{
   </details>
 </div>
 
-<p class="footer">The cap only goes down.</p>
+<p class="footer">The cap only goes down. The gaps only widen.</p>
 
 <div class="cz-overlay" id="czOverlay" role="dialog" aria-modal="true" aria-labelledby="czTitle" hidden>
   <div class="detail-grab" aria-hidden="true"></div>
@@ -1159,31 +1259,97 @@ try{
     {days:2, cap:22, capText:"22", sessionMax:4, spacingH:3,
      rule:"Max 4 hits/session · 3h between sessions",
      desc:"A quarter down from the ~30 baseline. The cut is real but holdable — the point is proving the count works.",
+     goals:["Day one on a ceiling. Don't chase perfect — just land under 22 and prove the count is real.",
+            "Hold 22 a second day. It should already feel routine — that's the ceiling doing its job."],
+     plans:[
+       {w:['8a','11a','2p','5p','8p','11p'],
+        note:'Six windows fit a 3-hour rhythm. At 4 hits a window that’s 24 of room — the 22 cap means at least one window runs short.',
+        do:['Log every hit the moment it happens. Today is about making the count real, not about being perfect.',
+            'Keep each sitting inside its window: up to 4 hits, ~30 minutes, then closed until the next one.',
+            'A skipped window doesn’t bank — its hits are gone, and the next window still waits the full 3 hours.']},
+       {w:['8a','11a','2p','5p','8p','11p'],
+        note:'Same six windows as yesterday — repetition is the point today.',
+        do:['Run yesterday’s shape again and let it feel routine. Boring is the win.',
+            'Notice which window you needed least — that’s the one tomorrow deletes.',
+            'By tonight you’ll have held the ceiling twice. That’s the proof the structure works.']}],
      why:"The clinical review's core finding: slow, stepped reduction over weeks lowers the odds and severity of withdrawal.",
      ref:"taper"},
     {days:2, cap:16, capText:"16", sessionMax:4, spacingH:[3.5,4],
      rule:"Max 4 hits/session · gap widens daily: 3½h, then 4h",
      desc:"Cut the most mindless session of the day — the one that happens because it's just the time. The space between sessions starts stretching every day from here.",
+     goals:["Cut the most mindless session — the one that fires just because it's the time. Ceiling drops to 16.",
+            "Hold 16, but stretch the gap to 4h. Same ceiling, more space between windows."],
+     plans:[
+       {w:['10a','1:30p','5p','8:30p'],
+        note:'Four windows × 4 hits is exactly the 16 cap — no slack anywhere.',
+        do:['The most mindless window from the last two days is gone. Don’t replace it — let the gap stand.',
+            'Push the first window to 10 a.m. even if the morning argues. Mornings are where the taper is won.',
+            'Every window is exactly the cap now: 4 in each, none spare.']},
+       {w:['10a','2p','6p','10p'],
+        note:'Same four windows, pushed to 4 hours apart — the space between them is the change today.',
+        do:['The ceiling holds at 16; the gap does the moving. Feel the extra half hour and let it pass.',
+            'An urge between windows is the 20-minute rule’s job — set the timer instead of watching the clock.',
+            'Tomorrow is the halfway cut to 12. Decide tonight which daytime window survives.']}],
      why:"Lab trials show THC suppresses withdrawal dose-dependently — small steps keep the gap your receptors feel small.",
      ref:"taper"},
     {days:2, cap:12, capText:"12", sessionMax:3, spacingH:[5,6],
      rule:"Max 3 hits/session · past 4h the gap steps by the full hour: 5h, then 6h",
      desc:"Well under half of baseline — and past the 4-hour mark, where it's gotten easier before. So the gap pushes by the hour now instead of the half. Mild edge here is the taper working, not failing.",
+     goals:["Under half of baseline now — 12. Past the 4-hour mark the gap jumps a full hour, so ride it out to 5h.",
+            "Hold 12, gap out to 6h. Any mild edge you feel here is the taper working, not failing."],
+     plans:[
+       {w:['10a','3p','8p'],
+        note:'Three windows × 3 hits = 9 — under the 12 cap. From here the clock cuts deeper than the ceiling.',
+        do:['Only three windows fit a 5-hour rhythm. Ride them; don’t engineer a fourth.',
+            'Past the 4-hour mark gaps have gotten easier before — expect the same here.',
+            'Restlessness or a mild edge today is the taper working, not failing.']},
+       {w:['10a','4p','10p'],
+        note:'Same three windows at 6 hours apart — most of your waking day is now between sessions.',
+        do:['Eat a real meal at the old session times — feeding the cue is cheaper than fighting it.',
+            'Keep the evening window last, not longest: 3 hits and closed.',
+            'Tomorrow drops all daytime use. Plan what the morning looks like without a window.']}],
      why:"Cravings crest and pass in minutes — urge-delay is first-line behavioral treatment, and this stretch is where it earns its keep.",
      ref:"manage"},
     {days:2, cap:8, capText:"8", sessionMax:3, spacingH:[7,8],
      rule:"2–3 sessions max · gaps 7h, then 8h · drop all daytime",
      desc:"Biggest structural cut, landed on the weekend on purpose. Keep only what's load-bearing — midday and the evening wind-down.",
+     goals:["The biggest structural cut — down to 8. Drop all daytime; keep only midday and the evening wind-down.",
+            "Hold 8, gap out to 8h. Landed on the weekend on purpose — lean on the lighter schedule."],
+     plans:[
+       {w:['1p','8p'],
+        note:'Two windows × 3 hits = 6 — the 8 cap is headroom, not a target.',
+        do:['No morning window at all — the first sitting is midday. Fill the morning with anything that moves.',
+            'Keep only what’s load-bearing: midday, and the evening wind-down.',
+            'It’s the weekend on purpose — no work rhythm to smoke against, nothing to defend.']},
+       {w:['1p','9p'],
+        note:'Same two windows, an hour further apart — the last multi-window day of the taper.',
+        do:['Midday and evening, nothing between. Tomorrow goes evening-only.',
+            'Assemble the sleep kit today — wind-down, phone dock, whatever’s in yours — so tomorrow it just runs.',
+            'Look back at the week: 22 to 8 in eight days, every step held.']}],
      why:"Cues drive use as much as chemistry. Dropping whole sessions removes cue windows — the same target CBT and MET, the best-supported treatments, work on.",
      ref:"manage"},
     {days:2, cap:3, capText:"2–3", sessionMax:3, spacingH:0, single:true,
      rule:"Evening only · one session",
      desc:"Functionally done all day and proving it. Start the sleep kit now so it's already running before zero.",
+     goals:["Evening only from here — 2–3, one session. You're functionally done all day; start the sleep kit tonight.",
+            "One last evening at 2–3. Tomorrow is zero — bag whatever's left tonight so it's not waiting for you."],
+     plans:[
+       {w:['9p'],
+        note:'One evening sitting — 2–3 hits, then done. The daytime schedule is already at zero.',
+        do:['Nothing all day. You’re functionally quit from wake to dinner — today proves it.',
+            'Start the sleep kit tonight, before zero, so it’s already working when it matters most.',
+            'Keep the sitting small and deliberate: 2–3 hits, one window, closed.']},
+       {w:['9p'],
+        note:'The last window of the taper.',
+        do:['One final evening sitting — 2–3, same as yesterday, nothing new.',
+            'Before bed, the ritual: whatever’s left goes in the trash. Not saved, not “just in case.”',
+            'Tomorrow the day counter starts. You step off from 2–3 hits, not ~30 — the drop is already mostly behind you.']}],
      why:"Sleep disturbance is the withdrawal symptom the research finds lasts longest — starting the sleep kit before zero front-loads the support.",
      ref:"withdrawal"},
     {days:null, cap:0, capText:"0",
      rule:"Whatever's left goes in the trash the night before",
      desc:"Zero. Not saved, not “just in case.” The day counter starts here — and it only climbs.",
+     goals:["Zero. Not saved, not “just in case.” The day counter starts today and only climbs."],
      why:"The withdrawal timeline (onset 24–48 h, peak days 2–6, fading over 2–3 weeks) is drawn from abrupt heavy stops. You step off from 2–3 hits, not ~30 — and easing the drop is exactly what the review says reduces the probability and severity.",
      ref:"withdrawal"}
   ];
@@ -1370,6 +1536,41 @@ try{
     return sp[Math.max(0,Math.min(sp.length-1,off))];
   }
   function spacingHNow(){return idx>=BASE_PHASES.length-1?0:spacingHOn(today,idx);}
+  // which day within its phase a date falls on (0-based), and that day's goal
+  function dayInPhase(d,di){
+    if(di<0)di=0;
+    return Math.max(0,Math.round((d-schedule()[di].start)/MS_DAY));
+  }
+  function dayGoal(d,di){
+    if(di<0)di=0;
+    var p=BASE_PHASES[di], g=p.goals;
+    if(!g||!g.length)return p.desc;
+    return g[Math.min(g.length-1,dayInPhase(d,di))];
+  }
+  // the structured plan for a given day: session windows, honest math, do-list.
+  // Held days clamp to the phase's last (widest) day, same as goals.
+  function dayPlanOf(d,di){
+    if(di<0)di=0;
+    var p=BASE_PHASES[di];
+    if(!p.plans||!p.plans.length)return null;
+    return p.plans[Math.min(p.plans.length-1,dayInPhase(d,di))];
+  }
+  function winsHTML(pl){
+    if(!pl||!pl.w||!pl.w.length)return '';
+    return '<div class="wins">'+pl.w.map(function(t){return '<span class="win">'+t+'</span>';}).join('')+'</div>';
+  }
+  function doListHTML(pl){
+    if(!pl||!pl.do||!pl.do.length)return '';
+    return '<ul class="do-list">'+pl.do.map(function(t){return '<li>'+t+'</li>';}).join('')+'</ul>';
+  }
+  // one-line structure for a given day: cap, session ceiling, this day's gap
+  function dayStructure(d,di){
+    if(di<0)di=0;
+    var p=BASE_PHASES[di];
+    if(p.cap<=0)return 'Zero — nothing on the schedule but the day count';
+    if(p.single)return '2–3 hits · one evening session only';
+    return p.capText+' hits · max '+p.sessionMax+' per session · '+fmtGapH(spacingHOn(d,di))+' between';
+  }
   function fmtGapH(h){
     var w=Math.floor(h);
     return (h%1?(w?w:'')+'½':w)+'h';
@@ -1384,9 +1585,16 @@ try{
       if(hits[i]-hits[i-1]<=SESSION_GAP)inSession++;else break;
     }
     var last=hits[hits.length-1];
+    var first=hits[hits.length-inSession];
+    // A sitting is a single ~30-min window: it closes 30 min after its first
+    // hit (or the moment the per-session cap is reached). Hits you didn't take
+    // are NOT banked for later — once the sitting closes the next one waits out
+    // the full between-session gap.
+    var open=(Date.now()-first.getTime())<=SESSION_GAP;
     // spacing rule (how long to wait before the *next* session) is day-aware
     var spacing=spacingHNow()*3600000;
-    return {last:last,inSession:inSession,nextOpen:spacing>0?new Date(last.getTime()+spacing):null};
+    return {last:last,first:first,inSession:inSession,open:open,
+            nextOpen:spacing>0?new Date(last.getTime()+spacing):null};
   }
   function sessionsFor(key){return rc('sf:'+key,function(){
     var e=data.days[key];
@@ -1398,6 +1606,19 @@ try{
       else out[out.length-1].push(hits[i]);
     }
     return out;
+  });}
+  /* the most recent timed hit anywhere — the live gap runs from here,
+     across midnight too: the overnight stretch counts. */
+  function lastHitEver(){return rc('lhe',function(){
+    var best=null;
+    for(var k in data.days){
+      var hits=data.days[k].hits||[];
+      for(var i=0;i<hits.length;i++){
+        var t=new Date(hits[i]);
+        if(!best||t>best)best=t;
+      }
+    }
+    return best;
   });}
 
   /* ================= rendering ================= */
@@ -1552,9 +1773,18 @@ try{
       if(isNow){bg=rgbStr(col);num=rgbStr(mixPaper(col,.86));}          // saturated fill, cream number
       else if(isPast){bg=rgbStr(mixPaper(col,.7));num=rgbStr(mixPaper(col,.15));}
       else{bg=rgbStr(mixPaper(col,.82));num=rgbStr(mixPaper(col,.05));} // soft tint, saturated number
+      // each step carries its gap rule — the other half of the schedule
+      var gapTxt;
+      if(p.cap<=0)gapTxt='free';
+      else if(p.single)gapTxt='evening';
+      else gapTxt=typeof p.spacingH==='number'
+        ?fmtGapH(p.spacingH)+' gap'
+        :fmtGapH(p.spacingH[0])+'→'+fmtGapH(p.spacingH[p.spacingH.length-1]);
+      var gapCol=isNow?'':(' style="color:'+rgbStr(mixPaper(col,isPast?.45:.15))+'"');
       el.innerHTML='<div class="step" style="height:'+barH+'px;background:'+bg+'">'+
         '<span class="cap" style="color:'+num+'">'+p.capText+'</span></div>'+
-        '<span class="lbl">'+fmtShort(s.start)+'</span>';
+        '<span class="lbl">'+fmtShort(s.start)+'</span>'+
+        '<span class="glbl"'+gapCol+'>'+gapTxt+'</span>';
       el.setAttribute('role','button');el.setAttribute('tabindex','0');
       el.setAttribute('aria-label','Jump to '+s.lbl+' details');
       function go(){$('phase-'+i).scrollIntoView();}
@@ -1576,13 +1806,132 @@ try{
       var held=hv>0?'<p class="phase-held">Held +'+hv+' day'+(hv>1?'s':'')+'</p>'
         :hv<0?'<p class="phase-held">Finished '+(-hv)+' day'+(hv<-1?'s':'')+' early</p>':'';
       var capCol=rgbStr(capRGB(p.cap/BASE_PHASES[0].cap));
+      // each scheduled day gets its own row: date, planned windows, that day's gap
+      var dayRows='';
+      if(s.end){
+        var dd=new Date(s.start);
+        while(dd<=s.end){
+          var dpl=dayPlanOf(dd,i);
+          var rowCls='pd-row'+(dd<today?' past':'')+(dkeyOf(dd)===todayKey?' today':'');
+          dayRows+='<div class="'+rowCls+'">'+
+            '<span class="pd-date">'+WEEKDAYS[dd.getDay()].slice(0,3)+' '+dd.getDate()+'</span>'+
+            '<span class="pd-wins">'+(dpl&&dpl.w?dpl.w.join(' · '):'—')+'</span>'+
+            '<span class="pd-gap">'+(p.single?'evening':fmtGapH(spacingHOn(dd,i))+' gap')+'</span></div>';
+          dd=addDays(dd,1);
+        }
+        if(dayRows)dayRows='<div class="phase-days">'+dayRows+'</div>';
+      }
       el.innerHTML=
         '<div class="phase-top"><span class="phase-dates">'+s.lbl+(i===idx?' · now':'')+'</span>'+
         '<span class="phase-cap" style="color:'+capCol+'">'+p.capText+'<small> '+(p.cap>0?'hits/day':'')+'</small></span></div>'+
         held+'<p class="phase-rule">'+p.rule+'</p><p>'+p.desc+'</p>'+
+        dayRows+
         (p.why?'<p class="phase-evid">'+p.why+' <a href="guide.html#'+p.ref+'">sources →</a></p>':'');
       wrap.appendChild(el);
     });
+  }
+
+  /* ---- the focal "where I'm at today" plan card ---- */
+  function renderTodayPlan(){
+    var box=$('todayPlan');if(!box)return;
+    var sch=schedule(), start=sch[0].start, z=zeroDate();
+    if(today<start){
+      var pl0=dayPlanOf(start,0);
+      box.innerHTML='<div class="tp-eyebrow">Starts '+WEEKDAYS[start.getDay()]+', '+fmtShort(start)+'</div>'+
+        '<div class="tp-goal">'+dayGoal(start,0)+'</div>'+
+        '<div class="tp-struct">'+dayStructure(start,0)+'</div>'+
+        (pl0?'<div class="tp-day"><div class="tp-day-k">Day one, laid out</div>'+winsHTML(pl0)+
+          (pl0.note?'<p class="win-note">'+pl0.note+'</p>':'')+doListHTML(pl0)+'</div>':'');
+      return;
+    }
+    var totalD=Math.max(1,Math.round((z-start)/MS_DAY));
+    var dayN=Math.round((today-start)/MS_DAY)+1;
+
+    if(isZeroEra){
+      var n=Math.max(0,daysFree()), zs=zeroStats();
+      box.className='tplan zero';
+      box.innerHTML=
+        '<div class="tp-eyebrow">Zero era · <b>day '+n+'</b> off</div>'+
+        '<div class="tp-goal">'+dayGoal(today,BASE_PHASES.length-1)+'</div>'+
+        '<div class="tp-struct">'+zeroTimelineNote(n)+'</div>'+
+        (zs&&zs.slips?'<div class="tp-vs"><span class="tp-vs-k">Banked</span> '+zs.clean+' clean days total · best run '+zs.best+' — a slip never wipes the total.</div>':'')+
+        '<div class="tp-arc"><div class="tp-track done"><i style="width:100%"></i></div>'+
+        '<div class="tp-arc-lbl">Walked <b>'+BASE_PHASES[0].capText+' → 0</b> in '+totalD+' days. The counter only climbs now.</div></div>';
+      return;
+    }
+    box.className='tplan';
+    var col=rgbStr(capRGB(cap/BASE_PHASES[0].cap));
+    var left=Math.round((z-today)/MS_DAY);
+    var dropBase=Math.max(0,Math.round((1-cap/BASELINE)*100));
+    var journey=Math.max(0,Math.min(100,Math.round((BASELINE-cap)/BASELINE*100)));
+
+    // ---- comparison to yesterday: the plan delta + what you actually logged ----
+    var yd=addDays(today,-1), vs='';
+    if(yd>=start){
+      var yIdx=phaseIndexFor(yd), yCap=BASE_PHASES[yIdx<0?0:yIdx].cap, yCapT=BASE_PHASES[yIdx<0?0:yIdx].capText;
+      var plan;
+      if(cap<yCap){
+        plan='<span class="tp-vs-k down">↓ Ceiling dropped</span> from <b>'+yCapT+'</b> yesterday — <b>'+(yCap-cap)+' fewer</b> today.';
+      }else{
+        var yGap=spacingHOn(yd,yIdx<0?0:yIdx), tGap=spacingHOn(today,idx);
+        if(!phase.single&&tGap>yGap){
+          plan='<span class="tp-vs-k hold">Same ceiling</span> as yesterday ('+cap+') — but the gap widens: <b>'+fmtGapH(yGap)+' → '+fmtGapH(tGap)+'</b>.';
+        }else{
+          plan='<span class="tp-vs-k hold">Holding</span> at <b>'+cap+'</b>, same as yesterday.';
+        }
+      }
+      var yc=countOf(dkeyOf(yd)), ylog='';
+      if(yc!==null){
+        var yst=yc>yCap?'over':yc===yCap?'at the cap':'under';
+        ylog=' Yesterday you logged <b>'+yc+'</b> of '+yCapT+' — '+yst+'.';
+      }
+      vs='<div class="tp-vs">'+plan+ylog+'</div>';
+    }
+
+    // tomorrow's move — the schedule always says what comes next
+    var tm=addDays(today,1),nxt='';
+    if(dkeyOf(tm)===dkeyOf(z)){
+      nxt='<span class="tp-vs-k down">Tomorrow</span> <b>Zero day.</b> Tonight the ritual clears the runway.';
+    }else if(tm<z){
+      var nIdx=phaseIndexFor(tm),np=BASE_PHASES[nIdx<0?0:nIdx];
+      if(np.cap<cap){
+        nxt='<span class="tp-vs-k down">Tomorrow</span> the ceiling drops to <b>'+np.capText+'</b>'+
+          (np.single?' — one evening session only.':' · gap '+fmtGapH(spacingHOn(tm,nIdx))+'.');
+      }else if(!np.single&&!phase.single&&spacingHOn(tm,nIdx)>spacingHNow()){
+        nxt='<span class="tp-vs-k hold">Tomorrow</span> same ceiling — the gap stretches to <b>'+fmtGapH(spacingHOn(tm,nIdx))+'</b>.';
+      }
+    }
+    if(nxt)vs+='<div class="tp-vs">'+nxt+'</div>';
+
+    var struct=phase.single
+      ?'<span class="tp-cap" style="color:'+col+'">'+phase.capText+'</span>'+
+       '<span class="tp-struct-txt">one evening session<small>hits max</small></span>'
+      :'<span class="tp-cap" style="color:'+col+'">'+phase.capText+'</span>'+
+       '<span class="tp-struct-txt"><small>hits max</small>'+phase.sessionMax+' a session</span>'+
+       '<span class="tp-gap">'+fmtGapH(spacingHNow())+'</span>'+
+       '<span class="tp-struct-txt"><small>between</small>sessions</span>';
+
+    // the day, laid out: suggested windows + honest math + the do-list
+    var pl=dayPlanOf(today,idx), dayPlanHTML='';
+    if(pl){
+      dayPlanHTML='<div class="tp-day">'+
+        '<div class="tp-day-k">The day, laid out</div>'+
+        winsHTML(pl)+
+        (pl.note?'<p class="win-note">'+pl.note+'</p>':'')+
+        doListHTML(pl)+
+        '</div>';
+    }
+    box.innerHTML=
+      '<div class="tp-eyebrow">Day <b>'+dayN+'</b> of '+totalD+' · Today · '+WEEKDAYS[today.getDay()]+', '+fmtShort(today)+'</div>'+
+      '<div class="tp-goal">'+dayGoal(today,idx)+'</div>'+
+      '<div class="tp-struct">'+struct+'</div>'+
+      dayPlanHTML+
+      vs+
+      '<div class="tp-arc">'+
+        '<div class="tp-track"><i style="width:'+journey+'%"></i><span class="tp-here" style="left:'+journey+'%"></span></div>'+
+        '<div class="tp-arc-ends"><span>~'+BASELINE+' baseline</span><span>zero</span></div>'+
+        '<div class="tp-arc-lbl"><b>'+dropBase+'% below your ~'+BASELINE+' baseline</b> — down from '+BASE_PHASES[0].capText+' at the start, zero in '+left+' day'+(left===1?'':'s')+'.</div>'+
+      '</div>';
   }
 
   /* ---- interactive day-by-day schedule strip ---- */
@@ -1631,8 +1980,15 @@ try{
         :off<=21?'Weeks 2–3: the climb back to baseline. Sleep settles last.'
         :'Past the 3-week adjustment window.');
     }else{
-      head+=' · cap '+p.capText;
+      var schD=schedule(),dayNum=Math.round((d-schD[0].start)/MS_DAY)+1;
+      head+=' · day '+dayNum+' · cap '+p.capText;
+      lines.push('<span class="sd-goal">'+dayGoal(d,di)+'</span>');
       lines.push('<strong>Structure:</strong> '+(p.single?'one evening session only':'max '+p.sessionMax+' hits per session · '+fmtGapH(spacingHOn(d,di))+' between sessions'));
+      var pl=dayPlanOf(d,di);
+      if(pl){
+        lines.push(winsHTML(pl)+(pl.note?'<span class="win-note">'+pl.note+'</span>':''));
+        if(d>=today)lines.push(doListHTML(pl));
+      }
       if(d<today){
         lines.push('<strong>Logged:</strong> '+(st.c===null?'nothing — no data that day':st.c+' of '+st.cap+' · '+st.stat));
         var sess=sessionsFor(selSchedKey);
@@ -1645,10 +2001,32 @@ try{
         lines.push('<strong>So far:</strong> '+c+' of '+cap+' · '+Math.max(0,cap-c)+' left today');
       }else{
         var inD=Math.round((d-today)/MS_DAY);
-        lines.push('<strong>In '+inD+' day'+(inD>1?'s':'')+'.</strong> '+p.desc);
+        lines.push('<strong>In '+inD+' day'+(inD>1?'s':'')+'</strong> from now.');
+      }
+      // comparison to the day before — the plan's shape, day over day
+      var yd=addDays(d,-1);
+      if(yd>=schD[0].start){
+        var ydi=phaseIndexFor(yd),yp=BASE_PHASES[ydi<0?0:ydi],cmp='';
+        if(yp.cap>p.cap)cmp='Ceiling stepped down from <strong>'+yp.capText+'</strong> the day before — '+(yp.cap-p.cap)+' fewer.';
+        else if(yp.cap===p.cap&&!p.single){
+          var yg=spacingHOn(yd,ydi<0?0:ydi),tg=spacingHOn(d,di);
+          cmp=tg>yg?'Same cap as the day before — the gap widens <strong>'+fmtGapH(yg)+' → '+fmtGapH(tg)+'</strong>.'
+                   :'Same cap and gap as the day before — holding steady.';
+        }else if(yp.single&&!p.single)cmp='';
+        if(d<=today){
+          var yc=countOf(dkeyOf(yd));
+          if(yc!==null&&st.c!==null&&st.c!==undefined){
+            var dv=st.c-yc;
+            cmp+=(cmp?' ':'')+(dv<0?'<span class="down">'+(-dv)+' fewer</span> than the day before.'
+              :dv>0?'<span class="up">'+dv+' more</span> than the day before.':'Even with the day before.');
+          }
+        }
+        if(cmp)lines.push('<span class="sd-cmp">'+cmp+'</span>');
       }
     }
-    box.innerHTML='<p>'+head+'</p>'+lines.map(function(l){return '<p>'+l+'</p>';}).join('');
+    box.innerHTML='<p>'+head+'</p>'+lines.map(function(l){
+      return /^<(ul|div)/.test(l)?l:'<p>'+l+'</p>';
+    }).join('');
     box.hidden=false;
     if(animate)expandEl(box);
   }
@@ -1677,6 +2055,7 @@ try{
       $('statRow').style.display='none';
       $('btnEarlier').style.display='none';
       $('earlierRow').hidden=true;
+      $('todaySched').hidden=true;
       $('todayEyebrow').textContent='Days off';
       setNum('tallyCount',Math.max(0,daysFree()),true);
       $('tallyCount').style.color=count>0?'var(--clay)':'var(--sage)';
@@ -1700,6 +2079,20 @@ try{
       $('todayEyebrow').textContent=idx>=0?'Today · '+sch[idx].lbl:'Starts '+fmtShort(sch[0].start);
       setNum('tallyCount',count,!booted);
       $('capLabel').textContent='of '+cap+' hits today';
+      // the day's structure, spelled out where the count lives — and what changes tomorrow
+      var schedTxt=phase.single
+        ?'One evening session only'
+        :'Max '+phase.sessionMax+' a session · '+fmtGapH(spacingHNow())+' between sessions';
+      var zNext=zeroDate(),tmr=addDays(today,1);
+      if(dkeyOf(tmr)===dkeyOf(zNext)){schedTxt+=' · tomorrow: zero';}
+      else if(today>=sch[0].start&&tmr<zNext){
+        var tmi=phaseIndexFor(tmr),tmp=BASE_PHASES[tmi<0?0:tmi];
+        if(tmp.cap<cap)schedTxt+=' · tomorrow: cap '+tmp.capText;
+        else if(!tmp.single&&!phase.single&&spacingHOn(tmr,tmi)>spacingHNow())
+          schedTxt+=' · tomorrow: gap '+fmtGapH(spacingHOn(tmr,tmi));
+      }
+      $('todaySched').textContent=schedTxt;
+      $('todaySched').hidden=false;
       var pct=cap>0?Math.min(100,(count/cap)*100):0;
       var statusCol=count>cap?'var(--clay)':count>=cap*0.8?'var(--amber)':'var(--sage)';
       $('barFill').style.width=pct+'%';
@@ -1708,7 +2101,7 @@ try{
       $('tallyCount').style.color=count>cap?'var(--clay)':count>=cap*0.8?'var(--amber)':'var(--sand)';
       if(count>cap){$('barNote').textContent='Over the cap — tomorrow, hold this phase one extra day, then keep stepping down.';}
       else if(count===cap){$('barNote').textContent='At the cap. That’s the ceiling — you’re done for today.';}
-      else{$('barNote').textContent='Under is always fine.';}
+      else{$('barNote').textContent='Under is always fine — the space between sessions does the real work.';}
       setNum('stLeft',Math.max(0,cap-count),!booted);
       var si=sessionInfo();
       if(!si){
@@ -1722,14 +2115,22 @@ try{
           setTxt('stSession','—');
           $('stSession').className='sv';
           $('stSessionLbl').textContent='evening only';
-        }else if(si.inSession>=phase.sessionMax){
+        }else if(si.open&&si.inSession<phase.sessionMax){
+          // sitting still open (within 30 min of its first hit) — hits remain
+          $('stSession').className='sv';
+          setNum('stSession',phase.sessionMax-si.inSession);
+          $('stSessionLbl').textContent='left this session';
+        }else if(si.nextOpen&&Date.now()<si.nextOpen.getTime()){
+          // sitting closed (cap reached or the 30-min window elapsed) — leftover
+          // hits aren't banked; the next sitting waits out the gap
           setTxt('stSession',fmtTime(si.nextOpen));
           $('stSession').className='sv time';
           $('stSessionLbl').textContent='next session';
         }else{
+          // the gap has elapsed — a fresh sitting is available
           $('stSession').className='sv';
-          setNum('stSession',phase.sessionMax-si.inSession);
-          $('stSessionLbl').textContent='left this session';
+          setNum('stSession',phase.sessionMax);
+          $('stSessionLbl').textContent='this session';
         }
       }
     }
@@ -1805,6 +2206,11 @@ try{
     if(sess.length){
       var ls=sess[sess.length-1];
       bits.push(sess.length+' session'+(sess.length>1?'s':'')+' · '+fmtTime(sess[0][0])+' → '+fmtTime(ls[ls.length-1]));
+    }
+    if(sess.length>1){
+      var gSum=0;
+      for(var gi=1;gi<sess.length;gi++)gSum+=sess[gi][0]-sess[gi-1][sess[gi-1].length-1];
+      bits.push('avg gap '+fmtDur(gSum/(sess.length-1)));
     }
     td.innerHTML=bits.join(' · ');
     td.hidden=false;
@@ -1912,6 +2318,23 @@ try{
           bits.push(sess.length+' session'+(sess.length>1?'s':''));
           var lastS=sess[sess.length-1];
           bits.push(fmtTime(sess[0][0])+' → '+fmtTime(lastS[lastS.length-1]));
+        }
+        // the day's gaps, judged against that day's rule
+        if(sess.length>1){
+          var reqGH=(dIdx>=0&&!BASE_PHASES[dIdx].single)?spacingHOn(d,dIdx):0;
+          var gSum=0,gMin=Infinity;
+          for(var gi=1;gi<sess.length;gi++){
+            var gMs=sess[gi][0]-sess[gi-1][sess[gi-1].length-1];
+            gSum+=gMs;if(gMs<gMin)gMin=gMs;
+          }
+          var gAvg=gSum/(sess.length-1);
+          if(reqGH>0){
+            bits.push(gMin>=reqGH*3600000
+              ?'<span class="down">gaps avg '+fmtDur(gAvg)+' — held the '+fmtGapH(reqGH)+' rule</span>'
+              :'<span class="up">gaps avg '+fmtDur(gAvg)+' — short of the '+fmtGapH(reqGH)+' rule</span>');
+          }else{
+            bits.push('gaps avg '+fmtDur(gAvg));
+          }
         }
         var eAdj=data.days[key]?(data.days[key].adj||0):0;
         if(eAdj>0)bits.push(eAdj+' untimed');
@@ -2262,7 +2685,7 @@ try{
   function notifOK(){return data.notifyWindows&&'Notification' in window&&Notification.permission==='granted';}
   function windowAlert(){
     if(navigator.vibrate)navigator.vibrate([20,90,20,90,20]);
-    var wrap=$('gapStatus');
+    var wrap=$('gapHero');
     if(wrap){wrap.classList.remove('flash');void wrap.offsetWidth;wrap.classList.add('flash');}
     if(!notifOK())return;
     var body='The window’s open — but the taper lives in the waiting. Craving waves pass in minutes, and every extra minute you hold is banked.';
@@ -2278,30 +2701,67 @@ try{
   function renderGap(){
     if(gapTick){clearInterval(gapTick);gapTick=null;}
     if(winTimer){clearTimeout(winTimer);winTimer=null;}
-    var wrap=$('gapStatus'),chip=$('gapChip'),bell=$('gapBell');
+    var wrap=$('gapHero'),bell=$('gapBell');
+    if(isZeroEra||idx<0){wrap.hidden=true;$('gapNote').hidden=true;return;}
+    wrap.hidden=false;
     var count=countOf(todayKey)||0;
-    var si=(!isZeroEra&&idx>=0&&!phase.single&&spacingHNow()>0&&count<cap)?sessionInfo():null;
-    if(!si||!si.nextOpen){wrap.hidden=true;$('gapNote').hidden=true;return;}
-    var nextOpen=si.nextOpen,gapH=spacingHNow(),openTs=nextOpen.getTime();
+    var gapH=phase.single?0:spacingHNow();
+    var reqMs=gapH*3600000;
+    $('ghRule').textContent=phase.single?'evening only':'today’s gap · '+fmtGapH(gapH);
+    var last=lastHitEver();
+    var openTs=(last&&reqMs>0)?last.getTime()+reqMs:0;
     function tick(){
-      var diff=nextOpen-Date.now();
+      renderGlassWin();
+      if(!last){
+        $('ghSince').textContent='—';
+        $('ghFill').style.width='0%';
+        wrap.classList.remove('open');
+        $('ghNote').innerHTML='Nothing logged yet — the clock starts at the first hit. '+
+          (phase.single?'One evening session only.':'Max '+phase.sessionMax+' a session, then '+fmtGapH(gapH)+' of space.');
+        return;
+      }
+      var since=Date.now()-last.getTime();
+      $('ghSince').textContent=fmtDur(since);
+      if(count>=cap){
+        wrap.classList.add('open');
+        $('ghFill').style.width='100%';
+        $('ghNote').innerHTML=count>cap
+          ?'Over the cap — the day is done, and this number still counts. Let it run.'
+          :'At the cap — done for today. This gap runs into tomorrow now; the longer, the better.';
+        return;
+      }
+      if(phase.single){
+        wrap.classList.add('open');
+        $('ghFill').style.width='100%';
+        $('ghNote').textContent='One evening session only tonight — the longer this grows before it, the softer zero lands.';
+        return;
+      }
+      var si=sessionInfo();
+      if(si&&si.open&&si.inSession<phase.sessionMax){
+        wrap.classList.remove('open');
+        $('ghFill').style.width='0%';
+        $('ghNote').innerHTML='Session open — <strong>'+(phase.sessionMax-si.inSession)+' of '+phase.sessionMax+'</strong> left this sitting. When it closes, the '+fmtGapH(gapH)+' gap starts.';
+        return;
+      }
+      var diff=openTs-Date.now();
       if(diff>0){
+        wrap.classList.remove('open');
+        $('ghFill').style.width=Math.min(100,since/reqMs*100)+'%';
         var h=Math.floor(diff/3600000),m=Math.ceil(diff%3600000/60000);
-        chip.className='gap-line gap-wait';
-        chip.textContent='Next window ~'+fmtTime(nextOpen)+' · '+(h?h+'h ':'')+m+'m · gap '+fmtGapH(gapH);
+        $('ghNote').innerHTML='Next session ~<strong>'+fmtTime(new Date(openTs))+'</strong> · '+(h?h+'h ':'')+m+'m to go — this stretch is the taper itself.';
       }else{
-        chip.className='gap-line gap-open';
-        chip.textContent=gapOpenMsg(Math.floor(-diff/60000));
+        wrap.classList.add('open');
+        $('ghFill').style.width='100%';
+        $('ghNote').textContent=gapOpenMsg(Math.floor(-diff/60000));
         // fire the "try to wait" alert once per window, when it first opens
         if(lastAlertedOpen!==openTs){lastAlertedOpen=openTs;windowAlert();}
       }
     }
-    wrap.hidden=false;
     tick();
     gapTick=setInterval(tick,20000);
     // precise foreground alert at the moment the window opens
     var untilOpen=openTs-Date.now();
-    if(untilOpen>0&&untilOpen<24*3600000){
+    if(count<cap&&untilOpen>0&&untilOpen<24*3600000){
       winTimer=setTimeout(function(){
         if(lastAlertedOpen!==openTs){lastAlertedOpen=openTs;windowAlert();}
         renderGap();
@@ -3121,7 +3581,9 @@ try{
       var siH=sessionInfo();
       var sessTxt=!siH?(phase.single?'evening':String(phase.sessionMax))
         :phase.single?'evening'
-        :siH.inSession>=phase.sessionMax?'full':String(phase.sessionMax-siH.inSession);
+        :(siH.open&&siH.inSession<phase.sessionMax)?String(phase.sessionMax-siH.inSession)
+        :(siH.nextOpen&&Date.now()<siH.nextOpen.getTime())?'—'
+        :String(phase.sessionMax);
       $('dhStats').innerHTML=ds(Math.max(0,cap-c),'left today')+
         ds(sessTxt,phase.single?'session':'left in session')+
         ds(siH?fmtTime(siH.last):'–','last hit');
@@ -3478,7 +3940,7 @@ try{
   function renderAll(){
     computeToday();
     rcClear();
-    [renderCountdown,renderStairs,renderPhases,renderSchedStrip,
+    [renderCountdown,renderStairs,renderPhases,renderTodayPlan,renderSchedStrip,
      renderToday,renderTrend,renderHistory,renderHoldBanner,renderDayHeld,
      renderRitual,renderCheckin,renderStory,renderUrge,renderGap,renderGlass,renderDash].forEach(safe);
     if(!$('detailOverlay').hidden)safe(renderXtras);
@@ -3694,7 +4156,7 @@ try{
     if(data.notifyWindows){data.notifyWindows=false;save();renderGap();return;}
     if(Notification.permission==='granted'){data.notifyWindows=true;save();renderGap();return;}
     if(Notification.permission==='denied'){
-      var line=$('gapChip');
+      var line=$('ghNote');
       if(line){line.textContent='Notifications are blocked in your browser settings.';setTimeout(renderGap,3000);}
       return;
     }
@@ -3840,6 +4302,19 @@ try{
       gt.innerHTML='Today &nbsp;<span class="gbnum">'+(countOf(todayKey)||0)+'</span>&nbsp;/ '+cap;
       gz.textContent='Zero · '+fmtShort(zeroDate());
     }
+    renderGlassWin();
+  }
+  /* the schedule rides along while you scroll: next-window state in the bar */
+  function renderGlassWin(){
+    var el=$('gbWin');
+    if(!el)return;
+    if(isZeroEra||idx<0){el.textContent='';return;}
+    if((countOf(todayKey)||0)>=cap){el.textContent='done today';return;}
+    var gapH=phase.single?0:spacingHNow();
+    var last=lastHitEver();
+    if(!gapH||!last){el.textContent=phase.single?'evening only':'';return;}
+    var openTs=last.getTime()+gapH*3600000;
+    el.textContent=openTs>Date.now()?'next ~'+fmtTime(new Date(openTs)):'window open';
   }
   window.addEventListener('scroll',function(){
     $('glassBar').classList.toggle('show', $('todayCard').getBoundingClientRect().bottom<0);

@@ -79,6 +79,30 @@
   .refs li{padding:6px 0 6px 4px}
   .refs li::before{display:none}
   .refs a{color:var(--accent);text-decoration:none;word-break:break-word}
+  .glance{border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:12px 0;background:var(--bg)}
+  .gl-row{display:flex;align-items:baseline;gap:10px;padding:7px 14px;border-top:1px solid var(--hair);font-size:13px}
+  .gl-row:first-child{border-top:none}
+  .gl-day{flex:0 0 96px;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:800}
+  .gl-cap{flex:0 0 44px;font-family:'Fraunces',serif;font-weight:600;font-size:16px;color:var(--accent)}
+  .gl-shape{flex:1;color:var(--ink);font-weight:700}
+  .gl-row.zero .gl-cap,.gl-row.zero .gl-shape{color:var(--sage)}
+  .dayplan{border:1px solid var(--line);border-radius:14px;padding:13px 16px;margin:10px 0;background:var(--bg)}
+  .dp-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .dp-when{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:800}
+  .dp-cap{font-family:'Fraunces',serif;font-size:19px;color:var(--accent);font-weight:600;white-space:nowrap}
+  .dp-cap small{font-family:'Karla',sans-serif;font-size:11px;color:var(--muted);font-weight:400}
+  .dp-focus{font-family:'Fraunces',serif;font-size:16px;line-height:1.4;color:var(--sand);font-weight:500;margin:5px 0 2px}
+  .wins{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 2px}
+  .win{
+    font-size:12.5px;font-weight:800;color:var(--accent);white-space:nowrap;
+    background:rgba(165,104,31,.09);border:1px solid rgba(165,104,31,.28);
+    border-radius:99px;padding:3px 11px;
+  }
+  html.dark .win{background:rgba(224,164,88,.12);border-color:rgba(224,164,88,.35)}
+  .dp-note{font-size:12.5px;color:var(--muted);font-style:italic;margin:6px 0 2px}
+  .dayplan ul{margin:6px 0 0}
+  .dayplan li{font-size:13.5px;padding:4px 0 4px 17px}
+  .dayplan li::before{top:12px;width:5px;height:5px;background:var(--accent)}
   .disclaimer{font-size:12.5px;color:var(--muted);margin-top:22px;padding:14px 16px;background:var(--surface2);border-radius:12px}
   .footer{text-align:center;color:var(--muted);margin-top:26px;font-family:'Fraunces',serif;font-style:italic;font-size:15px}
 </style>
@@ -95,6 +119,7 @@ try{var __t=localStorage.getItem('ttz-theme');if(__t==='dark'||(__t!=='light'&&m
 
 <div class="toc">
   <a href="#taper">Does tapering beat quitting cold turkey?</a>
+  <a href="#playbook">The playbook, day by day</a>
   <a href="#withdrawal">The withdrawal timeline</a>
   <a href="#manage">What actually helps</a>
   <a href="#relapse">Staying quit</a>
@@ -113,8 +138,152 @@ try{var __t=localStorage.getItem('ttz-theme');if(__t==='dark'||(__t!=='light'&&m
   </div>
 </section>
 
+<section id="playbook">
+  <h2><span class="num">2</span>The playbook, day by day</h2>
+  <p>The taper shrinks three things at once: the <strong>daily cap</strong> (22 → 16 → 12 → 8 → 2–3 → 0), the <strong>size of a sitting</strong> (4 → 3 → 2–3 hits), and — most of all — the <strong>number of windows in a day</strong> (6 → 4 → 3 → 2 → 1 → 0). That last one is the real engine: every rung deletes a window or pushes the survivors further apart, so the decline is built into the clock, not into willpower.</p>
+
+  <p class="sub">The decline at a glance</p>
+  <div class="glance">
+    <div class="gl-row"><span class="gl-day">Days 1–2 · Jul 12–13</span><span class="gl-cap">22</span><span class="gl-shape">6 windows · 3h apart</span></div>
+    <div class="gl-row"><span class="gl-day">Day 3 · Tue Jul 14</span><span class="gl-cap">16</span><span class="gl-shape">4 windows · 3½h apart</span></div>
+    <div class="gl-row"><span class="gl-day">Day 4 · Wed Jul 15</span><span class="gl-cap">16</span><span class="gl-shape">4 windows · 4h apart</span></div>
+    <div class="gl-row"><span class="gl-day">Day 5 · Thu Jul 16</span><span class="gl-cap">12</span><span class="gl-shape">3 windows · 5h apart</span></div>
+    <div class="gl-row"><span class="gl-day">Day 6 · Fri Jul 17</span><span class="gl-cap">12</span><span class="gl-shape">3 windows · 6h apart</span></div>
+    <div class="gl-row"><span class="gl-day">Day 7 · Sat Jul 18</span><span class="gl-cap">8</span><span class="gl-shape">2 windows · 7h apart</span></div>
+    <div class="gl-row"><span class="gl-day">Day 8 · Sun Jul 19</span><span class="gl-cap">8</span><span class="gl-shape">2 windows · 8h apart</span></div>
+    <div class="gl-row"><span class="gl-day">Day 9 · Mon Jul 20</span><span class="gl-cap">2–3</span><span class="gl-shape">1 window · evening only</span></div>
+    <div class="gl-row"><span class="gl-day">Day 10 · Tue Jul 21</span><span class="gl-cap">2–3</span><span class="gl-shape">1 window · the last one</span></div>
+    <div class="gl-row zero"><span class="gl-day">Day 11 · Wed Jul 22</span><span class="gl-cap">0</span><span class="gl-shape">zero — the counter starts</span></div>
+  </div>
+  <p class="cite">Dates are the schedule as first planned. Held days slide everything later — the app is the live source of truth — but the structure of each rung never loosens.</p>
+
+  <p class="sub">Days 1–2 — prove the count (cap 22)</p>
+  <div class="dayplan">
+    <div class="dp-top"><span class="dp-when">Day 1 · Sun Jul 12</span><span class="dp-cap">22<small> · max 4/sitting</small></span></div>
+    <p class="dp-focus">Land under the ceiling and make the count real.</p>
+    <div class="wins"><span class="win">8a</span><span class="win">11a</span><span class="win">2p</span><span class="win">5p</span><span class="win">8p</span><span class="win">11p</span></div>
+    <p class="dp-note">Six windows fit a 3-hour rhythm. At 4 hits a window that’s 24 of room — the 22 cap means at least one window runs short.</p>
+    <ul>
+      <li>Log every hit the moment it happens. Today is about making the count real, not about being perfect.</li>
+      <li>Keep each sitting inside its window: up to 4 hits, ~30 minutes, then closed until the next one.</li>
+      <li>A skipped window doesn’t bank — its hits are gone, and the next window still waits the full 3 hours.</li>
+    </ul>
+  </div>
+  <div class="dayplan">
+    <div class="dp-top"><span class="dp-when">Day 2 · Mon Jul 13</span><span class="dp-cap">22<small> · max 4/sitting</small></span></div>
+    <p class="dp-focus">Hold 22 a second day, until it feels routine.</p>
+    <div class="wins"><span class="win">8a</span><span class="win">11a</span><span class="win">2p</span><span class="win">5p</span><span class="win">8p</span><span class="win">11p</span></div>
+    <p class="dp-note">Same six windows as yesterday — repetition is the point today.</p>
+    <ul>
+      <li>Run yesterday’s shape again and let it feel routine. Boring is the win.</li>
+      <li>Notice which window you needed least — that’s the one tomorrow deletes.</li>
+      <li>By tonight you’ll have held the ceiling twice. That’s the proof the structure works.</li>
+    </ul>
+  </div>
+
+  <p class="sub">Days 3–4 — delete the mindless window (cap 16)</p>
+  <div class="dayplan">
+    <div class="dp-top"><span class="dp-when">Day 3 · Tue Jul 14</span><span class="dp-cap">16<small> · max 4/sitting</small></span></div>
+    <p class="dp-focus">Cut the session that fires just because it’s the time.</p>
+    <div class="wins"><span class="win">10a</span><span class="win">1:30p</span><span class="win">5p</span><span class="win">8:30p</span></div>
+    <p class="dp-note">Four windows × 4 hits is exactly the 16 cap — no slack anywhere.</p>
+    <ul>
+      <li>The most mindless window from the last two days is gone. Don’t replace it — let the gap stand.</li>
+      <li>Push the first window to 10 a.m. even if the morning argues. Mornings are where the taper is won.</li>
+      <li>Every window is exactly the cap now: 4 in each, none spare.</li>
+    </ul>
+  </div>
+  <div class="dayplan">
+    <div class="dp-top"><span class="dp-when">Day 4 · Wed Jul 15</span><span class="dp-cap">16<small> · max 4/sitting</small></span></div>
+    <p class="dp-focus">Same ceiling — the gap stretches to 4 hours.</p>
+    <div class="wins"><span class="win">10a</span><span class="win">2p</span><span class="win">6p</span><span class="win">10p</span></div>
+    <p class="dp-note">Same four windows, pushed to 4 hours apart — the space between them is the change today.</p>
+    <ul>
+      <li>The ceiling holds at 16; the gap does the moving. Feel the extra half hour and let it pass.</li>
+      <li>An urge between windows is the 20-minute rule’s job — set the timer instead of watching the clock.</li>
+      <li>Tomorrow is the halfway cut to 12. Decide tonight which daytime window survives.</li>
+    </ul>
+  </div>
+
+  <p class="sub">Days 5–6 — the clock starts cutting (cap 12)</p>
+  <div class="dayplan">
+    <div class="dp-top"><span class="dp-when">Day 5 · Thu Jul 16</span><span class="dp-cap">12<small> · max 3/sitting</small></span></div>
+    <p class="dp-focus">Under half of baseline — and past the 4-hour mark, where it gets easier.</p>
+    <div class="wins"><span class="win">10a</span><span class="win">3p</span><span class="win">8p</span></div>
+    <p class="dp-note">Three windows × 3 hits = 9 — under the 12 cap. From here the clock cuts deeper than the ceiling.</p>
+    <ul>
+      <li>Only three windows fit a 5-hour rhythm. Ride them; don’t engineer a fourth.</li>
+      <li>Past the 4-hour mark gaps have gotten easier before — expect the same here.</li>
+      <li>Restlessness or a mild edge today is the taper working, not failing.</li>
+    </ul>
+  </div>
+  <div class="dayplan">
+    <div class="dp-top"><span class="dp-when">Day 6 · Fri Jul 17</span><span class="dp-cap">12<small> · max 3/sitting</small></span></div>
+    <p class="dp-focus">Hold 12 — the gap opens to 6 hours.</p>
+    <div class="wins"><span class="win">10a</span><span class="win">4p</span><span class="win">10p</span></div>
+    <p class="dp-note">Same three windows at 6 hours apart — most of your waking day is now between sessions.</p>
+    <ul>
+      <li>Eat a real meal at the old session times — feeding the cue is cheaper than fighting it.</li>
+      <li>Keep the evening window last, not longest: 3 hits and closed.</li>
+      <li>Tomorrow drops all daytime use. Plan what the morning looks like without a window.</li>
+    </ul>
+  </div>
+
+  <p class="sub">Days 7–8 — drop the daytime (cap 8, the weekend)</p>
+  <div class="dayplan">
+    <div class="dp-top"><span class="dp-when">Day 7 · Sat Jul 18</span><span class="dp-cap">8<small> · max 3/sitting</small></span></div>
+    <p class="dp-focus">The biggest structural cut — keep only midday and the wind-down.</p>
+    <div class="wins"><span class="win">1p</span><span class="win">8p</span></div>
+    <p class="dp-note">Two windows × 3 hits = 6 — the 8 cap is headroom, not a target.</p>
+    <ul>
+      <li>No morning window at all — the first sitting is midday. Fill the morning with anything that moves.</li>
+      <li>Keep only what’s load-bearing: midday, and the evening wind-down.</li>
+      <li>It’s the weekend on purpose — no work rhythm to smoke against, nothing to defend.</li>
+    </ul>
+  </div>
+  <div class="dayplan">
+    <div class="dp-top"><span class="dp-when">Day 8 · Sun Jul 19</span><span class="dp-cap">8<small> · max 3/sitting</small></span></div>
+    <p class="dp-focus">The last multi-window day of the taper.</p>
+    <div class="wins"><span class="win">1p</span><span class="win">9p</span></div>
+    <p class="dp-note">Same two windows, an hour further apart.</p>
+    <ul>
+      <li>Midday and evening, nothing between. Tomorrow goes evening-only.</li>
+      <li>Assemble the sleep kit today — wind-down, phone dock, whatever’s in yours — so tomorrow it just runs.</li>
+      <li>Look back at the week: 22 to 8 in eight days, every step held.</li>
+    </ul>
+  </div>
+
+  <p class="sub">Days 9–10 — evening only (2–3 hits)</p>
+  <div class="dayplan">
+    <div class="dp-top"><span class="dp-when">Day 9 · Mon Jul 20</span><span class="dp-cap">2–3<small> · one sitting</small></span></div>
+    <p class="dp-focus">Functionally done all day — and proving it.</p>
+    <div class="wins"><span class="win">9p</span></div>
+    <p class="dp-note">One evening sitting — 2–3 hits, then done. The daytime schedule is already at zero.</p>
+    <ul>
+      <li>Nothing all day. You’re functionally quit from wake to dinner — today proves it.</li>
+      <li>Start the sleep kit tonight, before zero, so it’s already working when it matters most.</li>
+      <li>Keep the sitting small and deliberate: 2–3 hits, one window, closed.</li>
+    </ul>
+  </div>
+  <div class="dayplan">
+    <div class="dp-top"><span class="dp-when">Day 10 · Tue Jul 21</span><span class="dp-cap">2–3<small> · one sitting</small></span></div>
+    <p class="dp-focus">The last window of the taper.</p>
+    <div class="wins"><span class="win">9p</span></div>
+    <p class="dp-note">One final evening — then the runway gets cleared.</p>
+    <ul>
+      <li>One final evening sitting — 2–3, same as yesterday, nothing new.</li>
+      <li>Before bed, the ritual: whatever’s left goes in the trash. Not saved, not “just in case.”</li>
+      <li>Tomorrow the day counter starts. You step off from 2–3 hits, not ~30 — the drop is already mostly behind you.</li>
+    </ul>
+  </div>
+
+  <div class="callout ok">
+    <strong>If a day runs over,</strong> the plan doesn’t break — that step holds one extra day at its widest gap, and every later rung (zero day included) slides back with it. A held day repeats its last day’s plan; it never loosens. The windows above are one clean way to lay each day out, not a law — what’s fixed is the count of windows, the sitting size, and the gap.
+  </div>
+</section>
+
 <section id="withdrawal">
-  <h2><span class="num">2</span>Cannabis withdrawal — the real timeline</h2>
+  <h2><span class="num">3</span>Cannabis withdrawal — the real timeline</h2>
   <p>Cannabis withdrawal is real, formally recognized (DSM-5), and — for a ten-year daily user — expected. A meta-analysis pooling <strong>&gt;20,000</strong> regular and dependent users found roughly <span class="hl">47% experience clinically meaningful withdrawal</span> on standardized scales.<sup><a href="#r1">1</a></sup> Heavier, longer use sits at the higher end of that risk. None of it is medically dangerous in an otherwise-healthy adult — the worst of it reads like a rough flu week.</p>
 
   <div class="callout ok">
@@ -136,7 +305,7 @@ try{var __t=localStorage.getItem('ttz-theme');if(__t==='dark'||(__t!=='light'&&m
 </section>
 
 <section id="manage">
-  <h2><span class="num">3</span>What actually helps</h2>
+  <h2><span class="num">4</span>What actually helps</h2>
   <p class="sub">Behavioral — the first line</p>
   <p>The review is blunt: <span class="hl">no medication is approved for cannabis withdrawal</span>, so supportive counselling and psychoeducation (knowing what's coming — which is the point of this page) are the first-line approach.<sup><a href="#r1">1</a></sup> The two most effective stand-alone psychological treatments are <strong>cognitive-behavioral therapy (CBT)</strong> and <strong>motivational enhancement therapy (MET)</strong>, and they work best combined; <strong>contingency management</strong> (concrete rewards for clean time) is an effective add-on.<sup><a href="#r1">1</a></sup></p>
   <ul>
@@ -152,7 +321,7 @@ try{var __t=localStorage.getItem('ttz-theme');if(__t==='dark'||(__t!=='light'&&m
 </section>
 
 <section id="relapse">
-  <h2><span class="num">4</span>Staying quit</h2>
+  <h2><span class="num">5</span>Staying quit</h2>
   <p>Quitting cannabis after years of daily use is genuinely hard and lapses are common — that's the norm, not a personal failure. What the evidence and the app's philosophy share: <strong>the trend line matters, not any single day.</strong></p>
   <ul>
     <li><strong>A slip is data, not doom.</strong> Go back to the last cap you held, hold it an extra day, keep stepping down. The app builds this in.</li>
@@ -163,7 +332,7 @@ try{var __t=localStorage.getItem('ttz-theme');if(__t==='dark'||(__t!=='light'&&m
 </section>
 
 <section id="resources">
-  <h2><span class="num">5</span>Resources &amp; helplines</h2>
+  <h2><span class="num">6</span>Resources &amp; helplines</h2>
   <p class="cite">Tap to open. US-focused; free and confidential unless noted.</p>
   <a class="resource" href="https://www.samhsa.gov/find-help/national-helpline" target="_blank" rel="noopener">
     <b>SAMHSA National Helpline — 1-800-662-4357</b>
