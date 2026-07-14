@@ -1639,8 +1639,12 @@ try{
     if(di<0)return null;
     var p=BASE_PHASES[di],slots=[];
     if(p.cap<=0){
-      // zero era: keyed to days off, mirroring the guide's timeline
-      var off=Math.round((d-zeroDate())/MS_DAY)+1;
+      // zero era: keyed to days off, mirroring the guide's timeline. The
+      // today card keys the eyebrow/timeline note to daysFree() (the clean
+      // run, which resets on a post-zero slip) — so match it here, or a slip
+      // makes the two halves of the card disagree. A projected future day in
+      // the schedule detail has no streak yet, so use the calendar offset.
+      var off=dkeyOf(d)===todayKey?Math.max(1,daysFree()):Math.round((d-zeroDate())/MS_DAY)+1;
       if(off>21)return null;
       if(off<=6)slots.push({s:null,t:'waves',kind:'edge',
         head:'Waves, not walls.',
@@ -1715,7 +1719,7 @@ try{
     }
     // evenings run on less than the brain budgeted
     if(di>=1&&!p.single){
-      slots.push({s:1260,e:1425,t:'9p–12a',kind:'dip',
+      slots.push({s:1260,e:1440,t:'9p–12a',kind:'dip',
         head:'The debt hour.',
         body:'The day ran below what your brain budgeted, so patience is thinnest at night — snappishness here is scheduled, not personal.',
         fix:'Warn the house, keep the evening low-stakes, and let bed end the argument.'});
@@ -1728,6 +1732,16 @@ try{
       fix:di<=1?'Keep the wind-down consistent anyway — it’s rehearsal for zero.'
         :di<=3?'Screens down early; a hot shower is the cheapest sleep aid there is.'
         :'Run the whole ritual even if you feel fine.'});
+    // a deleted session that fell mid-gap lands right where that gap's hump
+    // is — the same rough hour, named twice with conflicting advice ("20-min
+    // blip" vs "hardest sustained hour"). Drop the redundant ghost; the hump
+    // keeps the gap context. Ghosts that stand alone, or only fall in the
+    // broad morning/evening bands, survive.
+    var humps=slots.filter(function(s){return s.kind==='edge'&&s.s!=null;});
+    slots=slots.filter(function(s){
+      if(s.kind!=='ghost'||s.s==null)return true;
+      return !humps.some(function(h){return s.s<h.e&&h.s<s.e;});
+    });
     // chronological, with untimed rows anchored where they belong
     slots.sort(function(a,b){
       var ka=a.s!=null?a.s:(a.kind==='night'?1439:720);
@@ -3776,7 +3790,7 @@ try{
       var siH=sessionInfo();
       var sessTxt=!siH?(phase.single?'evening':String(phase.sessionMax))
         :phase.single?'evening'
-        :(siH.open&&siH.inSession<phase.sessionMax)?String(phase.sessionMax-siH.inSession)
+        :((Date.now()-siH.last.getTime())<=SESSION_GAP&&siH.inSession<phase.sessionMax)?String(phase.sessionMax-siH.inSession)
         :(siH.nextOpen&&Date.now()<siH.nextOpen.getTime())?'—'
         :String(phase.sessionMax);
       $('dhStats').innerHTML=ds(Math.max(0,cap-c),'left today')+
