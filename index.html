@@ -1776,14 +1776,13 @@ try{
     }
     var last=hits[hits.length-1];
     var first=hits[hits.length-inSession];
-    // A sitting is a single ~30-min window: it closes 30 min after its first
-    // hit (or the moment the per-session cap is reached). Hits you didn't take
-    // are NOT banked for later — once the sitting closes the next one waits out
-    // the full between-session gap.
-    var open=(Date.now()-first.getTime())<=SESSION_GAP;
-    // spacing rule (how long to wait before the *next* session) is day-aware
+    // The between-session gap runs from the LAST hit, not from when a sitting
+    // "closes" — take two hits and stop, and the clock is already moving.
+    // inSession still counts the run so we can show how many hits remain free
+    // in this sitting (up to the per-session cap); leftover hits aren't banked.
+    // spacing rule (how long to wait before the *next* session) is day-aware.
     var spacing=spacingHNow()*3600000;
-    return {last:last,first:first,inSession:inSession,open:open,
+    return {last:last,first:first,inSession:inSession,
             nextOpen:spacing>0?new Date(last.getTime()+spacing):null};
   }
   function sessionsFor(key){return rc('sf:'+key,function(){
@@ -2312,14 +2311,10 @@ try{
           setTxt('stSession','—');
           $('stSession').className='sv';
           $('stSessionLbl').textContent='evening only';
-        }else if(si.open&&si.inSession<phase.sessionMax){
-          // sitting still open (within 30 min of its first hit) — hits remain
-          $('stSession').className='sv';
-          setNum('stSession',phase.sessionMax-si.inSession);
-          $('stSessionLbl').textContent='left this session';
         }else if(si.nextOpen&&Date.now()<si.nextOpen.getTime()){
-          // sitting closed (cap reached or the 30-min window elapsed) — leftover
-          // hits aren't banked; the next sitting waits out the gap
+          // The gap runs from the last hit — surface the next window straight
+          // away rather than waiting out the sitting's 30-min span. (How many
+          // hits are still free in this sitting lives in the gap-hero note.)
           setTxt('stSession',fmtTime(si.nextOpen));
           $('stSession').className='sv time';
           $('stSessionLbl').textContent='next session';
@@ -2934,18 +2929,21 @@ try{
         return;
       }
       var si=sessionInfo();
-      if(si&&si.open&&si.inSession<phase.sessionMax){
-        wrap.classList.remove('open');
-        $('ghFill').style.width='0%';
-        $('ghNote').innerHTML='Session open — <strong>'+(phase.sessionMax-si.inSession)+' of '+phase.sessionMax+'</strong> left this sitting. When it closes, the '+fmtGapH(gapH)+' gap starts.';
-        return;
-      }
+      // The gap always runs from the LAST hit — a sitting never freezes the
+      // clock. If you took two hits and stopped, the countdown is already
+      // moving; you don't wait out the 30-min window first. While the sitting
+      // can still take more hits (within 30 min of your last one and under the
+      // per-session cap), say so — but keep counting either way.
+      var sittingRoom=si&&si.inSession<phase.sessionMax&&(Date.now()-si.last.getTime())<=SESSION_GAP;
       var diff=openTs-Date.now();
       if(diff>0){
         wrap.classList.remove('open');
         $('ghFill').style.width=Math.min(100,since/reqMs*100)+'%';
         var h=Math.floor(diff/3600000),m=Math.ceil(diff%3600000/60000);
-        $('ghNote').innerHTML='Next session ~<strong>'+fmtTime(new Date(openTs))+'</strong> · '+(h?h+'h ':'')+m+'m to go — this stretch is the taper itself.';
+        var cd='Next session ~<strong>'+fmtTime(new Date(openTs))+'</strong> · '+(h?h+'h ':'')+m+'m to go';
+        $('ghNote').innerHTML=sittingRoom
+          ?cd+' — counting from your last hit. Still <strong>'+(phase.sessionMax-si.inSession)+' of '+phase.sessionMax+'</strong> in this sitting if you’re not done.'
+          :cd+' — this stretch is the taper itself.';
       }else{
         wrap.classList.add('open');
         $('ghFill').style.width='100%';
