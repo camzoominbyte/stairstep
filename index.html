@@ -346,8 +346,6 @@
   .dc-n{font-family:'Fraunces',serif;font-weight:600;font-size:14px;color:var(--sand)}
   .dc-sum{font-size:12.5px;color:var(--muted);margin:6px 0 2px}
   .dc-sum strong{color:var(--sand)}
-  .dc-sum .down{color:var(--sage);font-weight:700}
-  .dc-sum .up{color:var(--clay);font-weight:700}
   html.dark .dc-row{background:#2b261c}
   /* the road ahead — running schedule */
   .road{margin-top:6px}
@@ -386,17 +384,38 @@
   .hcount{font-family:'Fraunces',serif;font-weight:600;font-size:17px;color:var(--sand);flex:0 0 auto;min-width:52px;text-align:right}
   .hstat{flex:0 0 54px;text-align:right}
   .hrow2{display:none;font-size:12px;color:var(--muted);margin-top:5px;padding-left:86px}
-  .hrow2 .up{color:var(--clay);font-weight:700}
-  .hrow2 .down{color:var(--sage);font-weight:700}
   .expanded .hrow2{display:block}
   .hstat{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
   .hstat.under{color:var(--sage)}
   .hstat.at{color:var(--amber)}
   .hstat.over{color:var(--clay)}
-  .hstat.zero{color:var(--sage)}
   .hstat.slip{color:var(--clay)}
   .hstat.nolog{color:var(--faint)}
+  .hstat.clean{color:var(--sage)}
   .hempty{color:var(--muted);font-size:14px}
+  /* ---- verdict-colored deltas: color is the judgment, the arrow is the math ---- */
+  .dv{font-size:12px;font-weight:700;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+  .dv.good{color:var(--sage)}
+  .dv.bad{color:var(--clay)}
+  .dv.flat{color:var(--muted);font-weight:600}
+  .dv.pill{display:inline-block;padding:2px 10px;border-radius:99px}
+  .dv.pill.good{background:rgba(100,125,75,.13)}
+  .dv.pill.bad{background:rgba(184,83,53,.13)}
+  .dv.pill.flat{background:var(--surface2)}
+  .hrow-main .dv{flex:0 0 54px;text-align:right}
+  .hcount .hcap{color:var(--muted);font-size:12px;font-weight:400;font-family:'Karla',sans-serif}
+  /* the day-by-day card: line 2 always visible, main page capped at 3 rows */
+  #dayCard .hrow2{display:block}
+  #dayCard:not(.expanded) .hrow.hpast{display:none}
+  #dayCard.expanded .hall{display:none}
+  .hall{margin-top:10px}
+  /* the comparison header at the top of Day by day */
+  .dd-sum{padding:2px 0 10px;border-bottom:1px solid var(--hair);margin-bottom:8px}
+  .dd-now{font-size:14px;color:var(--ink)}
+  .dd-now .dv{font-family:'Fraunces',serif;font-size:15px;font-weight:600}
+  .dd-sub{font-size:12.5px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums}
+  .dd-base{font-size:12.5px;color:var(--muted);margin-top:6px}
+  .dd-base b{color:var(--sage);font-family:'Fraunces',serif;font-size:14px}
   .hedit{display:flex;gap:8px;align-items:center}
   .hedit button{
     font-family:'Karla',sans-serif;font-weight:700;font-size:15px;
@@ -405,7 +424,6 @@
   }
   .hedit button.hdone{width:auto;padding:0 12px;font-size:12px;color:#fff;background:var(--accent);border-color:var(--accent-deep)}
   .hdetail{padding:2px 0 12px;font-size:13px}
-  .hrow.open .hdate{color:var(--accent);font-weight:700}
   .hsession{
     background:#faf5ea;border:1px solid var(--hair);border-radius:14px;
     padding:4px 12px 8px;margin:10px 0;
@@ -534,6 +552,14 @@
   details[open] summary::after{transform:rotate(45deg);color:var(--accent)}
   details[open] .d-body{animation:dbodyIn .5s var(--spring) both}
   @keyframes dbodyIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+  /* ---- top-level folds: header look, not card look ---- */
+  details.fold{border:none;border-radius:0;background:transparent;box-shadow:none;margin:0 0 8px;overflow:hidden}
+  .fold>summary{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:12px;padding:16px 4px 14px;border-top:1px solid var(--line)}
+  .fold-t{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--sand);grid-column:1;grid-row:1}
+  .fold-live{grid-column:1;grid-row:2;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:2px}
+  .fold>summary::after{grid-column:2;grid-row:1/3}
+  .fold-body{padding-top:4px}
+  .fold .section>h2{display:none}
   .d-body{padding:0 18px 18px;font-size:14.5px;color:var(--ink)}
   .d-body p{margin-bottom:10px}
   .d-body p:last-child{margin-bottom:0}
@@ -638,8 +664,6 @@
   }
   .insight-line strong{color:var(--sand)}
   /* prior-day cards inside the Today detail */
-  .daycard{background:#faf5ea;border:1px solid var(--hair);border-radius:14px;padding:10px 12px;margin:8px 0}
-  .daycard-head{display:flex;align-items:baseline;gap:10px;margin-bottom:2px}
   .dc-date{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);flex:1}
   .dc-count{font-family:'Fraunces',serif;font-weight:600;font-size:16px;color:var(--sand)}
   .dc-count small{font-family:'Karla',sans-serif;font-size:11px;color:var(--muted);font-weight:400}
@@ -681,19 +705,6 @@
   .sday.today{border-color:var(--accent)}
   .sday.today .sd-dow{color:var(--accent)}
   .sday.zeroday .sd-cap{color:var(--sage)}
-  .sday.sel{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 10px 22px -10px rgba(165,104,31,.45)}
-  .sched-detail{
-    background:#faf5ea;border:1px solid var(--hair);border-radius:14px;
-    padding:12px 14px;margin-bottom:12px;font-size:13.5px;color:var(--ink);line-height:1.55;
-  }
-  .sched-detail p{margin:3px 0}
-  .sched-detail strong{color:var(--sand)}
-  .sched-detail .sd-goal{font-family:'Fraunces',serif;font-size:16px;line-height:1.4;color:var(--sand);font-weight:500}
-  .sched-detail .sd-cmp{display:block;font-size:12.5px;color:var(--muted);margin-top:3px}
-  .sched-detail .sd-cmp strong,.sched-detail .sd-cmp .down,.sched-detail .sd-cmp .up{color:var(--sand)}
-  .sched-detail .down{color:var(--sage);font-weight:700}
-  .sched-detail .up{color:var(--clay);font-weight:700}
-  html.dark .sched-detail{background:#2b261c}
   .sched-cap{font-size:11.5px;color:var(--muted);margin:2px 0 6px}
   /* ---- the focal "where I'm at today" plan card ---- */
   .tplan{
@@ -729,8 +740,6 @@
   .do-list{list-style:none;margin:9px 0 10px;padding:0}
   .do-list li{position:relative;padding:4px 0 4px 19px;font-size:13.5px;line-height:1.5;color:var(--ink)}
   .do-list li::before{content:"";position:absolute;left:3px;top:12px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
-  .sched-detail .wins{margin:6px 0 2px}
-  .sched-detail .do-list{margin-bottom:2px}
   /* ---- how the day may feel: a forecast of the predictable rough patches ---- */
   .tp-feel{padding:12px 0 2px;border-bottom:1px solid var(--hair)}
   .feel-intro{font-size:13px;color:var(--ink);line-height:1.5;margin:7px 0 10px}
@@ -749,7 +758,6 @@
   .feel-row.am,.feel-row.waves{border-left-color:var(--sand)}
   .feel-row.ghost .fr-t{color:var(--accent)}
   .feel-src{font-size:11.5px;color:var(--muted);line-height:1.5;margin:9px 0 0;font-style:italic}
-  .sched-detail .tp-feel{border-bottom:none;padding-bottom:0}
   .tp-vs{font-size:13.5px;color:var(--ink);line-height:1.5;margin:11px 0}
   .tp-vs b{color:var(--sand);font-weight:700}
   .tp-vs-k{display:inline-block;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;font-weight:800;padding:1px 7px;border-radius:99px;margin-right:5px;vertical-align:1px}
@@ -766,6 +774,8 @@
   .tp-arc-lbl b{color:var(--sand);font-weight:700}
   html.dark .tp-vs-k.down{background:rgba(163,184,153,.16)}
   html.dark .tp-vs-k.hold{background:rgba(224,164,88,.16)}
+  html.dark .dv.pill.good{background:rgba(163,184,153,.16)}
+  html.dark .dv.pill.bad{background:rgba(217,119,87,.18)}
   /* taper score contributors */
   .contrib{margin:12px 0 2px}
   .contrib-row{display:flex;align-items:center;gap:10px;padding:4px 0}
@@ -805,6 +815,27 @@
   .cz-title{font-family:'Fraunces',serif;font-weight:600;font-size:19px;color:var(--sand)}
   .cz-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px}
   html.dark .cz-bar button,html.dark .zoomable .zoom-ico{background:#2e2920}
+  /* ---- the day pager: one page per day, swipe to walk the record ---- */
+  .dp-nav{display:flex;align-items:center;gap:4px;margin-left:auto}
+  .dp-pos{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:38px;text-align:center}
+  .dp .cz-bar button[disabled]{opacity:.35;cursor:default}
+  .dp-head{margin:2px 0 12px}
+  .dp-eyebrow{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .dp-big{font-family:'Fraunces',serif;font-weight:600;font-size:42px;line-height:1.15;color:var(--sand)}
+  .dp-big small{font-family:'Karla',sans-serif;font-size:15px;color:var(--muted);font-weight:400}
+  .dp-big .hstat{font-size:13px;margin-left:8px}
+  .dp-goal{font-family:'Fraunces',serif;font-size:17px;line-height:1.35;color:var(--sand);font-weight:500;margin:6px 0 2px}
+  .dmove{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:10px 0 14px;box-shadow:var(--shadow-sm)}
+  .dmove-hd{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800;margin-bottom:6px}
+  .dm-row{display:flex;align-items:baseline;gap:10px;padding:4px 0}
+  .dm-k{flex:0 0 64px;font-size:11px;letter-spacing:.03em;color:var(--muted);font-weight:700}
+  .dm-v{flex:1;font-size:13.5px;color:var(--ink);font-variant-numeric:tabular-nums}
+  .dm-row .dv{flex:0 0 auto;min-width:64px;text-align:right}
+  .dm-base{font-size:12.5px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--hair)}
+  .dm-base b{color:var(--sage);font-family:'Fraunces',serif;font-size:14px}
+  .dmove .dc-sum{margin:8px 0 0}
+  .dp-plan{margin:12px 0}
+  .dp-plan .tp-day{border-bottom:none}
   .detail-overlay{
     position:fixed;inset:0;z-index:80;background:var(--bg);overflow-y:auto;
     -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;
@@ -957,7 +988,7 @@
       linear-gradient(to bottom, rgba(242,232,213,.04) 1px, transparent 1px);
   }
   html.dark .glassbar{background:rgba(29,26,20,.78);border-bottom:1px solid rgba(255,244,222,.08)}
-  html.dark .hsession,html.dark .daycard{background:#2b261c}
+  html.dark .hsession{background:#2b261c}
   html.dark .chip-under{background:#2c331f}
   html.dark .chip-at{background:#3d321e}
   html.dark .chip-over{background:#40281e}
@@ -1135,22 +1166,15 @@ try{
   <p class="ck-note" id="ckNote"></p>
 </div>
 
-<div class="history openable" id="trendCard" data-title="The trend">
-  <button class="xopen" data-target="trendCard" data-title="The trend" aria-label="Open the trend in detail">⤢</button>
-  <h3>The trend</h3>
-  <p class="history-hint">Ghost = cap · solid = logged · tap a bar.</p>
+<div class="history openable" id="dayCard" data-title="Day by day">
+  <button class="xopen" data-target="dayCard" data-title="Day by day" aria-label="Open day by day in detail">⤢</button>
+  <h3>Day by day</h3>
+  <div class="dd-sum" id="ddSum"></div>
+  <p class="history-hint">Ghost = cap · solid = logged · tap any day to open it.</p>
   <div id="trendChart"></div>
-  <p class="history-hint" id="trendDetail" style="margin:6px 0 0;color:var(--ink)" hidden></p>
-  <p class="history-hint" id="trendInsight" style="margin:8px 0 0"></p>
-  <div class="xtra" id="trendXtra"></div>
-</div>
-
-<div class="history openable" id="recordCard" data-title="The record">
-  <button class="xopen" data-target="recordCard" data-title="The record" aria-label="Open the record in detail">⤢</button>
-  <h3>The record</h3>
-  <p class="history-hint">Tap a day to open its log — each time with its hits.</p>
-  <div class="xtra" id="recordXtra"></div>
   <div id="historyRows"><p class="hempty">Your days will stack up here as you go.</p></div>
+  <div class="xtra" id="trendXtra"></div>
+  <div class="xtra" id="recordXtra"></div>
 </div>
 
 <div class="story" id="storyCard" hidden>
@@ -1163,18 +1187,25 @@ try{
   <p class="gap-note" id="storyMsg"></p>
 </div>
 
+<details class="fold" id="stepFold">
+  <summary><span class="fold-t">The step-down</span><span class="fold-live" id="stepFoldLive"></span></summary>
+  <div class="fold-body">
 <div class="section openable" id="stepSection" data-title="The step-down">
   <button class="xopen" data-target="stepSection" data-title="The step-down" aria-label="Open the step-down in detail">⤢</button>
   <h2>The step-down</h2>
   <div class="tplan" id="todayPlan"></div>
   <p class="sched-cap">The whole descent — tap any day for its full plan. <a class="dlink" href="guide.html#playbook">The written playbook →</a></p>
   <div class="sched-strip" id="schedStrip" aria-label="Day-by-day schedule — tap a day for details"></div>
-  <div class="sched-detail" id="schedDetail" hidden></div>
   <div class="xtra" id="stepXtra"></div>
   <div id="phases"></div>
   <p class="d-evid" style="border-top:none;padding-top:0;margin-top:4px">Honest footnote: the research backs slow, stepped reduction over weeks, but no trial prescribes exact step sizes or session gaps — the caps carry the evidence-backed principle, and the daily-widening gaps are the structure that enforces it (each urge between windows is a wave the 20-minute rule already handles). That's why a hard day holds a step instead of breaking the plan — and a held day keeps its widest gap. <a class="dlink" href="guide.html#taper">The evidence →</a></p>
 </div>
+  </div>
+</details>
 
+<details class="fold" id="sysFold">
+  <summary><span class="fold-t">The system</span><span class="fold-live">Rules · guide · backup</span></summary>
+  <div class="fold-body">
 <div class="section openable" id="systemSection" data-title="The system">
   <button class="xopen" data-target="systemSection" data-title="The system" aria-label="Open the system in detail">⤢</button>
   <h2>The system</h2>
@@ -1246,6 +1277,8 @@ try{
     </div>
   </details>
 </div>
+  </div>
+</details>
 
 <p class="footer">The cap only goes down. The gaps only widen.</p>
 
@@ -1257,6 +1290,20 @@ try{
     <div class="cz-dots" id="czDots" aria-label="More charts — swipe or tap a dot"></div>
   </div>
   <div class="cz-body" id="czBody"></div>
+</div>
+
+<div class="cz-overlay dp" id="dpOverlay" role="dialog" aria-modal="true" aria-labelledby="dpTitle" hidden>
+  <div class="detail-grab" aria-hidden="true"></div>
+  <div class="cz-bar">
+    <button id="dpBack">← Back</button>
+    <span class="cz-title" id="dpTitle"></span>
+    <div class="dp-nav">
+      <button id="dpPrev" aria-label="Previous day">‹</button>
+      <span class="dp-pos" id="dpPos" aria-hidden="true"></span>
+      <button id="dpNext" aria-label="Next day">›</button>
+    </div>
+  </div>
+  <div class="cz-body" id="dpBody"></div>
 </div>
 
 <div class="detail-overlay" id="detailOverlay" hidden>
@@ -1774,7 +1821,7 @@ try{
     var n=new Date(),m=n.getHours()*60+n.getMinutes();
     for(var i=0;i<rows.length;i++){
       var r=rows[i];
-      var isToday=!!r.closest('#todayPlan')||(selSchedKey===todayKey&&!!r.closest('#schedDetail'));
+      var isToday=!!r.closest('#todayPlan')||(dpKey===todayKey&&!!r.closest('#dpBody'));
       r.classList.toggle('live',isToday&&m>=+r.dataset.s&&m<+r.dataset.e);
     }
   }
@@ -1826,7 +1873,7 @@ try{
 
   /* ================= rendering ================= */
   function $(id){return document.getElementById(id);}
-  var editingKey=null, lastFixTime='', fixMsg='', histAnimKey=null;
+  var lastFixTime='', fixMsg='';
 
   /* ---- motion helpers ---- */
   var booted=false;
@@ -1858,24 +1905,6 @@ try{
     s.style.left=(br.left-cr.left+br.width/2)+'px';
     card.appendChild(s);
     setTimeout(function(){s.remove();},950);
-  }
-  /* spring-eased height reveal / collapse for accordion content */
-  function expandEl(el){
-    if(!motionOK||!el)return;
-    var h=el.offsetHeight;
-    el.style.height='0px';el.style.opacity='0';el.style.overflow='hidden';
-    void el.offsetHeight;
-    el.style.transition='height .34s var(--spring),opacity .3s ease .05s';
-    el.style.height=h+'px';el.style.opacity='1';
-    setTimeout(function(){el.style.cssText='';},360);
-  }
-  function collapseEl(el,cb){
-    if(!motionOK||!el){cb();return;}
-    el.style.height=el.offsetHeight+'px';el.style.overflow='hidden';
-    void el.offsetHeight;
-    el.style.transition='height .26s var(--spring),opacity .2s ease';
-    el.style.height='0px';el.style.opacity='0';
-    setTimeout(cb,270);
   }
   function sparks(anchor,host){
     if(!motionOK)return;
@@ -1940,7 +1969,7 @@ try{
       $('countdown').innerHTML='Zero date cleared. <strong>Day '+Math.max(0,n)+'</strong> off.'+
         (zs&&zs.slips?' · '+zs.clean+' clean total · best run '+zs.best:'');
     }else{
-      var left=Math.round((z-today)/MS_DAY);
+      var left=taperProgress().daysToZero;
       $('countdown').innerHTML='Zero date: <strong>'+WEEKDAYS[z.getDay()]+', '+fmtShort(z)+
         '</strong> · '+left+' day'+(left===1?'':'s')+' out';
     }
@@ -1990,7 +2019,11 @@ try{
         '<span class="glbl"'+gapCol+'>'+gapTxt+'</span>';
       el.setAttribute('role','button');el.setAttribute('tabindex','0');
       el.setAttribute('aria-label','Jump to '+s.lbl+' details');
-      function go(){$('phase-'+i).scrollIntoView();}
+      function go(){
+        var f=$('stepFold');
+        if(f&&!f.open)f.open=true; // instant, so the scroll target exists before we move
+        $('phase-'+i).scrollIntoView();
+      }
       el.addEventListener('click',go);
       el.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
       stairs.appendChild(el);
@@ -2066,29 +2099,29 @@ try{
     }
     box.className='tplan';
     var col=rgbStr(capRGB(cap/BASE_PHASES[0].cap));
-    var left=Math.round((z-today)/MS_DAY);
-    var dropBase=Math.max(0,Math.round((1-cap/BASELINE)*100));
-    var journey=Math.max(0,Math.min(100,Math.round((BASELINE-cap)/BASELINE*100)));
+    var tpr=taperProgress();
+    var left=tpr.daysToZero;
+    var dropBase=Math.max(0,tpr.dropBase);
+    var journey=Math.max(0,Math.min(100,dropBase));
 
     // ---- comparison to yesterday: the plan delta + what you actually logged ----
     var yd=addDays(today,-1), vs='';
     if(yd>=start){
-      var yIdx=phaseIndexFor(yd), yCap=BASE_PHASES[yIdx<0?0:yIdx].cap, yCapT=BASE_PHASES[yIdx<0?0:yIdx].capText;
+      var tM=dayMetrics(todayKey), yM=dayMetrics(dkeyOf(yd));
       var plan;
-      if(cap<yCap){
-        plan='<span class="tp-vs-k down">↓ Ceiling dropped</span> from <b>'+yCapT+'</b> yesterday — <b>'+(yCap-cap)+' fewer</b> today.';
+      if(cap<yM.cap){
+        plan='<span class="tp-vs-k down">↓ Ceiling dropped</span> from <b>'+yM.capText+'</b> yesterday — <b>'+(yM.cap-cap)+' fewer</b> today.';
       }else{
-        var yGap=spacingHOn(yd,yIdx<0?0:yIdx), tGap=spacingHOn(today,idx);
-        if(!phase.single&&tGap>yGap){
-          plan='<span class="tp-vs-k hold">Same ceiling</span> as yesterday ('+cap+') — but the gap widens: <b>'+fmtGapH(yGap)+' → '+fmtGapH(tGap)+'</b>.';
+        if(!phase.single&&tM.reqGapH>yM.reqGapH){
+          plan='<span class="tp-vs-k hold">Same ceiling</span> as yesterday ('+cap+') — but the gap widens: <b>'+fmtGapH(yM.reqGapH)+' → '+fmtGapH(tM.reqGapH)+'</b>.';
         }else{
           plan='<span class="tp-vs-k hold">Holding</span> at <b>'+cap+'</b>, same as yesterday.';
         }
       }
-      var yc=countOf(dkeyOf(yd)), ylog='';
-      if(yc!==null){
-        var yst=yc>yCap?'over':yc===yCap?'at the cap':'under';
-        ylog=' Yesterday you logged <b>'+yc+'</b> of '+yCapT+' — '+yst+'.';
+      var ylog='';
+      if(yM.eff!==null){
+        var yst=yM.eff>yM.cap?'over':yM.eff===yM.cap?'at the cap':'under';
+        ylog=' Yesterday you logged <b>'+yM.eff+'</b> of '+yM.capText+' — '+yst+'.';
       }
       vs='<div class="tp-vs">'+plan+ylog+'</div>';
     }
@@ -2098,12 +2131,12 @@ try{
     if(dkeyOf(tm)===dkeyOf(z)){
       nxt='<span class="tp-vs-k down">Tomorrow</span> <b>Zero day.</b> Tonight the ritual clears the runway.';
     }else if(tm<z){
-      var nIdx=phaseIndexFor(tm),np=BASE_PHASES[nIdx<0?0:nIdx];
-      if(np.cap<cap){
-        nxt='<span class="tp-vs-k down">Tomorrow</span> the ceiling drops to <b>'+np.capText+'</b>'+
-          (np.single?' — one evening session only.':' · gap '+fmtGapH(spacingHOn(tm,nIdx))+'.');
-      }else if(!np.single&&!phase.single&&spacingHOn(tm,nIdx)>spacingHNow()){
-        nxt='<span class="tp-vs-k hold">Tomorrow</span> same ceiling — the gap stretches to <b>'+fmtGapH(spacingHOn(tm,nIdx))+'</b>.';
+      var nM=dayMetrics(dkeyOf(tm));
+      if(nM.cap<cap){
+        nxt='<span class="tp-vs-k down">Tomorrow</span> the ceiling drops to <b>'+nM.capText+'</b>'+
+          (nM.single?' — one evening session only.':' · gap '+fmtGapH(nM.reqGapH)+'.');
+      }else if(!nM.single&&!phase.single&&nM.reqGapH>spacingHNow()){
+        nxt='<span class="tp-vs-k hold">Tomorrow</span> same ceiling — the gap stretches to <b>'+fmtGapH(nM.reqGapH)+'</b>.';
       }
     }
     if(nxt)vs+='<div class="tp-vs">'+nxt+'</div>';
@@ -2140,8 +2173,7 @@ try{
       '</div>';
   }
 
-  /* ---- interactive day-by-day schedule strip ---- */
-  var selSchedKey=null;
+  /* ---- interactive day-by-day schedule strip: every chip opens its day page ---- */
   function renderSchedStrip(){
     var el=$('schedStrip');if(!el)return;
     var sch=schedule(),z=zeroDate();
@@ -2155,7 +2187,6 @@ try{
       if(d<today)cls+=' past '+st.cls;
       if(k===todayKey)cls+=' today';
       if(isZ)cls+=' zeroday';
-      if(selSchedKey===k)cls+=' sel';
       var gap=isZ?(d<=today?st.stat:'zero'):(p.single?'evening':fmtGapH(spacingHOn(d,di))+' gap');
       html+='<div class="'+cls+'" data-k="'+k+'" role="button" tabindex="0" aria-label="'+fmtShort(d)+' details">'+
         '<span class="sd-dow">'+WEEKDAYS[d.getDay()].slice(0,3)+' '+(d.getMonth()+1)+'/'+d.getDate()+'</span>'+
@@ -2164,96 +2195,19 @@ try{
       d=addDays(d,1);
     }
     el.innerHTML=html;
-    renderSchedDetail(false);
-    var focus=el.querySelector('.sday.sel')||el.querySelector('.sday.today');
+    var focus=el.querySelector('.sday.today');
     if(focus)el.scrollLeft=focus.offsetLeft-el.clientWidth/2+focus.clientWidth/2;
-  }
-  function renderSchedDetail(animate){
-    var box=$('schedDetail');if(!box)return;
-    if(!selSchedKey){box.hidden=true;return;}
-    var d=dateOf(selSchedKey),di=phaseIndexFor(d),p=BASE_PHASES[di<0?0:di];
-    var isZ=di===BASE_PHASES.length-1,st=dayStatus(d);
-    var head='<strong>'+WEEKDAYS[d.getDay()]+', '+fmtShort(d)+'</strong>';
-    var lines=[];
-    if(isZ){
-      var off=Math.round((d-zeroDate())/MS_DAY)+1;
-      head+=' · zero era, day '+off;
-      if(d<today)lines.push(st.cls==='clean'?'Clean — the streak held.':'Slip logged: '+st.c+'. Data, not doom.');
-      else if(selSchedKey===todayKey)lines.push((countOf(todayKey)||0)===0?'Clean so far today.':'Slip logged today: '+countOf(todayKey)+'.');
-      lines.push(off<=2?'Symptoms, if any, typically start in this window (24–48 h) — the tapered, blunted version.'
-        :off<=6?'The days-2–6 peak window the research maps, pre-shaved by the step-down.'
-        :off<=13?'Past the peak — the grade flattens from here.'
-        :off<=21?'Weeks 2–3: the climb back to baseline. Sleep settles last.'
-        :'Past the 3-week adjustment window.');
-      if(d>=today){var fz=feelHTML(d,BASE_PHASES.length-1,true);if(fz)lines.push(fz);}
-    }else{
-      var schD=schedule(),dayNum=Math.round((d-schD[0].start)/MS_DAY)+1;
-      head+=' · day '+dayNum+' · cap '+p.capText;
-      lines.push('<span class="sd-goal">'+dayGoal(d,di)+'</span>');
-      lines.push('<strong>Structure:</strong> '+(p.single?'one evening session only':'max '+p.sessionMax+' hits per session · '+fmtGapH(spacingHOn(d,di))+' between sessions'));
-      var pl=dayPlanOf(d,di);
-      if(pl){
-        lines.push(winsHTML(pl)+(pl.note?'<span class="win-note">'+pl.note+'</span>':''));
-        if(d>=today)lines.push(doListHTML(pl));
-      }
-      if(d>=today){var ff=feelHTML(d,di,true);if(ff)lines.push(ff);}
-      if(d<today){
-        lines.push('<strong>Logged:</strong> '+(st.c===null?'nothing — no data that day':st.c+' of '+st.cap+' · '+st.stat));
-        var sess=sessionsFor(selSchedKey);
-        if(sess.length){
-          var ls=sess[sess.length-1];
-          lines.push('<strong>Sessions:</strong> '+sess.length+' · '+fmtTime(sess[0][0])+' → '+fmtTime(ls[ls.length-1]));
-        }
-      }else if(selSchedKey===todayKey){
-        var c=countOf(todayKey)||0;
-        lines.push('<strong>So far:</strong> '+c+' of '+cap+' · '+Math.max(0,cap-c)+' left today');
-      }else{
-        var inD=Math.round((d-today)/MS_DAY);
-        lines.push('<strong>In '+inD+' day'+(inD>1?'s':'')+'</strong> from now.');
-      }
-      // comparison to the day before — the plan's shape, day over day
-      var yd=addDays(d,-1);
-      if(yd>=schD[0].start){
-        var ydi=phaseIndexFor(yd),yp=BASE_PHASES[ydi<0?0:ydi],cmp='';
-        if(yp.cap>p.cap)cmp='Ceiling stepped down from <strong>'+yp.capText+'</strong> the day before — '+(yp.cap-p.cap)+' fewer.';
-        else if(yp.cap===p.cap&&!p.single){
-          var yg=spacingHOn(yd,ydi<0?0:ydi),tg=spacingHOn(d,di);
-          cmp=tg>yg?'Same cap as the day before — the gap widens <strong>'+fmtGapH(yg)+' → '+fmtGapH(tg)+'</strong>.'
-                   :'Same cap and gap as the day before — holding steady.';
-        }else if(yp.single&&!p.single)cmp='';
-        if(d<=today){
-          var yc=countOf(dkeyOf(yd));
-          if(yc!==null&&st.c!==null&&st.c!==undefined){
-            var dv=st.c-yc;
-            cmp+=(cmp?' ':'')+(dv<0?'<span class="down">'+(-dv)+' fewer</span> than the day before.'
-              :dv>0?'<span class="up">'+dv+' more</span> than the day before.':'Even with the day before.');
-          }
-        }
-        if(cmp)lines.push('<span class="sd-cmp">'+cmp+'</span>');
-      }
-    }
-    box.innerHTML='<p>'+head+'</p>'+lines.map(function(l){
-      return /^<(ul|div)/.test(l)?l:'<p>'+l+'</p>';
-    }).join('');
-    box.hidden=false;
-    if(animate)expandEl(box);
   }
   $('schedStrip').addEventListener('click',function(ev){
     var c=ev.target.closest('.sday');if(!c)return;
     ev.stopPropagation();
-    var wasOpen=!!selSchedKey;
-    selSchedKey=selSchedKey===c.dataset.k?null:c.dataset.k;
-    renderSchedStrip();
-    if(selSchedKey&&!wasOpen)renderSchedDetail(true);
-    safe(feelLive);
+    openDayPage(c.dataset.k);
   });
   $('schedStrip').addEventListener('keydown',function(ev){
     if(ev.key!=='Enter'&&ev.key!==' ')return;
     var c=ev.target.closest('.sday');if(!c)return;
     ev.preventDefault();
-    selSchedKey=selSchedKey===c.dataset.k?null:c.dataset.k;
-    renderSchedStrip();
-    safe(feelLive);
+    openDayPage(c.dataset.k);
   });
 
   function renderToday(){
@@ -2342,7 +2296,6 @@ try{
     }
   }
 
-  var trendSel=null;
   function renderTrend(){
     var el=$('trendChart');
     var sch=schedule(), z=zeroDate(), start=sch[0].start;
@@ -2352,81 +2305,87 @@ try{
     var vals=[], maxV=BASE_PHASES[0].cap;
     var d=new Date(start);
     while(d<=endD){
-      var key=dkeyOf(d), di=phaseIndexFor(d);
-      var c=countOf(key);
-      vals.push({date:new Date(d),key:key,cap:di>=0?BASE_PHASES[di].cap:BASE_PHASES[0].cap,
-                 count:c,isToday:key===todayKey,isZ:di===BASE_PHASES.length-1});
-      if(c>maxV)maxV=c;
+      var m=dayMetrics(dkeyOf(d));
+      vals.push(m);
+      if(m.eff!==null&&m.eff>maxV)maxV=m.eff;
       d=addDays(d,1);
     }
     var W=340,H=120,padT=6,padB=16,scaleH=H-padT-padB;
     var slotW=W/n, barW=Math.min(22,slotW*0.62);
     function yv(v){return padT+scaleH*(1-v/maxV);}
     function hv(v){return scaleH*(v/maxV);}
-    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Daily hits against each day’s cap — tap a bar for details">';
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Daily hits against each day’s cap — tap a day to open it">';
     var labelEvery=n>16?3:2;
-    vals.forEach(function(v,i){
+    vals.forEach(function(m,i){
       var cx=slotW*i+slotW/2, x=cx-barW/2;
-      var sel=trendSel===v.key;
       // full-height invisible hit zone makes every day easy to tap
-      svg+='<rect x="'+(slotW*i).toFixed(1)+'" y="0" width="'+slotW.toFixed(1)+'" height="'+H+'" fill="transparent" data-k="'+v.key+'" style="cursor:pointer"/>';
-      if(v.cap>0){
-        svg+='<rect x="'+x.toFixed(1)+'" y="'+yv(v.cap).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+hv(v.cap).toFixed(1)+'" rx="3" fill="var(--surface2)" pointer-events="none"'+((v.isToday||sel)?' stroke="var(--accent)" stroke-opacity="'+(sel?'1':'.6')+'"':'')+'/>';
+      svg+='<rect x="'+(slotW*i).toFixed(1)+'" y="0" width="'+slotW.toFixed(1)+'" height="'+H+'" fill="transparent" data-k="'+m.key+'" style="cursor:pointer"/>';
+      if(m.cap>0){
+        svg+='<rect x="'+x.toFixed(1)+'" y="'+yv(m.cap).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+hv(m.cap).toFixed(1)+'" rx="3" fill="var(--surface2)" pointer-events="none"'+(m.isToday?' stroke="var(--accent)" stroke-opacity=".6"':'')+'/>';
       }else{
         svg+='<rect x="'+x.toFixed(1)+'" y="'+(padT+scaleH-2)+'" width="'+barW.toFixed(1)+'" height="2" rx="1" fill="var(--surface2)" pointer-events="none"/>';
       }
-      if(v.count!==null&&v.count>0){
-        var col=(v.isZ||v.count>v.cap)?'var(--clay)':v.count===v.cap?'var(--amber)':'var(--sage)';
-        svg+='<rect x="'+x.toFixed(1)+'" y="'+yv(v.count).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+Math.max(2,hv(v.count)).toFixed(1)+'" rx="3" fill="'+col+'" fill-opacity="'+(sel?'1':'.9')+'" pointer-events="none"/>';
-      }else if(v.isZ&&v.date<=today){
+      if(m.eff!==null&&m.eff>0){
+        var col=(m.isZ||m.eff>m.cap)?'var(--clay)':m.eff===m.cap?'var(--amber)':'var(--sage)';
+        svg+='<rect x="'+x.toFixed(1)+'" y="'+yv(m.eff).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+Math.max(2,hv(m.eff)).toFixed(1)+'" rx="3" fill="'+col+'" fill-opacity=".9" pointer-events="none"/>';
+      }else if(m.isZ&&!m.future){
         svg+='<circle cx="'+cx.toFixed(1)+'" cy="'+(padT+scaleH-4)+'" r="3" fill="var(--sage)" pointer-events="none"/>';
       }
       if(i%labelEvery===0){
-        svg+='<text x="'+cx.toFixed(1)+'" y="'+(H-3)+'" font-size="8.5" fill="'+(sel?'var(--accent)':'var(--muted)')+'" text-anchor="middle" font-family="Karla,sans-serif" pointer-events="none">'+(v.date.getMonth()+1)+'/'+v.date.getDate()+'</text>';
+        svg+='<text x="'+cx.toFixed(1)+'" y="'+(H-3)+'" font-size="8.5" fill="var(--muted)" text-anchor="middle" font-family="Karla,sans-serif" pointer-events="none">'+(m.date.getMonth()+1)+'/'+m.date.getDate()+'</text>';
       }
     });
     svg+='</svg>';
     el.innerHTML=svg;
-    renderTrendDetail();
-    var ti=$('trendInsight');
-    if(ti){
-      var th=timedHits();
-      if(th.length>=4){
-        var pk=peakWindow(hourHist(th),th.length);
-        ti.textContent=pk?('Heaviest window: '+pk.from+'–'+pk.to+' · '+pk.share+'% of hits — open ⤢ for the full patterns.'):'';
-      }else{
-        ti.textContent='';
-      }
-    }
-  }
-
-  function renderTrendDetail(){
-    var td=$('trendDetail');if(!td)return;
-    if(!trendSel){td.hidden=true;return;}
-    var d=dateOf(trendSel),st=dayStatus(d);
-    var bits=['<strong>'+WEEKDAYS[d.getDay()].slice(0,3)+' '+fmtShort(d)+'</strong>'];
-    if(st.cap>0)bits.push(st.c===null?'no log':st.c+' of '+st.cap+' · '+st.stat);
-    else if(d<=today)bits.push(st.cls==='clean'?'clean at zero':'slip · '+st.c);
-    else bits.push('zero day ahead');
-    var sess=sessionsFor(trendSel);
-    if(sess.length){
-      var ls=sess[sess.length-1];
-      bits.push(sess.length+' session'+(sess.length>1?'s':'')+' · '+fmtTime(sess[0][0])+' → '+fmtTime(ls[ls.length-1]));
-    }
-    if(sess.length>1){
-      var gSum=0;
-      for(var gi=1;gi<sess.length;gi++)gSum+=sess[gi][0]-sess[gi-1][sess[gi-1].length-1];
-      bits.push('avg gap '+fmtDur(gSum/(sess.length-1)));
-    }
-    td.innerHTML=bits.join(' · ');
-    td.hidden=false;
   }
   $('trendChart').addEventListener('click',function(ev){
     var r=ev.target.closest('[data-k]');if(!r)return;
     ev.stopPropagation();
-    trendSel=trendSel===r.dataset.k?null:r.dataset.k;
-    renderTrend();
+    openDayPage(r.dataset.k);
   });
+
+  /* the live comparison header at the top of Day by day — a sentence, not tiles */
+  function renderDayHead(){
+    var el=$('ddSum');if(!el)return;
+    var t=taperProgress(), start=schedule()[0].start;
+    var now='',sub='',base='';
+    if(today<start){
+      now='Day one lands '+fmtShort(start)+'.';
+      base='The road: '+t.totalD+' days, '+BASE_PHASES[0].capText+' → 0.';
+    }else if(isZeroEra){
+      var zs=zeroStats(), c0=countOf(todayKey)||0;
+      if(c0>0){
+        now='<span class="dv pill bad">slip today</span>';
+        sub=(zs?zs.clean:0)+' clean days banked — a slip dents the record, it doesn’t delete it.';
+      }else{
+        now='<span class="dv pill good">Day '+Math.max(1,zs?zs.run:1)+' clean</span>';
+        sub=zs&&zs.slips?'best run '+zs.best+' · '+zs.slips+' slip'+(zs.slips>1?'s':'')+', banked and past.'
+           :(zs&&zs.best>1?'best run '+zs.best+' — and climbing.':'');
+      }
+      base=t.cutPct+'% was the taper — <b>100%</b> is now.';
+    }else{
+      var pv=paceVsYesterday();
+      if(!pv){
+        now='No log yesterday — today stands on its own.';
+      }else{
+        var yM=dayMetrics(dkeyOf(addDays(today,-1)));
+        var pill;
+        if(pv.t===pv.y)pill='<span class="dv pill flat">even</span>';
+        else{
+          var good=pv.t<pv.y, arrow=good?'▾':'▴';
+          var pct=pv.y>0?Math.round(Math.abs(pv.t-pv.y)/pv.y*100)+'%':String(Math.abs(pv.t-pv.y));
+          pill='<span class="dv pill '+(good?'good':'bad')+'">'+arrow+pct+'</span>';
+        }
+        now=pill+' vs yesterday by this hour';
+        sub=(countOf(todayKey)||0)+' so far · yesterday had '+pv.y+' by now'+(yM.eff!==null?', and closed at '+yM.eff:'')+'.'+
+          (pv.t>pv.y?' The 20-minute timer is right there.':'');
+      }
+      base='Whole taper: <b>'+t.cutPct+'%</b> below the '+BASELINE+'-a-day start'+(t.streak>1?' · '+t.streak+' days under cap in a row':'')+'.';
+    }
+    el.innerHTML='<div class="dd-now">'+now+'</div>'+
+      (sub?'<div class="dd-sub">'+sub+'</div>':'')+
+      (base?'<div class="dd-base">'+base+'</div>':'');
+  }
 
   function daylineSVG(key){
     var e=data.days[key];
@@ -2448,42 +2407,24 @@ try{
     return svg+'</svg>';
   }
 
-  /* a day's timeline stacked against the day before and the day after,
-     so the shift in time slots and count is visible at a glance */
-  function dayCompareHTML(key){
+  /* a day's timeline stacked against the day before and the day after —
+     the visual proof under the day page's move grid */
+  function dayTimelinesHTML(key){
     var d0=dateOf(key), start=schedule()[0].start;
     var specs=[{off:-1,lbl:'Day before'},{off:0,lbl:'This day'},{off:1,lbl:'Next day'}];
-    var byOff={}, html='<div class="daycmp">';
+    var html='<div class="daycmp">';
     specs.forEach(function(sp){
       var dd=addDays(d0,sp.off);
       if(dd<start||dd>today)return;
-      var k=dkeyOf(dd), st=dayStatus(dd), sess=sessionsFor(k);
-      byOff[sp.off]={d:dd,count:st.c,first:sess.length?sess[0][0]:null};
-      var countTxt=st.cap>0?(st.c===null?'·':st.c+' <span style="color:var(--muted);font-size:11px">/ '+st.cap+'</span>'):(st.c||0);
+      var k=dkeyOf(dd), m=dayMetrics(k);
+      var countTxt=(!m.isZ&&m.cap>0)?(m.eff===null?'·':m.eff+' <span style="color:var(--muted);font-size:11px">/ '+m.cap+'</span>'):String(m.eff||0);
       var line=daylineSVG(k)||'<div class="hnote-line" style="font-size:11.5px;padding:2px 0">no timed hits</div>';
       html+='<div class="dc-row'+(sp.off===0?' cur':'')+'">'+
         '<div class="dc-hd"><span class="dc-l">'+sp.lbl+' · '+WEEKDAYS[dd.getDay()].slice(0,3)+' '+fmtShort(dd)+'</span>'+
         '<span class="dc-n">'+countTxt+'</span>'+
-        '<span class="hstat '+st.cls+'">'+st.stat+'</span></div>'+line+'</div>';
+        '<span class="hstat '+m.cls+'">'+m.stat+'</span></div>'+line+'</div>';
     });
-    html+='</div>';
-    var t=byOff[0], p=byOff[-1], nx=byOff[1], sums=[];
-    if(p&&p.count!==null&&t.count!==null){
-      var dv=t.count-p.count;
-      sums.push(dv<0?'<span class="down">'+(-dv)+' fewer</span> than the day before'
-        :dv>0?'<span class="up">'+dv+' more</span> than the day before'
-        :'even with the day before');
-      if(p.first&&t.first){
-        var sh=(t.first.getHours()*60+t.first.getMinutes())-(p.first.getHours()*60+p.first.getMinutes());
-        if(Math.abs(sh)>=15)sums.push('first hit '+fmtDur(Math.abs(sh)*60000)+(sh>0?' later':' earlier'));
-      }
-    }
-    if(nx&&nx.count!==null&&t.count!==null){
-      var dn=nx.count-t.count;
-      if(dn!==0)sums.push('next day '+(dn<0?'dropped to '+nx.count:'rose to '+nx.count));
-    }
-    if(sums.length)html+='<p class="dc-sum">'+sums.join(' · ')+'.</p>';
-    return html;
+    return html+'</div>';
   }
 
   function renderHistory(){
@@ -2493,123 +2434,110 @@ try{
       rowsEl.innerHTML='<p class="hempty">Your days will stack up here as you go.</p>';
       return;
     }
-    var rows='';
-    var d=new Date(sch[0].start);
-    var prevLogged=null;
-    while(d<=today){
-      var key=dkeyOf(d);
-      var n=countOf(key);
-      var dIdx=phaseIndexFor(d);
-      var dCap=dIdx>=0?BASE_PHASES[dIdx].cap:BASE_PHASES[0].cap;
-      var isZ=dIdx===BASE_PHASES.length-1;
-      var stat,cls,countHtml,barPct,barCol;
-      if(isZ){
-        if(n>0){stat='slip';cls='slip';countHtml=String(n);barPct=100;barCol='var(--clay)';}
-        else{stat='clean';cls='zero';countHtml='0';barPct=100;barCol='var(--sage)';}
-      }else if(n===null&&key!==todayKey){
-        stat='no log';cls='nolog';countHtml='<span style="color:var(--faint)">·</span>';barPct=0;barCol='transparent';
+    var rows='', shown=0, total=0;
+    var d=new Date(today);
+    while(d>=sch[0].start){
+      var m=dayMetrics(dkeyOf(d));
+      total++;
+      var barPct=0,barCol='transparent',countHtml,pill='',line2=[],aria;
+      if(m.isZ){
+        countHtml=String(m.eff||0);
+        barPct=100;barCol=m.eff>0?'var(--clay)':'var(--sage)';
+        pill='<span class="hstat '+m.cls+'">'+m.stat+'</span>';
+        if(!m.eff)line2.push('nothing logged — the streak holds');
+        aria=m.eff>0?'slip, '+m.eff+' logged':'clean at zero';
+      }else if(m.count===null&&!m.isToday){
+        countHtml='<span style="color:var(--faint)">·</span>';
+        aria='no log';
       }else{
-        var nn=n||0;
-        if(nn>dCap){stat='over';cls='over';barCol='var(--clay)';}
-        else if(nn===dCap){stat='at cap';cls='at';barCol='var(--amber)';}
-        else{stat='under';cls='under';barCol='var(--sage)';}
-        barPct=dCap>0?Math.min(100,nn/dCap*100):0;
-        countHtml=nn+' <span style="color:var(--muted);font-size:12px">/ '+dCap+'</span>';
-      }
-      // second line (shown in the expanded page): sessions, span, delta
-      var bits=[];
-      if(!isZ&&n!==null){
-        var sess=sessionsFor(key);
-        if(sess.length){
-          bits.push(sess.length+' session'+(sess.length>1?'s':''));
-          var lastS=sess[sess.length-1];
-          bits.push(fmtTime(sess[0][0])+' → '+fmtTime(lastS[lastS.length-1]));
+        // today can exist without an entry yet (nothing logged since 4am) — eff is null then
+        var effN=m.eff||0;
+        var col=m.cls==='over'?'var(--clay)':m.cls==='at'?'var(--amber)':'var(--sage)';
+        barPct=m.cap>0?Math.min(100,(effN/m.cap)*100):0;
+        barCol=col;
+        countHtml=effN+' <span class="hcap">/ '+m.cap+'</span>';
+        aria=effN+' of '+m.cap+', '+m.stat;
+        if(m.isToday){
+          // a half day never wears a closed-day delta — the header carries the live one
+          pill='<span class="hstat '+m.cls+'" style="opacity:.75">'+m.stat+'</span>';
+        }else if(m.cls==='over'){
+          // honesty beats symmetry: the loud word stays, the delta moves down a line
+          pill='<span class="hstat over">over</span>';
+          line2.push(hitsPill(m)+' vs day before');
+        }else{
+          pill=hitsPill(m);
         }
-        // the day's gaps, judged against that day's rule
-        if(sess.length>1){
-          var reqGH=(dIdx>=0&&!BASE_PHASES[dIdx].single)?spacingHOn(d,dIdx):0;
-          var gSum=0,gMin=Infinity;
-          for(var gi=1;gi<sess.length;gi++){
-            var gMs=sess[gi][0]-sess[gi-1][sess[gi-1].length-1];
-            gSum+=gMs;if(gMs<gMin)gMin=gMs;
-          }
-          var gAvg=gSum/(sess.length-1);
-          if(reqGH>0){
-            bits.push(gMin>=reqGH*3600000
-              ?'<span class="down">gaps avg '+fmtDur(gAvg)+' — held the '+fmtGapH(reqGH)+' rule</span>'
-              :'<span class="up">gaps avg '+fmtDur(gAvg)+' — short of the '+fmtGapH(reqGH)+' rule</span>');
-          }else{
-            bits.push('gaps avg '+fmtDur(gAvg));
+        if(m.sessN){
+          line2.push(m.sessN+' sitting'+(m.sessN>1?'s':'')+(m.isToday?' so far':''));
+          line2.push(fmtTime(m.first)+'–'+fmtTime(m.last));
+          if(m.gapAvgMs!==null){
+            var gtxt='gap '+fmtDur(m.gapAvgMs);
+            var gTitle=m.reqGapH>0?(m.heldRule?'held the '+fmtGapH(m.reqGapH)+' rule':'short of the '+fmtGapH(m.reqGapH)+' rule'):'';
+            if(m.vs&&m.vs.gapAvgPct!==null&&!m.isToday){
+              var gp=m.vs.gapAvgPct;
+              line2.push('<span class="dv '+(gp>0?'good':gp<0?'bad':'flat')+'"'+(gTitle?' title="'+gTitle+'"':'')+'>'+gtxt+' '+(gp>=0?'+':'−')+Math.abs(gp)+'%</span>');
+            }else{
+              line2.push(gTitle?'<span title="'+gTitle+'">'+gtxt+'</span>':gtxt);
+            }
           }
         }
-        var eAdj=data.days[key]?(data.days[key].adj||0):0;
-        if(eAdj>0)bits.push(eAdj+' untimed');
-        if(prevLogged!==null&&key!==todayKey){
-          var dv=n-prevLogged;
-          bits.push(dv<0?'<span class="down">▾'+(-dv)+' vs day before</span>'
-                   :dv>0?'<span class="up">▴'+dv+' vs day before</span>'
-                   :'even with day before');
-        }
-        prevLogged=n;
-      }else if(isZ&&!n){
-        bits.push('nothing logged — the streak holds');
+        if(m.adj>0)line2.push(m.adj+' untimed');
       }
-      var rowHtml='<div class="hrow'+(editingKey===key?' open':'')+'" data-key="'+key+'">'+
+      var rowHtml='<div class="hrow'+(shown>=3?' hpast':'')+'" data-key="'+m.key+'" role="button" tabindex="0" aria-label="'+
+        WEEKDAYS[d.getDay()].slice(0,3)+' '+fmtShort(d)+' — '+aria+'. Open this day.">'+
         '<div class="hrow-main">'+
         '<span class="hdate">'+WEEKDAYS[d.getDay()].slice(0,3)+' '+(d.getMonth()+1)+'/'+d.getDate()+'</span>'+
         '<span class="hbar"><i style="width:'+barPct+'%;background:'+barCol+'"></i></span>'+
         '<span class="hcount">'+countHtml+'</span>'+
-        '<span class="hstat '+cls+'">'+stat+'</span></div>'+
-        (bits.length?'<div class="hrow2">'+bits.join(' · ')+'</div>':'')+
+        pill+'</div>'+
+        (line2.length?'<div class="hrow2">'+line2.join(' · ')+'</div>':'')+
         '</div>';
-      if(editingKey===key){
-        var detail=dayCompareHTML(key);
-        var e=data.days[key];
-        // split the day into sessions (by spacing), then group each session's hits by minute
-        var sessions=sessionsFor(key);
-        if(sessions.length||( e&&(e.adj||0)>0))detail+='<p class="dc-sum" style="margin-top:10px;font-weight:700;color:var(--sand)">This day’s sessions — adjust below</p>';
-        sessions.forEach(function(sess,si){
-          var block='<div class="hsession"><div class="hsession-head">'+
-            '<span class="sn">Session '+(si+1)+'</span>'+
-            '<span class="srange"></span>'+
-            '<span class="stot">'+sess.length+' hit'+(sess.length>1?'s':'')+'</span></div>';
-          var groups={},order=[];
-          sess.forEach(function(hd){
-            var gk=pad(hd.getHours())+':'+pad(hd.getMinutes());
-            if(!groups[gk]){groups[gk]={t:hd,n:0};order.push(gk);}
-            groups[gk].n++;
-          });
-          order.sort();
-          order.forEach(function(gk){
-            var g=groups[gk];
-            block+='<div class="hgroup"><span class="ht">'+fmtTime(g.t)+'</span>'+
-              '<span class="hn">'+g.n+' hit'+(g.n>1?'s':'')+'</span>'+
-              '<button data-act="gdec" data-hm="'+gk+'" aria-label="Remove one at this time">−</button></div>';
-          });
-          detail+=block+'</div>';
-        });
-        var adj=e?(e.adj||0):0;
-        if(adj>0){
-          detail+='<div class="hnotime"><span class="ht">no time</span>'+
-            '<span class="hn">'+adj+' hit'+(adj>1?'s':'')+' — re-add below with a time</span>'+
-            '<button data-act="adjdec" aria-label="One less untimed">−</button></div>';
-        }
-        if(!detail)detail='<div class="hnote-line">Nothing logged this day yet.</div>';
-        detail+='<div class="timefix"><input type="time" value="'+lastFixTime+'" aria-label="Time the hit happened">'+
-                '<button data-act="addat">+ Add hit</button></div>';
-        if(fixMsg)detail+='<div class="hnote-line">'+fixMsg+'</div>';
-        detail+='<div class="hedit"><button data-act="done" class="hdone">Done</button></div>';
-        rowHtml+='<div class="hdetail" data-key="'+key+'">'+detail+'</div>';
-      }
-      rows=rowHtml+rows;
-      d=addDays(d,1);
+      rows+=rowHtml;
+      shown++;
+      d=addDays(d,-1);
     }
+    if(total>3)rows+='<button class="linklike hall">All '+total+' days →</button>';
     rowsEl.innerHTML=rows||'<p class="hempty">Your days will stack up here as you go.</p>';
-    if(histAnimKey){
-      var openDet=rowsEl.querySelector('.hdetail[data-key="'+histAnimKey+'"]');
-      histAnimKey=null;
-      expandEl(openDet);
+  }
+
+  /* the session editor — extracted from the old inline row flow; it lives
+     on the day page now. Same data-act contract, same save path. */
+  function sessionEditorHTML(key){
+    var e=data.days[key];
+    var detail='';
+    var sessions=sessionsFor(key);
+    sessions.forEach(function(sess,si){
+      var block='<div class="hsession"><div class="hsession-head">'+
+        '<span class="sn">Session '+(si+1)+'</span>'+
+        '<span class="srange"></span>'+
+        '<span class="stot">'+sess.length+' hit'+(sess.length>1?'s':'')+'</span></div>';
+      var groups={},order=[];
+      sess.forEach(function(hd){
+        var gk=pad(hd.getHours())+':'+pad(hd.getMinutes());
+        if(!groups[gk]){groups[gk]={t:hd,n:0};order.push(gk);}
+        groups[gk].n++;
+      });
+      order.sort();
+      order.forEach(function(gk){
+        var g=groups[gk];
+        block+='<div class="hgroup"><span class="ht">'+fmtTime(g.t)+'</span>'+
+          '<span class="hn">'+g.n+' hit'+(g.n>1?'s':'')+'</span>'+
+          '<button data-act="gdec" data-hm="'+gk+'" aria-label="Remove one at this time">−</button></div>';
+      });
+      detail+=block+'</div>';
+    });
+    var adj=e?(e.adj||0):0;
+    if(adj>0){
+      detail+='<div class="hnotime"><span class="ht">no time</span>'+
+        '<span class="hn">'+adj+' hit'+(adj>1?'s':'')+' — re-add below with a time</span>'+
+        '<button data-act="adjdec" aria-label="One less untimed">−</button></div>';
     }
+    if(!detail)detail='<div class="hnote-line">Nothing logged this day yet.</div>';
+    detail+='<div class="timefix"><input type="time" value="'+lastFixTime+'" aria-label="Time the hit happened">'+
+            '<button data-act="addat">+ Add hit</button></div>';
+    if(fixMsg)detail+='<div class="hnote-line">'+fixMsg+'</div>';
+    detail+='<div class="hedit"><button data-act="done" class="hdone">Done</button></div>';
+    return '<div class="hdetail" data-key="'+key+'">'+detail+'</div>';
   }
 
   /* ---- hold-the-phase banner ---- */
@@ -3033,17 +2961,14 @@ try{
   }
   function sessionStatsAll(){return rc('ssa',function(){
     var totS=0,totHits=0,gaps=[],firsts=[],lasts=[];
-    for(var k in data.days){
-      var s=sessionsFor(k);
-      if(!s.length)continue;
-      totS+=s.length;
-      s.forEach(function(x){totHits+=x.length;});
-      for(var i=1;i<s.length;i++){
-        gaps.push((s[i][0]-s[i-1][s[i-1].length-1])/3600000);
-      }
-      firsts.push(s[0][0]);
-      lasts.push(s[s.length-1][s[s.length-1].length-1]);
-    }
+    taperProgress().days.forEach(function(m){
+      if(!m.sessN)return;
+      totS+=m.sessN;
+      m.sessions.forEach(function(x){totHits+=x.length;});
+      m.gaps.forEach(function(g){gaps.push(g/3600000);});
+      firsts.push(m.first);
+      lasts.push(m.last);
+    });
     function avgTime(arr){
       if(!arr.length)return null;
       var m=0;
@@ -3062,18 +2987,13 @@ try{
   });}
   /* time-between-sessions analytics, each gap judged against that day's rule */
   function gapAnalytics(){return rc('ga',function(){
-    var sch=schedule(),recs=[];
-    var d=new Date(sch[0].start);
-    while(d<=today){
-      var k=dkeyOf(d),di=phaseIndexFor(d);
-      var reqH=(di>=0&&di<BASE_PHASES.length-1&&!BASE_PHASES[di].single)?spacingHOn(d,di):0;
-      var s=sessionsFor(k);
-      for(var i=1;i<s.length;i++){
-        var gapH=(s[i][0]-s[i-1][s[i-1].length-1])/3600000;
-        recs.push({h:gapH,ok:reqH>0?gapH>=reqH:true,k:k,req:reqH});
-      }
-      d=addDays(d,1);
-    }
+    var recs=[];
+    taperProgress().days.forEach(function(m){
+      m.gaps.forEach(function(g){
+        var gapH=g/3600000;
+        recs.push({h:gapH,ok:m.reqGapH>0?gapH>=m.reqGapH:true,k:m.key,req:m.reqGapH});
+      });
+    });
     if(!recs.length)return null;
     var sum=0,okc=0;recs.forEach(function(r){sum+=r.h;if(r.ok)okc++;});
     var half=Math.floor(recs.length/2),early=null,recent=null;
@@ -3135,39 +3055,16 @@ try{
     return svg+'</svg>';
   }
   function paceVsYesterday(){
-    var ye=data.days[dkeyOf(addDays(today,-1))];
-    if(!ye||((ye.hits||[]).length+(ye.adj||0))===0)return null;
+    // deliberately a raw 24h slice, not logical hours — "by this time yesterday"
+    var yM=dayMetrics(dkeyOf(addDays(today,-1)));
+    if(!yM.eff)return null;
+    var ye=data.days[yM.key];
     var yCut=Date.now()-MS_DAY,yCount=0;
-    (ye.hits||[]).forEach(function(iso){if(new Date(iso).getTime()<=yCut)yCount++;});
+    ((ye&&ye.hits)||[]).forEach(function(iso){if(new Date(iso).getTime()<=yCut)yCount++;});
     return {y:yCount,t:countOf(todayKey)||0};
   }
-  function dayTotals(){return rc('dt',function(){
-    var sch=schedule(),tot=0,logged=0,under=0;
-    var d=new Date(sch[0].start);
-    while(d<=today){
-      var k=dkeyOf(d),c=countOf(k);
-      var di=phaseIndexFor(d),cp=di>=0?BASE_PHASES[di].cap:BASE_PHASES[0].cap;
-      if(c!==null){logged++;tot+=c;if(c<=cp)under++;}
-      d=addDays(d,1);
-    }
-    return {tot:tot,logged:logged,under:under};
-  });}
   var BASELINE=30; // the ~30/day starting point the copy references
-  function progressStats(){return rc('ps',function(){
-    var t=dayTotals();
-    var avoided=Math.max(0,t.logged*BASELINE-t.tot);
-    var cutPct=t.logged?Math.max(0,Math.round((1-(t.tot/t.logged)/BASELINE)*100)):0;
-    var streak=0,d=new Date(today),start=schedule()[0].start;
-    while(d>=start){
-      var k=dkeyOf(d),c=countOf(k),di=phaseIndexFor(d);
-      var cp=di>=0?BASE_PHASES[di].cap:BASE_PHASES[0].cap;
-      var isZ=di===BASE_PHASES.length-1;
-      var ok=isZ?(c===null||c===0):(k===todayKey?(c||0)<=cp:(c!==null&&c<=cp));
-      if(!ok)break;
-      streak++;d=addDays(d,-1);
-    }
-    return {avoided:avoided,cutPct:cutPct,streak:streak,tot:t.tot,logged:t.logged,under:t.under};
-  });}
+  /* dayTotals()/progressStats() lived here — absorbed into taperProgress() */
   /* Oura-style daily score: weighted contributors, all from logged data */
   function scoreToday(){
     var count=countOf(todayKey)||0;
@@ -3180,17 +3077,14 @@ try{
       ]};
     }
     var capS=count<=cap?Math.round(100-(count/Math.max(1,cap))*40):Math.max(0,60-20*(count-cap));
-    var sess=sessionsFor(todayKey);
+    var tM=dayMetrics(todayKey);
+    var sess=tM.sessions;
     var maxSess=0;
     sess.forEach(function(s){if(s.length>maxSess)maxSess=s.length;});
     var sessS=!sess.length?100
       :phase.single?(sess.length<=1?100:40)
       :maxSess<=phase.sessionMax?100:Math.max(0,100-25*(maxSess-phase.sessionMax));
-    var req=spacingHNow()*3600000,minGap=null;
-    for(var i=1;i<sess.length;i++){
-      var g=sess[i][0]-sess[i-1][sess[i-1].length-1];
-      if(minGap===null||g<minGap)minGap=g;
-    }
+    var req=spacingHNow()*3600000,minGap=tM.gapMinMs;
     var spaceS=(req<=0||minGap===null)?100:Math.min(100,Math.round(minGap/req*100));
     var pv=paceVsYesterday();
     var paceS=!pv?80:pv.t<pv.y?100:pv.t===pv.y?75:Math.max(40,75-10*(pv.t-pv.y));
@@ -3649,74 +3543,357 @@ try{
     czReturnFocus=null;
   }
 
-  function dayStatus(d){
-    var k=dkeyOf(d),c=countOf(k),di=phaseIndexFor(d);
-    var cp=di>=0?BASE_PHASES[di].cap:BASE_PHASES[0].cap;
-    if(di===BASE_PHASES.length-1)return c>0?{cls:'slip',stat:'slip',c:c,cap:0}:{cls:'clean',stat:'clean',c:0,cap:0};
-    if(c===null&&k!==todayKey)return {cls:'nolog',stat:'no log',c:null,cap:cp};
-    var n=c||0;
-    return n>cp?{cls:'over',stat:'over',c:n,cap:cp}:n===cp?{cls:'at',stat:'at cap',c:n,cap:cp}:{cls:'under',stat:'under',c:n,cap:cp};
+  /* ================= the day pager =================
+     One page per day — swipe (or ‹ ›, or arrow keys) to walk the record.
+     Every day tap in the app lands here. */
+  var dpKey=null, dpReturnFocus=null, dpEditOpen=false;
+  function dpKeys(){
+    var sch=schedule(), end=isZeroEra?today:zeroDate();
+    var ks=[],d=new Date(sch[0].start);
+    while(d<=end){ks.push(dkeyOf(d));d=addDays(d,1);}
+    return ks;
   }
-  function prevDaysHTML(){
-    var start=schedule()[0].start,html='',shown=0;
-    var d=addDays(today,-1);
-    while(d>=start&&shown<14){
-      var k=dkeyOf(d),s=dayStatus(d);
-      html+='<div class="daycard"><div class="daycard-head">'+
-        '<span class="dc-date">'+WEEKDAYS[d.getDay()].slice(0,3)+' '+fmtShort(d)+'</span>'+
-        '<span class="dc-count">'+(s.c===null?'·':(s.cap>0?s.c+'<small> / '+s.cap+'</small>':s.c))+'</span>'+
-        '<span class="hstat '+s.cls+'">'+s.stat+'</span></div>'+
-        daylineSVG(k)+'</div>';
-      shown++;d=addDays(d,-1);
+  /* the move: this day against the previous logged day, every needle named */
+  function dpMoveGridHTML(m){
+    if(!m.vs){
+      var isFirst=m.key===dkeyOf(schedule()[0].start);
+      return '<div class="dmove"><div class="dmove-hd">'+(isFirst?'Day one':'The move')+'</div>'+
+        '<p class="dc-sum" style="margin:0">'+(isFirst
+          ?'Nothing before it to compare — the baseline was ~'+BASELINE+' a day.'
+          :(m.eff===null?'Nothing logged this day.':'No logged day before this one to compare against.'))+'</p>'+
+        (m.eff!==null&&m.baseCutPct!==null?'<div class="dm-base">Against the old '+BASELINE+' a day: <b>'+m.baseCutPct+'% cut</b>.</div>':'')+
+        '</div>';
     }
-    return html?'<h3 class="xtra-h" style="margin-top:18px">The days before</h3>'+html:'';
+    var v=m.vs, pm=dayMetrics(v.key), pd=dateOf(v.key);
+    var rows=[], goodN=0, badN=0, badNames=[];
+    function note(g,name){if(g===true)goodN++;else if(g===false){badN++;if(name)badNames.push(name);}}
+    function row(k,val,verdict){rows.push('<div class="dm-row"><span class="dm-k">'+k+'</span><span class="dm-v">'+val+'</span>'+verdict+'</div>');}
+    var hGood=v.count<0?true:v.count>0?false:null; note(hGood,'count');
+    var hTxt=v.count===0?'even':((v.count<0?'▾':'▴')+(v.prevEff>=5&&v.countPct!==null?Math.abs(v.countPct)+'%':Math.abs(v.count)));
+    row('hits',pm.eff+' → '+m.eff+(m.partial?' <span style="color:var(--muted);font-size:11px">so far</span>':''),dv(hTxt,hGood));
+    if(m.capPct!==null&&pm.capPct!==null){
+      var cGood=m.capPct<pm.capPct?true:m.capPct>pm.capPct?false:null; note(cGood,'cap margin');
+      row('of cap',pm.capPct+'% → '+m.capPct+'%',dv(cGood===true?'more room':cGood===false?'less room':'even',cGood));
+    }
+    if(v.gapAvgMs!==null){
+      var gGood=v.gapAvgPct===null?null:v.gapAvgPct>5?true:v.gapAvgPct<-5?false:null; note(gGood,'spacing');
+      row('avg gap',fmtDur(pm.gapAvgMs)+' → '+fmtDur(m.gapAvgMs),
+        dv(gGood===null?'about even':(v.gapAvgPct>=0?'+':'−')+Math.abs(v.gapAvgPct)+'%',gGood));
+    }
+    if(v.firstMin!==null){
+      var fGood=v.firstMin>=15?true:v.firstMin<=-15?false:null; note(fGood,'start time');
+      row('first hit',fmtTime(pm.first)+' → '+fmtTime(m.first),
+        dv(fGood===null?'about even':fmtDur(Math.abs(v.firstMin)*60000)+(v.firstMin>0?' later':' earlier'),fGood));
+    }
+    if(v.sessN!==null){
+      // a half day always has "fewer sittings" — no verdict until the day closes
+      if(m.partial){
+        row('sittings',pm.sessN+' → '+m.sessN+' so far',dv('open',null));
+      }else{
+        var sGood=v.sessN<0?true:v.sessN>0?false:null; note(sGood,'sittings');
+        row('sittings',pm.sessN+' → '+m.sessN,
+          dv(sGood===null?'even':(v.sessN<0?(-v.sessN)+' fewer':'+'+v.sessN),sGood));
+      }
+    }
+    // span is meaningless mid-day — only closed days wear it
+    if(v.spanMs!==null&&!m.partial){
+      var spGood=v.spanMs<=-1200000?true:v.spanMs>=1200000?false:null; note(spGood,'span');
+      row('span',fmtDur(pm.spanMs)+' → '+fmtDur(m.spanMs),
+        dv(spGood===null?'about even':fmtDur(Math.abs(v.spanMs))+(v.spanMs<0?' shorter':' longer'),spGood));
+    }
+    var close;
+    if(m.cls==='over')close='Over the cap — the day after holds the phase, then the descent resumes.';
+    else if(badN===0&&goodN>0)close='Every needle moved the right way.';
+    else if(hGood===true&&badN>0)close='Fewer hits — count the win, watch the '+badNames.join(' and ')+'.';
+    else if(hGood===false)close='Up on the day before — data, not doom.'+(m.heldRule?' The gaps still held.':'');
+    else close='About even with the day before — holding is allowed.';
+    var hd=m.partial?'vs yesterday — so far, by the clock'
+      :'vs '+WEEKDAYS[pd.getDay()].slice(0,3)+' '+fmtShort(pd)+(v.key!==dkeyOf(addDays(m.date,-1))?' — the last logged day':'');
+    var pace='';
+    if(m.partial){
+      var pv=paceVsYesterday();
+      if(pv)pace='<p class="dc-sum" style="margin:6px 0 0">By this hour yesterday: <strong>'+pv.y+'</strong> · today: <strong>'+pv.t+'</strong>.</p>';
+    }
+    return '<div class="dmove"><div class="dmove-hd">'+hd+'</div>'+rows.join('')+
+      (m.adj>0?'<p class="dc-sum" style="margin:6px 0 0">'+m.adj+' untimed — invisible to the time rows above.</p>':'')+
+      pace+
+      (m.baseCutPct!==null?'<div class="dm-base">Against the old '+BASELINE+' a day: <b>'+m.baseCutPct+'% cut</b>.</div>':'')+
+      '<p class="dc-sum">'+close+'</p></div>';
   }
+  function dpPageHTML(key){
+    var m=dayMetrics(key), d=m.date, t=taperProgress();
+    var di=m.di<0?0:m.di;
+    var html='';
+    var eyebrow;
+    if(m.isZ){
+      var off=Math.round((d-zeroDate())/MS_DAY)+1;
+      eyebrow=m.future?('In '+Math.round((d-today)/MS_DAY)+' day'+(Math.round((d-today)/MS_DAY)>1?'s':'')+' · zero era'):('Day '+off+' at zero');
+    }else if(m.future){
+      var inD=Math.round((d-today)/MS_DAY);
+      eyebrow='In '+inD+' day'+(inD>1?'s':'')+' · cap '+m.capText+(m.single?' · evening only':m.reqGapH>0?' · '+fmtGapH(m.reqGapH)+' gaps':'');
+    }else{
+      var dayNum=Math.round((d-schedule()[0].start)/MS_DAY)+1;
+      eyebrow='Day '+dayNum+' of '+t.totalD+' · cap '+m.capText+(m.single?' · evening only':m.reqGapH>0?' · '+fmtGapH(m.reqGapH)+' gaps':'');
+    }
+    var big;
+    if(m.future)big='—';
+    else if(m.isZ)big=m.eff>0?(m.eff+'<span class="hstat slip">slip</span>'):('✓<span class="hstat clean">clean</span>');
+    else big=(m.eff||0)+'<small> / '+m.cap+'</small><span class="hstat '+m.cls+'">'+m.stat+(m.partial?' · so far':'')+'</span>';
+    html+='<div class="dp-head"><div class="dp-eyebrow">'+eyebrow+'</div><div class="dp-big">'+big+'</div></div>';
+    if(!m.future)html+=dpMoveGridHTML(m);
+    if(!m.future)html+=dayTimelinesHTML(key);
+    if(m.isZ&&!m.future){
+      var off2=Math.max(1,Math.round((d-zeroDate())/MS_DAY)+1);
+      html+='<div class="dp-plan"><div class="tp-day-k">The timeline</div>'+
+        '<p class="chart-note" style="margin-top:6px">'+zeroTimelineNote(dkeyOf(d)===todayKey?Math.max(1,daysFree()):off2)+'</p>'+
+        (d>=today?feelHTML(d,m.di,true):'')+'</div>';
+    }else if(m.future||m.isToday){
+      var pl=dayPlanOf(d,di);
+      html+='<div class="dp-plan"><div class="tp-day-k">'+(m.isToday?'Today’s plan':'The plan')+'</div>'+
+        '<div class="dp-goal">'+dayGoal(d,di)+'</div>'+
+        '<p class="chart-note" style="margin:2px 0 4px">'+dayStructure(d,di)+'</p>'+
+        (pl?winsHTML(pl)+(pl.note?'<p class="win-note">'+pl.note+'</p>':'')+doListHTML(pl):'')+
+        feelHTML(d,m.di,true)+'</div>';
+    }else{
+      var pl2=dayPlanOf(d,di);
+      html+='<p class="chart-note" style="margin-top:4px">The plan was: '+dayStructure(d,di)+(pl2&&pl2.w?' · windows '+pl2.w.join(' · '):'')+'.</p>';
+    }
+    if(!m.future){
+      html+='<p class="chart-note" style="margin-top:14px"><button class="linklike" data-act="edit">Adjust this day '+(dpEditOpen?'▾':'▸')+'</button></p>';
+      if(dpEditOpen)html+=sessionEditorHTML(key);
+    }
+    html+='<p class="chart-note" style="margin-top:16px;color:var(--faint)">Swipe, or use ‹ ›, to walk the days.</p>';
+    return html;
+  }
+  function dpRender(key,keepScroll){
+    var ov=$('dpOverlay');
+    var st=keepScroll?ov.scrollTop:0;
+    var ks=dpKeys(), i=ks.indexOf(key);
+    var d=dateOf(key);
+    $('dpTitle').textContent=WEEKDAYS[d.getDay()].slice(0,3)+' · '+fmtShort(d);
+    $('dpPos').textContent=(i+1)+' / '+ks.length;
+    $('dpPrev').disabled=i<=0;
+    $('dpNext').disabled=i>=ks.length-1;
+    $('dpBody').innerHTML=dpPageHTML(key);
+    ov.scrollTop=st;
+    safe(feelLive);
+  }
+  function openDayPage(key,dir){
+    if(dpKeys().indexOf(key)<0)return;
+    var ov=$('dpOverlay');
+    var wasOpen=!ov.hidden;
+    if(dpKey!==key){dpEditOpen=false;fixMsg='';}
+    dpKey=key;
+    dpRender(key,false);
+    if(dir){
+      var body=$('dpBody');
+      body.style.animation='none';void body.offsetWidth;
+      body.style.animation='czslide-'+dir+' .4s var(--spring)';
+      ov.scrollTop=0;
+    }
+    if(wasOpen)return;
+    ov.hidden=false;ov.scrollTop=0;
+    dpReturnFocus=document.activeElement;
+    if(navigator.vibrate)navigator.vibrate(5);
+    requestAnimationFrame(function(){ov.classList.add('show');});
+    setTimeout(function(){
+      ov.classList.add('show');
+      try{$('dpBack').focus({preventScroll:true});}catch(e){}
+    },80);
+  }
+  function closeDayPage(){
+    var ov=$('dpOverlay');
+    if(ov.hidden)return;
+    ov.classList.remove('show');
+    setTimeout(function(){ov.hidden=true;},280);
+    if(dpReturnFocus&&dpReturnFocus.focus){
+      try{dpReturnFocus.focus({preventScroll:true});}catch(e){}
+    }
+    dpReturnFocus=null;dpKey=null;
+  }
+  /* dir 'left' = the next (newer) day, 'right' = the previous — matches the swipe */
+  function dpPage(dir){
+    var ks=dpKeys(), i=ks.indexOf(dpKey), ni=dir==='left'?i+1:i-1;
+    if(i<0||ni<0||ni>=ks.length)return;
+    if(navigator.vibrate)navigator.vibrate(4);
+    openDayPage(ks[ni],dir);
+  }
+  /* the editor's actions — same data-act contract, same save path as ever */
+  function dayEditAction(ev){
+    var btn=ev.target.closest('button[data-act]');
+    if(!btn||!dpKey)return;
+    var act=btn.dataset.act, key=dpKey;
+    if(act==='edit'){dpEditOpen=!dpEditOpen;fixMsg='';dpRender(key,true);return;}
+    if(act==='done'){dpEditOpen=false;fixMsg='';dpRender(key,true);return;}
+    if(act==='addat'){
+      var inp=$('dpBody').querySelector('input[type=time]');
+      var v=inp?inp.value:'';
+      if(!v){fixMsg='Pick a time first.';dpRender(key,true);return;}
+      var hm=v.split(':');
+      var bd=dateOf(key);
+      var shift=(+hm[0]<DAY_CUTOFF_H)?1:0;
+      var ts=new Date(bd.getFullYear(),bd.getMonth(),bd.getDate()+shift,+hm[0],+hm[1]);
+      if(ts>new Date()){fixMsg='That time hasn’t happened yet.';dpRender(key,true);return;}
+      entryFor(key,true).hits.push(ts.toISOString());
+      lastFixTime=v;fixMsg='';
+      save();renderAll();
+      return;
+    }
+    if(act==='gdec'){
+      var e=data.days[key], gm=btn.dataset.hm;
+      if(e&&e.hits){
+        for(var i=0;i<e.hits.length;i++){
+          var hd=new Date(e.hits[i]);
+          if(pad(hd.getHours())+':'+pad(hd.getMinutes())===gm){e.hits.splice(i,1);save();break;}
+        }
+      }
+      renderAll();
+      return;
+    }
+    if(act==='adjdec'){
+      var e2=data.days[key];
+      if(e2&&(e2.adj||0)>0){e2.adj--;save();}
+      renderAll();
+    }
+  }
+
+  /* ================= the engine =================
+     One place, one truth. Every day-level number any surface shows comes
+     from dayMetrics(key); every whole-taper number from taperProgress().
+     Both rc()-cached, so they clear on every save and every render pass. */
+  function dayMetrics(key){return rc('dm:'+key,function(){
+    var d=dateOf(key), di=phaseIndexFor(d);
+    var isZ=di===BASE_PHASES.length-1;
+    var m={
+      key:key, date:d, di:di, isZ:isZ,
+      isToday:key===todayKey, future:d>today,
+      cap:di>=0?BASE_PHASES[di].cap:BASE_PHASES[0].cap,
+      capText:di>=0?BASE_PHASES[di].capText:BASE_PHASES[0].capText,
+      single:!!(di>=0&&BASE_PHASES[di].single),
+      reqGapH:0, count:countOf(key), adj:0, eff:null,
+      sessions:sessionsFor(key), sessN:0, first:null, last:null, spanMs:null,
+      firstMin:null, lastMin:null,
+      gaps:[], gapAvgMs:null, gapMinMs:null, gapsMet:null, heldRule:null,
+      capPct:null, baseCutPct:null, cls:'nolog', stat:'no log', partial:false, vs:null
+    };
+    var e=data.days[key]; m.adj=e?(e.adj||0):0;
+    if(di>=0&&!isZ&&!m.single)m.reqGapH=spacingHOn(d,di);
+    // eff: null-vs-0 is load-bearing — but a past zero-era day with no entry
+    // IS a known clean 0. Future days stay null.
+    m.eff=m.count!==null?m.count:(isZ&&d<=today?0:null);
+    if(isZ){ if(m.count>0){m.cls='slip';m.stat='slip';} else {m.cls='clean';m.stat='clean';} }
+    else if(m.count===null&&!m.isToday){ /* stays nolog */ }
+    else { var n=m.count||0;
+      m.cls=n>m.cap?'over':n===m.cap?'at':'under';
+      m.stat=n>m.cap?'over':n===m.cap?'at cap':'under'; }
+    m.partial=m.isToday&&!isZ;
+    var s=m.sessions; m.sessN=s.length;
+    if(s.length){
+      m.first=s[0][0]; var ls=s[s.length-1]; m.last=ls[ls.length-1];
+      m.spanMs=m.last-m.first;
+      // logical (4am-anchored) minutes — a 1am first hit is LATE, not early
+      var lmin=function(t){return ((t.getHours()-DAY_CUTOFF_H+24)%24)*60+t.getMinutes();};
+      m.firstMin=lmin(m.first); m.lastMin=lmin(m.last);
+      for(var i=1;i<s.length;i++)m.gaps.push(s[i][0]-s[i-1][s[i-1].length-1]);
+      if(m.gaps.length){
+        var gs=0,gm=Infinity; m.gaps.forEach(function(g){gs+=g;if(g<gm)gm=g;});
+        m.gapAvgMs=gs/m.gaps.length; m.gapMinMs=gm;
+        if(m.reqGapH>0){
+          var req=m.reqGapH*3600000, met=0;
+          m.gaps.forEach(function(g){if(g>=req)met++;});
+          m.gapsMet=met; m.heldRule=gm>=req;
+        }
+      }
+    }
+    if(m.eff!==null&&m.cap>0)m.capPct=Math.round(m.eff/m.cap*100);
+    if(m.eff!==null)m.baseCutPct=Math.round((1-m.eff/BASELINE)*100);
+    // vs: the previous LOGGED day, skipping no-log days
+    var start=schedule()[0].start, p=addDays(d,-1), pm=null;
+    while(p>=start){ var cand=dayMetrics(dkeyOf(p));
+      if(cand.eff!==null){pm=cand;break;} p=addDays(p,-1); }
+    if(pm&&m.eff!==null){
+      var dc=m.eff-pm.eff;
+      m.vs={key:pm.key, prevEff:pm.eff, count:dc,
+        countPct:pm.eff>0?Math.round(dc/pm.eff*100):null,
+        firstMin:(m.firstMin!==null&&pm.firstMin!==null)?m.firstMin-pm.firstMin:null,
+        gapAvgMs:(m.gapAvgMs!==null&&pm.gapAvgMs!==null)?m.gapAvgMs-pm.gapAvgMs:null,
+        gapAvgPct:(m.gapAvgMs!==null&&pm.gapAvgMs)?Math.round((m.gapAvgMs-pm.gapAvgMs)/pm.gapAvgMs*100):null,
+        sessN:(m.sessN&&pm.sessN)?m.sessN-pm.sessN:null,
+        spanMs:(m.spanMs!==null&&pm.spanMs!==null)?m.spanMs-pm.spanMs:null,
+        capStep:m.cap-pm.cap, gapStep:m.reqGapH-pm.reqGapH};
+    }
+    return m;
+  });}
+  function taperProgress(){return rc('tp',function(){
+    var sch=schedule(), start=sch[0].start, z=zeroDate();
+    var days=[], d=new Date(start);
+    while(d<=today){days.push(dayMetrics(dkeyOf(d)));d=addDays(d,1);}
+    var t={days:days, tot:0, logged:0, under:0};
+    days.forEach(function(m){ if(m.count!==null){t.logged++;t.tot+=m.count;if(m.count<=m.cap)t.under++;} });
+    t.avgPerDay=t.logged?Math.round(t.tot/t.logged*10)/10:0;
+    t.avoided=Math.max(0,t.logged*BASELINE-t.tot);
+    t.cutPct=t.logged?Math.max(0,Math.round((1-(t.tot/t.logged)/BASELINE)*100)):0;
+    t.money=(data.costPerHit&&t.avoided>0)?Math.round(t.avoided*data.costPerHit):null;
+    t.streak=0;
+    for(var i=days.length-1;i>=0;i--){ var m=days[i];
+      var ok=m.isZ?(m.eff===0):(m.isToday?(m.count||0)<=m.cap:(m.count!==null&&m.count<=m.cap));
+      if(!ok)break; t.streak++; }
+    t.totalD=Math.max(1,Math.round((z-start)/MS_DAY));
+    t.dayN=today>=start?Math.min(t.totalD,Math.round((today-start)/MS_DAY)+1):0;
+    t.pctToZero=Math.round(t.dayN/t.totalD*100);
+    t.daysToZero=Math.max(0,Math.round((z-today)/MS_DAY));
+    t.dropBase=Math.round((1-cap/BASELINE)*100);
+    t.dropStart=Math.round((1-cap/BASE_PHASES[0].cap)*100);
+    // insight raws: completed, non-zero, logged days only — today would flatter them
+    var done=days.filter(function(m){return m.count!==null&&!m.isZ&&!m.isToday;});
+    t.doneN=done.length;
+    t.bestDay=null; t.biggestCut=null; t.first3=null; t.last3=null;
+    done.forEach(function(m){ var mg=m.cap-m.count;
+      if(m.count<=m.cap&&(!t.bestDay||mg>t.bestDay.margin))t.bestDay={m:m,margin:mg}; });
+    for(var j=1;j<done.length;j++){ var dvv=done[j-1].count-done[j].count;
+      if(!t.biggestCut||dvv>t.biggestCut.v)t.biggestCut={v:dvv,m:done[j]}; }
+    if(done.length>=4){ var k3=Math.min(3,Math.floor(done.length/2));
+      var avg=function(a){var s=0;a.forEach(function(x){s+=x.count;});return Math.round(s/a.length*10)/10;};
+      t.first3={n:k3,avg:avg(done.slice(0,k3))}; t.last3={n:k3,avg:avg(done.slice(-k3))}; }
+    var zd=days.filter(function(m){return m.isZ;});
+    t.zeroDays=zd.length; t.zeroClean=zd.filter(function(m){return m.eff===0;}).length;
+    return t;
+  });}
+  /* verdict-colored delta span. good=true → sage, false → clay, null → muted "flat". */
+  function dv(txt,good){return '<span class="dv '+(good===null?'flat':good?'good':'bad')+'">'+txt+'</span>';}
+  /* the hits pill for a closed day row: % when the base is big enough to
+     mean something, absolute when it isn't, a status word when there's
+     nothing to compare against. */
+  function hitsPill(m){
+    if(!m.vs)return '<span class="hstat '+m.cls+'">'+m.stat+'</span>';
+    var v=m.vs;
+    if(v.count===0)return dv('even',null);
+    var good=v.count<0, arrow=good?'▾':'▴';
+    var txt=(v.prevEff>=5&&v.countPct!==null)?arrow+Math.abs(v.countPct)+'%':arrow+Math.abs(v.count);
+    return dv(txt,good);
+  }
+  /* status for a calendar day — a thin view over the engine */
+  function dayStatus(d){var m=dayMetrics(dkeyOf(d));return {cls:m.cls,stat:m.stat,c:m.eff,cap:m.isZ?0:m.cap};}
   function chipCalHTML(){
     var start=schedule()[0].start,chips='';
     var d=new Date(start);
     while(d<=today){
-      var s=dayStatus(d);
-      chips+='<span class="chip chip-'+s.cls+(dkeyOf(d)===todayKey?' chip-today':'')+'" title="'+fmtShort(d)+' · '+s.stat+'">'+d.getDate()+'</span>';
+      var k=dkeyOf(d),s=dayStatus(d);
+      chips+='<span class="chip chip-'+s.cls+(k===todayKey?' chip-today':'')+'" data-key="'+k+'" role="button" tabindex="0" title="'+fmtShort(d)+' · '+s.stat+'" aria-label="'+fmtShort(d)+' · '+s.stat+' — open this day">'+d.getDate()+'</span>';
       d=addDays(d,1);
     }
     return '<div class="chipcal">'+chips+'</div>';
   }
+  /* what stands out — a thin formatter over the engine's insight raws */
   function recordInsights(){
-    var sch=schedule(),days=[],lines=[];
-    var d=new Date(sch[0].start);
-    while(d<=today){
-      var k=dkeyOf(d),di=phaseIndexFor(d);
-      days.push({d:new Date(d),k:k,c:countOf(k),cap:di>=0?BASE_PHASES[di].cap:BASE_PHASES[0].cap,z:di===BASE_PHASES.length-1});
-      d=addDays(d,1);
+    var t=taperProgress(),lines=[];
+    if(t.doneN>=2){
+      if(t.bestDay&&t.bestDay.margin>0)lines.push('Best day so far: <strong>'+fmtShort(t.bestDay.m.date)+'</strong> — '+t.bestDay.m.count+' of '+t.bestDay.m.cap+', <strong>'+t.bestDay.margin+' under cap</strong>.');
+      if(t.biggestCut&&t.biggestCut.v>0)lines.push('Biggest single-day cut: <strong>−'+t.biggestCut.v+'</strong> into '+fmtShort(t.biggestCut.m.date)+'.');
+      if(t.first3)lines.push('First '+t.first3.n+' days averaged <strong>'+t.first3.avg+'</strong> · last '+t.last3.n+' average <strong>'+t.last3.avg+'</strong>'+
+        (t.last3.avg<t.first3.avg?' — <strong>the line is bending down.</strong>':'.'));
     }
-    // completed days only — today is still in progress and would flatter the stats
-    var logged=days.filter(function(x){return x.c!==null&&!x.z&&x.k!==todayKey;});
-    if(logged.length>=2){
-      var best=null;
-      logged.forEach(function(x){
-        var m=x.cap-x.c;
-        if(x.c<=x.cap&&(best===null||m>best.m))best={x:x,m:m};
-      });
-      if(best&&best.m>0)lines.push('Best day so far: <strong>'+fmtShort(best.x.d)+'</strong> — '+best.x.c+' of '+best.x.cap+', <strong>'+best.m+' under cap</strong>.');
-      var drop=null;
-      for(var i=1;i<logged.length;i++){
-        var dv=logged[i-1].c-logged[i].c;
-        if(drop===null||dv>drop.v)drop={v:dv,d:logged[i].d};
-      }
-      if(drop&&drop.v>0)lines.push('Biggest single-day cut: <strong>−'+drop.v+'</strong> into '+fmtShort(drop.d)+'.');
-      if(logged.length>=4){
-        var k3=Math.min(3,Math.floor(logged.length/2));
-        function avgOf(arr){var s=0;arr.forEach(function(x){s+=x.c;});return Math.round(s/arr.length*10)/10;}
-        var fa=avgOf(logged.slice(0,k3)),la=avgOf(logged.slice(-k3));
-        lines.push('First '+k3+' days averaged <strong>'+fa+'</strong> · last '+k3+' average <strong>'+la+'</strong>'+
-          (la<fa?' — <strong>the line is bending down.</strong>':'.'));
-      }
-    }
-    var zdays=days.filter(function(x){return x.z;});
-    if(zdays.length){
-      var clean=zdays.filter(function(x){return !x.c;}).length;
-      lines.push('<strong>'+clean+'</strong> of '+zdays.length+' zero-era day'+(zdays.length>1?'s':'')+' clean.');
-    }
+    if(t.zeroDays)lines.push('<strong>'+t.zeroClean+'</strong> of '+t.zeroDays+' zero-era day'+(t.zeroDays>1?'s':'')+' clean.');
     return lines;
   }
   /* the running schedule: remaining taper steps + the research's
@@ -3839,7 +4016,7 @@ try{
     tick();
     dashTick=setInterval(tick,1000);
     $('dhTrend').innerHTML=dashTrendSVG();
-    var ps=progressStats();
+    var ps=taperProgress();
     $('dhTrendSub').textContent=ps.avoided+' not smoked · '+ps.cutPct+'% below baseline'+(ps.streak>1?' · '+ps.streak+'-day streak':'');
     if(isZeroEra){
       var zs=zeroStats();
@@ -3958,20 +4135,17 @@ try{
         if(ckActive())html+=checkinBlockHTML();
         html+='<h3 class="xtra-h" style="margin-top:16px">Today’s sessions</h3>'+daySummaryHTML(todayKey);
       }
-      html+=prevDaysHTML();
       tx.innerHTML=html;
     }
     var gx=$('trendXtra');
     if(gx){
-      var t=dayTotals();
-      var ps=progressStats();
-      var avg=t.logged?Math.round(t.tot/t.logged*10)/10:0;
+      var tp=taperProgress();
       var html2='<h3 class="xtra-h">The progress</h3><div class="stat-row" style="animation:none">'+
-        '<div class="stat" style="animation:none"><span class="sv" style="color:var(--sage)">'+ps.cutPct+'%</span><span class="sl">below baseline</span></div>'+
-        '<div class="stat" style="animation:none"><span class="sv" style="color:var(--sage)">'+ps.avoided+'</span><span class="sl">hits not smoked</span></div>'+
-        '<div class="stat" style="animation:none"><span class="sv">'+ps.streak+'</span><span class="sl">day streak held</span></div></div>';
-      html2+=(data.costPerHit&&ps.avoided>0)
-        ?'<p class="chart-note">≈ <strong style="color:var(--sage)">$'+Math.round(ps.avoided*data.costPerHit).toLocaleString()+'</strong> not spent vs the ~'+BASELINE+'/day baseline · <button class="linklike" id="costSet">edit cost</button></p>'
+        '<div class="stat" style="animation:none"><span class="sv" style="color:var(--sage)">'+tp.cutPct+'%</span><span class="sl">below baseline</span></div>'+
+        '<div class="stat" style="animation:none"><span class="sv" style="color:var(--sage)">'+tp.avoided+'</span><span class="sl">hits not smoked</span></div>'+
+        '<div class="stat" style="animation:none"><span class="sv">'+tp.streak+'</span><span class="sl">day streak held</span></div></div>';
+      html2+=(tp.money!==null)
+        ?'<p class="chart-note">≈ <strong style="color:var(--sage)">$'+tp.money.toLocaleString()+'</strong> not spent vs the ~'+BASELINE+'/day baseline · <button class="linklike" id="costSet">edit cost</button></p>'
         :'<p class="chart-note"><button class="linklike" id="costSet">Track money saved →</button></p>';
       var av=avoidedChartSVG();
       if(av){
@@ -3979,9 +4153,9 @@ try{
           '<p class="chart-note">vs the ~'+BASELINE+'/day baseline — and it only rises.</p>';
       }
       html2+='<h3 class="xtra-h" style="margin-top:16px">The numbers so far</h3><div class="stat-row" style="animation:none">'+
-        '<div class="stat" style="animation:none"><span class="sv">'+t.tot+'</span><span class="sl">total logged</span></div>'+
-        '<div class="stat" style="animation:none"><span class="sv">'+avg+'</span><span class="sl">avg / day</span></div>'+
-        '<div class="stat" style="animation:none"><span class="sv">'+t.under+'/'+t.logged+'</span><span class="sl">days under cap</span></div></div>'+
+        '<div class="stat" style="animation:none"><span class="sv">'+tp.tot+'</span><span class="sl">total logged</span></div>'+
+        '<div class="stat" style="animation:none"><span class="sv">'+tp.avgPerDay+'</span><span class="sl">avg / day</span></div>'+
+        '<div class="stat" style="animation:none"><span class="sv">'+tp.under+'/'+tp.logged+'</span><span class="sl">days under cap</span></div></div>'+
         '<p class="chart-note"><button class="linklike" data-big="trend">Open every day vs its cap, charted →</button></p>';
       var hits=timedHits();
       if(hits.length>=4){
@@ -4001,13 +4175,10 @@ try{
     }
     var rx=$('recordXtra');
     if(rx){
-      var ps2=progressStats();
       var ins=recordInsights();
       var pc=punchcardSVG();
-      rx.innerHTML='<h3 class="xtra-h">At a glance</h3>'+chipCalHTML()+
-        '<p class="chart-note">'+ps2.under+' of '+ps2.logged+' logged days under cap'+
-        (ps2.streak>1?' · <strong style="color:var(--sage)">'+ps2.streak+' days held in a row</strong>':'')+
-        ' · '+ps2.avoided+' hits not smoked vs baseline.</p>'+
+      rx.innerHTML='<h3 class="xtra-h" style="margin-top:16px">At a glance</h3>'+chipCalHTML()+
+        '<p class="chart-note">Tap any chip to open that day.</p>'+
         (pc?'<h3 class="xtra-h" style="margin-top:16px">Every day, side by side</h3>'+zoomable('punch',pc)+
             '<p class="chart-note">Columns are days, top to bottom is 4am → 4am. Fewer dots, drifting later — that’s the shift.</p>':'')+
         sessionRhythmHTML()+
@@ -4015,24 +4186,17 @@ try{
     }
     var sx=$('stepXtra');
     if(sx){
-      var start=schedule()[0].start,z=zeroDate();
-      var totalD=Math.max(1,Math.round((z-start)/MS_DAY));
-      var ga=gapAnalytics();
-      var spacingBlock=ga?'<h3 class="xtra-h" style="margin-top:16px">Holding the spacing</h3>'+
-        '<p class="chart-note"><strong style="color:'+(ga.adherence>=70?'var(--sage)':ga.adherence>=50?'var(--amber)':'var(--clay)')+'">'+ga.adherence+'%</strong> of your '+ga.count+' session gaps have met that day’s rule · averaging '+fmtDur(ga.avg*3600000)+' apart'+(ga.widening?' · <strong>widening as designed</strong>':'')+'. The rule steps up daily — that’s the ratchet.</p>':'';
-      var roadBlock=spacingBlock+'<h3 class="xtra-h" style="margin-top:16px">The running schedule</h3>'+roadAheadHTML()+
+      var tpr=taperProgress();
+      var roadBlock='<p class="chart-note" style="margin-top:14px">Spacing lives with the record now — every gap, judged against its day’s rule, is in <strong>Day by day ⤢</strong>.</p>'+
+        '<h3 class="xtra-h" style="margin-top:16px">The running schedule</h3>'+roadAheadHTML()+
         '<p class="chart-note">Dates ride on your actual progress — hold a step and everything below, zero day included, shifts with it. The milestones past zero are the research’s map, <a class="dlink" href="guide.html#withdrawal">cited here →</a></p>';
       if(isZeroEra){
         var nz=Math.max(0,daysFree());
         sx.innerHTML='<h3 class="xtra-h">The road</h3><div class="taper-track"><div style="width:100%"></div></div>'+
-          '<p class="chart-note">Taper complete — the cap walked '+BASE_PHASES[0].cap+' → 0 in '+totalD+' days. Day '+nz+' at zero, and the counter only climbs.</p>'+roadBlock;
-      }else if(today>=start){
-        var dayN=Math.min(totalD,Math.round((today-start)/MS_DAY)+1);
-        var pct=Math.round(dayN/totalD*100);
-        var dropStart=Math.round((1-cap/BASE_PHASES[0].cap)*100);
-        var dropBase=Math.round((1-cap/BASELINE)*100);
-        sx.innerHTML='<h3 class="xtra-h">The road</h3><div class="taper-track"><div style="width:'+pct+'%"></div></div>'+
-          '<p class="chart-note">Day <strong>'+dayN+' of '+totalD+'</strong> · '+pct+'% of the way to zero. Today’s cap of '+cap+' is <strong>'+dropBase+'% below baseline</strong>'+(dropStart>0?' and '+dropStart+'% below where the taper started':'')+'.</p>'+roadBlock;
+          '<p class="chart-note">Taper complete — the cap walked '+BASE_PHASES[0].cap+' → 0 in '+tpr.totalD+' days. Day '+nz+' at zero, and the counter only climbs.</p>'+roadBlock;
+      }else if(today>=schedule()[0].start){
+        sx.innerHTML='<h3 class="xtra-h">The road</h3><div class="taper-track"><div style="width:'+tpr.pctToZero+'%"></div></div>'+
+          '<p class="chart-note">Day <strong>'+tpr.dayN+' of '+tpr.totalD+'</strong> · '+tpr.pctToZero+'% of the way to zero. Today’s cap of '+cap+' is <strong>'+tpr.dropBase+'% below baseline</strong>'+(tpr.dropStart>0?' and '+tpr.dropStart+'% below where the taper started':'')+'.</p>'+roadBlock;
       }else{
         sx.innerHTML=roadBlock;
       }
@@ -4127,12 +4291,12 @@ try{
   /* ---- the story: zero-era capstone, built from the whole record ---- */
   function storyStats(){
     var sch=schedule(),start=sch[0].start,z=zeroDate();
-    var t=dayTotals(),ps=progressStats(),us=urgeStats(),ga=gapAnalytics(),zs=zeroStats();
+    var t=taperProgress(),us=urgeStats(),ga=gapAnalytics(),zs=zeroStats();
     var held=0,early=0;
     for(var i in data.holds){var h=data.holds[i]||0;if(h>0)held+=h;else early-=h;}
-    return {start:start,z:z,totalD:Math.max(1,Math.round((z-start)/MS_DAY)),
-      t:t,ps:ps,us:us,ga:ga,zs:zs,held:held,early:early,
-      money:(data.costPerHit&&ps.avoided>0)?Math.round(ps.avoided*data.costPerHit):null};
+    return {start:start,z:z,totalD:t.totalD,
+      t:t,ps:t,us:us,ga:ga,zs:zs,held:held,early:early,
+      money:t.money};
   }
   function renderStory(){
     var card=$('storyCard');if(!card)return;
@@ -4140,7 +4304,6 @@ try{
     card.hidden=false;
     var s=storyStats();
     function stat(v,l,c){return '<div class="stat" style="animation:none"><span class="sv"'+(c?' style="color:'+c+'"':'')+'>'+v+'</span><span class="sl">'+l+'</span></div>';}
-    var pc=punchcardSVG();
     $('storyBody').innerHTML=
       '<p class="chart-note" style="margin-top:0">Started <strong>'+fmtShort(s.start)+'</strong> from a ~'+BASELINE+'-a-day baseline · reached zero <strong>'+fmtShort(s.z)+'</strong> — '+s.totalD+' days of stepping down'+
       (s.held?', '+s.held+' held day'+(s.held>1?'s':'')+' along the way':'')+
@@ -4155,8 +4318,7 @@ try{
       stat(s.t.under+'/'+s.t.logged,'days under cap')+
       '</div>'+
       (s.ga?'<p class="chart-note">'+s.ga.adherence+'% of session gaps met the day’s rule, averaging '+fmtDur(s.ga.avg*3600000)+' apart'+(s.ga.widening?' — widening the whole way, exactly as designed':'')+'.</p>':'')+
-      (s.money!==null?'<p class="chart-note">≈ <strong style="color:var(--sage)">$'+s.money.toLocaleString()+'</strong> not spent.</p>':'')+
-      (pc?zoomable('punch',pc)+'<p class="chart-note">Every day of the taper, side by side — fewer dots, drifting later, then none.</p>':'');
+      (s.money!==null?'<p class="chart-note">≈ <strong style="color:var(--sage)">$'+s.money.toLocaleString()+'</strong> not spent.</p>':'');
   }
   function storyText(){
     var s=storyStats(),L=[];
@@ -4168,14 +4330,26 @@ try{
     return L.join('\n');
   }
 
+  /* live one-line summary on the step-down fold header */
+  function renderFoldSums(){
+    var el=$('stepFoldLive');if(!el)return;
+    var t=taperProgress(), start=schedule()[0].start;
+    if(today<start)el.textContent='Starts '+fmtShort(start)+' · zero '+fmtShort(zeroDate());
+    else if(isZeroEra)el.textContent='Day '+Math.max(1,daysFree())+' at zero · the descent, kept';
+    else el.textContent='Day '+t.dayN+' of '+t.totalD+' · cap '+phase.capText+
+      (phase.single?' · evening only':spacingHNow()>0?' · '+fmtGapH(spacingHNow())+' gaps':'')+
+      ' · zero '+fmtShort(zeroDate());
+  }
+
   function safe(fn){try{fn();}catch(e){try{console.error(e);}catch(e2){}}}
   function renderAll(){
     computeToday();
     rcClear();
     [renderCountdown,renderStairs,renderPhases,renderTodayPlan,renderSchedStrip,
-     renderToday,renderTrend,renderHistory,renderHoldBanner,renderDayHeld,
-     renderRitual,renderCheckin,renderStory,renderUrge,renderGap,renderGlass,renderDash].forEach(safe);
+     renderToday,renderTrend,renderDayHead,renderHistory,renderHoldBanner,renderDayHeld,
+     renderRitual,renderCheckin,renderStory,renderUrge,renderGap,renderGlass,renderDash,renderFoldSums].forEach(safe);
     if(!$('detailOverlay').hidden)safe(renderXtras);
+    if(!$('dpOverlay').hidden&&dpKey)safe(function(){dpRender(dpKey,true);});
     safe(feelLive);
   }
 
@@ -4398,72 +4572,19 @@ try{
     }).catch(function(){});
   });
 
-  /* history log + editing */
+  /* history rows: every day tap opens that day's page; the editor lives there now */
   $('historyRows').addEventListener('click',function(ev){
-    var holder=ev.target.closest('[data-key]');
+    if(ev.target.closest('.hall')){openDetail($('dayCard'),'Day by day');return;}
+    var holder=ev.target.closest('.hrow');
     if(!holder)return;
-    var btn=ev.target.closest('button');
-    var key=holder.dataset.key;
-    if(!btn&&!holder.classList.contains('hrow'))return;
-    if(btn){
-      var act=btn.dataset.act;
-      if(act==='addat'){
-        var inp=holder.querySelector('input[type=time]');
-        var v=inp?inp.value:'';
-        if(!v){fixMsg='Pick a time first.';renderHistory();return;}
-        var hm=v.split(':');
-        var bd=dateOf(key);
-        var shift=(+hm[0]<DAY_CUTOFF_H)?1:0;
-        var ts=new Date(bd.getFullYear(),bd.getMonth(),bd.getDate()+shift,+hm[0],+hm[1]);
-        if(ts>new Date()){fixMsg='That time hasn’t happened yet.';renderHistory();return;}
-        entryFor(key,true).hits.push(ts.toISOString());
-        lastFixTime=v;fixMsg='';
-        save();renderAll();
-        return;
-      }
-      if(act==='gdec'||act==='ginc'){
-        var e=data.days[key], gm=btn.dataset.hm;
-        if(act==='gdec'&&e&&e.hits){
-          for(var i=0;i<e.hits.length;i++){
-            var hd=new Date(e.hits[i]);
-            if(pad(hd.getHours())+':'+pad(hd.getMinutes())===gm){e.hits.splice(i,1);save();break;}
-          }
-        }else if(act==='ginc'){
-          var gp=gm.split(':');
-          var gbd=dateOf(key);
-          var gshift=(+gp[0]<DAY_CUTOFF_H)?1:0;
-          var gts=new Date(gbd.getFullYear(),gbd.getMonth(),gbd.getDate()+gshift,+gp[0],+gp[1]);
-          if(gts>new Date()){fixMsg='That time hasn’t happened yet.';renderHistory();return;}
-          entryFor(key,true).hits.push(gts.toISOString());
-          save();
-        }
-        renderAll();
-        return;
-      }
-      if(act==='adjdec'){
-        var e2=data.days[key];
-        if(e2&&(e2.adj||0)>0){e2.adj--;save();}
-        renderAll();
-        return;
-      }
-      // Done — fold the day's log shut, then re-render
-      collapseEl(btn.closest('.hdetail'),function(){
-        editingKey=null;fixMsg='';
-        renderAll();
-      });
-      return;
-    }
-    fixMsg='';
-    if(editingKey===key){
-      collapseEl(holder.parentNode.querySelector('.hdetail[data-key="'+key+'"]'),function(){
-        editingKey=null;
-        renderHistory();
-      });
-    }else{
-      editingKey=key;
-      histAnimKey=key;
-      renderHistory();
-    }
+    openDayPage(holder.dataset.key);
+  });
+  $('historyRows').addEventListener('keydown',function(ev){
+    if(ev.key!=='Enter'&&ev.key!==' ')return;
+    var holder=ev.target.closest('.hrow');
+    if(!holder)return;
+    ev.preventDefault();
+    openDayPage(holder.dataset.key);
   });
 
   /* backup */
@@ -4504,7 +4625,7 @@ try{
       d.holds=d.holds||{};d.holdPrompts=d.holdPrompts||{};
       d.urges=d.urges||[];d.dayCheers=d.dayCheers||{};d.ritual=d.ritual||{};
       d.checkins=d.checkins||{};
-      data=d;save();editingKey=null;renderAll();
+      data=d;save();dpEditOpen=false;renderAll();
       $('dataMsg').textContent='Backup restored. (The data it replaced was stashed, just in case.)';
     }catch(e){$('dataMsg').textContent='That doesn’t look like a valid backup.';}
   });
@@ -4520,7 +4641,7 @@ try{
     sd.holds=sd.holds||{};sd.holdPrompts=sd.holdPrompts||{};
     sd.urges=sd.urges||[];sd.dayCheers=sd.dayCheers||{};sd.ritual=sd.ritual||{};
     sd.checkins=sd.checkins||{};
-    data=sd;save();editingKey=null;renderAll();
+    data=sd;save();dpEditOpen=false;renderAll();
     $('dataMsg').textContent='Snapshot from '+snap.t+' restored. (The data it replaced was stashed.)';
   });
 
@@ -4606,10 +4727,10 @@ try{
     ov.addEventListener('touchcancel',end);
   })();
 
-  /* ---- chart-zoom gestures: pull down to dismiss, swipe sideways to
-     turn to the next chart. Touches inside a .cz-scroll pan the chart. ---- */
-  (function(){
-    var ov=$('czOverlay');
+  /* ---- overlay gestures, shared: pull down to dismiss, swipe sideways
+     to page. Touches inside a .cz-scroll pan the content instead. Used
+     by the chart zoom (pages charts) and the day pager (pages days). ---- */
+  function attachOverlayGestures(ov,body,onPage,onDismiss){
     var sx=0,sy=0,dx=0,dy=0,mode=null,armed=false,noswipe=false;
     ov.addEventListener('touchstart',function(e){
       armed=true;mode=null;dx=dy=0;
@@ -4635,10 +4756,9 @@ try{
         ov.style.transition='none';
         ov.style.transform='translateY('+t+'px)';
       }else{
-        var b=$('czBody');
-        b.style.transition='none';
-        b.style.transform='translateX('+(dx*0.4).toFixed(1)+'px)';
-        b.style.opacity=String(Math.max(.35,1-Math.abs(dx)/480));
+        body.style.transition='none';
+        body.style.transform='translateX('+(dx*0.4).toFixed(1)+'px)';
+        body.style.opacity=String(Math.max(.35,1-Math.abs(dx)/480));
       }
     },{passive:false});
     function end(){
@@ -4650,7 +4770,7 @@ try{
           ov.style.transition='transform .3s ease,opacity .25s ease';
           ov.style.transform='translateY(105%)';ov.style.opacity='0';
           setTimeout(function(){
-            closeChartZoom();
+            onDismiss();
             ov.style.transition='';ov.style.transform='';ov.style.opacity='';
           },240);
         }else{
@@ -4659,29 +4779,49 @@ try{
           setTimeout(function(){ov.style.transition='';ov.style.transform='';},360);
         }
       }else if(mode==='swipe'){
-        var b=$('czBody');
-        b.style.transition='';b.style.transform='';b.style.opacity='';b.style.animation='';
-        if(Math.abs(dx)>70){
-          var i=CZ_ORDER.indexOf(czKey),ni=dx<0?i+1:i-1;
-          if(ni>=0&&ni<CZ_ORDER.length){
-            if(navigator.vibrate)navigator.vibrate(4);
-            openChartZoom(CZ_ORDER[ni],dx<0?'left':'right');
-          }
-        }
+        body.style.transition='';body.style.transform='';body.style.opacity='';body.style.animation='';
+        if(Math.abs(dx)>70)onPage(dx<0?'left':'right');
       }
       mode=null;
     }
     ov.addEventListener('touchend',end);
     ov.addEventListener('touchcancel',end);
-  })();
+  }
+  attachOverlayGestures($('czOverlay'),$('czBody'),function(dir){
+    var i=CZ_ORDER.indexOf(czKey),ni=dir==='left'?i+1:i-1;
+    if(ni>=0&&ni<CZ_ORDER.length){
+      if(navigator.vibrate)navigator.vibrate(4);
+      openChartZoom(CZ_ORDER[ni],dir);
+    }
+  },closeChartZoom);
+  attachOverlayGestures($('dpOverlay'),$('dpBody'),dpPage,closeDayPage);
+
+  /* ---- day pager wiring ---- */
+  $('dpBack').addEventListener('click',closeDayPage);
+  $('dpPrev').addEventListener('click',function(){dpPage('right');});
+  $('dpNext').addEventListener('click',function(){dpPage('left');});
+  $('dpBody').addEventListener('click',dayEditAction);
 
   /* ---- section pages ---- */
   $('detailBack').addEventListener('click',closeDetail);
   $('czBack').addEventListener('click',closeChartZoom);
   document.addEventListener('keydown',function(e){
     if(e.key==='Escape'){
-      if(!$('czOverlay').hidden)closeChartZoom();
+      if(!$('dpOverlay').hidden)closeDayPage();
+      else if(!$('czOverlay').hidden)closeChartZoom();
       else if(!$('detailOverlay').hidden)closeDetail();
+      return;
+    }
+    if((e.key==='ArrowLeft'||e.key==='ArrowRight')&&!$('dpOverlay').hidden){
+      // don't hijack the arrows while typing in the editor's time input
+      if(e.target&&(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'))return;
+      e.preventDefault();
+      dpPage(e.key==='ArrowLeft'?'right':'left');
+      return;
+    }
+    if((e.key==='Enter'||e.key===' ')&&e.target.getAttribute&&e.target.getAttribute('data-key')&&e.target.classList.contains('chip')){
+      e.preventDefault();
+      openDayPage(e.target.getAttribute('data-key'));
       return;
     }
     if((e.key==='Enter'||e.key===' ')&&e.target.getAttribute&&e.target.getAttribute('data-big')){
@@ -4696,6 +4836,8 @@ try{
       openChartZoom(dz.dataset.czgo,ni===ci?null:(ni>ci?'left':'right'));
       return;
     }
+    var ch=ev.target.closest('.chip[data-key]');
+    if(ch){openDayPage(ch.dataset.key);return;}
     var zb=ev.target.closest('[data-big]');
     if(zb){
       // Safari doesn't focus tabindex elements on tap — do it ourselves so
@@ -4724,6 +4866,20 @@ try{
   });
   if(dashMQ.addEventListener)dashMQ.addEventListener('change',function(){renderAll();});
 
+  /* ---- fold state: remembered per fold, deliberately outside the ttz2 shape ---- */
+  (function(){
+    var FOLD_KEY='ttz-folds';
+    function foldPrefs(){try{return JSON.parse(localStorage.getItem(FOLD_KEY)||'{}');}catch(e){return {};}}
+    document.querySelectorAll('details.fold').forEach(function(d){
+      var s=foldPrefs();
+      if(s.hasOwnProperty(d.id))d.open=!!s[d.id];
+      d.addEventListener('toggle',function(){
+        var p=foldPrefs();p[d.id]=d.open?1:0;
+        try{localStorage.setItem(FOLD_KEY,JSON.stringify(p));}catch(e){}
+      });
+    });
+  })();
+
   /* ---- smooth <details> accordions ---- */
   document.querySelectorAll('details').forEach(function(d){
     var sum=d.querySelector('summary');
@@ -4744,7 +4900,8 @@ try{
         d.style.height=endH+'px';
         setTimeout(function(){d.style.height='';d.style.transition='';anim=false;},390);
       }else{
-        var closedH=sum.offsetHeight+2; // + top/bottom border
+        var cs=getComputedStyle(d);
+        var closedH=sum.offsetHeight+(parseFloat(cs.borderTopWidth)||0)+(parseFloat(cs.borderBottomWidth)||0);
         d.style.height=startH+'px';
         void d.offsetHeight;
         d.style.transition='height .3s var(--spring)';
@@ -4764,7 +4921,7 @@ try{
         if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}
       });
     },{rootMargin:'0px 0px -8% 0px'});
-    document.querySelectorAll('.history,.guide-link,details,.footer').forEach(function(el,i){
+    document.querySelectorAll('.history,.guide-link,details:not(.fold),.footer').forEach(function(el,i){
       el.classList.add('reveal');
       el.style.transitionDelay=((i%3)*0.06)+'s';
       io.observe(el);
@@ -4813,6 +4970,8 @@ try{
     computeToday();
     if(todayKey!==tickKey){tickKey=todayKey;renderAll();return;}
     safe(renderToday);
+    safe(renderDayHead);
+    if(!$('dpOverlay').hidden&&dpKey===todayKey)safe(function(){dpRender(dpKey,true);});
     safe(feelLive);
   },30000);
 
