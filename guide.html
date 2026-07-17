@@ -35,6 +35,15 @@
     padding:calc(20px + env(safe-area-inset-top)) 20px calc(70px + env(safe-area-inset-bottom));
   }
   .back{display:inline-block;color:var(--accent);font-weight:700;font-size:14px;text-decoration:none;margin-bottom:16px}
+  /* status-bar shield: nothing reads through the Dynamic Island while scrolling */
+  #safeTop{
+    position:fixed;top:0;left:0;right:0;z-index:200;pointer-events:none;
+    height:env(safe-area-inset-top,0px);
+    background:rgba(250,246,238,.72);
+    -webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);
+    -webkit-mask-image:linear-gradient(black 62%,transparent);mask-image:linear-gradient(black 62%,transparent);
+  }
+  html.dark #safeTop{background:rgba(29,26,20,.72)}
   .eyebrow{font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:700}
   h1{font-family:'Fraunces',serif;font-weight:300;font-size:34px;line-height:1.08;color:var(--sand);margin:6px 0 6px;letter-spacing:-.01em}
   h1 em{font-style:italic;color:var(--accent)}
@@ -111,6 +120,7 @@ try{var __t=localStorage.getItem('ttz-theme');if(__t==='dark'||(__t!=='light'&&m
 </script>
 </head>
 <body>
+<div id="safeTop" aria-hidden="true"></div>
 
 <a class="back" href="index.html">← Back to the taper</a>
 <p class="eyebrow">Evidence-based · THC / cannabis only</p>

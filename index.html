@@ -109,6 +109,17 @@
   .glassbar .gbzero{color:var(--accent)}
   .glassbar .gbwin{font-size:12px;color:var(--sage);font-variant-numeric:tabular-nums;white-space:nowrap}
 
+  /* ---- status-bar shield: nothing reads through the Dynamic Island ----
+     Sits above every scrolling surface (page and overlays alike); its height
+     is exactly the top safe area, so it vanishes on notchless screens. */
+  #safeTop{
+    position:fixed;top:0;left:0;right:0;z-index:200;pointer-events:none;
+    height:env(safe-area-inset-top,0px);
+    background:rgba(250,246,238,.72);
+    -webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);
+    -webkit-mask-image:linear-gradient(black 62%,transparent);mask-image:linear-gradient(black 62%,transparent);
+  }
+
   /* ---- scroll reveal ---- */
   .reveal{opacity:0;transform:translateY(16px);transition:opacity .65s var(--spring),transform .65s var(--spring)}
   .reveal.in{opacity:1;transform:none}
@@ -697,7 +708,7 @@
   }
   .xtra{display:none}
   .expanded .xtra{display:block;margin-top:16px}
-  .expanded>h2{display:none}
+  .expanded>h2,.expanded>h3{display:none}
   .expanded .xopen{display:none}
   .xtra-h{
     font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
@@ -886,7 +897,7 @@
   .detail-overlay{
     position:fixed;inset:0;z-index:80;background:var(--bg);overflow-y:auto;
     -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;
-    padding:calc(14px + env(safe-area-inset-top)) 20px calc(60px + env(safe-area-inset-bottom));
+    padding:calc(64px + env(safe-area-inset-top)) 20px calc(60px + env(safe-area-inset-bottom));
   }
   .detail-grab{width:42px;height:5px;border-radius:99px;background:var(--line);margin:-4px auto 8px}
   .detail-overlay[hidden]{display:none}
@@ -901,16 +912,17 @@
   ::view-transition-old(card),::view-transition-new(card){animation-duration:.3s}
   ::view-transition-old(root),::view-transition-new(root){animation-duration:.32s}
   .detail-bar{
-    position:sticky;top:env(safe-area-inset-top,0px);z-index:3;
-    display:flex;align-items:center;gap:12px;max-width:480px;margin:0 auto 16px;
-    padding:8px 0;
+    position:fixed;top:0;left:0;right:0;z-index:10;
+    display:flex;align-items:center;gap:12px;
+    max-width:520px;margin:0 auto;
+    padding:calc(8px + env(safe-area-inset-top,0px)) 20px 8px;
   }
   .detail-bar::before{
     content:"";position:absolute;pointer-events:none;
-    inset:calc(-14px - env(safe-area-inset-top,0px)) -20px -4px;
+    top:0;bottom:-8px;left:50%;width:100vw;transform:translateX(-50%);
     background:rgba(250,246,238,.8);
     -webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);
-    -webkit-mask-image:linear-gradient(black 72%,transparent);mask-image:linear-gradient(black 72%,transparent);
+    -webkit-mask-image:linear-gradient(black calc(100% - 22px),transparent);mask-image:linear-gradient(black calc(100% - 22px),transparent);
   }
   .detail-bar>*{position:relative}
   #detailBack{
@@ -938,7 +950,8 @@
       gap:11px;
     }
     .detail-body,.cz-body{max-width:680px}
-    .detail-bar,.cz-bar{max-width:680px}
+    .cz-bar{max-width:680px}
+    .detail-bar{max-width:720px}
   }
   .dtile{
     position:relative;overflow:hidden;border-radius:18px;
@@ -1057,6 +1070,7 @@
   html.dark .timefix input,html.dark .earlier-row input{background:#2e2920}
   html.dark .tally-btns .hold-log{background:var(--accent-deep);color:#f8ecd8}
   html.dark .detail-bar::before{background:rgba(29,26,20,.8)}
+  html.dark #safeTop{background:rgba(29,26,20,.72)}
   @media (hover:hover){
     html.dark .hrow:hover{background:rgba(255,244,222,.05)}
   }
@@ -1081,6 +1095,7 @@ try{
 </script>
 </head>
 <body>
+<div id="safeTop" aria-hidden="true"></div>
 
 <div class="glassbar" id="glassBar" role="button" tabindex="0" aria-label="Back to top">
   <span id="gbToday"></span><span class="gbwin" id="gbWin"></span><span class="gbzero" id="gbZero"></span>
