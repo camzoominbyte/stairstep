@@ -91,6 +91,12 @@
   h1 em{font-style:italic;color:var(--accent)}
   .countdown{color:var(--muted);font-size:15px;margin-bottom:26px}
   .countdown strong{color:var(--sand)}
+  /* ---- the big picture: the encouraging numbers at display scale ---- */
+  .bigfigs{display:grid;grid-template-columns:1fr 1fr;gap:18px 14px;margin:-8px 0 30px}
+  .bigfigs .bf{min-width:0}
+  .bigfigs .bf-v{display:block;font-family:'Fraunces',serif;font-weight:600;font-size:37px;line-height:1.05;color:var(--sand);letter-spacing:-.01em;white-space:nowrap}
+  .bigfigs .bf-v small{font-family:'Fraunces',serif;font-size:19px;font-weight:500;color:var(--muted)}
+  .bigfigs .bf-l{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:4px;line-height:1.45}
 
   /* ---- glass bar (appears on scroll) ---- */
   .glassbar{
@@ -416,7 +422,7 @@
   .hrow-main .dv{flex:0 0 54px;text-align:right}
   .hcount .hcap{color:var(--muted);font-size:12px;font-weight:400;font-family:'Karla',sans-serif}
   /* the day-by-day card: line 2 always visible, main page capped at 3 rows */
-  #dayCard .hrow2{display:block}
+  /* main-page rows stay one clean line — the detail lives on each day's page */
   #dayCard:not(.expanded) .hrow.hpast{display:none}
   #dayCard.expanded .hall{display:none}
   .hall{margin-top:10px}
@@ -1185,6 +1191,7 @@ try{
   <p class="eyebrow">Ten days · fewer hits · wider gaps</p>
   <h1>Taper to <em>zero</em></h1>
   <p class="countdown" id="countdown"></p>
+  <div class="bigfigs" id="bigPicture" hidden></div>
 </header>
 
 <div class="hold-banner" id="holdBanner">
@@ -1225,6 +1232,7 @@ try{
   <div class="bar"><div id="barFill"></div></div>
   <div class="stat-row" id="statRow">
     <div class="stat"><span class="sv" id="stLeft">–</span><span class="sl">left today</span></div>
+    <div class="stat"><span class="sv" id="stVs">–</span><span class="sl">vs yesterday now</span></div>
     <div class="stat"><span class="sv" id="stSession">–</span><span class="sl" id="stSessionLbl">this session</span></div>
     <div class="stat"><span class="sv time" id="stLast">–</span><span class="sl">last hit</span></div>
   </div>
@@ -1282,7 +1290,7 @@ try{
     <div class="jdeck" id="jdeck" role="group" aria-label="The journey, day by day — swipe through the cards, tap one for the full day"></div>
     <p class="history-hint">Each card reads a day against the one before it — swipe or use ‹ › to walk the run, tap a card for the full story.</p>
   </div>
-  <p class="history-hint">Ghost = cap · solid = logged · tap any day to open it.</p>
+  <p class="history-hint">The line up top is the old ~30 a day · tap any day to open it.</p>
   <div id="trendChart"></div>
   <div id="historyRows"><p class="hempty">Your days will stack up here as you go.</p></div>
   <div class="xtra" id="trendXtra"></div>
@@ -2383,6 +2391,13 @@ try{
       else if(count===cap){$('barNote').textContent='At the cap. That’s the ceiling — you’re done for today.';}
       else{$('barNote').textContent='Under is always fine — the space between sessions does the real work.';}
       setNum('stLeft',Math.max(0,cap-count),!booted);
+      var pvT=paceVsYesterday();
+      if(!pvT){setTxt('stVs','–');$('stVs').style.color='';}
+      else{
+        var dY=pvT.y-pvT.t;
+        setTxt('stVs',dY>0?'▾'+dY:dY<0?'▴'+(-dY):'even');
+        $('stVs').style.color=dY>0?'var(--sage)':dY<0?'var(--clay)':'var(--muted)';
+      }
       var si=sessionInfo();
       if(!si){
         $('stSession').className='sv';
@@ -2412,13 +2427,15 @@ try{
     }
   }
 
+  /* the descent, big picture: every day drawn against the old ~30/day line,
+     so the whole story reads in one glance — tall bars then, slivers now */
   function renderTrend(){
     var el=$('trendChart');
     var sch=schedule(), z=zeroDate(), start=sch[0].start;
     if(today<start){el.innerHTML='<p class="hempty">The chart starts with day one.</p>';return;}
     var endD=today>z?today:z;
     var n=Math.round((endD-start)/MS_DAY)+1;
-    var vals=[], maxV=BASE_PHASES[0].cap;
+    var vals=[], maxV=BASELINE;
     var d=new Date(start);
     while(d<=endD){
       var m=dayMetrics(dkeyOf(d));
@@ -2426,30 +2443,40 @@ try{
       if(m.eff!==null&&m.eff>maxV)maxV=m.eff;
       d=addDays(d,1);
     }
-    var W=340,H=120,padT=6,padB=16,scaleH=H-padT-padB;
-    var slotW=W/n, barW=Math.min(22,slotW*0.62);
+    var W=340,H=205,padT=26,padB=18,scaleH=H-padT-padB;
+    var slotW=W/n, barW=Math.min(26,slotW*0.66);
     function yv(v){return padT+scaleH*(1-v/maxV);}
     function hv(v){return scaleH*(v/maxV);}
-    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Daily hits against each day’s cap — tap a day to open it">';
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="The descent — every day against the old '+BASELINE+'-a-day baseline; tap a day to open it">';
+    // where you started: the line the whole descent hangs from
+    svg+='<line x1="0" y1="'+yv(BASELINE).toFixed(1)+'" x2="'+W+'" y2="'+yv(BASELINE).toFixed(1)+'" stroke="var(--faint)" stroke-width="1.5" stroke-dasharray="6 5"/>'+
+      txt(2,yv(BASELINE)-8,10,'var(--muted)',null,'where you started · ~'+BASELINE+' a day',true);
     var labelEvery=n>16?3:2;
+    var firstLogged=-1;
+    vals.forEach(function(m,i){if(firstLogged<0&&m.eff!==null&&m.eff>0)firstLogged=i;});
     vals.forEach(function(m,i){
       var cx=slotW*i+slotW/2, x=cx-barW/2;
-      // full-height invisible hit zone makes every day easy to tap
-      svg+='<rect x="'+(slotW*i).toFixed(1)+'" y="0" width="'+slotW.toFixed(1)+'" height="'+H+'" fill="transparent" data-k="'+m.key+'" style="cursor:pointer"/>';
       if(m.cap>0){
-        svg+='<rect x="'+x.toFixed(1)+'" y="'+yv(m.cap).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+hv(m.cap).toFixed(1)+'" rx="3" fill="var(--surface2)" pointer-events="none"'+(m.isToday?' stroke="var(--accent)" stroke-opacity=".6"':'')+'/>';
+        svg+='<rect x="'+x.toFixed(1)+'" y="'+yv(m.cap).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+hv(m.cap).toFixed(1)+'" rx="4" fill="var(--surface2)" pointer-events="none"'+(m.isToday?' stroke="var(--accent)" stroke-opacity=".6"':'')+'/>';
       }else{
         svg+='<rect x="'+x.toFixed(1)+'" y="'+(padT+scaleH-2)+'" width="'+barW.toFixed(1)+'" height="2" rx="1" fill="var(--surface2)" pointer-events="none"/>';
       }
       if(m.eff!==null&&m.eff>0){
         var col=(m.isZ||m.eff>m.cap)?'var(--clay)':m.eff===m.cap?'var(--amber)':'var(--sage)';
-        svg+='<rect x="'+x.toFixed(1)+'" y="'+yv(m.eff).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+Math.max(2,hv(m.eff)).toFixed(1)+'" rx="3" fill="'+col+'" fill-opacity=".9" pointer-events="none"/>';
+        svg+='<rect x="'+x.toFixed(1)+'" y="'+yv(m.eff).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+Math.max(2.5,hv(m.eff)).toFixed(1)+'" rx="4" fill="'+col+'" fill-opacity=".9" pointer-events="none"/>';
+        // the endpoints wear their numbers — the story in two figures
+        if(i===firstLogged||m.isToday)svg+=txt(cx,yv(m.eff)-5,11,col,'middle',m.eff,true);
       }else if(m.isZ&&!m.future){
-        svg+='<circle cx="'+cx.toFixed(1)+'" cy="'+(padT+scaleH-4)+'" r="3" fill="var(--sage)" pointer-events="none"/>';
+        svg+='<circle cx="'+cx.toFixed(1)+'" cy="'+(padT+scaleH-4)+'" r="3.5" fill="var(--sage)" pointer-events="none"/>';
       }
-      if(i%labelEvery===0){
-        svg+='<text x="'+cx.toFixed(1)+'" y="'+(H-3)+'" font-size="8.5" fill="var(--muted)" text-anchor="middle" font-family="Karla,sans-serif" pointer-events="none">'+(m.date.getMonth()+1)+'/'+m.date.getDate()+'</text>';
-      }
+      if(m.isZ&&dkeyOf(m.date)===dkeyOf(z))
+        svg+=txt(cx,padT+scaleH-10,11,'var(--sage)','middle','0',true);
+      if(i%labelEvery===0)
+        svg+=txt(cx,H-3,9.5,m.isToday?'var(--accent)':'var(--muted)','middle',(m.date.getMonth()+1)+'/'+m.date.getDate());
+    });
+    // full-height invisible hit zones on top make every day easy to tap
+    vals.forEach(function(m,i){
+      svg+='<rect x="'+(slotW*i).toFixed(1)+'" y="0" width="'+slotW.toFixed(1)+'" height="'+H+'" fill="transparent" data-k="'+m.key+'" style="cursor:pointer"/>';
     });
     svg+='</svg>';
     el.innerHTML=svg;
@@ -2460,25 +2487,67 @@ try{
     openDayPage(r.dataset.k);
   });
 
+  /* ---- the big picture: the most encouraging numbers, top of the page ---- */
+  function renderBigPicture(){
+    var el=$('bigPicture');if(!el)return;
+    var start=schedule()[0].start;
+    if(today<start){el.hidden=true;return;}
+    function bf(v,l,c){return '<div class="bf"><span class="bf-v"'+(c?' style="color:'+c+'"':'')+'>'+v+'</span><span class="bf-l">'+l+'</span></div>';}
+    var t=taperProgress(), figs=[];
+    if(isZeroEra){
+      var zs=zeroStats(), n=Math.max(0,daysFree());
+      figs.push(bf(n,'day'+(n===1?'':'s')+' at zero','var(--sage)'));
+      figs.push(bf('100<small>%</small>','below the old '+BASELINE+'/day','var(--sage)'));
+      if(zs){
+        figs.push(bf(zs.clean,'clean days banked'));
+        figs.push(bf(zs.best,'best run'));
+      }
+    }else{
+      var pv=paceVsYesterday();
+      if(pv){
+        var dY=pv.y-pv.t;
+        figs.push(dY>0?bf('▾'+dY,'fewer than yesterday by now · '+pv.t+' vs '+pv.y,'var(--sage)')
+          :dY<0?bf('▴'+(-dY),'more than yesterday by now · '+pv.t+' vs '+pv.y,'var(--clay)')
+          :bf('even','with yesterday by now · '+pv.t+' vs '+pv.y));
+      }
+      // the space being pushed: today's average gap against yesterday's
+      var tm=dayMetrics(todayKey);
+      if(tm.gapAvgMs!==null&&tm.vs&&tm.vs.gapAvgPct!==null&&tm.vs.gapAvgPct!==0){
+        var gp=tm.vs.gapAvgPct;
+        figs.push(bf((gp>0?'+':'−')+Math.abs(gp)+'<small>%</small>',
+          (gp>0?'wider':'tighter')+' gaps than yesterday · avg '+fmtDur(tm.gapAvgMs),
+          gp>0?'var(--sage)':'var(--clay)'));
+      }else{
+        var g=gapAnalytics();
+        if(g&&g.early!==null&&g.widening)
+          figs.push(bf('+'+Math.round((g.recent/g.early-1)*100)+'<small>%</small>','wider gaps than the first days','var(--sage)'));
+        else if(g)figs.push(bf(fmtDur(g.avg*3600000),'avg time between sessions'));
+      }
+      figs.push(bf(t.cutPct+'<small>%</small>','below the old '+BASELINE+'/day','var(--sage)'));
+      var toZ=Math.max(0,Math.round((zeroDate()-today)/MS_DAY));
+      figs.push(bf(toZ,'day'+(toZ===1?'':'s')+' to zero','var(--accent)'));
+    }
+    el.innerHTML=figs.slice(0,4).join('');
+    el.hidden=!figs.length;
+  }
+
   /* the live comparison header at the top of Day by day — a sentence, not tiles */
   function renderDayHead(){
     var el=$('ddSum');if(!el)return;
     var t=taperProgress(), start=schedule()[0].start;
-    var now='',sub='',base='';
+    var now='',sub='';
     if(today<start){
       now='Day one lands '+fmtShort(start)+'.';
-      base='The road: '+t.totalD+' days, '+BASE_PHASES[0].capText+' → 0.';
+      sub='The road: '+t.totalD+' days, '+BASE_PHASES[0].capText+' → 0.';
     }else if(isZeroEra){
       var zs=zeroStats(), c0=countOf(todayKey)||0;
       if(c0>0){
         now='<span class="dv pill bad">slip today</span>';
-        sub=(zs?zs.clean:0)+' clean days banked — a slip dents the record, it doesn’t delete it.';
+        sub='A slip dents the record — it doesn’t delete it.';
       }else{
         now='<span class="dv pill good">Day '+Math.max(1,zs?zs.run:1)+' clean</span>';
-        sub=zs&&zs.slips?'best run '+zs.best+' · '+zs.slips+' slip'+(zs.slips>1?'s':'')+', banked and past.'
-           :(zs&&zs.best>1?'best run '+zs.best+' — and climbing.':'');
+        sub=zs&&zs.slips?zs.slips+' slip'+(zs.slips>1?'s':'')+', banked and past.':'';
       }
-      base=t.cutPct+'% was the taper — <b>100%</b> is now.';
     }else{
       var pv=paceVsYesterday();
       if(!pv){
@@ -2493,14 +2562,11 @@ try{
           pill='<span class="dv pill '+(good?'good':'bad')+'">'+arrow+pct+'</span>';
         }
         now=pill+' vs yesterday by this hour';
-        sub=(countOf(todayKey)||0)+' so far · yesterday had '+pv.y+' by now'+(yM.eff!==null?', and closed at '+yM.eff:'')+'.'+
-          (pv.t>pv.y?' The 20-minute timer is right there.':'');
+        sub=(countOf(todayKey)||0)+' so far · yesterday had '+pv.y+' by now'+(yM.eff!==null?', and closed at '+yM.eff:'')+'.';
       }
-      base='Whole taper: <b>'+t.cutPct+'%</b> below the '+BASELINE+'-a-day start'+(t.streak>1?' · '+t.streak+' days under cap in a row':'')+'.';
     }
     el.innerHTML='<div class="dd-now">'+now+'</div>'+
-      (sub?'<div class="dd-sub">'+sub+'</div>':'')+
-      (base?'<div class="dd-base">'+base+'</div>':'');
+      (sub?'<div class="dd-sub">'+sub+'</div>':'');
   }
 
   function daylineSVG(key){
@@ -3152,7 +3218,7 @@ try{
       if(diff>0){
         wrap.classList.remove('open');
         $('ghFill').style.width=Math.min(100,since/reqMs*100)+'%';
-        var h=Math.floor(diff/3600000),m=Math.ceil(diff%3600000/60000);
+        var tmTot=Math.ceil(diff/60000),h=Math.floor(tmTot/60),m=tmTot%60;
         var cd='Next session ~<strong>'+fmtTime(new Date(openTs))+'</strong> · '+(h?h+'h ':'')+m+'m to go';
         $('ghNote').innerHTML=sittingRoom
           ?cd+' — counting from your last hit. Still <strong>'+(phase.sessionMax-si.inSession)+' of '+phase.sessionMax+'</strong> in this sitting if you’re not done.'
@@ -4423,7 +4489,7 @@ try{
       if(si&&si.nextOpen){
         var diff=si.nextOpen-Date.now();
         if(diff>0){
-          var h=Math.floor(diff/3600000),m=Math.ceil(diff%3600000/60000);
+          var tmTot=Math.ceil(diff/60000),h=Math.floor(tmTot/60),m=tmTot%60;
           $('dhWinLbl').textContent='Next window';
           $('dhWin').textContent=(h?h+'h ':'')+m+'m';
           $('dhWinSub').textContent='opens ~'+fmtTime(si.nextOpen)+' · gap '+fmtGapH(spacingHNow());
@@ -4798,7 +4864,7 @@ try{
   function renderAll(){
     computeToday();
     rcClear();
-    [renderCountdown,renderStairs,renderPhases,renderTodayPlan,renderSchedStrip,
+    [renderCountdown,renderBigPicture,renderStairs,renderPhases,renderTodayPlan,renderSchedStrip,
      renderToday,renderTrend,renderDayHead,renderJourney,renderHistory,renderHoldBanner,renderDayHeld,
      renderRitual,renderCheckin,renderStory,renderUrge,renderGap,renderGlass,renderDash,renderFoldSums].forEach(safe);
     if(!$('detailOverlay').hidden)safe(renderXtras);
