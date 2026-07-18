@@ -61,7 +61,7 @@
     line-height:1.55;
     max-width:480px;
     margin:0 auto;
-    padding:calc(28px + env(safe-area-inset-top)) 20px calc(80px + env(safe-area-inset-bottom));
+    padding:calc(24px + env(safe-area-inset-top)) 20px calc(130px + env(safe-area-inset-bottom));
     -webkit-user-select:none;user-select:none;
   }
   /* paper atmosphere: light pooling on the page, not a flat tint */
@@ -85,11 +85,11 @@
     color:var(--muted);font-weight:700;
   }
   h1{
-    font-family:'Fraunces',serif;font-weight:300;font-size:40px;
-    line-height:1.05;margin:6px 0 4px;letter-spacing:-.01em;color:var(--sand);
+    font-family:'Fraunces',serif;font-weight:400;font-size:27px;
+    line-height:1.1;margin:0 0 2px;letter-spacing:-.01em;color:var(--sand);
   }
   h1 em{font-style:italic;color:var(--accent)}
-  .countdown{color:var(--muted);font-size:15px;margin-bottom:26px}
+  .countdown{color:var(--muted);font-size:13.5px;margin-bottom:20px}
   .countdown strong{color:var(--sand)}
   /* ---- the big picture: the encouraging numbers at display scale ---- */
   .bigfigs{display:grid;grid-template-columns:1fr 1fr;gap:18px 14px;margin:-8px 0 30px}
@@ -1060,6 +1060,31 @@
 
   .section{margin-bottom:36px}
   .footer{text-align:center;color:var(--muted);margin-top:44px;font-family:'Fraunces',serif;font-style:italic;font-size:15px}
+  /* ---- bottom tabs: one focused view at a time ---- */
+  .view{display:none}
+  body:not([data-view]) #vToday{display:block}
+  body[data-view="today"] #vToday,body[data-view="journey"] #vJourney,
+  body[data-view="plan"] #vPlan,body[data-view="more"] #vMore{display:block;animation:cardin .35s var(--spring) both}
+  .tabbar{
+    position:fixed;left:0;right:0;bottom:0;z-index:70;
+    max-width:480px;margin:0 auto;display:flex;gap:2px;
+    padding:7px 12px calc(9px + env(safe-area-inset-bottom));
+    background:rgba(250,246,238,.85);
+    -webkit-backdrop-filter:blur(18px) saturate(1.4);backdrop-filter:blur(18px) saturate(1.4);
+    border-top:1px solid rgba(59,43,20,.08);
+  }
+  html.dark .tabbar{background:rgba(29,26,20,.85);border-top-color:rgba(255,255,255,.07)}
+  .tab{
+    flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+    padding:5px 0 3px;background:none;border:none;cursor:pointer;
+    color:var(--muted);font-family:'Karla',sans-serif;font-size:9.5px;
+    font-weight:800;letter-spacing:.07em;text-transform:uppercase;
+    transition:transform .2s var(--spring),color .2s;
+  }
+  .tab svg{width:23px;height:23px}
+  .tab.on{color:var(--accent)}
+  .tab:active{transform:scale(.92)}
+  .bar-note:empty{display:none}
 
   /* ---- dark mode (system-following via .dark class, plus in-app toggle) ---- */
   html.dark{
@@ -1188,11 +1213,12 @@ try{
 
 <header id="hero">
   <button class="theme-btn" id="themeBtn" aria-label="Theme: auto — tap to change">◐</button>
-  <p class="eyebrow">Ten days · fewer hits · wider gaps</p>
   <h1>Taper to <em>zero</em></h1>
   <p class="countdown" id="countdown"></p>
-  <div class="bigfigs" id="bigPicture" hidden></div>
 </header>
+
+<main class="view" id="vToday">
+<div class="bigfigs" id="bigPicture" hidden></div>
 
 <div class="hold-banner" id="holdBanner">
   <p id="holdText"></p>
@@ -1209,10 +1235,6 @@ try{
     <button id="heldDrop" hidden>Step down a day early</button>
     <button id="heldOk">Onward ↓</button>
   </div>
-</div>
-
-<div id="stairsWrap">
-  <div class="stairs" id="stairs" aria-label="Step-down schedule — daily hit cap, tap a step for details"></div>
 </div>
 
 <div class="ritual" id="ritualCard" hidden>
@@ -1276,7 +1298,9 @@ try{
   <div id="ckRows"></div>
   <p class="ck-note" id="ckNote"></p>
 </div>
+</main>
 
+<main class="view" id="vJourney">
 <div class="history openable" id="dayCard" data-title="Day by day">
   <button class="xopen" data-target="dayCard" data-title="Day by day" aria-label="Open day by day in detail">⤢</button>
   <h3>Day by day</h3>
@@ -1288,9 +1312,8 @@ try{
       <button class="jd-btn" id="jdNext" aria-label="Later day">›</button>
     </div>
     <div class="jdeck" id="jdeck" role="group" aria-label="The journey, day by day — swipe through the cards, tap one for the full day"></div>
-    <p class="history-hint">Each card reads a day against the one before it — swipe or use ‹ › to walk the run, tap a card for the full story.</p>
   </div>
-  <p class="history-hint">The line up top is the old ~30 a day · tap any day to open it.</p>
+  <p class="history-hint">Tap any day to open it · the dashed line is the old ~30 a day.</p>
   <div id="trendChart"></div>
   <div id="historyRows"><p class="hempty">Your days will stack up here as you go.</p></div>
   <div class="xtra" id="trendXtra"></div>
@@ -1305,6 +1328,12 @@ try{
     <button id="btnShareStory">Share the story</button>
   </div>
   <p class="gap-note" id="storyMsg"></p>
+</div>
+</main>
+
+<main class="view" id="vPlan">
+<div id="stairsWrap">
+  <div class="stairs" id="stairs" aria-label="Step-down schedule — daily hit cap, tap a step for details"></div>
 </div>
 
 <details class="fold" id="stepFold">
@@ -1322,7 +1351,9 @@ try{
 </div>
   </div>
 </details>
+</main>
 
+<main class="view" id="vMore">
 <details class="fold" id="sysFold">
   <summary><span class="fold-t">The system</span><span class="fold-live">Rules · guide · backup</span></summary>
   <div class="fold-body">
@@ -1399,8 +1430,28 @@ try{
 </div>
   </div>
 </details>
+</main>
 
 <p class="footer">The cap only goes down. The gaps only widen.</p>
+
+<nav class="tabbar" id="tabbar" aria-label="App sections">
+  <button class="tab on" data-view="today" aria-label="Today">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg>
+    <span>Today</span>
+  </button>
+  <button class="tab" data-view="journey" aria-label="Journey — progress and history">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 19V6M10 19v-8M16 19v-4M22 19h-20" stroke-linejoin="round"/></svg>
+    <span>Journey</span>
+  </button>
+  <button class="tab" data-view="plan" aria-label="Plan — the step-down">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18h5v-4h5v-4h5V6h3"/></svg>
+    <span>Plan</span>
+  </button>
+  <button class="tab" data-view="more" aria-label="More — rules, guide and backup">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+    <span>More</span>
+  </button>
+</nav>
 
 <div class="cz-overlay" id="czOverlay" role="dialog" aria-modal="true" aria-labelledby="czTitle" hidden>
   <div class="detail-grab" aria-hidden="true"></div>
@@ -2387,9 +2438,11 @@ try{
       $('barFill').style.background=statusCol;
       // the hero number stays confident-neutral while under, warms as you climb
       $('tallyCount').style.color=count>cap?'var(--clay)':count>=cap*0.8?'var(--amber)':'var(--sand)';
+      // advice only when it's needed — a calm day earns a quiet card
       if(count>cap){$('barNote').textContent='Over the cap — tomorrow, hold this phase one extra day, then keep stepping down.';}
       else if(count===cap){$('barNote').textContent='At the cap. That’s the ceiling — you’re done for today.';}
-      else{$('barNote').textContent='Under is always fine — the space between sessions does the real work.';}
+      else if(cap>0&&count>=cap*0.8){$('barNote').textContent='Close to the ceiling — make the rest of the day about space.';}
+      else{$('barNote').textContent='';}
       setNum('stLeft',Math.max(0,cap-count),!booted);
       var pvT=paceVsYesterday();
       if(!pvT){setTxt('stVs','–');$('stVs').style.color='';}
@@ -5197,6 +5250,32 @@ try{
   $('glassBar').addEventListener('click',function(){
     window.scrollTo({top:0,behavior:'smooth'});
   });
+
+  /* ---- bottom tabs: one focused view at a time ---- */
+  (function(){
+    var VIEW_KEY='ttz-view';
+    function setView(v,first){
+      document.body.dataset.view=v;
+      document.querySelectorAll('.tab').forEach(function(t){
+        t.classList.toggle('on',t.dataset.view===v);
+        t.setAttribute('aria-current',t.dataset.view===v?'page':'false');
+      });
+      try{localStorage.setItem(VIEW_KEY,v);}catch(e){}
+      // a tab tap is intent to look — unfold the section it leads to
+      if(v==='plan'&&$('stepFold'))$('stepFold').open=true;
+      if(v==='more'&&$('sysFold'))$('sysFold').open=true;
+      if(!first){
+        window.scrollTo({top:0,behavior:'instant'});
+        if(navigator.vibrate)navigator.vibrate(4);
+      }
+    }
+    document.querySelectorAll('.tab').forEach(function(t){
+      t.addEventListener('click',function(){setView(t.dataset.view);});
+    });
+    var saved=null;
+    try{saved=localStorage.getItem(VIEW_KEY);}catch(e){}
+    setView(/^(today|journey|plan|more)$/.test(saved||'')?saved:'today',true);
+  })();
 
   /* ---- pull down to dismiss the detail page ---- */
   (function(){
