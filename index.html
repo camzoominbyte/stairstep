@@ -422,7 +422,9 @@
   .hrow-main .dv{flex:0 0 54px;text-align:right}
   .hcount .hcap{color:var(--muted);font-size:12px;font-weight:400;font-family:'Karla',sans-serif}
   /* the day-by-day card: line 2 always visible, main page capped at 3 rows */
-  /* main-page rows stay one clean line — the detail lives on each day's page */
+  /* the tiles carry the day-by-day on the main view; the row list lives in
+     the expanded page (with its second detail line) and in day pages */
+  #dayCard:not(.expanded) #historyRows .hrow{display:none}
   #dayCard:not(.expanded) .hrow.hpast{display:none}
   #dayCard.expanded .hall{display:none}
   .hall{margin-top:10px}
@@ -434,52 +436,31 @@
   .dd-base{font-size:12.5px;color:var(--muted);margin-top:6px}
   .dd-base b{color:var(--sage);font-family:'Fraunces',serif;font-size:14px}
   /* ---- the journey deck: one card per day, each read against the day before ---- */
-  .jd-nav{display:flex;align-items:center;gap:10px;margin:14px 0 0}
-  .jd-btn{
-    flex:0 0 34px;height:34px;border-radius:50%;border:1px solid var(--line);
-    background:var(--surface);color:var(--sand);font-size:17px;line-height:1;
-    cursor:pointer;box-shadow:var(--shadow-sm);
-  }
-  .jd-btn:disabled{opacity:.35;cursor:default}
-  .jd-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .jd-pos{
-    flex:1;text-align:center;font-size:11px;color:var(--muted);font-weight:800;
-    letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;
-    overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;
-  }
+  /* day tiles: a flickable strip, one glance per day */
   .jdeck{
-    position:relative;
-    display:flex;gap:10px;overflow-x:auto;padding:10px 2px 14px;margin:0 -2px;
-    scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+    display:flex;gap:8px;overflow-x:auto;padding:10px 2px 12px;margin:0 -2px;
+    scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none;
   }
   .jdeck::-webkit-scrollbar{display:none}
   .jday{
-    flex:0 0 238px;scroll-snap-align:center;box-sizing:border-box;
-    border:1px solid var(--line);border-radius:16px;background:var(--surface);
-    box-shadow:var(--shadow-sm);padding:12px 14px 11px;cursor:pointer;
-    display:flex;flex-direction:column;gap:8px;
+    flex:0 0 88px;scroll-snap-align:end;box-sizing:border-box;
+    border:1px solid var(--line);border-radius:14px;background:var(--surface);
+    box-shadow:var(--shadow-sm);padding:10px 8px 9px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;
     transition:border-color .25s,transform .25s var(--spring);
   }
+  .jday:active{transform:scale(.94)}
   .jday:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .jday.today{border-color:var(--accent)}
   .jday.future{border-style:dashed;background:none;box-shadow:none}
-  .jd-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-  .jd-dow{font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);font-weight:800;white-space:nowrap}
-  .jday.today .jd-dow{color:var(--accent)}
-  .jd-n{font-size:9.5px;color:var(--faint);font-weight:700;white-space:nowrap}
-  .jd-big{
-    font-family:'Fraunces',serif;font-weight:600;font-size:27px;line-height:1;
-    color:var(--sand);display:flex;align-items:baseline;gap:7px;
-  }
-  .jd-big small{font-family:'Karla',sans-serif;font-size:12px;color:var(--muted);font-weight:400}
-  .jd-big .hstat{margin-left:auto}
-  .jd-vs{border-top:1px dashed var(--hair);padding-top:7px;display:flex;flex-direction:column;gap:3px}
-  .jd-vs-hd{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:800}
-  .jd-row{display:flex;align-items:baseline;gap:8px;font-size:11.5px;color:var(--muted)}
-  .jd-row .jd-v{color:var(--ink);font-variant-numeric:tabular-nums;margin-left:auto}
-  .jd-row .dv{flex:0 0 auto;min-width:52px;text-align:right}
-  .jd-line{margin-top:auto}
-  .jd-note{font-size:11.5px;color:var(--muted);line-height:1.5}
+  .jt-dow{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800;white-space:nowrap}
+  .jday.today .jt-dow{color:var(--accent)}
+  .jt-big{font-family:'Fraunces',serif;font-weight:600;font-size:27px;line-height:1;color:var(--sand)}
+  .jt-big small{font-family:'Karla',sans-serif;font-size:11px;color:var(--muted);font-weight:700}
+  .jt-bar{width:100%;height:4px;border-radius:99px;background:var(--surface2);overflow:hidden}
+  .jt-bar i{display:block;height:100%;border-radius:99px}
+  .jt-chip{min-height:16px;display:flex;align-items:center;justify-content:center}
+  .jt-chip .hstat{font-size:9.5px}
   .hedit{display:flex;gap:8px;align-items:center}
   .hedit button{
     font-family:'Karla',sans-serif;font-weight:700;font-size:15px;
@@ -1306,12 +1287,7 @@ try{
   <h3>Day by day</h3>
   <div class="dd-sum" id="ddSum"></div>
   <div id="journey" hidden>
-    <div class="jd-nav">
-      <button class="jd-btn" id="jdPrev" aria-label="Earlier day">‹</button>
-      <div class="jd-pos" id="jdPos" aria-live="polite"></div>
-      <button class="jd-btn" id="jdNext" aria-label="Later day">›</button>
-    </div>
-    <div class="jdeck" id="jdeck" role="group" aria-label="The journey, day by day — swipe through the cards, tap one for the full day"></div>
+    <div class="jdeck" id="jdeck" role="group" aria-label="The journey, day by day — flick through the tiles, tap one for the full day"></div>
   </div>
   <p class="history-hint">Tap any day to open it · the dashed line is the old ~30 a day.</p>
   <div id="trendChart"></div>
@@ -2670,7 +2646,7 @@ try{
      One card per day, oldest to newest, each read against the day before
      it (the engine's vs — the previous LOGGED day). Swipe or ‹ › to walk
      the run; every card opens the full day page. */
-  var jdCenterKey=null,jdPosT=null;
+  var jdPosT=null;
   function jdDeckKeys(){
     var start=schedule()[0].start,ks=[];
     if(today<start)return ks;
@@ -2678,94 +2654,47 @@ try{
     while(d<=today){ks.push(dkeyOf(d));d=addDays(d,1);}
     return ks;
   }
+  /* one glanceable tile per day: date, the count wearing its status color,
+     a sliver of meter against the cap, and the delta chip. The full story
+     is one tap away on the day page. */
   function jdCardHTML(m,i){
     var d=m.date;
-    var head='<div class="jd-top"><span class="jd-dow">'+WEEKDAYS[d.getDay()].slice(0,3)+' · '+fmtShort(d)+(m.isToday?' · today':'')+'</span>'+
-      '<span class="jd-n">day '+(i+1)+'</span></div>';
-    var big;
-    if(m.isZ)big=m.eff>0?(m.eff+'<span class="hstat slip">slip</span>'):('✓<span class="hstat clean">clean</span>');
-    else if(m.eff===null)big='·<span class="hstat nolog">no log</span>';
-    else big=m.eff+'<small>/ '+m.cap+'</small><span class="hstat '+m.cls+'">'+m.stat+(m.partial?' · so far':'')+'</span>';
-    var vs='';
+    var col=STAT_COL[m.cls]||'var(--sand)';
+    var big,meter='',chip;
     if(m.isZ){
-      var off=Math.max(1,Math.round((d-zeroDate())/MS_DAY)+1);
-      vs='<div class="jd-vs"><div class="jd-vs-hd">the counter</div>'+
-        '<div class="jd-note">Day '+off+' at zero'+(m.eff>0?' — a slip, logged and past.':' — clean.')+'</div></div>';
-    }else if(m.vs){
-      var v=m.vs,pd=dateOf(v.key),rows='';
-      if(m.partial){
+      big=m.eff>0?'<span style="color:var(--clay)">'+m.eff+'</span>':'<span style="color:var(--sage)">✓</span>';
+      chip='<span class="hstat '+m.cls+'">'+m.stat+'</span>';
+    }else if(m.eff===null&&!m.isToday){
+      big='<span style="color:var(--faint)">·</span>';
+      chip='<span class="hstat nolog">no log</span>';
+    }else{
+      var eff=m.eff||0;
+      big='<span style="color:'+col+'">'+eff+'</span><small>/'+m.cap+'</small>';
+      var pct=m.cap>0?Math.min(100,eff/m.cap*100):100;
+      meter='<span class="jt-bar"><i style="width:'+pct+'%;background:'+col+'"></i></span>';
+      if(m.isToday){
         var pv=paceVsYesterday();
-        if(pv)rows+='<div class="jd-row"><span>by this hour</span><span class="jd-v">'+pv.y+' → '+pv.t+'</span>'+
-          (pv.t===pv.y?dv('even',null):dv((pv.t<pv.y?'▾':'▴')+Math.abs(pv.t-pv.y),pv.t<pv.y))+'</div>';
+        chip=pv?(pv.t===pv.y?dv('even',null):dv((pv.t<pv.y?'▾':'▴')+Math.abs(pv.t-pv.y),pv.t<pv.y))
+          :'<span class="hstat '+m.cls+'" style="opacity:.75">'+m.stat+'</span>';
+      }else{
+        chip=hitsPill(m);
       }
-      rows+='<div class="jd-row"><span>hits</span><span class="jd-v">'+v.prevEff+' → '+m.eff+(m.partial?' so far':'')+'</span>'+
-        (m.partial?dv('open',null):hitsPill(m))+'</div>';
-      if(v.gapAvgMs!==null){
-        var gGood=v.gapAvgPct===null?null:v.gapAvgPct>5?true:v.gapAvgPct<-5?false:null;
-        rows+='<div class="jd-row"><span>avg gap</span><span class="jd-v">'+fmtDur(m.gapAvgMs)+'</span>'+
-          dv(gGood===null?'even':(v.gapAvgPct>=0?'+':'−')+Math.abs(v.gapAvgPct)+'%',gGood)+'</div>';
-      }
-      if(v.firstMin!==null){
-        var fGood=v.firstMin>=15?true:v.firstMin<=-15?false:null;
-        rows+='<div class="jd-row"><span>first hit</span><span class="jd-v">'+fmtClk(m.first)+'</span>'+
-          dv(fGood===null?'even':fmtDur(Math.abs(v.firstMin)*60000)+(v.firstMin>0?' later':' earlier'),fGood)+'</div>';
-      }
-      vs='<div class="jd-vs"><div class="jd-vs-hd">vs '+WEEKDAYS[pd.getDay()].slice(0,3)+' '+fmtShort(pd)+'</div>'+rows+'</div>';
-    }else if(m.eff!==null){
-      vs='<div class="jd-vs"><div class="jd-vs-hd">the baseline day</div>'+
-        '<div class="jd-note">The first logged day — every day after gets read against the one before it.</div></div>';
     }
-    var line=daylineSVG(m.key);
     return '<div class="jday'+(m.isToday?' today':'')+'" data-jd="'+m.key+'" role="button" tabindex="0" aria-label="'+
-      WEEKDAYS[d.getDay()].slice(0,3)+' '+fmtShort(d)+' — open this day">'+head+
-      '<div class="jd-big">'+big+'</div>'+vs+(line?'<div class="jd-line">'+line+'</div>':'')+'</div>';
+      WEEKDAYS[d.getDay()].slice(0,3)+' '+fmtShort(d)+' — open this day">'+
+      '<span class="jt-dow">'+WEEKDAYS[d.getDay()].slice(0,3)+' '+(d.getMonth()+1)+'/'+d.getDate()+'</span>'+
+      '<span class="jt-big">'+big+'</span>'+meter+
+      '<span class="jt-chip">'+chip+'</span></div>';
   }
   function jdTomorrowHTML(){
     var d=addDays(today,1),m=dayMetrics(dkeyOf(d));
-    var what=m.isZ?'Zero — the counter takes over.':'Cap '+m.capText+(m.single?' · evening only.':m.reqGapH>0?' · '+fmtGapH(m.reqGapH)+' gaps.':'.');
     return '<div class="jday future" data-jd="'+dkeyOf(d)+'" role="button" tabindex="0" aria-label="Tomorrow — open the plan">'+
-      '<div class="jd-top"><span class="jd-dow">'+WEEKDAYS[d.getDay()].slice(0,3)+' · '+fmtShort(d)+' · tomorrow</span></div>'+
-      '<div class="jd-big">'+(m.isZ?'0':m.cap)+'<small>'+(m.isZ?'zero era':'the next step')+'</small></div>'+
-      '<div class="jd-note">'+what+' Tap for the full plan.</div></div>';
+      '<span class="jt-dow">'+WEEKDAYS[d.getDay()].slice(0,3)+' '+(d.getMonth()+1)+'/'+d.getDate()+'</span>'+
+      '<span class="jt-big"><span style="color:var(--muted)">'+(m.isZ?'0':m.cap)+'</span></span>'+
+      '<span class="jt-chip"><span class="hstat nolog">'+(m.isZ?'zero day':'next step')+'</span></span></div>';
   }
-  function jdCards(){return [].slice.call($('jdeck').querySelectorAll('.jday'));}
-  function jdIndex(){
-    var deck=$('jdeck'),mid=deck.scrollLeft+deck.clientWidth/2,cards=jdCards(),bi=0,bd=Infinity;
-    cards.forEach(function(c,i){var cc=c.offsetLeft+c.offsetWidth/2,dd=Math.abs(cc-mid);if(dd<bd){bd=dd;bi=i;}});
-    return bi;
-  }
-  function jdCenter(card,smooth){
-    var deck=$('jdeck'),left=card.offsetLeft-(deck.clientWidth-card.offsetWidth)/2;
-    if(smooth)deck.scrollTo({left:left,behavior:'smooth'});
-    else deck.scrollLeft=left;
-  }
-  function jdSyncTo(i){
-    var cards=jdCards();if(!cards.length)return;
-    i=Math.max(0,Math.min(cards.length-1,i));
-    var c=cards[i],d=dateOf(c.dataset.jd),total=jdDeckKeys().length;
-    jdCenterKey=c.dataset.jd;
-    $('jdPos').textContent=c.classList.contains('future')
-      ?'Tomorrow · '+fmtShort(d)
-      :'Day '+(i+1)+' of '+total+' · '+WEEKDAYS[d.getDay()].slice(0,3)+' '+fmtShort(d)+(c.dataset.jd===todayKey?' · today':'');
-    $('jdPrev').disabled=i<=0;
-    $('jdNext').disabled=i>=cards.length-1;
-  }
-  function jdSync(){jdGoalI=null;jdSyncTo(jdIndex());}
-  /* steps are read off the pending goal, not the mid-animation position,
-     so quick taps on ‹ › accumulate instead of fighting the scroll */
-  var jdGoalI=null;
-  function jdStep(dirN){
-    var cards=jdCards();if(!cards.length)return;
-    var base=jdGoalI!==null?jdGoalI:jdIndex();
-    var ni=Math.max(0,Math.min(cards.length-1,base+dirN));
-    if(ni===base)return;
-    jdGoalI=ni;
-    jdSyncTo(ni);
-    if(navigator.vibrate)navigator.vibrate(4);
-    jdCenter(cards[ni],true);
-  }
-  /* centering needs layout — while the card sits inside a hidden section
-     (another detail overlay open), retry once it's back on screen */
+  /* the strip opens parked on the newest days; while it sits inside a
+     hidden view it has no layout, so retry once it's back on screen */
   function jdReposition(){
     var deck=$('jdeck');
     if(!deck||deck.hidden)return;
@@ -2774,10 +2703,7 @@ try{
       jdPosT=setTimeout(jdReposition,450);
       return;
     }
-    var target=deck.querySelector('[data-jd="'+(jdCenterKey||todayKey)+'"]')||
-      deck.querySelector('[data-jd="'+todayKey+'"]')||jdCards()[0];
-    if(target)jdCenter(target,false);
-    jdSync();
+    deck.scrollLeft=deck.scrollWidth;
   }
   function renderJourney(){
     var wrap=$('journey'),deck=$('jdeck');
@@ -2800,21 +2726,9 @@ try{
       ev.preventDefault();openDayPage(ev.target.dataset.jd);
     }
   });
-  $('jdPrev').addEventListener('click',function(){jdStep(-1);});
-  $('jdNext').addEventListener('click',function(){jdStep(1);});
-  (function(){
-    var deck=$('jdeck'),t=null;
-    if('onscrollend' in deck){
-      deck.addEventListener('scrollend',jdSync,{passive:true});
-    }else{
-      deck.addEventListener('scroll',function(){
-        clearTimeout(t);t=setTimeout(jdSync,120);
-      },{passive:true});
-    }
-    window.addEventListener('resize',function(){
-      clearTimeout(jdPosT);jdPosT=setTimeout(jdReposition,220);
-    });
-  })();
+  window.addEventListener('resize',function(){
+    clearTimeout(jdPosT);jdPosT=setTimeout(jdReposition,220);
+  });
 
   function renderHistory(){
     var rowsEl=$('historyRows');
