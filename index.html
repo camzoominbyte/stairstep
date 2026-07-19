@@ -91,12 +91,6 @@
   h1 em{font-style:italic;color:var(--accent)}
   .countdown{color:var(--muted);font-size:13.5px;margin-bottom:20px}
   .countdown strong{color:var(--sand)}
-  /* ---- the big picture: the encouraging numbers at display scale ---- */
-  .bigfigs{display:grid;grid-template-columns:1fr 1fr;gap:18px 14px;margin:-8px 0 30px}
-  .bigfigs .bf{min-width:0}
-  .bigfigs .bf-v{display:block;font-family:'Fraunces',serif;font-weight:600;font-size:37px;line-height:1.05;color:var(--sand);letter-spacing:-.01em;white-space:nowrap}
-  .bigfigs .bf-v small{font-family:'Fraunces',serif;font-size:19px;font-weight:500;color:var(--muted)}
-  .bigfigs .bf-l{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:4px;line-height:1.45}
 
   /* ---- glass bar (appears on scroll) ---- */
   .glassbar{
@@ -1261,8 +1255,6 @@ try{
 </header>
 
 <main class="view" id="vToday">
-<div class="bigfigs" id="bigPicture" hidden></div>
-
 <div class="hold-banner" id="holdBanner">
   <p id="holdText"></p>
   <div class="hold-btns">
@@ -2610,50 +2602,6 @@ try{
     ev.stopPropagation();
     openDayPage(r.dataset.k);
   });
-
-  /* ---- the big picture: the most encouraging numbers, top of the page ---- */
-  function renderBigPicture(){
-    var el=$('bigPicture');if(!el)return;
-    var start=schedule()[0].start;
-    if(today<start){el.hidden=true;return;}
-    function bf(v,l,c){return '<div class="bf"><span class="bf-v"'+(c?' style="color:'+c+'"':'')+'>'+v+'</span><span class="bf-l">'+l+'</span></div>';}
-    var t=taperProgress(), figs=[];
-    if(isZeroEra){
-      var zs=zeroStats(), n=Math.max(0,daysFree());
-      figs.push(bf(n,'day'+(n===1?'':'s')+' at zero','var(--sage)'));
-      figs.push(bf('100<small>%</small>','below the old '+BASELINE+'/day','var(--sage)'));
-      if(zs){
-        figs.push(bf(zs.clean,'clean days banked'));
-        figs.push(bf(zs.best,'best run'));
-      }
-    }else{
-      var pv=paceVsYesterday();
-      if(pv){
-        var dY=pv.y-pv.t;
-        figs.push(dY>0?bf('▾'+dY,'fewer than yesterday by now · '+pv.t+' vs '+pv.y,'var(--sage)')
-          :dY<0?bf('▴'+(-dY),'more than yesterday by now · '+pv.t+' vs '+pv.y,'var(--clay)')
-          :bf('even','with yesterday by now · '+pv.t+' vs '+pv.y));
-      }
-      // the space being pushed: today's average gap against yesterday's
-      var tm=dayMetrics(todayKey);
-      if(tm.gapAvgMs!==null&&tm.vs&&tm.vs.gapAvgPct!==null&&tm.vs.gapAvgPct!==0){
-        var gp=tm.vs.gapAvgPct;
-        figs.push(bf((gp>0?'+':'−')+Math.abs(gp)+'<small>%</small>',
-          (gp>0?'wider':'tighter')+' gaps than yesterday · avg '+fmtDur(tm.gapAvgMs),
-          gp>0?'var(--sage)':'var(--clay)'));
-      }else{
-        var g=gapAnalytics();
-        if(g&&g.early!==null&&g.widening)
-          figs.push(bf('+'+Math.round((g.recent/g.early-1)*100)+'<small>%</small>','wider gaps than the first days','var(--sage)'));
-        else if(g)figs.push(bf(fmtDur(g.avg*3600000),'avg time between sessions'));
-      }
-      figs.push(bf(t.cutPct+'<small>%</small>','below the old '+BASELINE+'/day','var(--sage)'));
-      var toZ=Math.max(0,Math.round((zeroDate()-today)/MS_DAY));
-      figs.push(bf(toZ,'day'+(toZ===1?'':'s')+' to zero','var(--accent)'));
-    }
-    el.innerHTML=figs.slice(0,4).join('');
-    el.hidden=!figs.length;
-  }
 
   /* the live comparison header at the top of Day by day — a sentence, not tiles */
   function renderDayHead(){
@@ -4922,7 +4870,7 @@ try{
   function renderAll(){
     computeToday();
     rcClear();
-    [renderCountdown,renderBigPicture,renderStairs,renderPhases,renderTodayPlan,renderSchedStrip,
+    [renderCountdown,renderStairs,renderPhases,renderTodayPlan,renderSchedStrip,
      renderToday,renderTrend,renderDayHead,renderJourney,renderHistory,renderHoldBanner,renderDayHeld,
      renderRitual,renderCheckin,renderStory,renderUrge,renderGap,renderGlass,renderDash,renderFoldSums].forEach(safe);
     if(!$('detailOverlay').hidden)safe(renderXtras);
