@@ -268,13 +268,23 @@
   .bar{height:8px;border-radius:99px;background:var(--surface2);overflow:hidden;margin:16px 0 6px}
   .bar>div{height:100%;border-radius:99px;background:var(--sage);width:0%;transition:width .3s,background .3s}
   .bar-note{font-size:12.5px;color:var(--muted)}
-  .stat-row{display:flex;gap:8px;margin:14px 0 10px}
+  .stat-row{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0 10px}
   .stat{
-    flex:1;background:none;border:none;border-top:1px solid var(--line);border-radius:0;
-    padding:9px 2px 0;text-align:left;min-width:0;
+    flex:1 1 calc(50% - 5px);min-width:calc(50% - 5px);
+    background:var(--surface2);border:1px solid var(--line);border-radius:14px;
+    padding:11px 12px 10px;text-align:left;
   }
-  .stat .sv{display:block;font-family:'Fraunces',serif;font-weight:600;font-size:21px;color:var(--sand);line-height:1.2}
-  .stat .sv.time{font-size:15.5px;padding-top:5px}
+  .stat .sv{display:block;font-family:'Fraunces',serif;font-weight:600;font-size:24px;color:var(--sand);line-height:1.2}
+  .stat .sv.time{font-size:16.5px;padding-top:4px}
+  .card-head{display:flex;align-items:center;gap:10px}
+  .card-head .eyebrow{flex:1;min-width:0}
+  .streak-chip{
+    font-size:11px;font-weight:800;letter-spacing:.02em;white-space:nowrap;
+    color:var(--accent);background:var(--accent-soft);
+    border:1px solid rgba(165,104,31,.25);border-radius:99px;padding:4px 10px;
+    margin-right:34px;
+  }
+  .streak-chip[hidden]{display:none}
   .stat .sl{display:block;font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:2px}
   .action-row{display:flex;gap:10px;margin-top:14px;align-items:center}
   .action-row .delay-chip{margin-top:0;flex:1;text-align:center}
@@ -321,38 +331,68 @@
   }
   .delay-chip.running{border-style:solid;border-color:var(--accent);background:var(--accent-soft);font-variant-numeric:tabular-nums}
   .delay-chip.done{border-style:solid;border-color:var(--sage);color:var(--sage);background:#eff2df}
-  /* ---- the gap hero: time between sessions is the main event ---- */
-  .gap-hero{
-    position:relative;background:#faf5ea;border:1px solid var(--hair);
-    border-left:3px solid var(--accent);border-radius:14px;
-    padding:12px 14px;margin-top:14px;
+  /* ---- the hero: dark ember card — gap ring, score, and the log button ---- */
+  .hero-card{
+    position:relative;border-radius:20px;padding:16px 16px 14px;margin-bottom:14px;
+    background:
+      radial-gradient(90% 130% at 88% -12%, rgba(224,149,79,.16), transparent 62%),
+      #26221f;
+    color:#f0e8da;box-shadow:var(--shadow);
+  }
+  .hero-card[hidden]{display:none}
+  html.dark .hero-card{
+    background:
+      radial-gradient(90% 130% at 88% -12%, rgba(224,149,79,.13), transparent 62%),
+      #2b261c;
+    border:1px solid rgba(255,244,222,.07);
   }
   .gap-hero[hidden]{display:none}
-  .gap-hero.open{border-left-color:var(--sage)}
-  .gh-head{display:flex;align-items:baseline;gap:8px}
-  .gh-lbl{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700;flex:1}
-  .gh-rule{font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;font-weight:800;color:var(--accent)}
-  .gh-row{display:flex;align-items:center;gap:10px;margin:3px 0 9px}
-  .gh-time{
-    font-family:'Fraunces',serif;font-weight:600;font-size:36px;line-height:1;
-    color:var(--sand);font-variant-numeric:tabular-nums;flex:1;
+  .gh-main{display:flex;align-items:center;gap:16px}
+  .ring-wrap{position:relative;flex:0 0 126px;width:126px;height:126px}
+  .gap-ring{display:block;width:100%;height:100%}
+  .ring-track{fill:none;stroke:rgba(240,232,218,.13);stroke-width:9}
+  .ring-fill{
+    fill:none;stroke:#e0954f;stroke-width:9;stroke-linecap:round;
+    stroke-dasharray:377;stroke-dashoffset:377;
+    transition:stroke-dashoffset .6s var(--spring),stroke .3s;
   }
-  .gap-hero.open .gh-time{color:var(--sage)}
-  .gh-track{position:relative;height:8px;border-radius:99px;background:var(--surface2);overflow:hidden}
-  .gh-track>i{display:block;height:100%;border-radius:99px;background:var(--accent);transition:width .5s var(--spring),background .3s}
-  .gap-hero.open .gh-track>i{background:var(--sage)}
-  .gh-note{font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.5;font-variant-numeric:tabular-nums}
-  .gh-note strong{color:var(--sand)}
-  .gap-hero.open .gh-note{color:var(--sage);font-weight:700}
+  .gap-hero.open .ring-fill{stroke:#a3b899}
+  .ring-inner{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:3px;text-align:center;
+  }
+  .gh-time{
+    font-family:'Fraunces',serif;font-weight:330;font-size:25px;line-height:1;
+    color:#f0e8da;font-variant-numeric:tabular-nums;
+  }
+  .gap-hero.open .gh-time{color:#c8d4bd}
+  .gh-lbl{font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:#9c9080;font-weight:700}
+  .hero-right{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;padding-right:40px}
+  .hero-slbl{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:#9c9080;font-weight:700}
+  .hero-srow{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .hero-score{font-family:'Fraunces',serif;font-weight:600;font-size:44px;line-height:1;color:#f0e8da}
+  .hero-grade{font-size:12px;font-weight:700}
+  .gh-rule{font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;font-weight:800;color:#e0954f;margin-top:2px}
+  .gap-hero.open .gh-rule{color:#a3b899}
+  .gh-note{font-size:12.5px;color:#b3a891;margin-top:10px;line-height:1.5;font-variant-numeric:tabular-nums}
+  .gh-note strong{color:#f0e8da}
+  .gap-hero.open .gh-note{color:#c8d4bd;font-weight:700}
   @keyframes gapFlash{0%{transform:scale(1)}28%{transform:scale(1.02)}100%{transform:scale(1)}}
   .gap-hero.flash{animation:gapFlash .6s var(--spring)}
   .gap-bell{
-    flex:0 0 auto;width:38px;height:38px;border-radius:11px;
-    border:1px solid var(--line);background:none;cursor:pointer;
-    font-size:16px;line-height:1;color:var(--muted);padding:0;
+    position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:11px;
+    border:1px solid rgba(240,232,218,.18);background:none;cursor:pointer;
+    font-size:16px;line-height:1;color:#9c9080;padding:0;
   }
-  .gap-bell.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+  .gap-bell.on{border-color:#e0954f;background:rgba(224,149,79,.14);color:#e0954f}
   .gap-bell svg{display:block;margin:0 auto}
+  .hero-card .tally-btns{margin-top:14px}
+  .hero-card .tally-btns button.minus{
+    background:rgba(240,232,218,.08);border:1px solid rgba(240,232,218,.14);
+    color:#cbbfa8;box-shadow:none;
+  }
+  @keyframes logNudge{0%,100%{transform:scale(1)}35%{transform:scale(1.06)}}
+  .hold-log.nudge{animation:logNudge .8s var(--spring) 2}
   /* day-vs-adjacent comparison in the record detail */
   .daycmp{margin:2px 0 6px}
   .dc-row{padding:7px 9px;border-radius:11px;margin:5px 0;background:#faf5ea;border:1px solid var(--hair)}
@@ -392,16 +432,25 @@
   }
   .history h3{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:2px}
   .history-hint{font-size:11.5px;color:var(--faint);margin-bottom:10px}
-  .hrow{display:block;padding:8px 0;border-top:1px solid var(--surface2);font-size:14px;cursor:pointer}
-  .hrow:first-of-type{border-top:none}
-  .hrow-main{display:flex;align-items:center;gap:10px}
-  .hdate{color:var(--muted);flex:0 0 76px;font-size:12.5px}
-  .hbar{flex:1;height:6px;border-radius:99px;background:var(--surface2);overflow:hidden}
-  .hbar i{display:block;height:100%;border-radius:99px;transition:width .5s var(--spring)}
-  .hcount{font-family:'Fraunces',serif;font-weight:600;font-size:17px;color:var(--sand);flex:0 0 auto;min-width:52px;text-align:right}
-  .hstat{flex:0 0 54px;text-align:right}
-  .hrow2{display:none;font-size:12px;color:var(--muted);margin-top:5px;padding-left:86px}
-  .expanded .hrow2{display:block}
+  /* each day is a small visual card: date, count, chips, and the dot timeline */
+  .hrow{
+    display:block;padding:11px 13px 10px;margin-top:9px;font-size:14px;cursor:pointer;
+    background:var(--surface2);border:1px solid var(--line);border-radius:14px;
+  }
+  .hrow:first-of-type{margin-top:0}
+  .hrow.hnow{border-color:var(--accent)}
+  .hrow.nolog{background:none;border-style:dashed;padding:7px 13px}
+  .hrow-main{display:flex;align-items:baseline;gap:9px}
+  .hdate{color:var(--sand);flex:0 0 auto;font-size:13px;font-weight:700}
+  .hdate small{color:var(--muted);font-weight:400;font-size:12px}
+  .hcount{font-family:'Fraunces',serif;font-weight:600;font-size:19px;color:var(--sand);margin-left:auto}
+  .hline{margin-top:7px}
+  .hline svg{display:block}
+  .hchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px;align-items:center}
+  .hchip{
+    font-size:11px;font-weight:700;color:var(--muted);
+    background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:2px 9px;
+  }
   .hstat{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
   .hstat.under{color:var(--sage)}
   .hstat.at{color:var(--amber)}
@@ -419,7 +468,6 @@
   .dv.pill.good{background:rgba(100,125,75,.13)}
   .dv.pill.bad{background:rgba(184,83,53,.13)}
   .dv.pill.flat{background:var(--surface2)}
-  .hrow-main .dv{flex:0 0 54px;text-align:right}
   .hcount .hcap{color:var(--muted);font-size:12px;font-weight:400;font-family:'Karla',sans-serif}
   /* the day-by-day card: line 2 always visible, main page capped at 3 rows */
   /* the tiles carry the day-by-day on the main view; the row list lives in
@@ -677,7 +725,7 @@
   button:active{transform:scale(.95)}
   @media (hover:hover){
     button:hover{transform:translateY(-1.5px)}
-    .hrow:hover{background:rgba(59,43,20,.035);border-radius:8px}
+    .hrow:hover{border-color:var(--faint)}
     .stepcol:hover .step{filter:brightness(1.05)}
     .guide-link:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
     summary:hover{color:var(--accent)}
@@ -1065,6 +1113,21 @@
   .tab svg{width:23px;height:23px}
   .tab.on{color:var(--accent)}
   .tab:active{transform:scale(.92)}
+  .tab-log{
+    flex:0 0 62px;display:flex;align-items:flex-start;justify-content:center;
+    background:none;border:none;cursor:pointer;padding:0;margin-top:-20px;
+  }
+  .tl-circle{
+    width:54px;height:54px;border-radius:50%;
+    background:#26221f;color:#e0a458;
+    font-family:'Fraunces',serif;font-weight:300;font-size:30px;line-height:51px;text-align:center;
+    border:1px solid rgba(255,244,222,.1);
+    box-shadow:0 8px 20px -8px rgba(59,43,20,.55);
+    transition:transform .25s var(--spring);
+  }
+  .tab-log:active .tl-circle{transform:scale(.9)}
+  .tab-log:focus-visible .tl-circle{outline:2px solid var(--accent);outline-offset:2px}
+  html.dark .tl-circle{background:#e0a458;color:#1d1a14;box-shadow:0 8px 20px -8px rgba(0,0,0,.6)}
   .bar-note:empty{display:none}
 
   /* ---- dark mode (system-following via .dark class, plus in-app toggle) ---- */
@@ -1114,7 +1177,6 @@
   html.dark .rit-row.on .rit-check{color:#1d1a14}
   html.dark .phase.zero{border-color:#4c5a3b}
   html.dark .delay-chip.done{background:#28301f}
-  html.dark .gap-hero{background:#2b261c}
   html.dark .hold-btns button,html.dark .tally-btns button,html.dark .hedit button,
   html.dark .hgroup button,html.dark .hnotime button,html.dark .timefix button,
   html.dark .earlier-row button,html.dark .data-btns button,html.dark #detailBack,html.dark .xopen,
@@ -1125,7 +1187,7 @@
   html.dark .detail-bar::before{background:rgba(29,26,20,.8)}
   html.dark #safeTop{background:rgba(29,26,20,.72)}
   @media (hover:hover){
-    html.dark .hrow:hover{background:rgba(255,244,222,.05)}
+    html.dark .hrow:hover{border-color:var(--faint)}
   }
 
   /* ---- theme toggle button ---- */
@@ -1224,9 +1286,47 @@ try{
   <div id="ritRows"></div>
 </div>
 
+<div class="hero-card" id="heroCard">
+  <div class="gap-hero" id="gapHero" hidden>
+    <div class="gh-main">
+      <div class="ring-wrap">
+        <svg class="gap-ring" viewBox="0 0 140 140" aria-hidden="true">
+          <circle class="ring-track" cx="70" cy="70" r="60"/>
+          <circle class="ring-fill" id="ghRing" cx="70" cy="70" r="60" transform="rotate(-90 70 70)"/>
+        </svg>
+        <div class="ring-inner">
+          <span class="gh-time" id="ghSince" role="status">–</span>
+          <span class="gh-lbl" id="ghLbl">since last hit</span>
+        </div>
+      </div>
+      <div class="hero-right">
+        <span class="hero-slbl">Taper score</span>
+        <div class="hero-srow">
+          <span class="hero-score" id="heroScore">–</span>
+          <span class="hero-grade" id="heroGrade"></span>
+        </div>
+        <span class="gh-rule" id="ghRule"></span>
+      </div>
+      <button class="gap-bell" id="gapBell" type="button" aria-label="Remind me to wait when the window opens">🔕</button>
+    </div>
+    <p class="gh-note" id="ghNote"></p>
+  </div>
+  <div class="tally-btns" id="tallyBtns">
+    <button class="minus" id="btnMinus" aria-label="Remove one hit">−1</button>
+    <button class="hold-log" id="holdLog" aria-label="Press and hold to log a hit, or press Enter">
+      <svg class="hold-ring" aria-hidden="true"><rect id="holdRingRect" rx="14"/></svg>
+      <span class="hold-label" id="holdLabel">Hold to log a hit</span>
+    </button>
+  </div>
+</div>
+<p class="gap-note" id="gapNote" hidden>Heads-up: the reminder only rings while the app is open — nothing runs in the background, because nothing leaves this device.</p>
+
 <div class="today openable" id="todayCard" data-title="Today">
   <button class="xopen" data-target="todayCard" data-title="Today" aria-label="Open today in detail">⤢</button>
-  <p class="eyebrow" id="todayEyebrow">Today</p>
+  <div class="card-head">
+    <p class="eyebrow" id="todayEyebrow">Today</p>
+    <span class="streak-chip" id="streakChip" hidden></span>
+  </div>
   <div class="today-cap-row">
     <span class="big" id="tallyCount">0</span>
     <span class="of" id="capLabel"></span>
@@ -1240,26 +1340,6 @@ try{
     <div class="stat"><span class="sv time" id="stLast">–</span><span class="sl">last hit</span></div>
   </div>
   <p class="bar-note" id="barNote"></p>
-  <div class="tally-btns" id="tallyBtns">
-    <button class="minus" id="btnMinus" aria-label="Remove one hit">−1</button>
-    <button class="hold-log" id="holdLog" aria-label="Press and hold to log a hit, or press Enter">
-      <svg class="hold-ring" aria-hidden="true"><rect id="holdRingRect" rx="14"/></svg>
-      <span class="hold-label" id="holdLabel">Hold to log a hit</span>
-    </button>
-  </div>
-  <div class="gap-hero" id="gapHero" hidden>
-    <div class="gh-head">
-      <span class="gh-lbl" id="ghLbl">Since the last hit</span>
-      <span class="gh-rule" id="ghRule"></span>
-    </div>
-    <div class="gh-row">
-      <span class="gh-time" id="ghSince" role="status">–</span>
-      <button class="gap-bell" id="gapBell" type="button" aria-label="Remind me to wait when the window opens">🔕</button>
-    </div>
-    <div class="gh-track"><i id="ghFill"></i></div>
-    <p class="gh-note" id="ghNote"></p>
-  </div>
-  <p class="gap-note" id="gapNote" hidden>Heads-up: the reminder only rings while the app is open — nothing runs in the background, because nothing leaves this device.</p>
   <div class="action-row">
     <button class="delay-chip" id="urgeChip">Urge? Start the 20-minute timer.</button>
     <button class="time-link" id="btnEarlier" aria-label="Add hits from earlier at a chosen time">+ Earlier</button>
@@ -1418,6 +1498,9 @@ try{
   <button class="tab" data-view="journey" aria-label="Journey — progress and history">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 19V6M10 19v-8M16 19v-4M22 19h-20" stroke-linejoin="round"/></svg>
     <span>Journey</span>
+  </button>
+  <button class="tab-log" id="tabLog" aria-label="Jump to today and log">
+    <span class="tl-circle" aria-hidden="true">+</span>
   </button>
   <button class="tab" data-view="plan" aria-label="Plan — the step-down">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18h5v-4h5v-4h5V6h3"/></svg>
@@ -2366,6 +2449,8 @@ try{
     var count=countOf(todayKey)||0;
     if(isZeroEra){
       card.classList.add('free');
+      $('heroCard').hidden=true;
+      $('streakChip').hidden=true;
       $('tallyBtns').style.display='none';
       $('statRow').style.display='none';
       $('btnEarlier').style.display='none';
@@ -2387,9 +2472,19 @@ try{
       }
     }else{
       card.classList.remove('free');
+      $('heroCard').hidden=false;
       $('tallyBtns').style.display='flex';
       $('statRow').style.display='flex';
       $('btnEarlier').style.display='';
+      // hero: the score and its verdict, then the streak chip on the count card
+      var sc=scoreToday();
+      setNum('heroScore',sc.total,!booted);
+      var hg=$('heroGrade');
+      hg.textContent=sc.label;
+      hg.style.color=sc.total>=70?'#a3b899':sc.total>=55?'#e0a458':'#d98f75';
+      var tps=taperProgress(),chip=$('streakChip');
+      if(tps.streak>1){chip.hidden=false;chip.textContent='🔥 '+tps.streak+'-day streak';}
+      else chip.hidden=true;
       var sch=schedule();
       $('todayEyebrow').textContent=idx>=0?'Today · '+sch[idx].lbl:'Starts '+fmtShort(sch[0].start);
       setNum('tallyCount',count,!booted);
@@ -2742,58 +2837,49 @@ try{
     while(d>=sch[0].start){
       var m=dayMetrics(dkeyOf(d));
       total++;
-      var barPct=0,barCol='transparent',countHtml,pill='',line2=[],aria;
+      var head='',chips=[],line='',rowCls='',aria;
       if(m.isZ){
-        countHtml=String(m.eff||0);
-        barPct=100;barCol=m.eff>0?'var(--clay)':'var(--sage)';
-        pill='<span class="hstat '+m.cls+'">'+m.stat+'</span>';
-        if(!m.eff)line2.push('nothing logged — the streak holds');
+        head='<span class="hcount">'+(m.eff>0?'<span style="color:var(--clay)">'+m.eff+'</span>':'<span style="color:var(--sage)">✓</span>')+'</span>'+
+          '<span class="hstat '+m.cls+'">'+m.stat+'</span>';
+        if(!m.eff)chips.push('<span class="hchip">nothing logged — the streak holds</span>');
+        line=daylineSVG(m.key);
         aria=m.eff>0?'slip, '+m.eff+' logged':'clean at zero';
       }else if(m.count===null&&!m.isToday){
-        countHtml='<span style="color:var(--faint)">·</span>';
+        rowCls=' nolog';
+        head='<span class="hstat nolog" style="margin-left:auto">no log</span>';
         aria='no log';
       }else{
         // today can exist without an entry yet (nothing logged since 4am) — eff is null then
         var effN=m.eff||0;
         var col=m.cls==='over'?'var(--clay)':m.cls==='at'?'var(--amber)':'var(--sage)';
-        barPct=m.cap>0?Math.min(100,(effN/m.cap)*100):0;
-        barCol=col;
-        countHtml=effN+' <span class="hcap">/ '+m.cap+'</span>';
-        aria=effN+' of '+m.cap+', '+m.stat;
-        if(m.isToday){
+        head='<span class="hcount"><span style="color:'+col+'">'+effN+'</span> <span class="hcap">/ '+m.cap+'</span></span>'+
+          '<span class="hstat '+m.cls+'"'+(m.isToday?' style="opacity:.75"':'')+'>'+m.stat+'</span>'+
           // a half day never wears a closed-day delta — the header carries the live one
-          pill='<span class="hstat '+m.cls+'" style="opacity:.75">'+m.stat+'</span>';
-        }else if(m.cls==='over'){
-          // honesty beats symmetry: the loud word stays, the delta moves down a line
-          pill='<span class="hstat over">over</span>';
-          line2.push(hitsPill(m)+' vs day before');
-        }else{
-          pill=hitsPill(m);
-        }
+          (m.isToday||!m.vs?'':hitsPill(m));
+        aria=effN+' of '+m.cap+', '+m.stat;
+        line=daylineSVG(m.key);
         if(m.sessN){
-          line2.push(m.sessN+' sitting'+(m.sessN>1?'s':'')+(m.isToday?' so far':''));
-          line2.push(fmtTime(m.first)+'–'+fmtTime(m.last));
+          chips.push('<span class="hchip">'+m.sessN+' sitting'+(m.sessN>1?'s':'')+(m.isToday?' so far':'')+'</span>');
           if(m.gapAvgMs!==null){
             var gtxt='gap '+fmtDur(m.gapAvgMs);
             var gTitle=m.reqGapH>0?(m.heldRule?'held the '+fmtGapH(m.reqGapH)+' rule':'short of the '+fmtGapH(m.reqGapH)+' rule'):'';
             if(m.vs&&m.vs.gapAvgPct!==null&&!m.isToday){
               var gp=m.vs.gapAvgPct;
-              line2.push('<span class="dv '+(gp>0?'good':gp<0?'bad':'flat')+'"'+(gTitle?' title="'+gTitle+'"':'')+'>'+gtxt+' '+(gp>=0?'+':'−')+Math.abs(gp)+'%</span>');
+              chips.push('<span class="dv pill '+(gp>0?'good':gp<0?'bad':'flat')+'"'+(gTitle?' title="'+gTitle+'"':'')+'>'+gtxt+' '+(gp>=0?'+':'−')+Math.abs(gp)+'%</span>');
             }else{
-              line2.push(gTitle?'<span title="'+gTitle+'">'+gtxt+'</span>':gtxt);
+              chips.push('<span class="hchip"'+(gTitle?' title="'+gTitle+'"':'')+'>'+gtxt+'</span>');
             }
           }
         }
-        if(m.adj>0)line2.push(m.adj+' untimed');
+        if(m.adj>0)chips.push('<span class="hchip">'+m.adj+' untimed</span>');
       }
-      var rowHtml='<div class="hrow'+(shown>=3?' hpast':'')+'" data-key="'+m.key+'" role="button" tabindex="0" aria-label="'+
+      var rowHtml='<div class="hrow'+rowCls+(m.isToday?' hnow':'')+(shown>=3?' hpast':'')+'" data-key="'+m.key+'" role="button" tabindex="0" aria-label="'+
         WEEKDAYS[d.getDay()].slice(0,3)+' '+fmtShort(d)+' — '+aria+'. Open this day.">'+
         '<div class="hrow-main">'+
-        '<span class="hdate">'+WEEKDAYS[d.getDay()].slice(0,3)+' '+(d.getMonth()+1)+'/'+d.getDate()+'</span>'+
-        '<span class="hbar"><i style="width:'+barPct+'%;background:'+barCol+'"></i></span>'+
-        '<span class="hcount">'+countHtml+'</span>'+
-        pill+'</div>'+
-        (line2.length?'<div class="hrow2">'+line2.join(' · ')+'</div>':'')+
+        '<span class="hdate">'+WEEKDAYS[d.getDay()].slice(0,3)+' <small>'+(d.getMonth()+1)+'/'+d.getDate()+'</small></span>'+
+        head+'</div>'+
+        (line?'<div class="hline">'+line+'</div>':'')+
+        (chips.length?'<div class="hchips">'+chips.join('')+'</div>':'')+
         '</div>';
       rows+=rowHtml;
       shown++;
@@ -3136,6 +3222,11 @@ try{
       }else{new Notification('Try to stretch it a little longer',{body:body});}
     }catch(e){}
   }
+  var GH_CIRC=2*Math.PI*60;
+  function setGhRing(pct){
+    var c=$('ghRing');if(!c)return;
+    c.style.strokeDashoffset=String(GH_CIRC*(1-Math.min(100,Math.max(0,pct))/100));
+  }
   function renderGap(){
     if(gapTick){clearInterval(gapTick);gapTick=null;}
     if(winTimer){clearTimeout(winTimer);winTimer=null;}
@@ -3152,7 +3243,7 @@ try{
       renderGlassWin();
       if(!last){
         $('ghSince').textContent='—';
-        $('ghFill').style.width='0%';
+        setGhRing(0);
         wrap.classList.remove('open');
         $('ghNote').innerHTML='Nothing logged yet — the clock starts at the first hit. '+
           (phase.single?'One evening session only.':'Max '+phase.sessionMax+' a session, then '+fmtGapH(gapH)+' of space.');
@@ -3162,7 +3253,7 @@ try{
       $('ghSince').textContent=fmtDur(since);
       if(count>=cap){
         wrap.classList.add('open');
-        $('ghFill').style.width='100%';
+        setGhRing(100);
         $('ghNote').innerHTML=count>cap
           ?'Over the cap — the day is done, and this number still counts. Let it run.'
           :'At the cap — done for today. This gap runs into tomorrow now; the longer, the better.';
@@ -3170,7 +3261,7 @@ try{
       }
       if(phase.single){
         wrap.classList.add('open');
-        $('ghFill').style.width='100%';
+        setGhRing(100);
         $('ghNote').textContent='One evening session only tonight — the longer this grows before it, the softer zero lands.';
         return;
       }
@@ -3184,7 +3275,7 @@ try{
       var diff=openTs-Date.now();
       if(diff>0){
         wrap.classList.remove('open');
-        $('ghFill').style.width=Math.min(100,since/reqMs*100)+'%';
+        setGhRing(since/reqMs*100);
         var tmTot=Math.ceil(diff/60000),h=Math.floor(tmTot/60),m=tmTot%60;
         var cd='Next session ~<strong>'+fmtTime(new Date(openTs))+'</strong> · '+(h?h+'h ':'')+m+'m to go';
         $('ghNote').innerHTML=sittingRoom
@@ -3192,7 +3283,7 @@ try{
           :cd+' — this stretch is the taper itself.';
       }else{
         wrap.classList.add('open');
-        $('ghFill').style.width='100%';
+        setGhRing(100);
         $('ghNote').textContent=gapOpenMsg(Math.floor(-diff/60000));
         // fire the "try to wait" alert once per window, when it first opens
         if(lastAlertedOpen!==openTs){lastAlertedOpen=openTs;windowAlert();}
@@ -5185,6 +5276,18 @@ try{
     }
     document.querySelectorAll('.tab').forEach(function(t){
       t.addEventListener('click',function(){setView(t.dataset.view);});
+    });
+    // center "+": jump to today and spotlight the hold-to-log button —
+    // logging itself keeps its hold friction on purpose
+    $('tabLog').addEventListener('click',function(){
+      setView('today');
+      window.scrollTo({top:0,behavior:'smooth'});
+      var b=$('holdLog');
+      if(b&&!$('heroCard').hidden){
+        b.classList.remove('nudge');void b.offsetWidth;
+        b.classList.add('nudge');
+        setTimeout(function(){b.classList.remove('nudge');},1800);
+      }
     });
     var saved=null;
     try{saved=localStorage.getItem(VIEW_KEY);}catch(e){}
