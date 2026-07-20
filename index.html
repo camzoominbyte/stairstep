@@ -1707,12 +1707,43 @@ try{
     }catch(e){}
     return d;
   }
+  // phase index by the BASE calendar only — for migrations that must not
+  // depend on the (data-derived) live schedule
+  function basePhaseIndexOf(day){
+    var cur=new Date(TAPER_START);
+    for(var i=0;i<BASE_PHASES.length;i++){
+      if(!BASE_PHASES[i].days)return i;
+      var nxt=addDays(cur,BASE_PHASES[i].days);
+      if(day<nxt)return day>=cur?i:0;
+      cur=nxt;
+    }
+    return BASE_PHASES.length-1;
+  }
   /* every raw data object (boot, import, snapshot, cross-tab reload) goes
      through here: missing collections get created, and old saves migrate. */
   function normData(d){
     d.holds=d.holds||{};d.holdPrompts=d.holdPrompts||{};
     d.urges=d.urges||[];d.dayCheers=d.dayCheers||{};d.ritual=d.ritual||{};
     d.checkins=d.checkins||{};
+    /* legacy holds: before the schedule self-adjusted, the banner's hold
+       button wrote holdPrompts[day]='held' AND bumped data.holds — and since
+       the banner fired the morning AFTER, the manual day usually landed on
+       the NEXT (lower) phase, stretching the new step instead of holding the
+       cap the day actually broke. The auto-hold engine owns those days now:
+       'held' becomes 'ack' (so the engine counts the day itself) and the
+       misplaced manual day comes off. lhv 1. */
+    var bi,tgt;
+    if(d.lhv!==1){
+      for(k in d.holdPrompts){
+        if(d.holdPrompts[k]==='held'){
+          d.holdPrompts[k]='ack';
+          bi=basePhaseIndexOf(dateOf(k));
+          tgt=(d.holds[bi+1]||0)>0?bi+1:((d.holds[bi]||0)>0?bi:-1);
+          if(tgt>=0){d.holds[tgt]--;if(!d.holds[tgt])delete d.holds[tgt];}
+        }
+      }
+      d.lhv=1;
+    }
     /* craving history: dots flipped to mean intensity (5 = loud). ckv 2
        flipped values in place; ckv 3 renames the field to 'crave' so a
        write from a stale pre-update page (still keyed 'craving', still
