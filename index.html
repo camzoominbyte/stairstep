@@ -1258,8 +1258,8 @@ try{
 <div class="hold-banner" id="holdBanner">
   <p id="holdText"></p>
   <div class="hold-btns">
-    <button class="primary" id="btnHold">Hold cap +1 day</button>
-    <button id="btnKeep">Keep schedule</button>
+    <button class="primary" id="btnHold">Got it — hold the day</button>
+    <button id="btnKeep">Don’t hold — keep the original dates</button>
   </div>
 </div>
 
@@ -1707,10 +1707,21 @@ try{
     }catch(e){}
     return d;
   }
-  var data=loadData();
-  data.holds=data.holds||{};data.holdPrompts=data.holdPrompts||{};
-  data.urges=data.urges||[];data.dayCheers=data.dayCheers||{};data.ritual=data.ritual||{};
-  data.checkins=data.checkins||{};
+  /* every raw data object (boot, import, snapshot, cross-tab reload) goes
+     through here: missing collections get created, and old saves migrate.
+     ckv 2: craving check-in dots flipped to mean intensity (5 = loud);
+     pre-flag saves stored 5 = quiet, so their values flip once. */
+  function normData(d){
+    d.holds=d.holds||{};d.holdPrompts=d.holdPrompts||{};
+    d.urges=d.urges||[];d.dayCheers=d.dayCheers||{};d.ritual=d.ritual||{};
+    d.checkins=d.checkins||{};
+    if(!d.ckv){
+      for(var k in d.checkins){var c=d.checkins[k];if(c&&c.craving)c.craving=6-c.craving;}
+      d.ckv=2;
+    }
+    return d;
+  }
+  var data=normData(loadData());
   var saveFailed=false;
   /* per-paint memo: heavy analytics (day scans, session grouping) compute
      once per render pass instead of once per section. Cleared on every
@@ -1748,21 +1759,39 @@ try{
   }
 
   /* ================= derived schedule =================
-     Holding a phase (+1 day after an over-cap day) stretches that
-     phase and pushes every later phase — and the zero date — back. */
-  function schedule(){
+     Self-adjusting: every logged over-cap day automatically holds its
+     phase one extra day — today included, the moment the count crosses
+     the cap — stretching the phase and pushing every later phase and
+     the zero date back. Recomputed from the log on every render, so
+     editing a count re-adjusts the whole descent immediately.
+     'kept' on the banner declines a day's hold; legacy 'held' answers
+     already live in data.holds (manual holds / early step-downs), which
+     layer on top. */
+  function schedule(){return rc('schedule',buildSchedule);}
+  function buildSchedule(){
+    // latest logical day that has started — only real days can hold
+    var ln=logicalNow(), lim=new Date(ln.getFullYear(),ln.getMonth(),ln.getDate());
     var out=[], cur=new Date(TAPER_START);
     for(var i=0;i<BASE_PHASES.length;i++){
       var p=BASE_PHASES[i];
-      var dur=p.days ? Math.max(1,p.days+(data.holds[i]||0)) : null;
-      var start=new Date(cur);
-      var end=dur ? addDays(start,dur-1) : null;
+      var start=new Date(cur), end=null, auto=0, manual=data.holds[i]||0;
+      if(p.days){
+        var dur=Math.max(1,p.days+manual), done=0, d=new Date(start);
+        while(done<dur+auto){
+          if(d<=lim){
+            var c=countOf(dkeyOf(d)), resp=data.holdPrompts[dkeyOf(d)];
+            if(c!==null&&c>p.cap&&resp!=='kept'&&resp!=='held')auto++;
+          }
+          done++;d=addDays(d,1);
+        }
+        end=addDays(start,dur+auto-1);
+        cur=addDays(start,dur+auto);
+      }
       var lbl;
       if(!end){lbl=fmtShort(start)+' →';}
       else if(start.getMonth()===end.getMonth()){lbl=fmtShort(start)+'–'+end.getDate();}
       else{lbl=fmtShort(start)+'–'+fmtShort(end);}
-      out.push({start:start,end:end,lbl:lbl});
-      if(dur)cur=addDays(start,dur);
+      out.push({start:start,end:end,lbl:lbl,held:auto+Math.max(0,manual),early:Math.max(0,-manual)});
     }
     return out;
   }
@@ -2264,9 +2293,8 @@ try{
       var el=document.createElement('div');
       el.className='phase'+(i<idx?' past':'')+(i===idx?' now':'')+(i===sch.length-1?' zero':'');
       el.id='phase-'+i;
-      var hv=data.holds[i]||0;
-      var held=hv>0?'<p class="phase-held">Held +'+hv+' day'+(hv>1?'s':'')+'</p>'
-        :hv<0?'<p class="phase-held">Finished '+(-hv)+' day'+(hv<-1?'s':'')+' early</p>':'';
+      var held=s.held?'<p class="phase-held">Held +'+s.held+' day'+(s.held>1?'s':'')+'</p>'
+        :s.early?'<p class="phase-held">Finished '+s.early+' day'+(s.early>1?'s':'')+' early</p>':'';
       var capCol=rgbStr(capRGB(p.cap/BASE_PHASES[0].cap));
       // each scheduled day gets its own row: date, planned windows, that day's gap
       var dayRows='';
@@ -2502,7 +2530,7 @@ try{
       // the hero number stays confident-neutral while under, warms as you climb
       $('tallyCount').style.color=count>cap?'var(--clay)':count>=cap*0.8?'var(--amber)':'var(--sand)';
       // advice only when it's needed — a calm day earns a quiet card
-      if(count>cap){$('barNote').textContent='Over the cap — tomorrow, hold this phase one extra day, then keep stepping down.';}
+      if(count>cap){$('barNote').textContent='Over the cap — the schedule already adjusted: tomorrow holds this phase one extra day, then the descent resumes.';}
       else if(count===cap){$('barNote').textContent='At the cap. That’s the ceiling — you’re done for today.';}
       else if(cap>0&&count>=cap*0.8){$('barNote').textContent='Close to the ceiling — make the rest of the day about space.';}
       else{$('barNote').textContent='';}
@@ -2890,7 +2918,7 @@ try{
     var yCount=countOf(yKey);
     if(yCount===null||yCount<=BASE_PHASES[yIdx].cap)return;
     if(data.holdPrompts[yKey])return;
-    $('holdText').innerHTML='<strong>Yesterday went over cap.</strong> The rule: hold this cap one extra day, then keep stepping down. Holding pushes every later step — including the zero date — back by one day.';
+    $('holdText').innerHTML='<strong>Yesterday went over cap, so the schedule already adjusted itself:</strong> this cap holds one extra day, and every later step — including the zero date, now '+fmtShort(zeroDate())+' — moved back a day to match. Hold the cap today and the descent resumes tomorrow.';
     b.classList.add('show');
     b.dataset.ykey=yKey;
   }
@@ -2981,13 +3009,16 @@ try{
     }).join('');
   }
 
-  /* ---- nightly check-in: sleep · mood · cravings, 1–5, higher is better.
+  /* ---- nightly check-in: sleep · mood · cravings, 1–5. Dots count what
+     there was — solid sleep and steady mood score high, and cravings are
+     an intensity scale, so a loud night IS the high number (bad:true
+     flips which trend direction reads as good).
      Opens in the final taper phase — the guide says start the sleep kit
      before zero — so zero week has a baseline, then runs the whole tail. ---- */
   var CK_METRICS=[
     {k:'sleep',t:'Sleep',hint:'rough → solid'},
     {k:'mood',t:'Mood',hint:'heavy → steady'},
-    {k:'craving',t:'Cravings',hint:'loud → quiet'}
+    {k:'craving',t:'Cravings',hint:'quiet → loud',bad:true}
   ];
   function ckActive(){return idx>=BASE_PHASES.length-2;}
   function ckComplete(e){return !!e&&CK_METRICS.every(function(m){return e[m.k]>0;});}
@@ -3008,7 +3039,7 @@ try{
     }).join('');
     var note=$('ckNote');
     if(ckComplete(e)){note.className='ck-note done';note.textContent='✓ Logged for tonight — tap any dot to adjust.';}
-    else{note.className='ck-note';note.textContent='Tap a dot on each row: 1 is a rough one, 5 is a good one.';}
+    else{note.className='ck-note';note.textContent='Tap a dot on each row — more dots, more of it: 5 is solid sleep, steady mood, loud cravings.';}
   }
   function ckSeries(){return rc('ck',function(){
     var ks=Object.keys(data.checkins||{}).sort(),out=[];
@@ -3045,12 +3076,15 @@ try{
         var vals=ser.map(function(x){return x[m.k];});
         var l3=avg(vals.slice(-3)),p=vals.length>=6?avg(vals.slice(-6,-3)):avg(vals.slice(0,-3));
         var word;
-        if(l3>p)word=m.k==='craving'?'quieting':'climbing';
-        else if(l3<p)word=m.k==='craving'?'louder — waves, not walls'
+        if(l3>p)word=m.k==='craving'?'louder — waves, not walls':'climbing';
+        else if(l3<p)word=m.k==='craving'?'quieting'
           :m.k==='sleep'?'dipped — settles last':'dipped';
         else word='steady';
+        // which direction is good depends on the metric: cravings falling
+        // is the win, sleep and mood climbing are
+        var good=l3===p?null:(m.bad?l3<p:l3>p);
         figs.push({v:l3,l:m.t+' · last 3 nights',s:word+(l3!==p?' · was '+p:''),
-          c:l3>p?'var(--sage)':l3<p?'var(--amber)':null});
+          c:good===null?null:good?'var(--sage)':'var(--amber)'});
       });
     }else{
       figs.push({v:ser.length,l:'night'+(ser.length>1?'s':'')+' logged',s:'trends appear after a few more'});
@@ -3064,7 +3098,7 @@ try{
       html+=zoomable('nights',checkinChartSVG(ser))+
         '<p class="chart-note"><span class="legend-dot" style="background:var(--accent)"></span>sleep &nbsp;'+
         '<span class="legend-dot" style="background:var(--sage)"></span>mood &nbsp;'+
-        '<span class="legend-dot" style="background:var(--clay)"></span>cravings (5 = quiet)</p>';
+        '<span class="legend-dot" style="background:var(--clay)"></span>cravings (5 = loud)</p>';
     }
     html+=figsHTML(ckInsightFigs(ser));
     return html;
@@ -3868,7 +3902,7 @@ try{
     var ser=ckSeries();
     if(!ser.length)return '<p class="chart-note">No check-ins logged yet — the nightly card feeds this.</p>';
     var s=ser.slice(-28),n=s.length;
-    var defs=[['sleep','Sleep','var(--accent)'],['mood','Mood','var(--sage)'],['craving','Cravings — 5 is quiet','var(--clay)']];
+    var defs=[['sleep','Sleep','var(--accent)'],['mood','Mood','var(--sage)'],['craving','Cravings — 5 is loud','var(--clay)']];
     var html='';
     defs.forEach(function(df){
       var W=360,H=110,padL=16,padR=10,padT=14,padB=18;
@@ -4085,7 +4119,7 @@ try{
         chip:dv(spGood===null?'about even':fmtDur(Math.abs(v.spanMs))+(v.spanMs<0?' shorter':' longer'),spGood)}));
     }
     var close;
-    if(m.cls==='over')close='Over the cap — the day after holds the phase, then the descent resumes.';
+    if(m.cls==='over')close='Over the cap — the schedule already holds the phase a day for it, then the descent resumes.';
     else if(badN===0&&goodN>0)close='Every needle moved the right way.';
     else if(hGood===true&&badN>0)close='Fewer hits — count the win, watch the '+badNames.join(' and ')+'.';
     else if(hGood===false)close='Up on the day before — data, not doom.'+(m.heldRule?' The gaps still held.':'');
@@ -4486,7 +4520,7 @@ try{
       var pct=cap>0?Math.min(100,(c/cap)*100):0;
       $('dhBar').style.width=pct+'%';
       $('dhBar').style.background=c>cap?'var(--clay)':c>=cap*0.8?'var(--amber)':'var(--sage)';
-      $('dhNote').textContent=c>cap?'Over the cap — tomorrow holds the phase.':c===cap?'At the cap. Done for today.':(cap-c)+' left · under is always fine.';
+      $('dhNote').textContent=c>cap?'Over the cap — the schedule just adjusted: tomorrow holds this step, zero moved a day back.':c===cap?'At the cap. Done for today.':(cap-c)+' left · under is always fine.';
     }
     var sc=scoreToday();
     $('dhRing').innerHTML=ringSVG(sc.total/100,sc.total,sc.label.split(' — ')[0].toUpperCase(),scoreColor(sc.total));
@@ -4818,7 +4852,7 @@ try{
     var sch=schedule(),start=sch[0].start,z=zeroDate();
     var t=taperProgress(),us=urgeStats(),ga=gapAnalytics(),zs=zeroStats();
     var held=0,early=0;
-    for(var i in data.holds){var h=data.holds[i]||0;if(h>0)held+=h;else early-=h;}
+    sch.forEach(function(s){held+=s.held||0;early+=s.early||0;});
     return {start:start,z:z,totalD:t.totalD,
       t:t,ps:t,us:us,ga:ga,zs:zs,held:held,early:early,
       money:t.money};
@@ -4868,8 +4902,8 @@ try{
 
   function safe(fn){try{fn();}catch(e){try{console.error(e);}catch(e2){}}}
   function renderAll(){
-    computeToday();
     rcClear();
+    computeToday();
     [renderCountdown,renderStairs,renderPhases,renderTodayPlan,renderSchedStrip,
      renderToday,renderTrend,renderDayHead,renderJourney,renderHistory,renderHoldBanner,renderDayHeld,
      renderRitual,renderCheckin,renderStory,renderUrge,renderGap,renderGlass,renderDash,renderFoldSums].forEach(safe);
@@ -4989,8 +5023,9 @@ try{
     }
   });
   $('btnHold').addEventListener('click',function(){
-    data.holds[idx]=(data.holds[idx]||0)+1;
-    data.holdPrompts[$('holdBanner').dataset.ykey]='held';
+    // the hold itself is automatic (derived in schedule()) — this just
+    // acknowledges the banner without disturbing the auto-adjustment
+    data.holdPrompts[$('holdBanner').dataset.ykey]='ack';
     save();renderAll();
   });
   $('btnKeep').addEventListener('click',function(){
@@ -5149,10 +5184,7 @@ try{
       if(!confirm('Replace everything on this device with the pasted backup?'))return;
       // stash what's being replaced, so a wrong import is recoverable
       try{localStorage.setItem('ttz2-preimport',JSON.stringify(data));}catch(e2){}
-      d.holds=d.holds||{};d.holdPrompts=d.holdPrompts||{};
-      d.urges=d.urges||[];d.dayCheers=d.dayCheers||{};d.ritual=d.ritual||{};
-      d.checkins=d.checkins||{};
-      data=d;save();dpEditOpen=false;renderAll();
+      data=normData(d);save();dpEditOpen=false;renderAll();
       $('dataMsg').textContent='Backup restored. (The data it replaced was stashed, just in case.)';
     }catch(e){$('dataMsg').textContent='That doesn’t look like a valid backup.';}
   });
@@ -5165,10 +5197,7 @@ try{
     if(!validShape(sd)){$('dataMsg').textContent='The snapshot on this device is unreadable.';return;}
     if(!confirm('Replace current data with the automatic snapshot from '+snap.t+'? Anything logged since that snapshot is lost.'))return;
     try{localStorage.setItem('ttz2-preimport',JSON.stringify(data));}catch(e){}
-    sd.holds=sd.holds||{};sd.holdPrompts=sd.holdPrompts||{};
-    sd.urges=sd.urges||[];sd.dayCheers=sd.dayCheers||{};sd.ritual=sd.ritual||{};
-    sd.checkins=sd.checkins||{};
-    data=sd;save();dpEditOpen=false;renderAll();
+    data=normData(sd);save();dpEditOpen=false;renderAll();
     $('dataMsg').textContent='Snapshot from '+snap.t+' restored. (The data it replaced was stashed.)';
   });
 
@@ -5553,10 +5582,7 @@ try{
       if(raw){
         var d=JSON.parse(raw);
         if(validShape(d)&&(d._ts||0)>(data._ts||0)){
-          d.holds=d.holds||{};d.holdPrompts=d.holdPrompts||{};
-          d.urges=d.urges||[];d.dayCheers=d.dayCheers||{};d.ritual=d.ritual||{};
-          d.checkins=d.checkins||{};
-          data=d;
+          data=normData(d);
         }
       }
     }catch(e){}
