@@ -1770,8 +1770,12 @@ try{
      Self-adjusting: every logged over-cap day automatically holds its
      phase one extra day — today included, the moment the count crosses
      the cap — stretching the phase and pushing every later phase and
-     the zero date back. Recomputed from the log on every render, so
-     editing a count re-adjusts the whole descent immediately.
+     the zero date back. And a failed step-down defers, cap and all:
+     when the first day of a new step runs past its (lower) cap, that
+     day re-attaches to the step before it — it rides at the cap it was
+     living under, and the drop retries the next day. Recomputed from
+     the log on every render, so editing a count re-adjusts the whole
+     descent immediately.
      'kept' on the banner declines a day's hold; legacy 'held' answers
      already live in data.holds (manual holds / early step-downs), which
      layer on top. */
@@ -1785,12 +1789,22 @@ try{
       var start=new Date(cur), end=null, auto=0, manual=data.holds[i]||0;
       if(p.days){
         var dur=Math.max(1,p.days+manual), done=0, d=new Date(start);
+        // never defer INTO the zero era — a zero-day slip is the record's
+        // business, not the schedule's
+        var nextCap=(BASE_PHASES[i+1]&&BASE_PHASES[i+1].cap>0)?BASE_PHASES[i+1].cap:null;
         while(done<dur+auto){
           if(d<=lim){
             var c=countOf(dkeyOf(d)), resp=data.holdPrompts[dkeyOf(d)];
             if(c!==null&&c>p.cap&&resp!=='kept'&&resp!=='held')auto++;
           }
           done++;d=addDays(d,1);
+          // the phase is out of days — but if the would-be first day of the
+          // next step already ran past the NEXT cap, the step-down deferred:
+          // absorb that day here at this cap and retry the drop after it
+          if(done===dur+auto&&nextCap!==null&&d<=lim){
+            var c2=countOf(dkeyOf(d)), r2=data.holdPrompts[dkeyOf(d)];
+            if(c2!==null&&c2>nextCap&&r2!=='kept'&&r2!=='held')auto++;
+          }
         }
         end=addDays(start,dur+auto-1);
         cur=addDays(start,dur+auto);
@@ -1878,6 +1892,16 @@ try{
     var p=BASE_PHASES[di], g=p.goals;
     if(!g||!g.length)return p.desc;
     return g[Math.min(g.length-1,dayInPhase(d,di))];
+  }
+  // a deferred step-down day: an extension day riding its phase because it
+  // ran past the NEXT step's cap — the drop retries the day after
+  function deferredDay(d,di){
+    if(di<0||di>=BASE_PHASES.length-1)return false;
+    var p=BASE_PHASES[di], nx=BASE_PHASES[di+1];
+    if(!p.days||nx.cap<=0)return false;
+    var c=countOf(dkeyOf(d));
+    if(c===null||c<=nx.cap)return false;
+    return dayInPhase(d,di)>=Math.max(1,p.days+(data.holds[di]||0));
   }
   // the structured plan for a given day: session windows, honest math, do-list.
   // Held days clamp to the phase's last (widest) day, same as goals.
@@ -2544,6 +2568,7 @@ try{
       if(count>cap){$('barNote').textContent='Over the cap — the schedule already adjusted: this step runs one day longer, then the descent resumes.';}
       else if(count===cap){$('barNote').textContent='At the cap. That’s the ceiling — you’re done for today.';}
       else if(cap>0&&count>=cap*0.8){$('barNote').textContent='Close to the ceiling — make the rest of the day about space.';}
+      else if(deferredDay(today,idx)){$('barNote').textContent='Today ran past the '+BASE_PHASES[idx+1].capText+' step, so the drop deferred — today rides at '+cap+', and the step down retries tomorrow.';}
       else{$('barNote').textContent='';}
       setNum('stLeft',Math.max(0,cap-count),!booted);
       var pvT=paceVsYesterday();
@@ -2956,10 +2981,17 @@ try{
       if(c===null)return;
       var yCap=BASE_PHASES[yIdx].cap;
       if(c>yCap)return; // over — the hold banner owns that conversation
-      var margin=yCap-c;
-      title='Day held ✓';
-      body='Yesterday: <strong>'+c+' of '+yCap+'</strong>'+
-        (margin>0?' — <strong>'+margin+' under cap</strong>.':' — right at the ceiling, and the ceiling won.');
+      var margin=yCap-c, deferred=deferredDay(yDate,yIdx);
+      if(deferred){
+        // honest, not celebratory: the step-down didn't take, so the day rode
+        // the old cap and the whole descent moved back a day with it
+        title='Step-down deferred';
+        body='Yesterday ran past the <strong>'+BASE_PHASES[yIdx+1].capText+'</strong> step, so it rode at <strong>'+yCap+'</strong> instead — logged <strong>'+c+' of '+yCap+'</strong>, and the zero date moved back a day to match.';
+      }else{
+        title='Day held ✓';
+        body='Yesterday: <strong>'+c+' of '+yCap+'</strong>'+
+          (margin>0?' — <strong>'+margin+' under cap</strong>.':' — right at the ceiling, and the ceiling won.');
+      }
       if(!isZeroEra&&idx>yIdx)body+=' Today the cap steps down to <strong>'+BASE_PHASES[idx].capText+'</strong>.';
       // the inverse of the hold: a day already lived at the next cap can
       // end this step early and pull the zero date a day closer
@@ -2977,7 +3009,7 @@ try{
     $('heldBody').innerHTML=body;
     b.dataset.ykey=yKey;
     b.classList.add('show');
-    if(!cheeredKeys[yKey]){
+    if(!cheeredKeys[yKey]&&!deferred){ // a deferred step-down informs, it doesn't celebrate
       cheeredKeys[yKey]=1;
       setTimeout(function(){sparks(b,b);},400);
       if(navigator.vibrate)navigator.vibrate([10,50,14]);
