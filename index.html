@@ -1628,16 +1628,16 @@ try{
      rule:"Evening only · one session",
      desc:"Functionally done all day and proving it. Start the sleep kit now so it's already running before zero.",
      goals:["Evening only from here — 2–3, one session. You're functionally done all day; start the sleep kit tonight.",
-            "One last evening at 2–3. Tomorrow is zero — bag whatever's left tonight so it's not waiting for you."],
+            "One last evening at 2–3, an hour earlier than last night. Tomorrow is zero — whatever's left goes tonight."],
      plans:[
        {w:['9p'],
         note:'One evening sitting — 2–3 hits, then done. The daytime schedule is already at zero.',
         do:['Nothing all day. You’re functionally quit from wake to dinner — today proves it.',
             'Start the sleep kit tonight, before zero, so it’s already working when it matters most.',
             'Keep the sitting small and deliberate: 2–3 hits, one window, closed.']},
-       {w:['9p'],
-        note:'The last window of the taper.',
-        do:['One final evening sitting — 2–3, same as yesterday, nothing new.',
+       {w:['8p'],
+        note:'The last window of the taper — pulled an hour earlier, so sleep gets one rehearsal at standing on its own before zero.',
+        do:['One final evening sitting — 2–3, an hour earlier than yesterday. Bed arrives with the THC already fading.',
             'Before bed, the ritual: whatever’s left goes in the trash. Not saved, not “just in case.”',
             'Tomorrow the day counter starts. You step off from 2–3 hits, not ~30 — the drop is already mostly behind you.']}],
      why:"Sleep disturbance is the withdrawal symptom the research finds lasts longest — starting the sleep kit before zero front-loads the support.",
@@ -2281,13 +2281,29 @@ try{
   });}
 
   /* zero-era note keyed to the withdrawal timeline the research maps:
-     onset 24–48h, peak days 2–6, fading over 2–3 weeks, sleep last. */
+     onset 24–48h, peak days 2–6, fading over 2–3 weeks, sleep last.
+     Past the adjustment window the marker days carry the story — each one
+     a contingency-management stop: clean time pays for something real. */
+  var MARKERS=[
+    [30,'One month. The loops that ran ten years are running on you now.'],
+    [60,'Two months — the habit isn’t holding its breath anymore, and neither are you.'],
+    [90,'Ninety days — the marker treatment programs graduate on.'],
+    [180,'Half a year clean.'],
+    [365,'One year. The story card was written for this day.']];
   function zeroTimelineNote(n){
     if(n<=2)return 'Days 1–2 · if symptoms come, they start about now — and you arrive tapered, so expect the blunted version. Waves, not walls.';
     if(n<=6)return 'Day '+n+' · the days-2–6 peak window — already shaved down by the step-down you did. This is as hard as it gets, and it passes.';
     if(n<=13)return 'Day '+n+' · past the peak window. Withdrawal fades over 2–3 weeks — the grade flattens from here.';
     if(n<=21)return 'Day '+n+' · weeks 2–3, the climb back to baseline. Odd sleep and vivid dreams settle last — that’s recovery, not relapse risk.';
-    return 'Past the three-week mark — the receptor adjustment the research tracks is largely done. If mood or sleep is still consistently rough from here, that isn’t withdrawal anymore — it’s worth a professional look. Otherwise: the counter only climbs.';
+    if(n<=29)return 'Past the three-week mark — the receptor adjustment the research tracks is largely done. If mood or sleep is still consistently rough from here, that isn’t withdrawal anymore — it’s worth a professional look. First marker ahead: day 30.';
+    for(var i=0;i<MARKERS.length;i++){
+      if(n===MARKERS[i][0])return 'Day '+n+' · a marker day. '+MARKERS[i][1]+' If a reward was planned for this one, today it gets claimed.';
+      if(n<MARKERS[i][0]){
+        var t=taperProgress();
+        return 'Day '+n+' · maintenance now, not withdrawal. Next marker: day '+MARKERS[i][0]+', '+(MARKERS[i][0]-n)+' days out — worth deciding now what it earns'+(t.money?' (~$'+t.money+' already banked)':'')+'.';
+      }
+    }
+    return 'Day '+n+' · past every marker on the map. The counter only climbs.';
   }
 
   function renderCountdown(){
@@ -3125,16 +3141,27 @@ try{
     {k:'mood',t:'Mood',hint:'heavy → steady'},
     {k:'crave',t:'Cravings',hint:'quiet → loud',bad:true}
   ];
-  function ckActive(){return idx>=BASE_PHASES.length-2;}
+  function ckActive(){
+    if(idx<BASE_PHASES.length-2)return false;
+    if(!isZeroEra)return true;
+    var n=Math.floor((today-zeroDate())/MS_DAY)+1;
+    if(n<=21)return true;
+    // past the adjustment window the nightly reading turns weekly — enough
+    // signal to catch a drift, not enough to decay into noise
+    return (n-21)%7===0;
+  }
   function ckComplete(e){return !!e&&CK_METRICS.every(function(m){return e[m.k]>0;});}
   function renderCheckin(){
     var card=$('checkinCard');if(!card)return;
     if(!ckActive()){card.hidden=true;return;}
     card.hidden=false;
     var e=data.checkins[todayKey]||{};
-    $('ckLede').textContent=isZeroEra
-      ?'One honest reading a night. This is the record that shows the adjustment window closing — sleep is the one the research says settles last.'
-      :'Start the nightly reading now, before zero — so zero week has a baseline to measure against.';
+    var ckN=isZeroEra?Math.floor((today-zeroDate())/MS_DAY)+1:0;
+    $('ckLede').textContent=!isZeroEra
+      ?'Start the nightly reading now, before zero — so zero week has a baseline to measure against.'
+      :ckN>21
+      ?'The weekly reading now — one honest snapshot a week, to catch a drift before it becomes a slide.'
+      :'One honest reading a night. This is the record that shows the adjustment window closing — sleep is the one the research says settles last.';
     $('ckRows').innerHTML=CK_METRICS.map(function(m){
       var v=e[m.k]||0,dots='';
       for(var i=1;i<=5;i++){
@@ -3188,7 +3215,7 @@ try{
         // which direction is good depends on the metric: cravings falling
         // is the win, sleep and mood climbing are
         var good=l3===p?null:(m.bad?l3<p:l3>p);
-        figs.push({v:l3,l:m.t+' · last 3 nights',s:word+(l3!==p?' · was '+p:''),
+        figs.push({v:l3,l:m.t+' · last 3 readings',s:word+(l3!==p?' · was '+p:''),
           c:good===null?null:good?'var(--sage)':'var(--amber)'});
       });
     }else{
@@ -4601,6 +4628,7 @@ try{
     add(addDays(z,7),addDays(z,13),'Past the peak. The grade flattens — mood and appetite recover first.');
     add(addDays(z,14),addDays(z,21),'Weeks 2–3 · the climb back to baseline. The adjustment window closes around day 21.');
     add(addDays(z,22),null,'Beyond · vivid dreams can outlast everything else (REM rebound) — a progress signal, not a warning.');
+    add(addDays(z,29),addDays(z,89),'<strong>Marker days · 30, 60, 90.</strong> Each one a planned reward, funded by the hits that never happened — decide what each earns before it arrives.');
     return '<div class="road">'+rows.map(function(r){
       var endD=r.b||r.a;
       var cur=today>=r.a&&today<=endD;
