@@ -682,6 +682,41 @@
   .phase.zero{background:var(--surface);border-color:#c3cda4;border-left:3px solid var(--sage)}
   .phase.zero .phase-cap{color:var(--sage)}
 
+  /* ---- the schedule control: why the dates are what they are, and the
+     one place they can be moved by hand ---- */
+  .schedctl{
+    background:var(--surface);border:1px solid var(--line);
+    border-left:3px solid var(--accent);border-radius:14px;
+    padding:15px 17px;margin:0 0 16px;
+  }
+  .schedctl h3{
+    font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--accent);margin:0 0 9px;font-family:'Karla',sans-serif;
+  }
+  .sc-zero{font-family:'Fraunces',serif;font-weight:600;font-size:17px;color:var(--sand);margin:0 0 3px}
+  .sc-sum{font-size:13px;color:var(--ink);margin:0 0 10px;line-height:1.5}
+  .sc-row{
+    display:flex;align-items:baseline;gap:9px;padding:7px 0;
+    border-top:1px solid var(--hair);font-size:12.5px;color:var(--ink);
+  }
+  .sc-row .sc-k{flex:1;min-width:0}
+  .sc-row .sc-k b{color:var(--sand)}
+  .sc-row.declined .sc-k b{color:var(--clay)}
+  .sc-act{
+    flex:0 0 auto;font-family:'Karla',sans-serif;font-weight:700;font-size:12px;
+    padding:6px 12px;border-radius:10px;border:1px solid var(--line);
+    background:var(--surface2);color:var(--accent);cursor:pointer;
+  }
+  .sc-act.warn{color:var(--clay);border-color:rgba(158,90,62,.4)}
+  .sc-hand{display:flex;gap:9px;margin-top:11px}
+  .sc-hand button{
+    flex:1;font-family:'Karla',sans-serif;font-weight:700;font-size:13px;
+    padding:10px 0;border-radius:12px;border:1px solid var(--line);
+    background:var(--surface2);color:var(--ink);cursor:pointer;
+  }
+  .sc-hand button.pri{border-color:var(--amber);color:var(--amber)}
+  .sc-note{font-size:11.5px;color:var(--muted);margin:9px 0 0;line-height:1.5}
+
   /* ---- collapsibles ---- */
   details{border:1px solid var(--line);border-radius:18px;background:var(--surface);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow-sm)}
   summary{
@@ -1331,7 +1366,7 @@ try{
 </div>
 
 <div class="ritual" id="ritualCard" hidden>
-  <p class="eyebrow" style="color:var(--accent)">The night-before ritual</p>
+  <p class="eyebrow" style="color:var(--accent)" id="ritEyebrow">The night-before ritual</p>
   <p class="rit-lede" id="ritLede"></p>
   <div id="ritRows"></div>
   <p class="gap-note" id="ritExtend" hidden></p>
@@ -1466,6 +1501,7 @@ try{
   <button class="xopen" data-target="stepSection" data-title="The step-down" aria-label="Open the step-down in detail">⤢</button>
   <h2>The step-down</h2>
   <div class="tplan" id="todayPlan"></div>
+  <div class="schedctl" id="schedCtl" hidden></div>
   <p class="sched-cap">The whole descent — tap any day for its full plan. <a class="dlink" href="guide.html#playbook">The written playbook →</a></p>
   <div class="sched-strip" id="schedStrip" aria-label="Day-by-day schedule — tap a day for details"></div>
   <div class="xtra" id="stepXtra"></div>
@@ -1549,6 +1585,9 @@ try{
       <div class="data-btns">
         <button id="btnShare">Share backup file</button>
         <button id="btnSnap">Restore today’s auto-snapshot</button>
+      </div>
+      <div class="data-btns" id="undoRow" hidden>
+        <button id="btnUndoRestore">Undo the last restore</button>
       </div>
       <textarea id="dataBox" rows="4" placeholder="Your backup appears here — or paste one and tap Import."></textarea>
       <p id="dataMsg"></p>
@@ -1912,7 +1951,7 @@ try{
   function buildSchedule(){
     // latest logical day that has started — only real days can hold
     var ln=logicalNow(), lim=new Date(ln.getFullYear(),ln.getMonth(),ln.getDate());
-    var out=[], cur=new Date(TAPER_START), carry=0;
+    var out=[], cur=new Date(TAPER_START), carry=0, causes=[];
     for(var i=0;i<BASE_PHASES.length;i++){
       var p=BASE_PHASES[i];
       var start=new Date(cur), end=null, auto=0, manual=data.holds[i]||0;
@@ -1924,16 +1963,26 @@ try{
         var nextCap=(BASE_PHASES[i+1]&&BASE_PHASES[i+1].cap>0)?BASE_PHASES[i+1].cap:null;
         while(done<dur+auto){
           if(d<=lim){
-            var c=countOf(dkeyOf(d)), resp=data.holdPrompts[dkeyOf(d)];
-            if(c!==null&&c>p.cap&&resp!=='kept'&&resp!=='held')auto++;
+            var dk=dkeyOf(d), c=countOf(dk), resp=data.holdPrompts[dk];
+            /* every day that moved the descent — or was told not to — is
+               recorded here as it is decided, so the schedule can explain
+               itself without a second walk that could disagree with this one */
+            if(c!==null&&c>p.cap){
+              if(resp==='kept'||resp==='held')causes.push({kind:'declined',key:dk,d:new Date(d),c:c,cap:p.cap,i:i});
+              else{auto++;causes.push({kind:'over',key:dk,d:new Date(d),c:c,cap:p.cap,i:i});}
+            }
           }
           done++;d=addDays(d,1);
           // the phase is out of days — but if the would-be first day of the
           // next step already ran past the NEXT cap, the step-down deferred:
           // absorb that day here at this cap and retry the drop after it
           if(done===dur+auto&&nextCap!==null&&d<=lim){
-            var c2=countOf(dkeyOf(d)), r2=data.holdPrompts[dkeyOf(d)];
-            if(c2!==null&&c2>nextCap&&r2!=='kept'&&r2!=='held')auto++;
+            var dk2=dkeyOf(d), c2=countOf(dk2), r2=data.holdPrompts[dk2];
+            // a declined deferral needs no entry here: the day then falls
+            // into the next phase, where the in-loop check records it once
+            if(c2!==null&&c2>nextCap&&r2!=='kept'&&r2!=='held'){
+              auto++;causes.push({kind:'defer',key:dk2,d:new Date(d),c:c2,cap:nextCap,rode:p.cap,i:i});
+            }
           }
         }
         end=addDays(start,dur+auto-1);
@@ -1953,6 +2002,7 @@ try{
       var net=auto+manual;
       out.push({start:start,end:end,lbl:lbl,held:Math.max(0,net),early:Math.max(0,-net),eased:eased});
     }
+    out.causes=causes;
     return out;
   }
   function phaseIndexFor(day){
@@ -1976,10 +2026,19 @@ try{
     if(!e)return null;
     return Math.max(0,(e.hits?e.hits.length:0)+(e.adj||0));
   }
+  /* A declined hold was a decision about a SPECIFIC number. Correct that
+     number and the decision no longer describes anything real, so it is
+     dropped and the engine re-decides from the new count — otherwise a
+     'kept' answered once would silently freeze that day's step forever,
+     with no surface anywhere showing why the descent stopped adjusting. */
+  function countChanged(key){
+    if(data.holdPrompts[key])delete data.holdPrompts[key];
+  }
   function setCount(key,n){
     n=Math.max(0,n);
     var e=entryFor(key,true);
     var cur=countOf(key)||0;
+    if(n===cur)return;
     if(n>cur){e.adj=(e.adj||0)+(n-cur);}
     else{
       var need=cur-n;
@@ -1987,6 +2046,7 @@ try{
       e.adj=(e.adj||0)-adjCut;need-=adjCut;
       while(need>0&&e.hits.length){e.hits.pop();need--;}
     }
+    countChanged(key);
     save();
   }
 
@@ -2133,6 +2193,13 @@ try{
       // the schedule detail has no streak yet, so use the calendar offset.
       var off=dkeyOf(d)===todayKey?Math.max(1,daysFree()):Math.round((d-zeroDate())/MS_DAY)+1;
       if(off>21)return null;
+      /* the run can restart; the receptor adjustment cannot. Once the
+         window has closed by the CALENDAR, a slip must not replay the
+         24–48h onset and the days-2–6 peak underneath a timeline note
+         that (correctly) says withdrawal isn't starting over. Same guard
+         zeroTimelineNote already applies — the two halves of this card
+         have to agree. */
+      if(Math.round((d-zeroDate())/MS_DAY)+1>21)return null;
       if(off<=6)slots.push({s:null,t:'waves',kind:'edge',
         head:'Waves, not walls.',
         body:(off<=2?'First ripples land in this 24–48h window':'This is the days-2–6 peak the research maps')+' — irritability, restlessness, low appetite. Each wave crests and passes in minutes, and you arrive tapered: expect the blunted version.',
@@ -2367,7 +2434,10 @@ try{
   function lastUseDay(){
     var latest=null;
     for(var k in data.days){
-      if(countOf(k)>0 && (!latest||k>latest))latest=k;
+      // keys sort as dates, so a forward-dated entry is simply skipped —
+      // otherwise "days off" counts back from a day that hasn't happened
+      // and lands negative, which the counter then floors to 0
+      if(k<=todayKey && countOf(k)>0 && (!latest||k>latest))latest=k;
     }
     return latest?dateOf(latest):null;
   }
@@ -2528,6 +2598,68 @@ try{
         (p.why?'<p class="phase-evid">'+p.why+' <a href="guide.html#'+p.ref+'">sources →</a></p>':'');
       wrap.appendChild(el);
     });
+  }
+
+  /* ================= the schedule control =================
+     The engine re-derives the whole descent from the log on every render,
+     so the dates are always a FUNCTION of the record — never a stored
+     answer. That makes them correct, but it also made them opaque: an
+     adjustment that silently didn't happen looked identical to one that
+     did. This card is the derivation, written out — every day that held a
+     step, every hold that was declined, every day added by hand — and it
+     is the one place any of them can be reversed. Nothing here is a new
+     source of truth; every button edits the record the engine already
+     reads, and the whole app repaints from it. */
+  function baseZeroDate(){
+    var d=new Date(TAPER_START);
+    for(var i=0;i<BASE_PHASES.length;i++){if(BASE_PHASES[i].days)d=addDays(d,BASE_PHASES[i].days);}
+    return d;
+  }
+  function renderSchedCtl(){
+    var box=$('schedCtl');if(!box)return;
+    if(idx<0){box.hidden=true;return;}
+    box.hidden=false;
+    var sch=schedule(), causes=sch.causes||[], z=zeroDate(), bz=baseZeroDate();
+    var moved=Math.round((z-bz)/MS_DAY);
+    var rows='';
+    function row(cls,txt,act){
+      return '<div class="sc-row'+(cls?' '+cls:'')+'"><span class="sc-k">'+txt+'</span>'+(act||'')+'</div>';
+    }
+    causes.forEach(function(h){
+      var head=fmtShort(h.d)+' · <b>'+h.c+' of '+h.cap+'</b> — ';
+      if(h.kind==='over')rows+=row('',head+'held the '+h.cap+' cap a day longer',
+        '<button class="sc-act" data-sc="decline" data-k="'+h.key+'">Undo</button>');
+      else if(h.kind==='defer')rows+=row('',head+'the step-down deferred: the day rode the '+h.rode+' cap and the drop retried after it',
+        '<button class="sc-act" data-sc="decline" data-k="'+h.key+'">Undo</button>');
+      else rows+=row('declined',head+'hold declined, dates left alone',
+        '<button class="sc-act warn" data-sc="apply" data-k="'+h.key+'">Apply it</button>');
+    });
+    for(var i=0;i<BASE_PHASES.length;i++){
+      var m=data.holds[i]||0, e=sch[i].eased||0;
+      if(m>0)rows+=row('','Cap '+BASE_PHASES[i].capText+' · <b>+'+m+' day'+(m>1?'s':'')+'</b> added by hand',
+        '<button class="sc-act" data-sc="unhold" data-i="'+i+'">Undo</button>');
+      if(m<0)rows+=row('','Cap '+BASE_PHASES[i].capText+' · <b>'+(-m)+' day'+(m<-1?'s':'')+'</b> ended early',
+        '<button class="sc-act" data-sc="unhold" data-i="'+i+'">Undo</button>');
+      if(e>0)rows+=row('','Cap '+BASE_PHASES[i].capText+' · <b>+'+e+' day'+(e>1?'s':'')+' eased in</b> — the rung before ran hard');
+    }
+    var hand='';
+    if(!isZeroEra&&idx<BASE_PHASES.length-1){
+      hand='<div class="sc-hand"><button class="pri" data-sc="hold" data-i="'+idx+'">This step needs another day</button>'+
+        ((data.holds[idx]||0)>0?'<button data-sc="unhold" data-i="'+idx+'">Undo the extra day</button>':'')+'</div>';
+    }
+    box.innerHTML='<h3>The schedule, and why</h3>'+
+      '<p class="sc-zero">Zero: '+WEEKDAYS[z.getDay()]+', '+fmtShort(z)+
+        (moved>0?' <span style="color:var(--amber)">· '+moved+' day'+(moved>1?'s':'')+' later than the original plan</span>'
+        :moved<0?' <span style="color:var(--sage)">· '+(-moved)+' day'+(moved<-1?'s':'')+' earlier than the original plan</span>'
+        :' · exactly the original plan')+'</p>'+
+      '<p class="sc-sum">'+(rows
+        ?'The descent is re-derived from your log every time this screen paints. Here is everything that moved it:'
+        :isZeroEra
+          ?'The descent ran exactly as drawn — every logged day landed at or under its cap.'
+          :'Nothing has moved the descent yet — every logged day landed at or under its cap, and no hold was ever offered.')+'</p>'+
+      rows+hand+
+      (isZeroEra?''
+        :'<p class="sc-note">A day only holds its step when its <em>logged total</em> goes over that day\'s cap. A rough day that still landed under the cap won\'t move anything on its own — use the button above if the step needs more room, or correct the day\'s count from its day page and the whole descent re-adjusts.</p>');
   }
 
   /* ---- the focal "where I'm at today" plan card ---- */
@@ -3084,10 +3216,16 @@ try{
      it (the engine's vs — the previous LOGGED day). Swipe or ‹ › to walk
      the run; every card opens the full day page. */
   var jdPosT=null;
+  /* The deck is a surface you thumb through, not the archive. Unbounded, a
+     year at zero means ~370 cards rebuilt on every paint for a deck nobody
+     flicks past the recent end of. The full record stays whole in Day by
+     day and in the day pager — this keeps the window that gets touched. */
+  var JD_WINDOW=90;
   function jdDeckKeys(){
     var start=schedule()[0].start,ks=[];
     if(today<start)return ks;
-    var d=new Date(start);
+    var first=addDays(today,-(JD_WINDOW-1));
+    var d=new Date(start>first?start:first);
     while(d<=today){ks.push(dkeyOf(d));d=addDays(d,1);}
     return ks;
   }
@@ -3175,10 +3313,17 @@ try{
       return;
     }
     var rows='', shown=0, total=0;
+    /* collapsed, CSS showed three rows and hid the rest — but every hidden
+       row was still built, dayMetrics'd and given its inline SVG. A year
+       into the zero era that is ~370 rows constructed on every paint to
+       display three. Build what is visible; the rest arrive when the card
+       is opened (openDetail/closeDetail re-render on the class change). */
+    var expanded=$('dayCard').classList.contains('expanded');
     var d=new Date(today);
     while(d>=sch[0].start){
-      var m=dayMetrics(dkeyOf(d));
       total++;
+      if(!expanded&&shown>=3){d=addDays(d,-1);continue;}
+      var m=dayMetrics(dkeyOf(d));
       var head='',chips=[],line='',rowCls='',aria;
       if(m.isZ){
         head='<span class="hcount">'+(m.eff>0?'<span style="color:var(--clay)">'+m.eff+'</span>':'<span style="color:var(--sage)">✓</span>')+'</span>'+
@@ -3375,13 +3520,22 @@ try{
   }
 
   /* ---- zero-eve ritual: strip the environment the night before ---- */
+  /* the friend line names the day it is read on — on zero day itself
+     "tomorrow is zero day" would be describing yesterday's plan */
   var RITUAL_ITEMS=[
     {k:'flower',t:'The flower — in the trash, out of the house'},
     {k:'pieces',t:'Pieces, papers, grinder — gone or given away'},
-    {k:'friend',t:'Friend reminded: tomorrow is zero day'},
+    {k:'friend',t:'Friend reminded: tomorrow is zero day',tZ:'Friend reminded: today is zero day'},
     {k:'backup',t:'Backup copied out to Notes — the record survives the phone'},
     {k:'sleep',t:'Sleep kit staged — wind-down ready, phone dock out of reach'}
   ];
+  function ritRowsHTML(r,onZ){
+    return RITUAL_ITEMS.map(function(it){
+      var on=r.done&&r.done[it.k];
+      return '<button class="rit-row'+(on?' on':'')+'" data-k="'+it.k+'" aria-pressed="'+(!!on)+'">'+
+        '<span class="rit-check">✓</span><span>'+((onZ&&it.tZ)?it.tZ:it.t)+'</span></button>';
+    }).join('');
+  }
   function renderRitual(){
     var card=$('ritualCard');
     var z=zeroDate();
@@ -3389,11 +3543,17 @@ try{
     var onZ=todayKey===dkeyOf(z);
     if(!(onEve||onZ)){card.hidden=true;return;}
     card.hidden=false;
+    $('ritEyebrow').textContent=onZ?'The zero-day ritual':'The night-before ritual';
     var r=data.ritual;
     if(r.completedAt){
       card.classList.add('done');
-      $('ritRows').innerHTML='';
-      $('ritExtend').hidden=true;
+      /* the rows stay on the card, ticked — completing the list is a
+         milestone, not a trapdoor. A mis-tapped fifth line used to seal
+         the ritual permanently and take the planned-extra-day valve with
+         it, with nothing left on screen to tap. */
+      $('ritRows').innerHTML=ritRowsHTML(r,onZ);
+      $('ritExtend').hidden=false;
+      $('ritExtend').textContent='Tap any line to reopen it.';
       $('ritLede').textContent=onZ
         ?'✓ Ritual complete — zero day starts on a clean runway.'
         :'✓ Ritual complete — clean runway for tomorrow. Sleep well.';
@@ -3404,11 +3564,7 @@ try{
       ?'Zero day. Before anything else, finish stripping the environment — home shouldn’t be a loaded cue during the peak window. '
       :'Tomorrow the counter flips to days off. Tonight, strip the environment — cues drive use as much as chemistry. ')+
       '<a class="dlink" href="guide.html#relapse">The research →</a>';
-    $('ritRows').innerHTML=RITUAL_ITEMS.map(function(it){
-      var on=r.done&&r.done[it.k];
-      return '<button class="rit-row'+(on?' on':'')+'" data-k="'+it.k+'" aria-pressed="'+(!!on)+'">'+
-        '<span class="rit-check">✓</span><span>'+it.t+'</span></button>';
-    }).join('');
+    $('ritRows').innerHTML=ritRowsHTML(r,onZ);
     /* not ready is allowed — but only while the stash still exists: a
        PLANNED extra evening-only day beats an unplanned zero-day slip.
        Once the ritual is done and the stash is out, the road only goes
@@ -3609,10 +3765,24 @@ try{
       '<div class="stat" style="animation:none"><span class="sv">'+us.today+'</span><span class="sl">today</span></div></div>'+
       '<p class="chart-note">'+note+'</p>';
   }
+  /* A timer left running is not a wave outlasted. The tick banks any
+     elapsed>20min the moment the app is reopened, so a timer started
+     before a hit and abandoned for two days used to hand back a "banked"
+     win on next launch — the one counter in here that must never be
+     inflated, because its whole worth is that it is true. Anything this
+     stale was abandoned, not survived: it is dropped, not counted. */
+  var URGE_STALE_MS=2*3600000;
+  function dropStaleUrge(){
+    if(data.urgeStart&&Date.now()-data.urgeStart>URGE_STALE_MS){
+      data.urgeStart=null;save();return true;
+    }
+    return false;
+  }
   function renderUrge(){
     var chip=$('urgeChip');
     var hn=$('helpNote');if(hn)hn.hidden=!isZeroEra;
     renderWhy();
+    dropStaleUrge();
     if(urgeTick){clearInterval(urgeTick);urgeTick=null;}
     if(!data.urgeStart){
       if(Date.now()<urgeBankedUntil){
@@ -4763,6 +4933,7 @@ try{
       var ts=new Date(bd.getFullYear(),bd.getMonth(),bd.getDate()+shift,+hm[0],+hm[1]);
       if(ts>new Date()){fixMsg='That time hasn’t happened yet.';dpRender(key,true);return;}
       entryFor(key,true).hits.push(ts.toISOString());
+      countChanged(key);
       lastFixTime=v;fixMsg='';
       save();renderAll();
       return;
@@ -4772,7 +4943,7 @@ try{
       if(e&&e.hits){
         for(var i=0;i<e.hits.length;i++){
           var hd=new Date(e.hits[i]);
-          if(pad(hd.getHours())+':'+pad(hd.getMinutes())===gm){e.hits.splice(i,1);save();break;}
+          if(pad(hd.getHours())+':'+pad(hd.getMinutes())===gm){e.hits.splice(i,1);countChanged(key);save();break;}
         }
       }
       renderAll();
@@ -4780,7 +4951,7 @@ try{
     }
     if(act==='adjdec'){
       var e2=data.days[key];
-      if(e2&&(e2.adj||0)>0){e2.adj--;save();}
+      if(e2&&(e2.adj||0)>0){e2.adj--;countChanged(key);save();}
       renderAll();
     }
   }
@@ -5206,10 +5377,15 @@ try{
     if(tx){
       var html='';
       if(isZeroEra){
-        var n=Math.max(0,daysFree());
+        /* the ring measures the 2–3 week receptor adjustment, which is
+           physiology and runs on the calendar — keying it to the clean run
+           emptied it back to 1/21 after a slip on day 100, as if the whole
+           adjustment had been undone. The run's story is the clean-total
+           and best-run stats directly below. */
+        var n=Math.max(0,zeroCalDay());
         var zs=scoreToday();
         html+='<h3 class="xtra-h">The adjustment, visually</h3>'+
-          ringSVG(n/21,n,n===1?'DAY OFF':'DAYS OFF','var(--sage)')+
+          ringSVG(n/21,n,n===1?'DAY SINCE ZERO':'DAYS SINCE ZERO','var(--sage)')+
           '<p class="chart-note" style="text-align:center">'+
           (n>=21?'The 2–3 week adjustment window the research maps is behind you. From here it’s maintenance.'
                 :'Filling the 2–3 week receptor-adjustment window the research maps. Every day counts, and it only fills.')+'</p>';
@@ -5363,6 +5539,7 @@ try{
       ov.hidden=false;ov.scrollTop=0;
       document.body.style.overflow='hidden';
       renderXtras();
+      safe(renderHistory); // the full record only gets built once it's on screen
       // stagger the page's content in on first open only — re-renders
       // while it sits open (logging a hit, ticking timers) stay still
       ov.classList.add('fresh');
@@ -5388,6 +5565,7 @@ try{
       detailFrom.insertBefore(el,detailPh);
       if(detailPh){detailPh.remove();detailPh=null;}
       document.body.style.overflow='';
+      safe(renderHistory); // back to the three visible rows
       safe(jdReposition);
     }
     if(supportsVT&&motionOK){
@@ -5458,9 +5636,10 @@ try{
   function renderAll(){
     rcClear();
     computeToday();
-    [renderCountdown,renderStairs,renderPhases,renderTodayPlan,renderSchedStrip,
+    [renderCountdown,renderStairs,renderPhases,renderTodayPlan,renderSchedCtl,renderSchedStrip,
      renderToday,renderYday,renderTrend,renderDayHead,renderJourney,renderHistory,renderHoldBanner,renderDayHeld,
-     renderRitual,renderCheckin,renderBackupNudge,renderStory,renderUrge,renderGap,renderGlass,renderDash,renderFoldSums].forEach(safe);
+     renderRitual,renderCheckin,renderBackupNudge,renderStory,renderUrge,renderGap,renderGlass,renderDash,renderFoldSums,
+     renderUndoRestore].forEach(safe);
     if(!$('detailOverlay').hidden)safe(renderXtras);
     // a day edited through a chart's tap-to-open must repaint the chart under it
     if(!$('czOverlay').hidden&&czKey)safe(function(){openChartZoom(czKey);});
@@ -5586,6 +5765,21 @@ try{
     data.holdPrompts[$('holdBanner').dataset.ykey]='kept';
     save();renderAll();
   });
+  /* the schedule control — every button here edits the record the engine
+     already derives from, so one save() re-adjusts the entire app */
+  $('schedCtl').addEventListener('click',function(ev){
+    var b=ev.target.closest('[data-sc]');if(!b)return;
+    var act=b.dataset.sc, k=b.dataset.k, i=+b.dataset.i;
+    if(act==='apply')delete data.holdPrompts[k];        // let the day hold its step after all
+    else if(act==='decline')data.holdPrompts[k]='kept'; // and back again — nothing here is one-way
+    else if(act==='hold')data.holds[i]=(data.holds[i]||0)+1;
+    else if(act==='unhold'){
+      var m=data.holds[i]||0;
+      data.holds[i]=m>0?m-1:m<0?m+1:0;
+      if(!data.holds[i])delete data.holds[i];
+    }
+    save();renderAll();
+  });
   $('btnEarlier').addEventListener('click',function(){
     var r=$('earlierRow');
     r.hidden=!r.hidden;
@@ -5687,9 +5881,16 @@ try{
     r.done[row.dataset.k]=!r.done[row.dataset.k];
     var all=RITUAL_ITEMS.every(function(it){return r.done[it.k];});
     if(all){
-      r.completedAt=new Date().toISOString();
-      if(navigator.vibrate)navigator.vibrate([15,60,15,60,25]);
-      setTimeout(function(){sparks($('ritualCard'),$('ritualCard'));},300);
+      var wasDone=!!r.completedAt;
+      r.completedAt=r.completedAt||new Date().toISOString();
+      if(!wasDone){
+        if(navigator.vibrate)navigator.vibrate([15,60,15,60,25]);
+        setTimeout(function(){sparks($('ritualCard'),$('ritualCard'));},300);
+      }
+    }else if(r.completedAt){
+      // a line reopened un-completes the ritual, which brings the planned
+      // extra day back within reach — the valve should outlive a mis-tap
+      delete r.completedAt;
     }
     save();renderRitual();
   });
@@ -5777,6 +5978,30 @@ try{
       save();dpEditOpen=false;renderAll();
       $('dataMsg').textContent='Backup restored. (The data it replaced was stashed, just in case.)';
     }catch(e){$('dataMsg').textContent='That doesn’t look like a valid backup.';}
+  });
+  /* Both destructive restores stash what they replace under 'ttz2-preimport'
+     and say so. Nothing ever read that key back, so "stashed, just in case"
+     was a promise the app could not keep — on a phone there is no console to
+     dig it out with. This is the way back. */
+  function renderUndoRestore(){
+    var row=$('undoRow');if(!row)return;
+    var has=false;
+    try{has=!!localStorage.getItem('ttz2-preimport');}catch(e){}
+    row.hidden=!has;
+  }
+  $('btnUndoRestore').addEventListener('click',function(){
+    var raw=null;
+    try{raw=localStorage.getItem('ttz2-preimport');}catch(e){}
+    if(!raw){$('dataMsg').textContent='Nothing stashed to undo.';renderUndoRestore();return;}
+    var pd=null;
+    try{pd=JSON.parse(raw);}catch(e){}
+    if(!validShape(pd)){$('dataMsg').textContent='The stashed copy is unreadable.';return;}
+    if(!confirm('Put back the data that the last restore replaced? What is on the device now will be stashed in its place.'))return;
+    var cur=JSON.stringify(data);
+    data=normData(pd);save();
+    try{localStorage.setItem('ttz2-preimport',cur);}catch(e){} // so the undo is itself undoable
+    dpEditOpen=false;renderAll();renderUndoRestore();
+    $('dataMsg').textContent='Put back. (What it replaced is now the stashed copy — tap again to swap back.)';
   });
   $('btnSnap').addEventListener('click',function(){
     var snap=null;
