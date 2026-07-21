@@ -1351,6 +1351,8 @@ try{
   <div id="ckRows"></div>
   <p class="ck-note" id="ckNote"></p>
 </div>
+
+<p class="gap-note" id="backupNudge" hidden></p>
 </main>
 
 <main class="view" id="vJourney">
@@ -1438,6 +1440,7 @@ try{
     <div class="d-body">
       <p>Expect off sleep and <strong>vivid dreams for several weeks or more</strong> after zero — the research finds sleep disturbance outlasts every other symptom. The dreams are REM rebound: your brain rebooting dreaming after a decade of suppression. <span class="ok">It's a progress signal, not a problem.</span></p>
       <p>Sleep kit runs the whole tail: magnesium glycinate, consistent wind-down, phone out of reach. You've built this toolkit before. Sleep is also the symptom most likely to send people back — guarding it <em>is</em> relapse prevention.</p>
+      <p>And don't hand the old evening window to a nightcap — <strong>alcohol is a swap, not an exit</strong>, and it worsens the exact sleep rebound it promises to fix.</p>
       <p>A random bad night at week 4 or 5 means nothing. Don't read into single nights.</p>
       <p class="d-evid">Sleep findings from the same clinical review. <a class="dlink" href="guide.html#withdrawal">Sources →</a></p>
     </div>
@@ -1459,7 +1462,7 @@ try{
       <p class="d-evid">Concrete rewards for clean days help too — that's contingency management, an evidence-backed add-on. <a class="dlink" href="guide.html#relapse">Staying quit →</a></p>
     </div>
   </details>
-  <details>
+  <details id="backupDetails">
     <summary>Backup &amp; data</summary>
     <div class="d-body">
       <p>Everything lives on this device — nothing is sent anywhere. Copy a backup every few days and paste it into Notes, so a lost phone can't erase the record. The app also keeps an <strong>automatic snapshot</strong> from the first open of each day, and restores it by itself if the saved data ever turns up damaged.</p>
@@ -3003,11 +3006,24 @@ try{
     if(yIdx<0)return;
     var isZ=yIdx===BASE_PHASES.length-1;
     var c=countOf(yKey);
-    var title,body,dropOK=false;
+    var title,body,dropOK=false,quiet=false;
     if(isZ){
-      if(c!==null&&c>0)return; // slip day — no shame banner, the record handles it
-      title='Clean day banked ✓';
-      body='Yesterday stayed at zero. The counter only climbs — and so does every urge you outlasted.';
+      if(c!==null&&c>0){
+        /* the morning after a slip is the highest-risk window — "already
+           blew it" does its damage in the next 48h. One informational
+           line, no shame: the banked record survives, today restarts. */
+        var zsb=zeroStats();
+        title='The run restarts today';
+        body='Yesterday slipped — data, not doom. '+
+          (zsb&&zsb.clean>0
+            ?'Nothing banked was lost: <strong>'+zsb.clean+' clean day'+(zsb.clean===1?'':'s')+'</strong> still count'+(zsb.clean===1?'s':'')+', best run <strong>'+zsb.best+'</strong>. '
+            :'The whole step-down still stands — that work is done and banked. ')+
+          'Today has one job: outlast the evening window, and the counter climbs again.';
+        quiet=true;
+      }else{
+        title='Clean day banked ✓';
+        body='Yesterday stayed at zero. The counter only climbs — and so does every urge you outlasted.';
+      }
     }else{
       if(c===null)return;
       var yCap=BASE_PHASES[yIdx].cap;
@@ -3040,7 +3056,7 @@ try{
     $('heldBody').innerHTML=body;
     b.dataset.ykey=yKey;
     b.classList.add('show');
-    if(!cheeredKeys[yKey]&&!deferred){ // a deferred step-down informs, it doesn't celebrate
+    if(!cheeredKeys[yKey]&&!deferred&&!quiet){ // deferred and slip-morning banners inform, they don't celebrate
       cheeredKeys[yKey]=1;
       setTimeout(function(){sparks(b,b);},400);
       if(navigator.vibrate)navigator.vibrate([10,50,14]);
@@ -3176,6 +3192,21 @@ try{
     }
     html+=figsHTML(ckInsightFigs(ser));
     return html;
+  }
+
+  /* ---- stale-backup nudge: the record lives only on this phone, and the
+     record is the product — a quiet line when no copy has left it lately.
+     data.lastBackupAt is stamped on a confirmed copy, share, or import. ---- */
+  function renderBackupNudge(){
+    var el=$('backupNudge');if(!el)return;
+    var last=data.lastBackupAt;
+    var days=last?Math.floor((Date.now()-last)/MS_DAY):null;
+    if(last&&days<=7){el.hidden=true;return;}
+    el.hidden=false;
+    el.innerHTML=(last
+      ?'Last backup left this phone <strong>'+days+' days ago</strong> — everything since lives only here. '
+      :'No backup has left this phone yet — the record lives only here. ')+
+      '<button class="linklike" id="backupGo">Copy one now →</button>';
   }
 
   /* ---- urge timer: every completed 20 minutes is BANKED, permanently ---- */
@@ -4980,7 +5011,7 @@ try{
     computeToday();
     [renderCountdown,renderStairs,renderPhases,renderTodayPlan,renderSchedStrip,
      renderToday,renderTrend,renderDayHead,renderJourney,renderHistory,renderHoldBanner,renderDayHeld,
-     renderRitual,renderCheckin,renderStory,renderUrge,renderGap,renderGlass,renderDash,renderFoldSums].forEach(safe);
+     renderRitual,renderCheckin,renderBackupNudge,renderStory,renderUrge,renderGap,renderGlass,renderDash,renderFoldSums].forEach(safe);
     if(!$('detailOverlay').hidden)safe(renderXtras);
     // a day edited through a chart's tap-to-open must repaint the chart under it
     if(!$('czOverlay').hidden&&czKey)safe(function(){openChartZoom(czKey);});
@@ -5224,12 +5255,24 @@ try{
   });
 
   /* backup */
+  // the nudge's "Copy one now" → the More tab, backup section open and in view
+  document.addEventListener('click',function(ev){
+    if(!ev.target.closest('#backupGo'))return;
+    var t=document.querySelector('.tab[data-view="more"]');
+    if(t)t.click();
+    var det=$('backupDetails');
+    if(det){
+      det.open=true;
+      setTimeout(function(){det.scrollIntoView({behavior:'smooth',block:'center'});},80);
+    }
+  });
   $('btnExport').addEventListener('click',function(){
     var json=JSON.stringify(data);
     $('dataBox').value=json;
     function fallback(){$('dataBox').select();$('dataMsg').textContent='Select-all and copy the text above.';}
     if(navigator.clipboard&&navigator.clipboard.writeText){
       navigator.clipboard.writeText(json).then(function(){
+        data.lastBackupAt=Date.now();save();renderBackupNudge();
         $('dataMsg').textContent='Copied. Paste it somewhere safe (Notes works).';
       },fallback);
     }else{fallback();}
@@ -5239,7 +5282,10 @@ try{
   $('btnShare').addEventListener('click',function(){
     if(!navigator.share)return;
     var json=JSON.stringify(data);
-    var done=function(){$('dataMsg').textContent='Shared — Notes or Files both make a safe home.';};
+    var done=function(){
+      data.lastBackupAt=Date.now();save();renderBackupNudge();
+      $('dataMsg').textContent='Shared — Notes or Files both make a safe home.';
+    };
     try{
       var f=new File([json],'taper-backup-'+todayKey+'.json',{type:'application/json'});
       if(navigator.canShare&&navigator.canShare({files:[f]})){
@@ -5258,7 +5304,9 @@ try{
       if(!confirm('Replace everything on this device with the pasted backup?'))return;
       // stash what's being replaced, so a wrong import is recoverable
       try{localStorage.setItem('ttz2-preimport',JSON.stringify(data));}catch(e2){}
-      data=normData(d);save();dpEditOpen=false;renderAll();
+      data=normData(d);
+      data.lastBackupAt=Date.now(); // the pasted copy IS a live backup
+      save();dpEditOpen=false;renderAll();
       $('dataMsg').textContent='Backup restored. (The data it replaced was stashed, just in case.)';
     }catch(e){$('dataMsg').textContent='That doesn’t look like a valid backup.';}
   });
