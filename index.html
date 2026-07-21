@@ -4539,7 +4539,7 @@ try{
     // the longest stretch leads the gap rows — it's the needle that matters most
     var lv=liveGapNow(m), lvWins=!!lv&&lv.wins;
     var lCur=lvWins?lv.ms:m.gapMaxMs;
-    if(pm.gapMaxMs!==null&&lCur!==null){
+    if(pm.gapMaxMs!==null&&lCur!==null&&m.isZ===pm.isZ){
       var lDiff=lCur-pm.gapMaxMs;
       var lGood=lDiff>=300000?true:lDiff<=-300000?false:null;
       // a day still running hasn't fallen short of anything yet — it's chasing
@@ -5103,6 +5103,11 @@ try{
         (pd0?WEEKDAYS[pd0.getDay()].slice(0,3)+'’s log has no gap to push against.'
             :'nothing logged before it to push against yet.')+'</p>';
     }
+    // a zero-era day and a capped taper day are not the same kind of day —
+    // one has a gap rule and the other has no rule at all. State the stretch
+    // across that line; never grade it.
+    if(m.isZ!==pm.isZ)
+      return '<p class="lg-line">'+(lean?'The longest ran ':lede)+span+'.</p>';
     var pd=dateOf(v.key);
     // name the reference by date too when the walk-back skipped unlogged days
     var pdName=WEEKDAYS[pd.getDay()].slice(0,3)+
