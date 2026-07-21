@@ -1349,7 +1349,7 @@ try{
 </div>
 
 <div class="checkin" id="checkinCard" hidden>
-  <p class="eyebrow" style="color:var(--sage)">The nightly check-in</p>
+  <p class="eyebrow" style="color:var(--sage)">The check-in</p>
   <p class="rit-lede" id="ckLede"></p>
   <div id="ckRows"></div>
   <p class="ck-note" id="ckNote"></p>
@@ -1938,11 +1938,24 @@ try{
     if(di<0)di=0;
     return Math.max(0,Math.round((d-schedule()[di].start)/MS_DAY));
   }
+  /* which entry of a phase's goals/plans a day gets: normally clamp to the
+     last, but the FINAL capped phase's closing entry makes calendar claims
+     ("tomorrow is zero", "an hour earlier") — those belong only to the
+     phase's true last scheduled day, so held/extended days repeat the
+     generic evening entry instead and the closing copy moves with the end */
+  function phaseDayIdx(d,di,len){
+    var i=Math.min(len-1,dayInPhase(d,di));
+    if(di===BASE_PHASES.length-2&&len>1){
+      var end=schedule()[di].end;
+      if(end&&dkeyOf(d)!==dkeyOf(end))i=Math.min(i,len-2);
+    }
+    return i;
+  }
   function dayGoal(d,di){
     if(di<0)di=0;
     var p=BASE_PHASES[di], g=p.goals;
     if(!g||!g.length)return p.desc;
-    return g[Math.min(g.length-1,dayInPhase(d,di))];
+    return g[phaseDayIdx(d,di,g.length)];
   }
   // a deferred step-down day: an extension day riding its phase because it
   // ran past the NEXT step's cap — the drop retries the day after.
@@ -1962,7 +1975,7 @@ try{
     if(di<0)di=0;
     var p=BASE_PHASES[di];
     if(!p.plans||!p.plans.length)return null;
-    return p.plans[Math.min(p.plans.length-1,dayInPhase(d,di))];
+    return p.plans[phaseDayIdx(d,di,p.plans.length)];
   }
   function winsHTML(pl){
     if(!pl||!pl.w||!pl.w.length)return '';
@@ -2040,7 +2053,7 @@ try{
         head:'Waves, not walls.',
         body:(off<=2?'First ripples land in this 24–48h window':'This is the days-2–6 peak the research maps')+' — irritability, restlessness, low appetite. Each wave crests and passes in minutes, and you arrive tapered: expect the blunted version.',
         fix:'Move every day, eat at the old session times, keep the calendar boring.'});
-      if(off<=5)slots.push({s:1245,e:1320,t:'~9p',kind:'ghost',
+      if(off<=5)slots.push({s:1185,e:1320,t:'~8–9p',kind:'ghost',
         head:'The ghost window.',
         body:'The old evening sitting is the last cue standing — it fires on schedule for the first several nights'+(off>=4?', and it’s fading now':'')+'. It crests in minutes and is gone in 20.',
         fix:'Start the 20-minute timer the moment it lands. It has never outlasted you.'});
@@ -2279,6 +2292,8 @@ try{
     var from=(since&&since>=addDays(z,-1))?addDays(since,1):z;
     return Math.floor((today-from)/MS_DAY)+1;
   }
+  // calendar days since zero day (1-based) — unlike daysFree, never resets
+  function zeroCalDay(){return Math.floor((today-zeroDate())/MS_DAY)+1;}
 
   /* slip-resilient zero-era counters: a slip resets the current run,
      but total clean days and the best run are banked for good */
@@ -2304,12 +2319,17 @@ try{
     [90,'Ninety days — the marker treatment programs graduate on.'],
     [180,'Half a year clean.'],
     [365,'One year. The story card was written for this day.']];
-  function zeroTimelineNote(n){
+  function zeroTimelineNote(n,cd){
+    // cd = calendar days since zero, passed only by today's call sites.
+    // A slip resets n (the run) but not the physiology — once the
+    // adjustment window has closed by the calendar, a young run must not
+    // replay the withdrawal timeline as if it were starting over.
+    if(cd&&cd>21&&n<=21)return 'Day '+n+' of the new run · withdrawal isn’t restarting — that adjustment closed weeks ago. A lapse costs a run, never the physiology. The counter climbs again from here.';
     if(n<=2)return 'Days 1–2 · if symptoms come, they start about now — and you arrive tapered, so expect the blunted version. Waves, not walls.';
     if(n<=6)return 'Day '+n+' · the days-2–6 peak window — already shaved down by the step-down you did. This is as hard as it gets, and it passes.';
     if(n<=13)return 'Day '+n+' · past the peak window. Withdrawal fades over 2–3 weeks — the grade flattens from here.';
     if(n<=21)return 'Day '+n+' · weeks 2–3, the climb back to baseline. Odd sleep and vivid dreams settle last — that’s recovery, not relapse risk.';
-    if(n<=29)return 'Past the three-week mark — the receptor adjustment the research tracks is largely done. If mood or sleep is still consistently rough from here, that isn’t withdrawal anymore — it’s worth a professional look. First marker ahead: day 30.';
+    if(n<=29)return 'Past the three-week mark — the receptor adjustment the research tracks is largely done. Mood still consistently low from here deserves a professional look; sleep alone gets until week four — it settles last. First marker ahead: day 30.';
     for(var i=0;i<MARKERS.length;i++){
       if(n===MARKERS[i][0])return 'Day '+n+' · a marker day. '+MARKERS[i][1]+' If a reward was planned for this one, today it gets claimed.';
       if(n<MARKERS[i][0]){
@@ -2449,7 +2469,7 @@ try{
       box.innerHTML=
         '<div class="tp-eyebrow">Zero era · <b>day '+n+'</b> off</div>'+
         '<div class="tp-goal">'+dayGoal(today,BASE_PHASES.length-1)+'</div>'+
-        '<div class="tp-struct">'+zeroTimelineNote(n)+'</div>'+
+        '<div class="tp-struct">'+zeroTimelineNote(n,zeroCalDay())+'</div>'+
         feelHTML(today,BASE_PHASES.length-1,false)+
         (zs&&zs.slips?'<div class="tp-vs"><span class="tp-vs-k">Banked</span> '+zs.clean+' clean days total · best run '+zs.best+' — a slip never wipes the total.</div>':'')+
         '<div class="tp-arc"><div class="tp-track done"><i style="width:100%"></i></div>'+
@@ -2592,7 +2612,7 @@ try{
         $('btnSlip').textContent='Logged '+count+' today — undo one';
       }else{
         $('barFill').style.width='100%';$('barFill').style.background='var(--sage)';
-        $('barNote').textContent=zeroTimelineNote(Math.max(0,daysFree()));
+        $('barNote').textContent=zeroTimelineNote(Math.max(0,daysFree()),zeroCalDay());
         $('btnSlip').textContent='Slipped? Log it honestly';
       }
     }else{
@@ -3049,10 +3069,14 @@ try{
            blew it" does its damage in the next 48h. One informational
            line, no shame: the banked record survives, today restarts. */
         var zsb=zeroStats();
+        // zeroStats counts today-in-progress as clean; banked means LIVED —
+        // exclude today so the banner never promises a day not yet held
+        var banked=zsb?zsb.clean-(((countOf(todayKey)||0)>0)?0:1):0;
+        if(banked<0)banked=0;
         title='The run restarts today';
         body='Yesterday slipped — data, not doom. '+
-          (zsb&&zsb.clean>0
-            ?'Nothing banked was lost: <strong>'+zsb.clean+' clean day'+(zsb.clean===1?'':'s')+'</strong> still count'+(zsb.clean===1?'s':'')+', best run <strong>'+zsb.best+'</strong>. '
+          (banked>0
+            ?'Nothing banked was lost: <strong>'+banked+' clean day'+(banked===1?'':'s')+'</strong> still count'+(banked===1?'s':'')+', best run <strong>'+zsb.best+'</strong>. '
             :'The whole step-down still stands — that work is done and banked. ')+
           'Today has one job: outlast the evening window, and the counter climbs again.';
         quiet=true;
@@ -3138,10 +3162,12 @@ try{
        PLANNED extra evening-only day beats an unplanned zero-day slip.
        Once the ritual is done and the stash is out, the road only goes
        forward. Uses the manual-hold machinery the engine already honors. */
-    var xt=$('ritExtend');
-    if(onEve){
+    /* one planned extra day, once: the guide promises exactly one, and a
+       nightly re-offer would turn a pressure valve into an endless snooze */
+    var xt=$('ritExtend'), xli=BASE_PHASES.length-2;
+    if(onEve&&(data.holds[xli]||0)<1){
       xt.hidden=false;
-      xt.innerHTML='Not ready? A planned extra day beats an unplanned slip — <button class="linklike" id="extendEve">hold evening-only one more day</button> and zero moves to '+fmtShort(addDays(z,1))+'.';
+      xt.innerHTML='Not ready? A planned extra day beats an unplanned slip — <button class="linklike" id="extendEve">hold evening-only one more day</button> and zero moves to '+fmtShort(addDays(z,1))+'. One planned day is the valve; after that the date stands.';
     }else{xt.hidden=true;}
   }
 
@@ -3156,11 +3182,23 @@ try{
     {k:'mood',t:'Mood',hint:'heavy → steady'},
     {k:'crave',t:'Cravings',hint:'quiet → loud',bad:true}
   ];
+  // a zero-era slip inside the last week tightens monitoring back to
+  // nightly — the days right after a lapse are the riskiest stretch
+  function ckSlipWatch(){
+    if(!isZeroEra)return false;
+    for(var b=0;b<7;b++){
+      var d2=addDays(today,-b);
+      if(d2<zeroDate())break;
+      if((countOf(dkeyOf(d2))||0)>0)return true;
+    }
+    return false;
+  }
   function ckActive(){
     if(idx<BASE_PHASES.length-2)return false;
     if(!isZeroEra)return true;
-    var n=Math.floor((today-zeroDate())/MS_DAY)+1;
+    var n=zeroCalDay();
     if(n<=21)return true;
+    if(ckSlipWatch())return true;
     // past the adjustment window the nightly reading turns weekly — enough
     // signal to catch a drift, not enough to decay into noise
     return (n-21)%7===0;
@@ -3171,9 +3209,11 @@ try{
     if(!ckActive()){card.hidden=true;return;}
     card.hidden=false;
     var e=data.checkins[todayKey]||{};
-    var ckN=isZeroEra?Math.floor((today-zeroDate())/MS_DAY)+1:0;
+    var ckN=isZeroEra?zeroCalDay():0;
     $('ckLede').textContent=!isZeroEra
       ?'Start the nightly reading now, before zero — so zero week has a baseline to measure against.'
+      :ckN>21&&ckSlipWatch()
+      ?'Nightly again for this week — the days right after a lapse are the ones worth watching.'
       :ckN>21
       ?'The weekly reading now — one honest snapshot a week, to catch a drift before it becomes a slide.'
       :'One honest reading a night. This is the record that shows the adjustment window closing — sleep is the one the research says settles last.';
@@ -3636,8 +3676,12 @@ try{
       ]};
     }
     // the cap is a ceiling, not a target: at-or-under earns full credit,
-    // so the score never rewards racing below the plan
-    var capS=count<=cap?100:Math.max(0,60-20*(count-cap));
+    // so the score never rewards racing below the plan. A deferred day
+    // rides the old cap on the schedule, but the score judges it against
+    // the cap it was meant to step down to — the deferral is real, and
+    // the day shouldn't read as locked in.
+    var scap=deferredDay(today,idx)?BASE_PHASES[idx+1].cap:cap;
+    var capS=count<=scap?100:Math.max(0,60-20*(count-scap));
     var tM=dayMetrics(todayKey);
     var sess=tM.sessions;
     var maxSess=0;
@@ -4353,7 +4397,7 @@ try{
     if(m.isZ&&!m.future){
       var off2=Math.max(1,Math.round((d-zeroDate())/MS_DAY)+1);
       html+='<div class="dp-plan"><div class="tp-day-k">The timeline</div>'+
-        '<p class="chart-note" style="margin-top:6px">'+zeroTimelineNote(dkeyOf(d)===todayKey?Math.max(1,daysFree()):off2)+'</p>'+
+        '<p class="chart-note" style="margin-top:6px">'+(dkeyOf(d)===todayKey?zeroTimelineNote(Math.max(1,daysFree()),zeroCalDay()):zeroTimelineNote(off2))+'</p>'+
         (d>=today?feelHTML(d,m.di,true):'')+'</div>';
     }else if(m.future||m.isToday){
       var pl=dayPlanOf(d,di);
@@ -4557,7 +4601,14 @@ try{
     var t={days:days, tot:0, logged:0, under:0};
     days.forEach(function(m){ if(m.count!==null){t.logged++;t.tot+=m.count;if(m.count<=m.cap)t.under++;} });
     t.avgPerDay=t.logged?Math.round(t.tot/t.logged*10)/10:0;
-    t.avoided=Math.max(0,t.logged*BASELINE-t.tot);
+    // avoided matches the cumulative chart's math: a logged day banks its
+    // shortfall vs baseline, and a clean zero-era day banks the whole
+    // baseline — clean time keeps paying, and a slip pays less, never more
+    t.avoided=0;
+    days.forEach(function(m){
+      if(m.count!==null)t.avoided+=Math.max(0,BASELINE-m.count);
+      else if(m.isZ)t.avoided+=BASELINE;
+    });
     t.cutPct=t.logged?Math.max(0,Math.round((1-(t.tot/t.logged)/BASELINE)*100)):0;
     t.money=(data.costPerHit&&t.avoided>0)?Math.round(t.avoided*data.costPerHit):null;
     t.streak=0;
@@ -4688,7 +4739,7 @@ try{
       $('dhStats').innerHTML=ds(zsH?zsH.clean:0,'clean total')+ds(zsH?zsH.best:0,'best run')+ds(data.urges.length,'urges beat');
       $('dhBar').style.width='100%';
       $('dhBar').style.background=c>0?'var(--clay)':'var(--sage)';
-      $('dhNote').textContent=c>0?'Slip logged — the clean total stays banked.':zeroTimelineNote(n);
+      $('dhNote').textContent=c>0?'Slip logged — the clean total stays banked.':zeroTimelineNote(n,zeroCalDay());
     }else{
       var sch=schedule();
       $('dhEyebrow').textContent=idx>=0?'Today · '+sch[idx].lbl:'Starts '+fmtShort(sch[0].start);
@@ -5304,6 +5355,7 @@ try{
   /* zero-eve: a planned extra evening-only day, via the manual-hold engine */
   document.addEventListener('click',function(ev){
     if(!ev.target.closest('#extendEve'))return;
+    if((data.holds[BASE_PHASES.length-2]||0)>=1)return; // one planned day only
     var z=zeroDate(),nz=addDays(z,1);
     if(!confirm('Hold the evening-only step one more day? Zero day moves to '+WEEKDAYS[nz.getDay()]+', '+fmtShort(nz)+'.'))return;
     var li=BASE_PHASES.length-2;

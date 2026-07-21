@@ -13,9 +13,10 @@ A small personal PWA for tracking a 10-day cannabis taper (Jul 12–22, 2026), t
 - Daily hit tally against a stepping-down cap, visualized as a colour-coded descent (warm amber at a high cap → sage at zero) that the phase cards and hero number share
 - Per-hit timestamps drive the session rules ("max 3 hits/session · 3h between") — the today card shows when the next session opens
 - Working 20-minute urge delay timer (survives app close/reopen)
-- Self-adjusting schedule: an over-cap day automatically holds its phase one extra day, pushing all later steps and the zero date back in real time (the banner lets you decline and keep the original dates)
+- Self-adjusting schedule: an over-cap day automatically holds its phase one extra day, pushing all later steps and the zero date back in real time (the banner lets you decline and keep the original dates); a failed step-down defers — the day rides its old cap and the drop retries tomorrow; every two hard days at one cap ease the next step by an extra base day; and zero eve offers one (only one) planned extra evening-only day while the stash still exists
 - Post-zero slip logging with slip-resilient counters (current run, total clean days, best run — a slip never wipes the total)
-- Nightly check-in (sleep / mood / cravings, 1–5 — dots count what there was, so loud cravings are the high number) from the final taper phase onward, with trend chart and insights
+- Check-in (sleep / mood / cravings, 1–5 — dots count what there was, so loud cravings are the high number) from the final taper phase onward, with trend chart and insights — nightly through zero day 21, weekly after, and back to nightly for a week after any slip
+- The long tail: marker days at 30/60/90/180/365 with planned rewards funded by the money-saved tracker, a stale-backup nudge, and a one-sentence "why" that surfaces during the urge timer and on rough days
 - Flexible in both directions: a day already lived at the next cap can end its step a day early, pulling zero closer
 - "The story" capstone card in the zero era — the whole taper in numbers, shareable
 - Optional money-saved tracking (set a rough cost per hit in the trend detail)

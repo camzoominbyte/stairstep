@@ -1,6 +1,6 @@
 /* Taper to Zero — offline cache.
    Bump CACHE on any deploy so installed phones pick up the new version. */
-var CACHE = 'ttz-v6.1.7';
+var CACHE = 'ttz-v6.1.8';
 var ASSETS = [
   './',
   './index.html',
@@ -33,16 +33,19 @@ self.addEventListener('activate', function (e) {
 
 self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET') return;
-  var isNav = e.request.mode === 'navigate' || e.request.url.match(/index\.html$/);
+  var path = new URL(e.request.url).pathname;
+  var isNav = e.request.mode === 'navigate' || /\.html$/.test(path);
   if (isNav) {
-    // network-first for the page itself, so updates land when online
+    // network-first for pages, each cached under its OWN key — a guide
+    // visit must never overwrite the app shell with guide markup
+    var key = /guide\.html$/.test(path) ? './guide.html' : './index.html';
     e.respondWith(
       fetch(e.request).then(function (res) {
         var copy = res.clone();
-        caches.open(CACHE).then(function (c) { c.put('./index.html', copy); });
+        caches.open(CACHE).then(function (c) { c.put(key, copy); });
         return res;
       }).catch(function () {
-        return caches.match('./index.html');
+        return caches.match(key);
       })
     );
   } else {
