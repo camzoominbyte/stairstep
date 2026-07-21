@@ -340,24 +340,30 @@
   .yd-count{font-family:'Fraunces',serif;font-weight:600;font-size:17px;color:var(--sand)}
   .yd-count small{font-family:'Karla',sans-serif;font-size:11.5px;color:var(--muted);font-weight:400}
   .yd-go{color:var(--faint);font-size:17px;line-height:1;flex:0 0 auto}
-  .yd-line{margin:6px 0 2px}
-  .yd-line svg{display:block}
-  .yd-times{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0 2px;align-items:center}
-  .yd-times[hidden]{display:none}
   .yd-live[hidden]{display:none}
-  .ytime{
-    font-size:11.5px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;
-    background:var(--surface2);border:1px solid var(--line);border-radius:99px;padding:2px 9px;
-  }
-  .ytime small{font-weight:400;color:var(--muted)}
-  .ygap{
-    font-size:11px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums;
-    border:1px dashed var(--line);border-radius:99px;padding:2px 8px;
-  }
-  .ygap.max{
-    border-style:solid;border-color:var(--accent);color:var(--accent);
-    background:var(--accent-soft);font-weight:800;
-  }
+  /* the day as a vertical rail: one node per sitting, the gap to the next
+     riding the segment between them, and the longest stretch lit amber.
+     Reads top-to-bottom — no wrapping, no arrow glyphs to misrender. */
+  .yrail{margin:11px 0 3px}
+  .yrail[hidden]{display:none}
+  .yr-block{display:flex;align-items:stretch;gap:11px}
+  .yr-rail{position:relative;flex:0 0 14px;align-self:stretch}
+  .yr-rail::before{content:'';position:absolute;left:6px;top:0;bottom:0;width:2px;background:var(--line)}
+  .yrail>.yr-block:first-child .yr-rail::before{top:9px}
+  .yrail>.yr-block:last-child .yr-rail::before{bottom:auto;height:9px}
+  .yr-gap.max .yr-rail::before{background:var(--accent);width:3px;left:5.5px}
+  .yr-dot{position:absolute;left:0;top:4px;width:14px;height:14px;border-radius:50%;background:var(--amber);border:3px solid var(--surface);box-shadow:0 0 0 1.5px var(--line)}
+  .yr-dot.hollow{background:none;border-color:var(--faint)}
+  .yr-node .yr-body{padding:1px 0 3px;display:flex;align-items:baseline;gap:6px}
+  .yr-time{font-size:14.5px;font-weight:800;color:var(--sand);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .yr-mult{font-size:11px;font-weight:700;color:var(--muted)}
+  .yr-extra{font-size:11.5px;font-weight:700;color:var(--muted)}
+  .yr-gap .yr-body{padding:5px 0;display:flex;align-items:center}
+  .yr-gap.overnight .yr-body{padding:7px 0}
+  .yr-dur{font-size:11px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+  .yr-gap.max .yr-dur{color:var(--accent);font-weight:800}
+  .yr-tag{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);border-radius:99px;padding:1px 7px;margin-left:8px}
+  .yr-since{font-size:10.5px;color:var(--faint);font-weight:600;margin-left:8px;font-variant-numeric:tabular-nums}
   .yd-none{font-size:12.5px;color:var(--muted);font-style:italic;margin:6px 0 2px}
   /* the longest-stretch sentence, shared by the day surfaces */
   .lg-line{font-size:12.5px;color:var(--muted);margin:8px 0 0;line-height:1.5}
@@ -1407,8 +1413,7 @@ try{
     <span class="yd-count" id="ydCount"></span>
     <span class="yd-go" aria-hidden="true">›</span>
   </button>
-  <div class="yd-line" id="ydLine"></div>
-  <div class="yd-times" id="ydTimes"></div>
+  <div class="yrail" id="ydRail"></div>
   <p class="lg-line" id="ydLongest"></p>
   <p class="yd-live" id="ydLive" hidden></p>
 </div>
@@ -2808,22 +2813,34 @@ try{
       :((m.eff||0)+' <small>of '+m.cap+' · '+m.stat+'</small>');
     $('ydOpen').setAttribute('aria-label',
       'Yesterday, '+$('ydWhen').textContent+', '+$('ydCount').textContent+' — open in full');
-    $('ydLine').innerHTML=daylineSVG(k);
-    // the day as a sentence of chips: stamp, gap, stamp — longest gap lit
-    var chips='';
+    // the day as a vertical rail, read top-to-bottom: a node per sitting, the
+    // gap that opens into it riding the segment above, the longest lit amber.
+    // Each session has at most one preceding gap (the overnight one for si 0).
+    var rail='';
     m.sessions.forEach(function(sess,si){
       m.gapSpans.forEach(function(g,gi){
         if(g.si!==si)return;
-        chips+='<span class="ygap'+(gi===m.gapMaxIdx&&m.gaps.length>1?' max':'')+'" title="'+
-          esc(fmtSpan(g.from,g.to)+(g.on?' · overnight':''))+'">'+
-          (g.on?'↤ ':'↔ ')+fmtDur(g.ms)+'</span>';
+        var isMax=gi===m.gapMaxIdx&&m.gaps.length>1;
+        rail+='<div class="yr-block yr-gap'+(g.on?' overnight':'')+(isMax?' max':'')+
+          '" title="'+esc(fmtSpan(g.from,g.to)+(g.on?' · overnight':''))+'">'+
+          '<span class="yr-rail"></span>'+
+          '<span class="yr-body"><span class="yr-dur">'+fmtDur(g.ms)+'</span>'+
+          (isMax?'<span class="yr-tag">longest</span>':'')+
+          (g.on?'<span class="yr-since">since '+fmtTime(g.from)+'</span>':'')+
+          '</span></div>';
       });
-      chips+='<span class="ytime">'+fmtTime(sess[0])+
-        (sess.length>1?' <small>×'+sess.length+'</small>':'')+'</span>';
+      rail+='<div class="yr-block yr-node"><span class="yr-rail"><span class="yr-dot"></span></span>'+
+        '<span class="yr-body"><span class="yr-time">'+fmtTime(sess[0])+'</span>'+
+        (sess.length>1?'<span class="yr-mult">×'+sess.length+'</span>':'')+
+        '</span></div>';
     });
-    if(m.adj>0)chips+='<span class="ygap">'+m.adj+' untimed</span>';
-    $('ydTimes').innerHTML=chips;
-    $('ydTimes').hidden=!chips;
+    // untimed hits ride alongside the timed ones as a hollow node; when the
+    // whole day is untimed the note below carries it, so skip the rail
+    if(m.adj>0&&m.sessions.length)rail+='<div class="yr-block yr-node">'+
+      '<span class="yr-rail"><span class="yr-dot hollow"></span></span>'+
+      '<span class="yr-body"><span class="yr-extra">'+m.adj+' more · logged without times</span></span></div>';
+    $('ydRail').innerHTML=rail;
+    $('ydRail').hidden=!rail;
     // a day with one sitting has no gap to name — say so rather than sit empty
     var lg=m.sessions.length
       ?(longestVsHTML(m)||'<span class="yd-none">One sitting all day — no gap to measure.</span>')
