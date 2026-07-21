@@ -1382,7 +1382,7 @@ try{
     <div class="stat"><span class="sv" id="stLeft">–</span><span class="sl">left today</span></div>
     <div class="stat"><span class="sv" id="stVs">–</span><span class="sl">vs yesterday now</span></div>
     <div class="stat"><span class="sv" id="stSession">–</span><span class="sl" id="stSessionLbl">this session</span></div>
-    <div class="stat"><span class="sv time" id="stLast">–</span><span class="sl">last hit</span></div>
+    <div class="stat"><span class="sv time" id="stLast">–</span><span class="sl" id="stLastLbl">last hit</span></div>
   </div>
   <p class="bar-note" id="barNote"></p>
   <div class="action-row">
@@ -2752,9 +2752,18 @@ try{
         $('stSession').className='sv';
         setNum('stSession',phase.single?1:phase.sessionMax);
         $('stSessionLbl').textContent=phase.single?'evening session':'this session';
-        setTxt('stLast','–');
+        // no hit today yet — fall back to the last hit on record so the tile
+        // shows yesterday's clock time, tagged so it can't read as tonight's
+        var le=lastHitEver();
+        if(le){
+          setTxt('stLast',fmtTime(le));
+          var leD=new Date(le.getTime()-DAY_CUTOFF_H*3600000);
+          $('stLastLbl').textContent='last hit · '+
+            (dkeyOf(leD)===ydayKey()?'yest':WEEKDAYS[leD.getDay()].slice(0,3));
+        }else{ setTxt('stLast','–'); $('stLastLbl').textContent='last hit'; }
       }else{
         setTxt('stLast',fmtTime(si.last));
+        $('stLastLbl').textContent='last hit';
         if(phase.single){
           setTxt('stSession','—');
           $('stSession').className='sv';
