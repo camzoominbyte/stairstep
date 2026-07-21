@@ -1463,6 +1463,7 @@ try{
     <summary>If you slip</summary>
     <div class="d-body">
       <p>A day over cap — or a slip after zero — is <strong>data, not doom</strong>. The schedule holds that cap an extra day by itself, then keeps stepping down — nothing to fix, nothing to redo.</p>
+      <p>A genuinely rough patch goes further: <strong>every two hard days at one cap ease the following step by an extra day</strong>, so the whole remaining descent slows instead of snapping. The taper bends to the terrain; the direction never changes.</p>
       <p>In the research, lapses after years of daily use are <strong>the norm, not a personal failure</strong> — expected, planned for, and recoverable. The trend line matters, not any single day. Ten years in; the exit doesn't have to be flawless to be final.</p>
       <p class="d-evid">Concrete rewards for clean days help too — that's contingency management, an evidence-backed add-on. <a class="dlink" href="guide.html#relapse">Staying quit →</a></p>
     </div>
@@ -1815,6 +1816,11 @@ try{
      living under, and the drop retries the next day. Recomputed from
      the log on every render, so editing a count re-adjusts the whole
      descent immediately.
+     Strain propagates: a rung that needed hard extra days (over-cap
+     holds and deferred step-downs) was running too steep — every 2
+     strain days ease the NEXT step by one extra base day, so the whole
+     remaining descent slows, not just the broken rung. Manual holds are
+     chosen, not strain — they don't propagate.
      'kept' on the banner declines a day's hold; legacy 'held' answers
      already live in data.holds (manual holds / early step-downs), which
      layer on top. */
@@ -1822,12 +1828,13 @@ try{
   function buildSchedule(){
     // latest logical day that has started — only real days can hold
     var ln=logicalNow(), lim=new Date(ln.getFullYear(),ln.getMonth(),ln.getDate());
-    var out=[], cur=new Date(TAPER_START);
+    var out=[], cur=new Date(TAPER_START), carry=0;
     for(var i=0;i<BASE_PHASES.length;i++){
       var p=BASE_PHASES[i];
       var start=new Date(cur), end=null, auto=0, manual=data.holds[i]||0;
+      var eased=carry; carry=0;
       if(p.days){
-        var dur=Math.max(1,p.days+manual), done=0, d=new Date(start);
+        var dur=Math.max(1,p.days+manual+eased), done=0, d=new Date(start);
         // never defer INTO the zero era — a zero-day slip is the record's
         // business, not the schedule's
         var nextCap=(BASE_PHASES[i+1]&&BASE_PHASES[i+1].cap>0)?BASE_PHASES[i+1].cap:null;
@@ -1847,6 +1854,11 @@ try{
         }
         end=addDays(start,dur+auto-1);
         cur=addDays(start,dur+auto);
+        // strain propagation: every 2 hard extra days here ease the next
+        // step by one base day (the drop that follows a struggling rung
+        // is the risky one). Nothing carries into the zero era — the last
+        // capped rung's strain already holds itself.
+        carry=Math.floor(auto/2);
       }
       var lbl;
       if(!end){lbl=fmtShort(start)+' →';}
@@ -1855,7 +1867,7 @@ try{
       // net them out: an auto-hold cancelled by an early step-down is a
       // phase that ran its base length — report it as neither
       var net=auto+manual;
-      out.push({start:start,end:end,lbl:lbl,held:Math.max(0,net),early:Math.max(0,-net)});
+      out.push({start:start,end:end,lbl:lbl,held:Math.max(0,net),early:Math.max(0,-net),eased:eased});
     }
     return out;
   }
@@ -1933,14 +1945,16 @@ try{
     return g[Math.min(g.length-1,dayInPhase(d,di))];
   }
   // a deferred step-down day: an extension day riding its phase because it
-  // ran past the NEXT step's cap — the drop retries the day after
+  // ran past the NEXT step's cap — the drop retries the day after.
+  // The base length includes eased days (strain carried in from the rung
+  // before), or an eased in-base day would read as a deferral it isn't.
   function deferredDay(d,di){
     if(di<0||di>=BASE_PHASES.length-1)return false;
     var p=BASE_PHASES[di], nx=BASE_PHASES[di+1];
     if(!p.days||nx.cap<=0)return false;
     var c=countOf(dkeyOf(d));
     if(c===null||c<=nx.cap)return false;
-    return dayInPhase(d,di)>=Math.max(1,p.days+(data.holds[di]||0));
+    return dayInPhase(d,di)>=Math.max(1,p.days+(data.holds[di]||0)+(schedule()[di].eased||0));
   }
   // the structured plan for a given day: session windows, honest math, do-list.
   // Held days clamp to the phase's last (widest) day, same as goals.
@@ -2383,8 +2397,9 @@ try{
       var el=document.createElement('div');
       el.className='phase'+(i<idx?' past':'')+(i===idx?' now':'')+(i===sch.length-1?' zero':'');
       el.id='phase-'+i;
-      var held=s.held?'<p class="phase-held">Held +'+s.held+' day'+(s.held>1?'s':'')+'</p>'
-        :s.early?'<p class="phase-held">Finished '+s.early+' day'+(s.early>1?'s':'')+' early</p>':'';
+      var held=(s.eased?'<p class="phase-held">Eased +'+s.eased+' day'+(s.eased>1?'s':'')+' — the rung before ran hard</p>':'')+
+        (s.held?'<p class="phase-held">Held +'+s.held+' day'+(s.held>1?'s':'')+'</p>'
+        :s.early?'<p class="phase-held">Finished '+s.early+' day'+(s.early>1?'s':'')+' early</p>':'');
       var capCol=rgbStr(capRGB(p.cap/BASE_PHASES[0].cap));
       // each scheduled day gets its own row: date, planned windows, that day's gap
       var dayRows='';
@@ -3009,7 +3024,7 @@ try{
     var yCount=countOf(yKey);
     if(yCount===null||yCount<=BASE_PHASES[yIdx].cap)return;
     if(data.holdPrompts[yKey])return;
-    $('holdText').innerHTML='<strong>Yesterday went over cap, so the schedule already adjusted itself:</strong> this cap runs one day longer, and every later step — including the zero date, now '+fmtShort(zeroDate())+' — moved back a day to match. Under the cap is all today asks.';
+    $('holdText').innerHTML='<strong>Yesterday went over cap, so the schedule already adjusted itself:</strong> this cap runs one day longer, and every later step — including the zero date, now '+fmtShort(zeroDate())+' — moved back to match. If a cap takes two hard days, the next step eases by an extra day too: the descent slows to match the terrain. Under the cap is all today asks.';
     b.classList.add('show');
     b.dataset.ykey=yKey;
   }
@@ -5021,10 +5036,10 @@ try{
   function storyStats(){
     var sch=schedule(),start=sch[0].start,z=zeroDate();
     var t=taperProgress(),us=urgeStats(),ga=gapAnalytics(),zs=zeroStats();
-    var held=0,early=0;
-    sch.forEach(function(s){held+=s.held||0;early+=s.early||0;});
+    var held=0,early=0,eased=0;
+    sch.forEach(function(s){held+=s.held||0;early+=s.early||0;eased+=s.eased||0;});
     return {start:start,z:z,totalD:t.totalD,
-      t:t,ps:t,us:us,ga:ga,zs:zs,held:held,early:early,
+      t:t,ps:t,us:us,ga:ga,zs:zs,held:held,early:early,eased:eased,
       money:t.money};
   }
   function renderStory(){
@@ -5036,6 +5051,7 @@ try{
     $('storyBody').innerHTML=
       '<p class="chart-note" style="margin-top:0">Started <strong>'+fmtShort(s.start)+'</strong> from a ~'+BASELINE+'-a-day baseline · reached zero <strong>'+fmtShort(s.z)+'</strong> — '+s.totalD+' days of stepping down'+
       (s.held?', '+s.held+' held day'+(s.held>1?'s':'')+' along the way':'')+
+      (s.eased?', '+s.eased+' step'+(s.eased>1?'s':'')+' eased when the slope ran steep':'')+
       (s.early?', '+s.early+' step'+(s.early>1?'s':'')+' finished early':'')+'.</p>'+
       '<div class="stat-row" style="animation:none">'+
       stat(s.ps.avoided,'hits not smoked','var(--sage)')+
