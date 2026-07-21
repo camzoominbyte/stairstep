@@ -2752,7 +2752,16 @@ try{
         $('stSession').className='sv';
         setNum('stSession',phase.single?1:phase.sessionMax);
         $('stSessionLbl').textContent=phase.single?'evening session':'this session';
-        setTxt('stLast','–');
+        // No hit today yet — the "last hit" stat still names the most recent one
+        // anywhere rather than sitting blank. A prior-day stamp carries its
+        // weekday so "9:14 PM" can't misread as this morning; a hit inside
+        // today's logical day (before the 4am roll) shows the bare time.
+        var le=lastHitEver();
+        setTxt('stLast',le
+          ?(dkeyOf(new Date(le.getTime()-DAY_CUTOFF_H*3600000))===todayKey
+              ?fmtTime(le)
+              :WEEKDAYS[le.getDay()].slice(0,3)+' '+fmtTime(le))
+          :'–');
       }else{
         setTxt('stLast',fmtTime(si.last));
         if(phase.single){
