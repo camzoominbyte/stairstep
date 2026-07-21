@@ -12,6 +12,8 @@ A small personal PWA for tracking a 10-day cannabis taper (Jul 12–22, 2026), t
 
 - Daily hit tally against a stepping-down cap, visualized as a colour-coded descent (warm amber at a high cap → sage at zero) that the phase cards and hero number share
 - Per-hit timestamps drive the session rules ("max 3 hits/session · 3h between") — the today card shows when the next session opens
+- Timestamps are on the surface, not buried: every day timeline stamps each sitting with its clock time, and a "Yesterday" card on the Today screen spells out the prior day's sittings and the gaps between them
+- The longest gap is the headline stat — lit across the day's timeline, badged in the gap list, and compared against the previous logged day's longest everywhere a day appears (the Yesterday card also tracks the stretch running right now against yesterday's best)
 - Working 20-minute urge delay timer (survives app close/reopen)
 - Self-adjusting schedule: an over-cap day automatically holds its phase one extra day, pushing all later steps and the zero date back in real time (the banner lets you decline and keep the original dates); a failed step-down defers — the day rides its old cap and the drop retries tomorrow; every two hard days at one cap ease the next step by an extra base day; and zero eve offers one (only one) planned extra evening-only day while the stash still exists
 - Post-zero slip logging with slip-resilient counters (current run, total clean days, best run — a slip never wipes the total)

@@ -325,6 +325,58 @@
   }
   .delay-chip.running{border-style:solid;border-color:var(--accent);background:var(--accent-soft);font-variant-numeric:tabular-nums}
   .delay-chip.done{border-style:solid;border-color:var(--sage);color:var(--sage);background:#eff2df}
+  /* ---- yesterday, on the Today screen: the clock you actually want to see ---- */
+  .yday{
+    background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);
+    border-radius:14px;padding:14px 16px 13px;margin:-4px 0 14px;
+  }
+  .yday[hidden]{display:none}
+  .yd-open{
+    display:flex;align-items:baseline;gap:9px;width:100%;text-align:left;padding:0;
+    background:none;border:0;cursor:pointer;font-family:'Karla',sans-serif;
+  }
+  .yd-open .eyebrow{color:var(--accent);flex:0 0 auto}
+  .yd-when{font-size:11.5px;color:var(--muted);font-weight:700;flex:1;min-width:0}
+  .yd-count{font-family:'Fraunces',serif;font-weight:600;font-size:17px;color:var(--sand)}
+  .yd-count small{font-family:'Karla',sans-serif;font-size:11.5px;color:var(--muted);font-weight:400}
+  .yd-go{color:var(--faint);font-size:17px;line-height:1;flex:0 0 auto}
+  .yd-line{margin:6px 0 2px}
+  .yd-line svg{display:block}
+  .yd-times{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0 2px;align-items:center}
+  .yd-times[hidden]{display:none}
+  .yd-live[hidden]{display:none}
+  .ytime{
+    font-size:11.5px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;
+    background:var(--surface2);border:1px solid var(--line);border-radius:99px;padding:2px 9px;
+  }
+  .ytime small{font-weight:400;color:var(--muted)}
+  .ygap{
+    font-size:11px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums;
+    border:1px dashed var(--line);border-radius:99px;padding:2px 8px;
+  }
+  .ygap.max{
+    border-style:solid;border-color:var(--accent);color:var(--accent);
+    background:var(--accent-soft);font-weight:800;
+  }
+  .yd-none{font-size:12.5px;color:var(--muted);font-style:italic;margin:6px 0 2px}
+  /* the longest-stretch sentence, shared by the day surfaces */
+  .lg-line{font-size:12.5px;color:var(--muted);margin:8px 0 0;line-height:1.5}
+  .lg-line b{color:var(--accent);font-weight:800;font-variant-numeric:tabular-nums}
+  .lg-when{color:var(--faint);font-variant-numeric:tabular-nums}
+  .yd-live{
+    font-size:12.5px;color:var(--muted);margin:6px 0 0;line-height:1.5;
+    border-top:1px solid var(--hair);padding-top:7px;
+  }
+  .yd-live b{font-variant-numeric:tabular-nums;font-weight:800}
+  .yd-live.ahead b{color:var(--sage)}
+  .yd-live.chasing b{color:var(--accent)}
+  /* the longest gap, called out wherever gap rows are listed */
+  .sgap.max{font-weight:800}
+  .gmax{
+    display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--accent);background:var(--accent-soft);border-radius:99px;padding:1px 7px;margin-right:7px;
+    vertical-align:1px;
+  }
   /* ---- the hero: dark ember card — gap ring, score, and the log button ---- */
   .hero-card{
     position:relative;border-radius:20px;padding:16px 16px 14px;margin-bottom:14px;
@@ -1348,6 +1400,19 @@ try{
   <div class="xtra" id="todayXtra"></div>
 </div>
 
+<div class="yday" id="ydayCard" hidden>
+  <button class="yd-open" id="ydOpen">
+    <span class="eyebrow">Yesterday</span>
+    <span class="yd-when" id="ydWhen"></span>
+    <span class="yd-count" id="ydCount"></span>
+    <span class="yd-go" aria-hidden="true">›</span>
+  </button>
+  <div class="yd-line" id="ydLine"></div>
+  <div class="yd-times" id="ydTimes"></div>
+  <p class="lg-line" id="ydLongest"></p>
+  <p class="yd-live" id="ydLive" hidden></p>
+</div>
+
 <div class="checkin" id="checkinCard" hidden>
   <p class="eyebrow" style="color:var(--sage)">The check-in</p>
   <p class="rit-lede" id="ckLede"></p>
@@ -1663,10 +1728,24 @@ try{
   function dkeyOf(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
   function dateOf(key){var p=key.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
   function addDays(d,n){return new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);}
+  /* attribute-safe text — everything we build is generated, but markup that
+     rides inside an aria-label or title should never be able to break out */
+  function esc(s){
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
   function fmtShort(d){return MONTHS[d.getMonth()]+' '+d.getDate();}
   function fmtTime(d){
     var h=d.getHours()%12||12, ap=d.getHours()<12?'AM':'PM';
     return h+':'+pad(d.getMinutes())+' '+ap;
+  }
+  /* a stretch named end to end — the weekday rides along only when the
+     stretch crosses a day, so "5:00 PM → 7:00 PM" can't read as two hours
+     when it was really twenty-six */
+  function fmtSpan(a,b){
+    var same=a.toDateString()===b.toDateString();
+    function s(t){return (same?'':WEEKDAYS[t.getDay()].slice(0,3)+' ')+fmtTime(t);}
+    return s(a)+' → '+s(b);
   }
   // compact clock stamp for chart labels: 7:02a, 11:40p
   function fmtClk(d){
@@ -2697,6 +2776,81 @@ try{
     }
   }
 
+  /* ================= yesterday, on the Today screen =================
+     The prior day's clock spelled out where you'll actually see it: every
+     sitting's stamp, the gaps between them with the longest one lit, and
+     how much further that longest stretch got pushed than the day before.
+     One tap opens the full day page. */
+  function ydayKey(){return dkeyOf(addDays(today,-1));}
+  function renderYday(){
+    var card=$('ydayCard');
+    if(!card)return;
+    var yd=addDays(today,-1);
+    if(yd<schedule()[0].start){card.hidden=true;return;}
+    var k=ydayKey(), m=dayMetrics(k);
+    // nothing to show a clock for — no timed hits, no untimed ones, no slip
+    if(!m.sessions.length&&!m.adj&&!m.eff){card.hidden=true;return;}
+    card.hidden=false;
+    $('ydWhen').textContent=WEEKDAYS[yd.getDay()].slice(0,3)+' '+fmtShort(yd);
+    $('ydCount').innerHTML=m.isZ
+      ?(m.eff>0?m.eff+' <small>· slip</small>':'<small>clean</small>')
+      :((m.eff||0)+' <small>of '+m.cap+' · '+m.stat+'</small>');
+    $('ydOpen').setAttribute('aria-label',
+      'Yesterday, '+$('ydWhen').textContent+', '+$('ydCount').textContent+' — open in full');
+    $('ydLine').innerHTML=daylineSVG(k);
+    // the day as a sentence of chips: stamp, gap, stamp — longest gap lit
+    var chips='';
+    m.sessions.forEach(function(sess,si){
+      m.gapSpans.forEach(function(g,gi){
+        if(g.si!==si)return;
+        chips+='<span class="ygap'+(gi===m.gapMaxIdx&&m.gaps.length>1?' max':'')+'" title="'+
+          esc(fmtSpan(g.from,g.to)+(g.on?' · overnight':''))+'">'+
+          (g.on?'↤ ':'↔ ')+fmtDur(g.ms)+'</span>';
+      });
+      chips+='<span class="ytime">'+fmtTime(sess[0])+
+        (sess.length>1?' <small>×'+sess.length+'</small>':'')+'</span>';
+    });
+    if(m.adj>0)chips+='<span class="ygap">'+m.adj+' untimed</span>';
+    $('ydTimes').innerHTML=chips;
+    $('ydTimes').hidden=!chips;
+    // a day with one sitting has no gap to name — say so rather than sit empty
+    var lg=m.sessions.length
+      ?(longestVsHTML(m)||'<span class="yd-none">One sitting all day — no gap to measure.</span>')
+      :'<span class="yd-none">Logged without times — open the day to stamp them.</span>';
+    $('ydLongest').innerHTML=lg;
+    ydLiveTick();
+  }
+  /* today's longest stretch — including the one still running — measured
+     against yesterday's longest. The line the whole taper is chasing. */
+  function ydLiveTick(){
+    var el=$('ydLive'),card=$('ydayCard');
+    if(!el||!card||card.hidden)return;
+    var ym=dayMetrics(ydayKey());
+    if(isZeroEra||ym.gapMaxMs===null){el.hidden=true;return;}
+    var best=dayMetrics(todayKey).gapMaxMs||0;
+    var last=lastHitEver(), running=false;
+    if(last){
+      var since=Date.now()-last.getTime();
+      // a stretch only counts as live while it's plausibly still today's
+      if(since<48*3600000&&since>best){best=since;running=true;}
+    }
+    if(!best){el.hidden=true;return;}
+    el.hidden=false;
+    var lede='Today’s longest'+(running?' — still running —':'')+' <b>'+fmtDur(best)+'</b>';
+    var d=best-ym.gapMaxMs;
+    if(d>=60000){
+      el.className='yd-live ahead';
+      el.innerHTML=lede+' — already <b>'+fmtDur(d)+'</b> past yesterday’s '+fmtDur(ym.gapMaxMs)+'.';
+    }else if(d>0){
+      el.className='yd-live ahead';
+      el.innerHTML=lede+' — just past yesterday’s '+fmtDur(ym.gapMaxMs)+'.';
+    }else{
+      el.className='yd-live chasing';
+      el.innerHTML=lede+' — <b>'+(-d<60000?'under a minute':fmtDur(-d))+'</b> from beating yesterday’s '+fmtDur(ym.gapMaxMs)+'.';
+    }
+  }
+  $('ydOpen').addEventListener('click',function(){openDayPage(ydayKey());});
+
   /* the descent, big picture: every day drawn against the old ~30/day line,
      so the whole story reads in one glance — tall bars then, slivers now */
   function renderTrend(){
@@ -2795,26 +2949,84 @@ try{
       (sub?'<div class="dd-sub">'+sub+'</div>':'');
   }
 
+  /* a plain-words description of the day's clock, for screen readers and for
+     the tooltip on any surface that wants one */
+  function daylineText(key){
+    var m=dayMetrics(key);
+    if(!m.sessions.length)return 'No timed hits.';
+    var parts=m.sessions.map(function(sess){
+      return fmtTime(sess[0])+(sess.length>1?' ×'+sess.length:'');
+    });
+    return 'Hits at '+parts.join(', ')+
+      (m.gapMaxMs!==null?'. Longest gap '+fmtDur(m.gapMaxMs)+', '+fmtSpan(m.gapMax.from,m.gapMax.to)+'.':'.');
+  }
+  /* the day's clock: hour scale above, the line with a dot per hit, every
+     sitting's stamp below it, and the day's longest stretch lit across the
+     span it actually covers. */
   function daylineSVG(key){
     var e=data.days[key];
     if(!e||!e.hits||!e.hits.length)return '';
     var b=dateOf(key);
     var day4=new Date(b.getFullYear(),b.getMonth(),b.getDate(),DAY_CUTOFF_H).getTime();
-    var svg='<svg viewBox="0 0 340 30" width="100%" role="img" aria-label="When the hits landed across the day">';
-    svg+='<line x1="6" y1="15" x2="334" y2="15" stroke="var(--surface2)" stroke-width="2"/>';
-    for(var hh=1;hh<24;hh++){
-      var hx=6+(hh/24)*328;
-      svg+='<line x1="'+hx.toFixed(1)+'" y1="13.5" x2="'+hx.toFixed(1)+'" y2="16.5" stroke="var(--line)" stroke-width="1" stroke-opacity=".55"/>';
-    }
-    [[8,'8a'],[12,'12p'],[16,'4p'],[20,'8p'],[24,'12a']].forEach(function(t){
-      var x=6+((t[0]-DAY_CUTOFF_H)/24)*328;
-      svg+='<line x1="'+x.toFixed(1)+'" y1="12" x2="'+x.toFixed(1)+'" y2="18" stroke="var(--line)" stroke-width="1"/>';
-      svg+='<text x="'+x.toFixed(1)+'" y="28" font-size="7.5" fill="var(--muted)" text-anchor="middle" font-family="Karla,sans-serif">'+t[1]+'</text>';
-    });
-    e.hits.forEach(function(iso){
-      var hrs=(new Date(iso).getTime()-day4)/3600000;
+    var X0=6,XW=328,AX=34;
+    function xAt(ms){
+      var hrs=(ms-day4)/3600000;
       if(hrs<0)hrs=0;if(hrs>24)hrs=24;
-      svg+='<circle cx="'+(6+hrs/24*328).toFixed(1)+'" cy="15" r="4" fill="var(--amber)" fill-opacity=".9"/>';
+      return X0+hrs/24*XW;
+    }
+    var m=dayMetrics(key);
+    // lay the stamps out first: every sitting gets one, dropping to another
+    // row when the clock crowds, and the drawing grows to fit however many
+    // rows that takes — a busy day must never lose a timestamp
+    var stamps=[], rowEnd=[];
+    m.sessions.forEach(function(sess){
+      var st=fmtClk(sess[0])+(sess.length>1?' ×'+sess.length:'');
+      var w=st.length*4.4, x=xAt(sess[0].getTime()), row=0;
+      // resolve the anchor first: a stamp clamped to the edge occupies a
+      // different box than one centred on its dot, and the packing has to
+      // reserve the box that actually gets drawn
+      var anch='middle', tx=x, L=x-w/2;
+      if(L<1){anch='start';tx=1;L=1;}
+      else if(x+w/2>339){anch='end';tx=339;L=339-w;}
+      while(rowEnd[row]!==undefined&&L<=rowEnd[row]+4)row++;
+      rowEnd[row]=L+w;
+      stamps.push({t:st,tx:tx,anch:anch,row:row});
+    });
+    var H=50+Math.max(0,rowEnd.length-1)*8;
+    var svg='<svg viewBox="0 0 340 '+H+'" width="100%" role="img" aria-label="'+esc(daylineText(key))+'">';
+    // the hour scale rides above the line, leaving the space below for stamps
+    [[8,'8a'],[12,'12p'],[16,'4p'],[20,'8p'],[24,'12a']].forEach(function(t){
+      var x=X0+((t[0]-DAY_CUTOFF_H)/24)*XW;
+      svg+='<text x="'+x.toFixed(1)+'" y="11" font-size="7.5" fill="var(--faint)" text-anchor="middle" font-family="Karla,sans-serif">'+t[1]+'</text>';
+      svg+='<line x1="'+x.toFixed(1)+'" y1="'+(AX-4)+'" x2="'+x.toFixed(1)+'" y2="'+(AX+4)+'" stroke="var(--line)" stroke-width="1"/>';
+    });
+    svg+='<line x1="'+X0+'" y1="'+AX+'" x2="'+(X0+XW)+'" y2="'+AX+'" stroke="var(--line)" stroke-width="2"/>';
+    for(var hh=1;hh<24;hh++){
+      var hx=X0+(hh/24)*XW;
+      svg+='<line x1="'+hx.toFixed(1)+'" y1="'+(AX-1.5)+'" x2="'+hx.toFixed(1)+'" y2="'+(AX+1.5)+'" stroke="var(--line)" stroke-width="1" stroke-opacity=".55"/>';
+    }
+    // the longest stretch of the day, drawn where it happened
+    var gx=m.gapMax;
+    if(gx&&gx.ms>=20*60000){
+      var x1=xAt(gx.from.getTime()), x2=xAt(gx.to.getTime());
+      if(x2-x1>=4){
+        svg+='<line x1="'+x1.toFixed(1)+'" y1="'+AX+'" x2="'+x2.toFixed(1)+'" y2="'+AX+'" stroke="var(--accent)" stroke-width="7" stroke-linecap="round" stroke-opacity=".28"/>'+
+          '<line x1="'+x1.toFixed(1)+'" y1="'+(AX-7)+'" x2="'+x1.toFixed(1)+'" y2="'+(AX+7)+'" stroke="var(--accent)" stroke-width="1.3" stroke-opacity=".7"/>'+
+          '<line x1="'+x2.toFixed(1)+'" y1="'+(AX-7)+'" x2="'+x2.toFixed(1)+'" y2="'+(AX+7)+'" stroke="var(--accent)" stroke-width="1.3" stroke-opacity=".7"/>';
+        var lbl=(gx.on?'↤ ':'')+fmtDur(gx.ms)+' longest';
+        var mid=Math.min(340-lbl.length*2.6,Math.max(lbl.length*2.6,(x1+x2)/2));
+        svg+='<text x="'+mid.toFixed(1)+'" y="24" font-size="8.5" font-weight="700" fill="var(--accent)" text-anchor="middle" font-family="Karla,sans-serif">'+lbl+'</text>';
+      }
+    }
+    // a dot per hit
+    m.sessions.forEach(function(sess){
+      sess.forEach(function(hd){
+        svg+='<circle cx="'+xAt(hd.getTime()).toFixed(1)+'" cy="'+AX+'" r="4" fill="var(--amber)" fill-opacity=".9"/>';
+      });
+    });
+    // then the stamps, in the rows laid out above
+    stamps.forEach(function(s){
+      svg+='<text x="'+s.tx.toFixed(1)+'" y="'+(46+s.row*8)+'" font-size="8" fill="var(--muted)" text-anchor="'+s.anch+'" font-family="Karla,sans-serif">'+s.t+'</text>';
     });
     return svg+'</svg>';
   }
@@ -2962,7 +3174,18 @@ try{
         line=daylineSVG(m.key);
         if(m.sessN){
           chips.push('<span class="hchip">'+m.sessN+' sitting'+(m.sessN>1?'s':'')+(m.isToday?' so far':'')+'</span>');
-          if(m.gapAvgMs!==null){
+          // the longest stretch leads — it's the number the taper moves
+          if(m.gapMaxMs!==null){
+            var ltxt='longest '+fmtDur(m.gapMaxMs);
+            var lTitle=m.gapMax?fmtSpan(m.gapMax.from,m.gapMax.to)+(m.gapMax.on?' · overnight':''):'';
+            if(m.vs&&m.vs.gapMaxPct!==null&&!m.isToday){
+              var lp=m.vs.gapMaxPct;
+              chips.push('<span class="dv pill '+(lp>0?'good':lp<0?'bad':'flat')+'" title="'+esc(lTitle)+'">'+ltxt+' '+(lp>=0?'+':'−')+Math.abs(lp)+'%</span>');
+            }else{
+              chips.push('<span class="hchip"'+(lTitle?' title="'+esc(lTitle)+'"':'')+'>'+ltxt+'</span>');
+            }
+          }
+          if(m.gapAvgMs!==null&&m.gaps.length>1){
             var gtxt='gap '+fmtDur(m.gapAvgMs);
             var gTitle=m.reqGapH>0?(m.heldRule?'held the '+fmtGapH(m.reqGapH)+' rule':'short of the '+fmtGapH(m.reqGapH)+' rule'):'';
             if(m.vs&&m.vs.gapAvgPct!==null&&!m.isToday){
@@ -3445,6 +3668,7 @@ try{
     var openTs=(last&&reqMs>0)?last.getTime()+reqMs:0;
     function tick(){
       renderGlassWin();
+      safe(ydLiveTick);
       if(!last){
         $('ghSince').textContent='—';
         setGhRing(0);
@@ -3586,12 +3810,13 @@ try{
   });}
   /* time-between-sessions analytics, each gap judged against that day's rule */
   function gapAnalytics(){return rc('ga',function(){
-    var recs=[];
+    var recs=[],best=null;
     taperProgress().days.forEach(function(m){
-      m.gaps.forEach(function(g,i){
-        var gapH=g/3600000;
-        recs.push({h:gapH,ok:m.reqGapH>0?gapH>=m.reqGapH:true,k:m.key,req:m.reqGapH,
-          on:i===0&&m.overnightMs!==null});
+      m.gapSpans.forEach(function(g){
+        var gapH=g.ms/3600000;
+        var r={h:gapH,ok:m.reqGapH>0?gapH>=m.reqGapH:true,k:m.key,req:m.reqGapH,on:g.on};
+        recs.push(r);
+        if(!best||gapH>best.h)best=r;
       });
     });
     if(!recs.length)return null;
@@ -3603,7 +3828,7 @@ try{
       recent=r.reduce(function(a,b){return a+b.h;},0)/r.length;
     }
     return {count:recs.length,avg:sum/recs.length,adherence:Math.round(okc/recs.length*100),
-      early:early,recent:recent,widening:(early!==null&&recent>early+0.15),recs:recs};
+      early:early,recent:recent,widening:(early!==null&&recent>early+0.15),recs:recs,best:best};
   });}
   function sessionRhythmHTML(){
     var g=gapAnalytics();
@@ -3611,6 +3836,8 @@ try{
     var col=g.adherence>=70?'var(--sage)':g.adherence>=50?'var(--amber)':'var(--clay)';
     return '<h3 class="xtra-h" style="margin-top:16px">Time between sessions</h3>'+
       figsHTML([
+        g.best?{v:fmtDur(g.best.h*3600000),l:'longest yet',mid:true,c:'var(--accent)',
+          s:fmtShort(dateOf(g.best.k))}:null,
         {v:fmtDur(g.avg*3600000),l:'avg gap',mid:true},
         {v:g.adherence+'<small>%</small>',l:'met the rule',c:col},
         {v:g.count,l:'gaps logged',s:'nights included'},
@@ -4309,13 +4536,31 @@ try{
         pt:pm.capPct+'%',ct:m.capPct+'%',good:cGood,
         chip:dv(cGood===true?'more room':cGood===false?'less room':'even',cGood)}));
     }
-    if(v.gapAvgMs!==null){
+    // the longest stretch leads the gap rows — it's the needle that matters most
+    var lv=liveGapNow(m), lvWins=!!lv&&lv.wins;
+    var lCur=lvWins?lv.ms:m.gapMaxMs;
+    if(pm.gapMaxMs!==null&&lCur!==null){
+      var lDiff=lCur-pm.gapMaxMs;
+      var lGood=lDiff>=300000?true:lDiff<=-300000?false:null;
+      // a day still running hasn't fallen short of anything yet — it's chasing
+      if(lGood===false&&m.partial)lGood=null;
+      note(lGood,'longest stretch');
+      rows.push(pairHTML({k:'longest stretch',pv:pm.gapMaxMs,cv:lCur,
+        pt:fmtDur(pm.gapMaxMs),ct:fmtDur(lCur)+(m.partial?(lvWins?' running':' so far'):''),good:lGood,
+        chip:dv(m.partial&&lDiff<0?fmtDur(-lDiff)+' to go'
+          :lGood===null?'about even'
+          :fmtDur(Math.abs(lDiff))+(lDiff>0?' further':' shorter'),lGood)}));
+    }
+    if(v.gapAvgMs!==null&&m.gaps.length>1){
       var gGood=v.gapAvgPct===null?null:v.gapAvgPct>5?true:v.gapAvgPct<-5?false:null; note(gGood,'spacing');
       rows.push(pairHTML({k:'avg gap',pv:pm.gapAvgMs,cv:m.gapAvgMs,
         pt:fmtDur(pm.gapAvgMs),ct:fmtDur(m.gapAvgMs),good:gGood,
         chip:dv(gGood===null?'about even':(v.gapAvgPct>=0?'+':'−')+Math.abs(v.gapAvgPct)+'%',gGood)}));
     }
-    if(v.overnightMs!==null){
+    // when the longest stretch IS the overnight one on both days, the row
+    // above already said this — don't print the same two numbers twice
+    var onIsLongest=m.gapMax&&m.gapMax.on&&pm.gapMax&&pm.gapMax.on;
+    if(v.overnightMs!==null&&!onIsLongest){
       var oGood=v.overnightMs>=900000?true:v.overnightMs<=-900000?false:null; note(oGood,'overnight');
       rows.push(pairHTML({k:'overnight',pv:pm.overnightMs,cv:m.overnightMs,
         pt:fmtDur(pm.overnightMs),ct:fmtDur(m.overnightMs),good:oGood,
@@ -4393,6 +4638,9 @@ try{
     else big=(m.eff||0)+'<small> / '+m.cap+'</small><span class="hstat '+m.cls+'">'+m.stat+(m.partial?' · so far':'')+'</span>';
     html+='<div class="dp-head"><div class="dp-eyebrow">'+eyebrow+'</div><div class="dp-big">'+big+'</div></div>';
     if(!m.future)html+=dpMoveGridHTML(m);
+    // the day's clock, in the open — stamps and gaps without opening the editor
+    if(!m.future&&m.sessions.length)
+      html+='<div class="dp-plan"><div class="tp-day-k">The clock</div>'+daySummaryHTML(key,true)+'</div>';
     if(!m.future)html+=dayTimelinesHTML(key);
     if(m.isZ&&!m.future){
       var off2=Math.max(1,Math.round((d-zeroDate())/MS_DAY)+1);
@@ -4525,7 +4773,8 @@ try{
       reqGapH:0, count:countOf(key), adj:0, eff:null,
       sessions:sessionsFor(key), sessN:0, first:null, last:null, spanMs:null,
       firstMin:null, lastMin:null,
-      gaps:[], gapAvgMs:null, gapMinMs:null, gapsMet:null, heldRule:null,
+      gaps:[], gapSpans:[], gapAvgMs:null, gapMinMs:null, gapsMet:null, heldRule:null,
+      gapMaxMs:null, gapMaxIdx:-1, gapMax:null,
       overnightMs:null, prevLast:null,
       capPct:null, baseCutPct:null, cls:'nolog', stat:'no log', partial:false, vs:null
     };
@@ -4560,13 +4809,22 @@ try{
         if(oMs>SESSION_GAP){
           m.prevLast=pLast;
           m.overnightMs=oMs;
-          m.gaps.push(oMs);
+          // a span knows its own clock bounds, so any surface can point at
+          // the exact stretch — and si is the session the gap opens into
+          m.gapSpans.push({ms:oMs, from:pLast, to:m.first, on:true, si:0});
         }
       }
-      for(var i=1;i<s.length;i++)m.gaps.push(s[i][0]-s[i-1][s[i-1].length-1]);
+      for(var i=1;i<s.length;i++){
+        var gFrom=s[i-1][s[i-1].length-1], gTo=s[i][0];
+        m.gapSpans.push({ms:gTo-gFrom, from:gFrom, to:gTo, on:false, si:i});
+      }
+      m.gaps=m.gapSpans.map(function(g){return g.ms;});
       if(m.gaps.length){
-        var gs=0,gm=Infinity; m.gaps.forEach(function(g){gs+=g;if(g<gm)gm=g;});
+        var gs=0,gm=Infinity,gx=-1;
+        m.gaps.forEach(function(g,gi){gs+=g;if(g<gm)gm=g;if(gx<0||g>m.gaps[gx])gx=gi;});
         m.gapAvgMs=gs/m.gaps.length; m.gapMinMs=gm;
+        // the longest stretch of the day — the number the taper is actually about
+        m.gapMaxIdx=gx; m.gapMax=m.gapSpans[gx]; m.gapMaxMs=m.gaps[gx];
         if(m.reqGapH>0){
           var req=m.reqGapH*3600000, met=0;
           m.gaps.forEach(function(g){if(g>=req)met++;});
@@ -4587,6 +4845,8 @@ try{
         firstMin:(m.firstMin!==null&&pm.firstMin!==null)?m.firstMin-pm.firstMin:null,
         gapAvgMs:(m.gapAvgMs!==null&&pm.gapAvgMs!==null)?m.gapAvgMs-pm.gapAvgMs:null,
         gapAvgPct:(m.gapAvgMs!==null&&pm.gapAvgMs)?Math.round((m.gapAvgMs-pm.gapAvgMs)/pm.gapAvgMs*100):null,
+        gapMaxMs:(m.gapMaxMs!==null&&pm.gapMaxMs!==null)?m.gapMaxMs-pm.gapMaxMs:null,
+        gapMaxPct:(m.gapMaxMs!==null&&pm.gapMaxMs)?Math.round((m.gapMaxMs-pm.gapMaxMs)/pm.gapMaxMs*100):null,
         overnightMs:(m.overnightMs!==null&&pm.overnightMs!==null)?m.overnightMs-pm.overnightMs:null,
         sessN:(m.sessN&&pm.sessN)?m.sessN-pm.sessN:null,
         spanMs:(m.spanMs!==null&&pm.spanMs!==null)?m.spanMs-pm.spanMs:null,
@@ -4814,47 +5074,75 @@ try{
     var m=Math.max(0,Math.floor(ms/60000)),h=Math.floor(m/60);
     return h?h+'h '+pad(m%60)+'m':m+'m';
   }
-  function daySummaryHTML(key){
-    var sessions=sessionsFor(key);
+  /* The stretch running right now, once it has outgrown every closed gap of
+     the day — one place decides it, so no two surfaces can disagree about
+     what today's longest is. .wins is false while a closed gap still leads. */
+  function liveGapNow(m){
+    if(!m.isToday||isZeroEra||!m.sessions.length)return null;
+    var ls=m.sessions[m.sessions.length-1], from=ls[ls.length-1];
+    var ms=Date.now()-from;
+    if(ms<=60000)return null;
+    return {ms:ms, from:from, wins:(m.gapMaxMs===null||ms>m.gapMaxMs)};
+  }
+  /* how far the day's longest stretch got pushed past the last logged day's
+     longest — the one comparison the taper is actually about */
+  function longestVsHTML(m,lean,live){
+    // live: the stretch still running, when it has already outgrown every
+    // closed gap of the day — then IT is the day's longest so far
+    var curMs=live?live.ms:m.gapMaxMs;
+    if(curMs===null||curMs===undefined)return '';
+    // lean: a figure row already named the number, so lead with the verdict
+    var lede=lean?'':'<b>'+fmtDur(curMs)+'</b> longest ';
+    var span=live
+      ?'<span class="lg-when">running since '+fmtTime(live.from)+'</span>'
+      :(m.gapMax?'<span class="lg-when">'+fmtSpan(m.gapMax.from,m.gapMax.to)+'</span>':'');
+    var v=m.vs, pm=v?dayMetrics(v.key):null;
+    if(!pm||pm.gapMaxMs===null){
+      var pd0=pm?dateOf(pm.key):null;
+      return '<p class="lg-line">'+(lean?'The longest ran ':lede)+span+' — '+
+        (pd0?WEEKDAYS[pd0.getDay()].slice(0,3)+'’s log has no gap to push against.'
+            :'nothing logged before it to push against yet.')+'</p>';
+    }
+    var pd=dateOf(v.key);
+    // name the reference by date too when the walk-back skipped unlogged days
+    var pdName=WEEKDAYS[pd.getDay()].slice(0,3)+
+      (v.key===dkeyOf(addDays(m.date,-1))?'':' '+fmtShort(pd))+'’s ';
+    var dMs=curMs-pm.gapMaxMs, open=m.partial||!!live;
+    var good=dMs>=300000?true:dMs<=-300000?false:null;
+    // a day still running hasn't fallen short of anything yet — it's chasing
+    if(good===false&&open)good=null;
+    var clause=dMs>=300000?'pushed <b>'+fmtDur(dMs)+' further</b> than'
+      :dMs>-300000?'level with'
+      :open?'<b>'+fmtDur(-dMs)+'</b> to go to match'
+      :'<b>'+fmtDur(-dMs)+'</b> short of';
+    var pct=Math.round(dMs/pm.gapMaxMs*100);
+    return '<p class="lg-line">'+lede+span+' — '+clause+' '+pdName+fmtDur(pm.gapMaxMs)+
+      (open?'':' '+dv((pct>=0?'+':'−')+Math.abs(pct)+'%',good))+'</p>';
+  }
+  function daySummaryHTML(key,noLine){
+    var m=dayMetrics(key), sessions=m.sessions;
     if(!sessions.length)return '<p class="hnote-line">Nothing logged yet today.</p>';
-    var d=dateOf(key),di=phaseIndexFor(d);
-    var reqH=spacingHOn(d,di),reqMs=reqH*3600000;
+    var reqH=m.reqGapH,reqMs=reqH*3600000;
     var isTod=key===todayKey;
-    var h=daylineSVG(key);
-    var gaps=[];
-    // the overnight gap leads the day: last hit of the previous logical day
-    // → this day's first hit, judged by this day's rule
-    var prevSess=sessionsFor(dkeyOf(addDays(d,-1)));
-    if(prevSess.length){
-      var pSess=prevSess[prevSess.length-1],prevLast=pSess[pSess.length-1];
-      var oMs=sessions[0][0]-prevLast;
-      // hits within SESSION_GAP straddling 4am are one sitting — no gap row
-      if(oMs>SESSION_GAP){
-        gaps.push(oMs);
-        var oTail=' overnight · from '+fmtTime(prevLast)+(isTod?' last night':'');
-        if(reqMs>0){
-          var oHeld=oMs>=reqMs;
-          h+='<div class="sgap '+(oHeld?'ok':'short')+'">'+fmtDur(oMs)+oTail+
-            (oHeld?' · ✓ held '+fmtGapH(reqH):' · ✗ '+fmtDur(reqMs-oMs)+' short of '+fmtGapH(reqH))+'</div>';
-        }else{
-          h+='<div class="sgap ok">'+fmtDur(oMs)+oTail+'</div>';
-        }
-      }
+    var h=noLine?'':daylineSVG(key);
+    // the stretch running right now can already be the day's longest — settle
+    // that once, so the badge, the figure and the comparison agree
+    var live=liveGapNow(m), liveWins=!!live&&live.wins;
+    // gap rows come straight from the engine, so the "longest" badge lands on
+    // the same stretch every other surface names
+    function gapRow(g,gi){
+      var isMax=gi===m.gapMaxIdx&&m.gaps.length>1&&!liveWins;
+      var tail=g.on?(' overnight · from '+fmtTime(g.from)+(isTod?' last night':''))
+        :(reqMs>0?'':' between');
+      var verdict=reqMs>0
+        ?(g.ms>=reqMs?' · ✓ held '+fmtGapH(reqH):' · ✗ '+fmtDur(reqMs-g.ms)+' short of '+fmtGapH(reqH))
+        :'';
+      return '<div class="sgap '+(reqMs>0&&g.ms<reqMs?'short':'ok')+(isMax?' max':'')+'">'+
+        (isMax?'<span class="gmax">longest</span>':'')+fmtDur(g.ms)+tail+verdict+'</div>';
     }
     sessions.forEach(function(sess,si){
-      // gap connector from the previous session
-      if(si>0){
-        var prev=sessions[si-1];
-        var gapMs=sess[0]-prev[prev.length-1];
-        gaps.push(gapMs);
-        if(reqMs>0){
-          var held=gapMs>=reqMs;
-          h+='<div class="sgap '+(held?'ok':'short')+'">'+fmtDur(gapMs)+
-            (held?' · ✓ held '+fmtGapH(reqH):' · ✗ '+fmtDur(reqMs-gapMs)+' short of '+fmtGapH(reqH))+'</div>';
-        }else{
-          h+='<div class="sgap ok">'+fmtDur(gapMs)+' between</div>';
-        }
-      }
+      // every gap that opens into this sitting — the overnight one leads the day
+      m.gapSpans.forEach(function(g,gi){if(g.si===si)h+=gapRow(g,gi);});
       // one line per sitting: the range, a dot per hit, the count
       var range=sess.length>1?fmtTime(sess[0])+'–'+fmtTime(sess[sess.length-1]):fmtTime(sess[0]);
       var dots=sess.length<=14?sess.map(function(){return '<i></i>';}).join(''):'';
@@ -4863,24 +5151,20 @@ try{
         '<span class="sr-c">'+sess.length+'<small style="font-family:Karla,sans-serif;font-size:10px;color:var(--muted)"> hit'+(sess.length>1?'s':'')+'</small></span></div>';
     });
     // live gap since the last hit (today only)
-    if(isTod&&!isZeroEra){
-      var lastSess=sessions[sessions.length-1];
-      var sinceMs=Date.now()-lastSess[lastSess.length-1];
-      if(sinceMs>60000){
-        var open=reqMs>0?sinceMs>=reqMs:true;
-        h+='<div class="sgap live">'+fmtDur(sinceMs)+' since'+
-          (reqMs>0?(open?' — window open, every extra minute is banked':' — window opens at '+fmtTime(new Date(lastSess[lastSess.length-1].getTime()+reqMs))):'')+'</div>';
-      }
+    if(live){
+      var wOpen=reqMs>0?live.ms>=reqMs:true;
+      h+='<div class="sgap live'+(liveWins?' max':'')+'">'+(liveWins?'<span class="gmax">longest</span>':'')+
+        fmtDur(live.ms)+' since'+
+        (reqMs>0?(wOpen?' — window open, every extra minute is banked':' — window opens at '+fmtTime(new Date(live.from.getTime()+reqMs))):'')+'</div>';
     }
-    // gap summary
-    if(gaps.length){
-      var sum=0,longest=0;
-      gaps.forEach(function(g){sum+=g;if(g>longest)longest=g;});
+    // gap summary — the longest leads, the average backs it up
+    if(m.gaps.length||liveWins){
       h+=figsHTML([
-        {v:fmtDur(sum/gaps.length),l:'avg gap '+(isTod?'today':'that day'),mid:true},
-        gaps.length>1?{v:fmtDur(longest),l:'longest',mid:true}:null,
+        {v:fmtDur(liveWins?live.ms:m.gapMaxMs),l:'longest '+(isTod?'today':'that day'),
+         mid:true,c:'var(--accent)',s:liveWins?'still running':null},
+        m.gaps.length>1?{v:fmtDur(m.gapAvgMs),l:'avg gap',mid:true}:null,
         reqMs>0?{v:fmtGapH(reqH),l:'the rule',mid:true}:null
-      ]);
+      ])+longestVsHTML(m,true,liveWins?live:null);
     }
     return h;
   }
@@ -5142,7 +5426,7 @@ try{
     rcClear();
     computeToday();
     [renderCountdown,renderStairs,renderPhases,renderTodayPlan,renderSchedStrip,
-     renderToday,renderTrend,renderDayHead,renderJourney,renderHistory,renderHoldBanner,renderDayHeld,
+     renderToday,renderYday,renderTrend,renderDayHead,renderJourney,renderHistory,renderHoldBanner,renderDayHeld,
      renderRitual,renderCheckin,renderBackupNudge,renderStory,renderUrge,renderGap,renderGlass,renderDash,renderFoldSums].forEach(safe);
     if(!$('detailOverlay').hidden)safe(renderXtras);
     // a day edited through a chart's tap-to-open must repaint the chart under it
