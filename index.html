@@ -1801,6 +1801,33 @@ try{
   function validShape(d){
     return !!(d&&typeof d==='object'&&d.days&&typeof d.days==='object'&&!(d.days instanceof Array));
   }
+  /* validShape only proves the envelope. The entries inside decide whether
+     the app still runs: an entry without a hits ARRAY makes hits.push throw
+     on the very next logged hit, which wedges logging with no way back on a
+     phone. Repair what can be repaired, drop what can't, and say so — an
+     import is the one moment arbitrary text becomes the whole record. */
+  function repairDays(d){
+    var fixed=0, dropped=0, out={};
+    for(var k in d.days){
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(k)){dropped++;continue;}
+      var e=d.days[k];
+      if(!e||typeof e!=='object'||e instanceof Array){dropped++;continue;}
+      var hits=[];
+      if(e.hits instanceof Array){
+        e.hits.forEach(function(h){
+          var t=(typeof h==='number')?h:Date.parse(h);
+          if(!isNaN(t)&&t>0)hits.push(new Date(t).toISOString());
+        });
+        if(hits.length!==e.hits.length)fixed++;
+      }else if(e.hits!==undefined){fixed++;}
+      hits.sort(); // sessionsFor assumes chronological order
+      var adj=Number(e.adj);
+      if(!isFinite(adj)||adj<0){adj=0;if(e.adj!==undefined&&e.adj!==0)fixed++;}
+      out[k]={hits:hits,adj:Math.round(adj)};
+    }
+    d.days=out;
+    return {fixed:fixed,dropped:dropped};
+  }
   var loadWarning=null;
   function loadData(){
     var raw=null;
@@ -2105,13 +2132,20 @@ try{
   // ran past the NEXT step's cap — the drop retries the day after.
   // The base length includes eased days (strain carried in from the rung
   // before), or an eased in-base day would read as a deferral it isn't.
+  /* A deferral is not something to re-derive — it is something the engine
+     decided. Rebuilding the test from phase lengths ignored the auto-hold
+     days the engine itself added, so any extension day created by an
+     earlier over-cap day got called a "failed step-down" too, and the
+     score then judged it against the NEXT cap instead of the one it
+     actually rode. buildSchedule records each deferral as it makes it;
+     ask that record instead, and the two can never disagree. */
   function deferredDay(d,di){
     if(di<0||di>=BASE_PHASES.length-1)return false;
-    var p=BASE_PHASES[di], nx=BASE_PHASES[di+1];
-    if(!p.days||nx.cap<=0)return false;
-    var c=countOf(dkeyOf(d));
-    if(c===null||c<=nx.cap)return false;
-    return dayInPhase(d,di)>=Math.max(1,p.days+(data.holds[di]||0)+(schedule()[di].eased||0));
+    var cz=schedule().causes||[], k=dkeyOf(d);
+    for(var i=0;i<cz.length;i++){
+      if(cz[i].kind==='defer'&&cz[i].key===k)return true;
+    }
+    return false;
   }
   // the structured plan for a given day: session windows, honest math, do-list.
   // Held days clamp to the phase's last (widest) day, same as goals.
@@ -2334,8 +2368,15 @@ try{
   }
 
   function sessionInfo(){
-    var e=data.days[todayKey];
-    var hits=(e&&e.hits?e.hits:[]).map(function(t){return new Date(t);}).sort(function(a,b){return a-b;});
+    /* the sitting you are in does not restart because the logical day did.
+       Reading only todayKey meant a 1am hit — filed under yesterday — went
+       invisible at 4:01am, so "no session in progress" appeared while
+       renderGap, which measures from lastHitEver(), was still counting that
+       same hit. Carry the previous logical day's hits in; the trailing-run
+       scan below picks up only the ones still inside the 30-minute sitting. */
+    var e=data.days[todayKey], pe=data.days[dkeyOf(addDays(today,-1))];
+    var raw=((pe&&pe.hits)||[]).concat((e&&e.hits)||[]);
+    var hits=raw.map(function(t){return new Date(t);}).sort(function(a,b){return a-b;});
     if(!hits.length)return null;
     // current session = the last run of hits within 30 min of each other
     var inSession=1;
@@ -4081,7 +4122,10 @@ try{
   function paceVsYesterday(){
     // deliberately a raw 24h slice, not logical hours — "by this time yesterday"
     var yM=dayMetrics(dkeyOf(addDays(today,-1)));
-    if(!yM.eff)return null;
+    // eff===0 is a logged, perfect day — the best one possible. Testing it
+    // for falsiness made it indistinguishable from "never logged" and put
+    // every pace surface into its empty state the morning after a clean day.
+    if(yM.eff===null)return null;
     var ye=data.days[yM.key];
     var yCut=Date.now()-MS_DAY,yCount=0;
     ((ye&&ye.hits)||[]).forEach(function(iso){if(new Date(iso).getTime()<=yCut)yCount++;});
@@ -4721,6 +4765,19 @@ try{
         '</div>';
     }
     var v=m.vs, pm=dayMetrics(v.key), pd=dateOf(v.key);
+    /* the line the longest-stretch row already refuses to cross, drawn for
+       the whole card. A zero-era day has no cap and no session rule, so
+       grading it against a capped day scores it on rules it no longer
+       lives under — and because a slip's 2 hits "beat" yesterday's 3, the
+       card could close a slip with "Every needle moved the right way." */
+    if(m.isZ!==pm.isZ){
+      return '<div class="dmove"><div class="dmove-hd">The move</div>'+
+        '<p class="dc-sum" style="margin:0">'+(m.isZ
+          ?'Past the taper now. The last logged day before this one still had a cap and a session rule — different rules, so there is nothing honest to measure this against.'
+          :'The last logged day before this one was at zero, which had no cap to compare against.')+'</p>'+
+        (m.eff!==null&&m.baseCutPct!==null?'<div class="dm-base">Against the old '+BASELINE+' a day: <b>'+m.baseCutPct+'% cut</b>.</div>':'')+
+        '</div>';
+    }
     var rows=[], goodN=0, badN=0, badNames=[];
     function note(g,name){if(g===true)goodN++;else if(g===false){badN++;if(name)badNames.push(name);}}
     var hGood=v.count<0?true:v.count>0?false:null; note(hGood,'count');
@@ -5058,7 +5115,12 @@ try{
     var days=[], d=new Date(start);
     while(d<=today){days.push(dayMetrics(dkeyOf(d)));d=addDays(d,1);}
     var t={days:days, tot:0, logged:0, under:0};
-    days.forEach(function(m){ if(m.count!==null){t.logged++;t.tot+=m.count;if(m.count<=m.cap)t.under++;} });
+    /* eff, not count — a past zero-era day with no entry IS a known clean 0,
+       the same rule `avoided` and `streak` already use. Reading raw count
+       here dropped every clean day at zero out of the average while still
+       counting the slips, so a lapse of 2 hits landed BELOW the taper
+       average and pushed "% below baseline" UP: 59% -> 62% for slipping. */
+    days.forEach(function(m){ if(m.eff!==null){t.logged++;t.tot+=m.eff;if(m.eff<=m.cap)t.under++;} });
     t.avgPerDay=t.logged?Math.round(t.tot/t.logged*10)/10:0;
     // avoided matches the cumulative chart's math: a logged day banks its
     // shortfall vs baseline, and a clean zero-era day banks the whole
@@ -5973,10 +6035,13 @@ try{
       if(!confirm('Replace everything on this device with the pasted backup?'))return;
       // stash what's being replaced, so a wrong import is recoverable
       try{localStorage.setItem('ttz2-preimport',JSON.stringify(data));}catch(e2){}
+      var rep=repairDays(d);
       data=normData(d);
       data.lastBackupAt=Date.now(); // the pasted copy IS a live backup
       save();dpEditOpen=false;renderAll();
-      $('dataMsg').textContent='Backup restored. (The data it replaced was stashed, just in case.)';
+      $('dataMsg').textContent='Backup restored. (The data it replaced was stashed, just in case.)'+
+        (rep.dropped?' '+rep.dropped+' unreadable day'+(rep.dropped>1?'s were':' was')+' dropped.':'')+
+        (rep.fixed?' '+rep.fixed+' day'+(rep.fixed>1?'s':'')+' had damaged entries repaired.':'');
     }catch(e){$('dataMsg').textContent='That doesn’t look like a valid backup.';}
   });
   /* Both destructive restores stash what they replace under 'ttz2-preimport'
@@ -5998,6 +6063,7 @@ try{
     if(!validShape(pd)){$('dataMsg').textContent='The stashed copy is unreadable.';return;}
     if(!confirm('Put back the data that the last restore replaced? What is on the device now will be stashed in its place.'))return;
     var cur=JSON.stringify(data);
+    repairDays(pd);
     data=normData(pd);save();
     try{localStorage.setItem('ttz2-preimport',cur);}catch(e){} // so the undo is itself undoable
     dpEditOpen=false;renderAll();renderUndoRestore();
@@ -6012,6 +6078,7 @@ try{
     if(!validShape(sd)){$('dataMsg').textContent='The snapshot on this device is unreadable.';return;}
     if(!confirm('Replace current data with the automatic snapshot from '+snap.t+'? Anything logged since that snapshot is lost.'))return;
     try{localStorage.setItem('ttz2-preimport',JSON.stringify(data));}catch(e){}
+    repairDays(sd);
     data=normData(sd);save();dpEditOpen=false;renderAll();
     $('dataMsg').textContent='Snapshot from '+snap.t+' restored. (The data it replaced was stashed.)';
   });
