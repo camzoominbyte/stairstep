@@ -476,6 +476,7 @@
   }
   .free .big{color:var(--sage);font-size:72px}
   .free .slip-btn{display:inline-block;margin-top:0}
+  .slip-btn[hidden]{display:none}  /* must follow .free .slip-btn — equal specificity, later wins */
   .free .action-row{flex-wrap:wrap}
   .free .action-row .delay-chip{flex:1 1 100%;border-radius:14px}
 
@@ -1030,6 +1031,7 @@
   }
   .cz-overlay.show{opacity:1;transform:none}
   .cz-overlay[hidden]{display:none}
+  .cz-overlay:not(.show){pointer-events:none}  /* opacity:0 still catches taps for 280ms */
   .cz-body{max-width:600px;margin:0 auto}
   .cz-bar{display:flex;align-items:center;gap:12px;max-width:600px;margin:0 auto 14px}
   .cz-bar button{
@@ -1434,6 +1436,7 @@ try{
     <button class="delay-chip" id="urgeChip">Urge? Start the 20-minute timer.</button>
     <button class="time-link" id="btnEarlier" aria-label="Add hits from earlier at a chosen time">+ Earlier</button>
     <button class="slip-btn" id="btnSlip">Slipped? Log it honestly</button>
+    <button class="slip-btn slip-undo" id="btnSlipUndo" hidden aria-label="Remove the last slip logged today">−1</button>
   </div>
   <div class="earlier-row" id="earlierRow" hidden>
     <input type="time" id="earlierTime" aria-label="Time the hit happened">
@@ -1572,7 +1575,7 @@ try{
   <details>
     <summary>If you slip</summary>
     <div class="d-body">
-      <p>A day over cap — or a slip after zero — is <strong>data, not doom</strong>. The schedule holds that cap an extra day by itself, then keeps stepping down — nothing to fix, nothing to redo.</p>
+      <p>A day over cap is <strong>data, not doom</strong>: the schedule holds that cap an extra day by itself, then keeps stepping down — nothing to fix, nothing to redo. After zero there is no cap left to hold, so a slip moves nothing — the run restarts tomorrow while the clean total and the best run stay banked.</p>
       <p>A genuinely rough patch goes further: <strong>every two hard days at one cap ease the following step by an extra day</strong>, so the whole remaining descent slows instead of snapping. The taper bends to the terrain; the direction never changes.</p>
       <p>In the research, lapses after years of daily use are <strong>the norm, not a personal failure</strong> — expected, planned for, and recoverable. The trend line matters, not any single day. Ten years in; the exit doesn't have to be flawless to be final.</p>
       <p class="d-evid">Concrete rewards for clean days help too — that's contingency management, an evidence-backed add-on. <a class="dlink" href="guide.html#relapse">Staying quit →</a></p>
@@ -2507,10 +2510,12 @@ try{
   function daysFree(){
     var since=lastUseDay(), z=zeroDate();
     var from=(since&&since>=addDays(z,-1))?addDays(since,1):z;
-    return Math.floor((today-from)/MS_DAY)+1;
+    // round, not floor: two local midnights differ by N*24h ±1h across a DST
+    // change, and floor turns the minus case into a day the counter repeats
+    return Math.round((today-from)/MS_DAY)+1;
   }
   // calendar days since zero day (1-based) — unlike daysFree, never resets
-  function zeroCalDay(){return Math.floor((today-zeroDate())/MS_DAY)+1;}
+  function zeroCalDay(){return Math.round((today-zeroDate())/MS_DAY)+1;}
 
   /* slip-resilient zero-era counters: a slip resets the current run,
      but total clean days and the best run are banked for good */
@@ -2877,7 +2882,7 @@ try{
       card.classList.add('free');
       $('heroCard').hidden=true;
       $('streakChip').hidden=true;
-      $('tallyBtns').style.display=count>0?'flex':'none'; // keep −1 reachable once a slip is logged
+      $('tallyBtns').style.display='none'; // it lives inside #heroCard, which this branch hides
       $('statRow').style.display='none';
       $('btnEarlier').style.display='none';
       $('earlierRow').hidden=true;
@@ -2891,10 +2896,12 @@ try{
         $('barFill').style.width='100%';$('barFill').style.background='var(--clay)';
         $('barNote').textContent='Slip logged. Data, not doom — every clean day stays banked ('+(zs0?zs0.clean:0)+' so far). Tomorrow the run restarts; the total never resets.';
         $('btnSlip').textContent='Logged '+count+' today — tap to add another';
+        $('btnSlipUndo').hidden=false;
       }else{
         $('barFill').style.width='100%';$('barFill').style.background='var(--sage)';
         $('barNote').textContent=zeroTimelineNote(Math.max(0,daysFree()),zeroCalDay());
         $('btnSlip').textContent='Slipped? Log it honestly';
+        $('btnSlipUndo').hidden=true;
       }
     }else{
       card.classList.remove('free');
@@ -3010,7 +3017,12 @@ try{
     if(yd<schedule()[0].start){card.hidden=true;return;}
     var k=ydayKey(), m=dayMetrics(k);
     // nothing to show a clock for — no timed hits, no untimed ones, no slip
-    if(!m.sessions.length&&!m.adj&&!m.eff){card.hidden=true;return;}
+    /* a clean zero-era day is all zeroes by design — sessions [], adj 0,
+       eff 0 — so this guard hid the Yesterday card every morning after a
+       clean night and left the 'clean' arm below unreachable. At zero the
+       card's whole job is to say the day held. */
+    if(m.isZ&&!m.future){card.hidden=false;}
+    else if(!m.sessions.length&&!m.adj&&!m.eff){card.hidden=true;return;}
     card.hidden=false;
     $('ydWhen').textContent=WEEKDAYS[yd.getDay()].slice(0,3)+' '+fmtShort(yd);
     $('ydCount').innerHTML=m.isZ
@@ -3049,7 +3061,10 @@ try{
     // a day with one sitting has no gap to name — say so rather than sit empty
     var lg=m.sessions.length
       ?(longestVsHTML(m)||'<span class="yd-none">One sitting all day — no gap to measure.</span>')
-      :'<span class="yd-none">Logged without times — open the day to stamp them.</span>';
+      :(m.isZ&&!m.eff)
+        // a clean day at zero has nothing to stamp — the absence IS the record
+        ?'<span class="yd-none">Nothing logged. A whole day at zero.</span>'
+        :'<span class="yd-none">Logged without times — open the day to stamp them.</span>';
     $('ydLongest').innerHTML=lg;
     ydLiveTick();
   }
@@ -4126,7 +4141,8 @@ try{
     taperProgress().days.forEach(function(m){
       m.gapSpans.forEach(function(g){
         var gapH=g.ms/3600000;
-        var r={h:gapH,ok:m.reqGapH>0?gapH>=m.reqGapH:true,k:m.key,req:m.reqGapH,on:g.on};
+        // a zero-era day has no gap rule, so its spans are unscored (null), not passes
+        var r={h:gapH,ok:m.reqGapH>0?gapH>=m.reqGapH:null,k:m.key,req:m.reqGapH,on:g.on};
         recs.push(r);
         if(!best||gapH>best.h)best=r;
       });
@@ -5779,7 +5795,7 @@ try{
     var el=$('stepFoldLive');if(!el)return;
     var t=taperProgress(), start=schedule()[0].start;
     if(today<start)el.textContent='Starts '+fmtShort(start)+' · zero '+fmtShort(zeroDate());
-    else if(isZeroEra)el.textContent='Day '+Math.max(1,daysFree())+' at zero · the descent, kept';
+    else if(isZeroEra)el.textContent='Day '+Math.max(0,daysFree())+' at zero · the descent, kept';
     else el.textContent='Day '+t.dayN+' of '+t.totalD+' · cap '+phase.capText+
       (phase.single?' · evening only':spacingHNow()>0?' · '+fmtGapH(spacingHNow())+' gaps':'')+
       ' · zero '+fmtShort(zeroDate());
@@ -5802,6 +5818,11 @@ try{
 
   /* ================= events ================= */
   function logHit(){
+    /* the wave won. A timer still running must not go on to bank itself as
+       "outlasted" — the one counter whose whole worth is that it is true.
+       A timer past its 20 minutes is left alone, so a completed-but-not-yet
+       -banked one still counts. */
+    if(data.urgeStart&&Date.now()-data.urgeStart<URGE_MS)data.urgeStart=null;
     entryFor(todayKey,true).hits.push(new Date().toISOString());countChanged(todayKey);
     save();renderAll();
     plusOne();popBig();
@@ -5900,6 +5921,10 @@ try{
     var n=countOf(todayKey)||0;
     if(n>0){setCount(todayKey,n-1);renderAll();}
   });
+  $('btnSlipUndo').addEventListener('click',function(){
+    var n=countOf(todayKey)||0;
+    if(n>0){setCount(todayKey,n-1);renderAll();}
+  });
   $('btnSlip').addEventListener('click',function(){
     /* This used to DECREMENT whenever today already had a hit, so the Today
        card could record exactly one slip per day and a second tap deleted
@@ -5908,6 +5933,7 @@ try{
        adds now; undo is the −1 beside it. */
     var n=countOf(todayKey)||0;
     if(n>0||confirm('Log a slip for today? It gets recorded honestly — data, not doom.')){
+      if(data.urgeStart&&Date.now()-data.urgeStart<URGE_MS)data.urgeStart=null;
       entryFor(todayKey,true).hits.push(new Date().toISOString());countChanged(todayKey);
       save();renderAll();
     }
@@ -5954,6 +5980,7 @@ try{
     var dayShift=(+hm[0]<DAY_CUTOFF_H)?1:0;
     var ts=new Date(today.getFullYear(),today.getMonth(),today.getDate()+dayShift,+hm[0],+hm[1]);
     if(ts>new Date()){$('earlierMsg').textContent='That time hasn’t happened yet today.';$('earlierMsg').hidden=false;return;}
+    if(data.urgeStart&&Date.now()-data.urgeStart<URGE_MS)data.urgeStart=null;
     entryFor(todayKey,true).hits.push(ts.toISOString());
     countChanged(todayKey);
     save();renderAll();
@@ -6091,7 +6118,7 @@ try{
     var det=$('backupDetails');
     if(det){
       det.open=true;
-      setTimeout(function(){det.scrollIntoView({behavior:'smooth',block:'center'});},80);
+      setTimeout(function(){det.scrollIntoView({behavior:motionOK?'smooth':'auto',block:'center'});},80);
     }
   });
   $('btnExport').addEventListener('click',function(){
@@ -6209,7 +6236,7 @@ try{
     $('glassBar').classList.toggle('show', $('todayCard').getBoundingClientRect().bottom<0);
   },{passive:true});
   $('glassBar').addEventListener('click',function(){
-    window.scrollTo({top:0,behavior:'smooth'});
+    window.scrollTo({top:0,behavior:motionOK?'smooth':'auto'});
   });
 
   /* ---- bottom tabs: one focused view at a time ---- */
@@ -6237,7 +6264,7 @@ try{
     // logging itself keeps its hold friction on purpose
     $('tabLog').addEventListener('click',function(){
       setView('today');
-      window.scrollTo({top:0,behavior:'smooth'});
+      window.scrollTo({top:0,behavior:motionOK?'smooth':'auto'});
       var b=$('holdLog');
       if(b&&!$('heroCard').hidden){
         b.classList.remove('nudge');void b.offsetWidth;
