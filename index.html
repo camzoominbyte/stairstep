@@ -2396,6 +2396,16 @@ try{
        engine that absorbs miss six exactly like miss one is manufacturing
        the pattern that matters. */
     var slack=SLACK_TOTAL, lockKey=data.replan&&data.replan.lockFrom;
+    /* One day, one charge. The boundary check below can absorb the day after a
+       rung ends — and when it does it bumps `auto`, which re-opens the while
+       loop over that very same date, where the in-loop check charged it a
+       SECOND time against the rung's own (higher) cap. One bad day then spent
+       two of five slack days, moved zero by two, and printed two rows with two
+       Undos, each claiming one day. When the boundary instead records
+       'noslack' the loop exits and the next rung's walk re-records the same
+       date, which is where the duplicate "no slack left" rows came from.
+       Recorded here, outside the rung loop, so both paths are covered. */
+    var charged={};
     for(var i=0;i<BASE_PHASES.length;i++){
       var p=BASE_PHASES[i];
       var start=new Date(cur), end=null, auto=0, manual=holdsAt(i);
@@ -2417,7 +2427,7 @@ try{
             /* every day that moved the descent — or was told not to — is
                recorded here as it is decided, so the schedule can explain
                itself without a second walk that could disagree with this one */
-            if(c!==null&&c>p.cap){
+            if(c!==null&&c>p.cap&&!charged[dk]){
               if(resp==='kept'||resp==='held')causes.push({kind:'declined',key:dk,d:new Date(d),c:c,cap:p.cap,i:i});
               else if(slack<=0||(lockKey&&dk>=lockKey))
                 causes.push({kind:'noslack',key:dk,d:new Date(d),c:c,cap:p.cap,i:i,locked:!!(lockKey&&dk>=lockKey)});
@@ -2435,6 +2445,7 @@ try{
             if(c2!==null&&c2>nextCap&&r2!=='kept'&&r2!=='held'){
               // a deferral is an extension too, and it is the one that can
               // repeat forever — it spends from the same budget
+              charged[dk2]=1;   // this date is now spoken for, either way
               if(slack<=0||(lockKey&&dk2>=lockKey))
                 causes.push({kind:'noslack',key:dk2,d:new Date(d),c:c2,cap:nextCap,i:i,locked:!!(lockKey&&dk2>=lockKey),defer:true});
               else{slack--;auto++;causes.push({kind:'defer',key:dk2,d:new Date(d),c:c2,cap:nextCap,rode:p.cap,i:i});}
@@ -4285,7 +4296,20 @@ try{
     var yCount=countOf(yKey);
     if(yCount===null||yCount<=BASE_PHASES[yIdx].cap)return;
     if(data.holdPrompts[yKey])return;
-    $('holdText').innerHTML='<strong>Yesterday went over cap, so the schedule already adjusted itself:</strong> this cap runs one day longer, and every later step — including the zero date, now '+fmtShort(zeroDate())+' — moved back to match. If a cap takes two hard days, the next step eases by an extra day too: the descent slows to match the terrain. Under the cap is all today asks.';
+    /* Asserting the adjustment happened is only safe if it did — the same fix
+       the hero bar note already carries. Slack is finite and the date can be
+       locked, so an over-cap day can be recorded while moving nothing, and
+       this banner would then contradict the schedule card on the same screen. */
+    if(dayHeldTheStep(yKey)){
+      $('holdText').innerHTML='<strong>Yesterday went over cap, so the schedule already adjusted itself:</strong> this cap runs one day longer, and every later step — including the zero date, now '+fmtShort(zeroDate())+' — moved back to match. If a cap takes two hard days, the next step eases by an extra day too: the descent slows to match the terrain. Under the cap is all today asks.';
+    }else{
+      var yc=null,cz=schedule().causes||[];
+      for(var ci=0;ci<cz.length;ci++)if(cz[ci].key===yKey){yc=cz[ci];break;}
+      $('holdText').innerHTML='<strong>Yesterday went over cap, and the dates did not move:</strong> '+
+        (yc&&yc.locked?'the date is locked, so the day is on the record and zero stays '
+                      :'there are no extension days left, so the day is on the record and zero stays ')+
+        fmtShort(zeroDate())+'. That is the design rather than a failure — a date that keeps receding spends the part of this with evidence behind it. Under the cap is all today asks.';
+    }
     b.classList.add('show');
     b.dataset.ykey=yKey;
   }
@@ -4907,26 +4931,38 @@ try{
       });
     });
     if(!recs.length)return null;
-    var sum=0,okc=0;recs.forEach(function(r){sum+=r.h;if(r.ok)okc++;});
+    /* Only gaps that HAVE a rule can pass or fail one. The numerator already
+       knew that — r.ok is null on a day with no required gap — but the
+       denominator was recs.length, so every unscorable gap read as a miss.
+       An evening-only rung (single:true, spacingH:0) has no rule at all, so
+       the last days before zero drove this percentage down while the user
+       complied perfectly: a compliance number falling because the plan
+       deleted the thing it measures. Same for every zero-era night. */
+    var sum=0,okc=0,scored=0;
+    recs.forEach(function(r){sum+=r.h;if(r.ok!==null){scored++;if(r.ok)okc++;}});
     var half=Math.floor(recs.length/2),early=null,recent=null;
     if(recs.length>=4){
       var e=recs.slice(0,half),r=recs.slice(-half);
       early=e.reduce(function(a,b){return a+b.h;},0)/e.length;
       recent=r.reduce(function(a,b){return a+b.h;},0)/r.length;
     }
-    return {count:recs.length,avg:sum/recs.length,adherence:Math.round(okc/recs.length*100),
+    return {count:recs.length,avg:sum/recs.length,scored:scored,
+      adherence:scored?Math.round(okc/scored*100):null,
       early:early,recent:recent,widening:(early!==null&&recent>early+0.15),recs:recs,best:best};
   });}
   function sessionRhythmHTML(){
     var g=gapAnalytics();
     if(!g)return '';
+    // no scored gaps at all (evening-only rungs, zero era) — the tile drops
+    // out rather than printing a percentage of nothing
     var col=g.adherence>=70?'var(--sage)':g.adherence>=50?'var(--amber)':'var(--clay)';
     return '<h3 class="xtra-h" style="margin-top:16px">Time between sessions</h3>'+
       figsHTML([
         g.best?{v:fmtDur(g.best.h*3600000),l:'longest yet',mid:true,c:'var(--accent)',
           s:fmtShort(dateOf(g.best.k))}:null,
         {v:fmtDur(g.avg*3600000),l:'avg gap',mid:true},
-        {v:g.adherence+'<small>%</small>',l:'met the rule',c:col},
+        g.adherence!==null?{v:g.adherence+'<small>%</small>',l:'met the rule',
+          s:'of '+g.scored+' with a rule',c:col}:null,
         {v:g.count,l:'gaps logged',s:'nights included'},
         g.early!==null?{v:fmtDur(g.recent*3600000),l:'lately',mid:true,
           s:g.widening?'widening as designed':'early avg '+fmtDur(g.early*3600000),
@@ -5530,7 +5566,8 @@ try{
     return roChart(svg,'Slide to read each gap — tap to open its day.')+
       '<p class="chart-note"><span class="legend-dot" style="background:var(--sage)"></span>met the rule &nbsp;<span class="legend-dot" style="background:var(--clay)"></span>came up short &nbsp;<span class="legend-dot" style="background:none;border:1.5px solid var(--muted)"></span>overnight &nbsp;<span style="color:var(--amber)">—</span> that day’s required gap</p>'+
       figsHTML([
-        {v:g.adherence+'<small>%</small>',l:'met the rule',s:'of '+g.count+' gaps',c:col},
+        g.adherence!==null?{v:g.adherence+'<small>%</small>',l:'met the rule',
+          s:'of '+g.scored+' gap'+(g.scored===1?'':'s')+' with a rule',c:col}:null,
         {v:fmtDur(g.avg*3600000),l:'avg gap',mid:true},
         g.early!==null?{v:fmtDur(g.recent*3600000),l:'lately',mid:true,s:'early avg '+fmtDur(g.early*3600000)+(g.widening?' — widening as designed':''),c:g.widening?'var(--sage)':null}:null
       ]);
@@ -6536,7 +6573,7 @@ try{
       stat(s.zs?s.zs.best:0,'best run')+
       stat(s.t.under+'/'+s.t.logged,'days under cap')+
       '</div>'+
-      (s.ga?'<p class="chart-note">'+s.ga.adherence+'% of session gaps met the day’s rule, averaging '+fmtDur(s.ga.avg*3600000)+' apart'+(s.ga.widening?' — widening the whole way, exactly as designed':'')+'.</p>':'')+
+      (s.ga?'<p class="chart-note">'+(s.ga.adherence!==null?s.ga.adherence+'% of the session gaps that had a rule met it, averaging ':'Session gaps averaged ')+fmtDur(s.ga.avg*3600000)+' apart'+(s.ga.widening?' — widening the whole way, exactly as designed':'')+'.</p>':'')+
       (s.money!==null?'<p class="chart-note">≈ <strong style="color:var(--sage)">$'+s.money.toLocaleString()+'</strong> not spent.</p>':'');
   }
   function storyText(){
