@@ -1898,26 +1898,26 @@ try{
      ref:"manage"},
     {days:2, cap:8, capText:"8", sessionMax:3, spacingH:[7,8],
      rule:"2–3 sessions max · gaps 7h, then 8h · drop all daytime",
-     desc:"Biggest structural cut, landed on the weekend on purpose. Keep only what's load-bearing — midday and the evening wind-down.",
+     desc:"The biggest structural cut. Keep only what's load-bearing — midday and the evening wind-down.",
      goals:["The biggest structural cut — down to 8. Drop all daytime; keep only midday and the evening wind-down.",
-            "Hold 8, gap out to 8h. Landed on the weekend on purpose — lean on the lighter schedule."],
+            "Hold 8, gap out to 8h — same ceiling, wider clock. If the day allows a lighter schedule, lean on it."],
      plans:[
        {w:['1p','8p'],
         note:'Two windows × 3 hits = 6 — the 8 cap is headroom, not a target.',
         do:['No morning window at all — the first sitting is midday. Fill the morning with anything that moves.',
             'Keep only what’s load-bearing: midday, and the evening wind-down.',
-            'It’s the weekend on purpose — no work rhythm to smoke against, nothing to defend.']},
+            'If the day has slack in it — no work rhythm to smoke against, little to defend — spend it here.']},
        {w:['1p','9p'],
         note:'Same two windows, an hour further apart — the last multi-window day of the taper.',
         do:['Midday and evening, nothing between. Tomorrow goes evening-only.',
-            'Start the sleep diary tonight on the Tonight card — five nights before zero means the window is already set when you need it.',
-            'Look back at the week: 22 to 8 in eight days, every step held.']}],
+            'Start the sleep diary tonight on the Tonight card — every night logged before zero is one the window doesn’t have to guess at.',
+            'Look back: 22 down to 8, and the ceiling has only ever gone one way.']}],
      fineClose:{goal:"Hold 8, gap out to 8h. Next is 5 across two sittings, not evening-only — the last step got halved.",
        plan:{w:['1p','9p'],
         note:'Same two windows, an hour further apart. With the steps halved this is no longer the last multi-window day — tomorrow’s 5 still has two.',
         do:['Midday and evening, nothing between. Tomorrow is 5: three at midday, two at night.',
-            'Start the sleep diary tonight on the Tonight card — five nights before zero means the window is already set when you need it.',
-            'Look back at the week: 22 to 8 in eight days, every step held.']}},
+            'Start the sleep diary tonight on the Tonight card — every night logged before zero is one the window doesn’t have to guess at.',
+            'Look back: 22 down to 8, and the ceiling has only ever gone one way.']}},
      why:"Cues drive use as much as chemistry. Dropping whole sessions removes cue windows — the same target CBT and MET, the best-supported treatments, work on.",
      ref:"manage"},
     {days:2, cap:3, capText:"2–3", sessionMax:3, spacingH:0, single:true,
@@ -2671,6 +2671,21 @@ try{
     }
     return out.sort(function(a,b){return a.m-b.m;});
   }
+  /* The morning-wait row asserted "you already run an 8–10h gap every night" —
+     a statement about the user's own record, written as a constant. The record
+     was right there: dayMetrics keeps overnightMs for every logged day. Median
+     rather than mean, so one 3am night doesn't set the number, and null under
+     three nights rather than a confident figure drawn from one. */
+  function overnightTypical(){return rc('ont',function(){
+    var v=[],i,m;
+    for(i=1;i<=14;i++){
+      m=dayMetrics(dkeyOf(addDays(today,-i)));
+      if(m&&m.overnightMs)v.push(m.overnightMs);
+    }
+    if(v.length<3)return null;
+    v.sort(function(a,b){return a-b;});
+    return v[Math.floor(v.length/2)];
+  });}
   function feelForecast(d,di){
     if(di<0)return null;
     var p=BASE_PHASES[di],slots=[];
@@ -2706,20 +2721,27 @@ try{
     }
     var pl=dayPlanOf(d,di);
     var wins=(pl&&pl.w?pl.w:[]).map(parseWin).filter(function(x){return x!=null;}).sort(function(a,b){return a-b;});
+    /* Keyed to the ceiling, not to di. Rung INDEX only meant "how far down the
+       descent" while there was one ladder: halving the steps inserts rungs, so
+       di=2 is cap 12 coarse and cap 16 fine, and a ten-rung ladder collapsed
+       everything from cap 12 down onto "the taper's peak". The thresholds
+       reproduce the coarse mapping exactly (22→0, 16→1, 12→2, 8→3, 2–3→4). */
     var intro=[
       'Mildest stretch of the plan — today is cue-fighting, not chemistry. The count is the only battle.',
       'Still mostly cue work, with the first taste of real edge late in the gaps as they stretch.',
       'First genuinely chemical day — restlessness and a shorter fuse are the taper working, not failing. Appetite may dim: eat at the old times anyway.',
       'The biggest structural cut. A foggy, unsettled afternoon and maybe a dull headache — water and movement carry today.',
       'Withdrawal-lite all day, on purpose: the taper’s peak. Edgy, restless, appetite low — all expected, all temporary, all smaller than the cliff you’re not jumping off.'
-    ][Math.min(di,4)];
+    ][p.cap>=20?0:p.cap>=15?1:p.cap>=11?2:p.cap>=7?3:4];   // by ceiling, not by rung index
     // wake → first window: the wait is habit, not withdrawal. Only when the
     // first window sits in the morning/early-afternoon — an evening-only day's
     // daytime is covered by the "long fade" row instead.
     if(!p.single&&wins.length&&wins[0]>=570&&wins[0]<=840){
       slots.push({s:Math.max(300,wins[0]-240),e:wins[0],t:'wake–'+fmtMin(wins[0]),kind:'am',
         head:'The morning wait.',
-        body:'Cue, not chemistry — you already run an 8–10h gap every night; this only adds daylight to it.',
+        body:'Cue, not chemistry — '+(overnightTypical()
+          ?'your own nights already run about '+fmtDur(overnightTypical())+' with nothing logged'
+          :'the overnight stretch you already sleep through is longer than this')+'; this only adds daylight to it.',
         fix:'Hand the morning a script — coffee, shower, out the door — so the clock isn’t the show.'});
     }
     // ghost windows from the last two days
@@ -2749,7 +2771,9 @@ try{
           if(g.min>255){
             slots.push({s:g.from+180,e:g.from+240,t:fmtMin(g.from+180)+'–'+fmtMin(g.from+240),kind:'edge',
               head:'The hump of the '+fmtGapH(g.min/60)+' gap.',
-              body:'Your own logs say hours 3–4 of a gap are the hardest — then it eases before the window even opens.',
+              // said "Your own logs say" while reading nothing. The pattern is
+              // real; the attribution wasn't. Claim the pattern, not the record.
+              body:'Hours 3–4 of a long gap are typically its hardest stretch — then it eases before the window even opens.',
               fix:'Put motion or a meal at '+fmtMin(g.from+180)+' and the back half of the gap is downhill.'});
           }else{
             slots.push({s:g.to-60,e:g.to,t:fmtMin(g.to-60)+'–'+fmtMin(g.to),kind:'edge',
