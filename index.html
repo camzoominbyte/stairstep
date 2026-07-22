@@ -6596,7 +6596,9 @@ try{
     // countdown and "since last hit" tiles sat frozen at whatever time it
     // was turned sideways. It is the view most likely to be left watching.
     safe(renderDash);
-    if(!$('dpOverlay').hidden&&dpKey===todayKey)safe(function(){dpRender(dpKey,true);});
+    // never repaint the pager out from under an open editor — dpRender
+    // replaces #dpBody, and a half-filled <input type="time"> goes with it
+    if(!$('dpOverlay').hidden&&dpKey===todayKey&&!dpEditOpen)safe(function(){dpRender(dpKey,true);});
     safe(feelLive);
   },30000);
 
@@ -6618,6 +6620,9 @@ try{
       });
       btn.textContent=p==='dark'?'☾':p==='light'?'☀':'◐';
       btn.setAttribute('aria-label','Theme: '+(p||'auto')+' — tap to change');
+      // the staircase mixes its fills toward _paper(), which just changed —
+      // without a repaint the steps stay blended into the old background
+      if(typeof booted!=='undefined'&&booted){safe(renderStairs);safe(renderDash);}
     }
     btn.addEventListener('click',function(){
       var p=pref();
