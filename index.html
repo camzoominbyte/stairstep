@@ -809,6 +809,12 @@
   }
   .sc-hand button.pri{border-color:var(--amber);color:var(--amber)}
   .sc-note{font-size:11.5px;color:var(--muted);margin:9px 0 0;line-height:1.5}
+  /* the half-step offer: set off from the hold controls above it, because it
+     is the other answer to the same question and shouldn't read as one more
+     button in the row */
+  .sc-fine{margin-top:13px;padding-top:12px;border-top:1px solid var(--line)}
+  .sc-fine .sc-note{margin-top:0}
+  .sc-fine .sc-note b{color:var(--sand)}
 
   /* ---- collapsibles ---- */
   details{border:1px solid var(--line);border-radius:18px;background:var(--surface);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow-sm)}
@@ -1817,7 +1823,7 @@ try{
 
   /* ================= schedule ================= */
   var TAPER_START = new Date(2026,6,12); // Jul 12 2026
-  var BASE_PHASES = [
+  var COARSE_RUNGS = [
     {days:2, cap:22, capText:"22", sessionMax:4, spacingH:3,
      rule:"Max 4 hits/session · 3h between sessions",
      desc:"A quarter down from the ~30 baseline. The cut is real but holdable — the point is proving the count works.",
@@ -1834,6 +1840,12 @@ try{
         do:['Run yesterday’s shape again and let it feel routine. Boring is the win.',
             'Notice which window you needed least — that’s the one tomorrow deletes.',
             'By tonight you’ll have held the ceiling twice. That’s the proof the structure works.']}],
+     fineClose:{goal:"Hold 22 a second day — it should already feel routine. The next step down is 3, not 6.",
+       plan:{w:['8a','11a','2p','5p','8p','11p'],
+        note:'Same six windows as yesterday — repetition is the point today.',
+        do:['Run yesterday’s shape again and let it feel routine. Boring is the win.',
+            'Tomorrow the ceiling goes to 19 and the gap to 3½h. Every window survives — the cut is small on purpose.',
+            'By tonight you’ll have held the ceiling twice. That’s the proof the structure works.']}},
      why:"The clinical review's core finding: slow, stepped reduction over weeks lowers the odds and severity of withdrawal.",
      ref:"taper"},
     {days:2, cap:16, capText:"16", sessionMax:4, spacingH:[3.5,4],
@@ -1852,6 +1864,12 @@ try{
         do:['The ceiling holds at 16; the gap does the moving. Feel the extra half hour and let it pass.',
             'An urge between windows is the 20-minute rule’s job — set the timer instead of watching the clock.',
             'Tomorrow is the halfway cut to 12. Decide tonight which daytime window survives.']}],
+     fineClose:{goal:"Hold 16, gap out to 4h. Next is 14, not 12 — half the drop, and every window still fits.",
+       plan:{w:['10a','2p','6p','10p'],
+        note:'Same four windows, pushed to 4 hours apart — the space between them is the change today.',
+        do:['The ceiling holds at 16; the gap does the moving. Feel the extra half hour and let it pass.',
+            'An urge between windows is the 20-minute rule’s job — set the timer instead of watching the clock.',
+            'Tomorrow is 14 and the gap steps to 5h. Two hits off, not four — no window has to go yet.']}},
      why:"Lab trials show THC suppresses withdrawal dose-dependently — small steps keep the gap your receptors feel small.",
      ref:"taper"},
     {days:2, cap:12, capText:"12", sessionMax:3, spacingH:[5,6],
@@ -1870,6 +1888,12 @@ try{
         do:['Eat a real meal at the old session times — feeding the cue is cheaper than fighting it.',
             'Keep the evening window last, not longest: 3 hits and closed.',
             'Tomorrow drops all daytime use. Plan what the morning looks like without a window.']}],
+     fineClose:{goal:"Hold 12, gap out to 6h. Next is 10, not 8 — the daytime gets one more day.",
+       plan:{w:['10a','4p','10p'],
+        note:'Same three windows at 6 hours apart — most of your waking day is now between sessions.',
+        do:['Eat a real meal at the old session times — feeding the cue is cheaper than fighting it.',
+            'Keep the evening window last, not longest: 3 hits and closed.',
+            'Tomorrow is 10 and the gap goes to 7h. Three windows still fit — barely, and for the last time.']}},
      why:"Cravings crest and pass in minutes — urge-delay is first-line behavioral treatment, and this stretch is where it earns its keep.",
      ref:"manage"},
     {days:2, cap:8, capText:"8", sessionMax:3, spacingH:[7,8],
@@ -1888,6 +1912,12 @@ try{
         do:['Midday and evening, nothing between. Tomorrow goes evening-only.',
             'Start the sleep diary tonight on the Tonight card — five nights before zero means the window is already set when you need it.',
             'Look back at the week: 22 to 8 in eight days, every step held.']}],
+     fineClose:{goal:"Hold 8, gap out to 8h. Next is 5 across two sittings, not evening-only — the last step got halved.",
+       plan:{w:['1p','9p'],
+        note:'Same two windows, an hour further apart. With the steps halved this is no longer the last multi-window day — tomorrow’s 5 still has two.',
+        do:['Midday and evening, nothing between. Tomorrow is 5: three at midday, two at night.',
+            'Start the sleep diary tonight on the Tonight card — five nights before zero means the window is already set when you need it.',
+            'Look back at the week: 22 to 8 in eight days, every step held.']}},
      why:"Cues drive use as much as chemistry. Dropping whole sessions removes cue windows — the same target CBT and MET, the best-supported treatments, work on.",
      ref:"manage"},
     {days:2, cap:3, capText:"2–3", sessionMax:3, spacingH:0, single:true,
@@ -1915,6 +1945,178 @@ try{
      why:"The withdrawal timeline (onset 24–48 h, peak days 2–6, fading over 2–3 weeks) is drawn from abrupt heavy stops. You step off from 2–3 hits, not ~30 — and easing the drop is exactly what the review says reduces the probability and severity.",
      ref:"withdrawal"}
   ];
+  /* ================= the finer ladder =================
+     The same descent taken in half-steps. Every coarse cap appears here with
+     exactly one new rung between it and the next, and a coarse rung is two
+     days where a fine rung is one — so swapping the remainder of the descent
+     from coarse to fine costs exactly the same number of days, and zero does
+     not move. That equality is the whole feature: the other way to answer a
+     step that is too big was to push the date, and pushing the date is the
+     thing that spends what little the evidence actually supports.
+
+     Only rungs strictly BELOW the switch point are ever taken from here, so
+     each fine rung has one determinate predecessor and its copy can name it:
+     19←22, 16←19, 14←16, 12←14, 10←12, 8←10, 5←8, 3←5.
+
+     One deliberate constraint on the writing: a fine rung is one base day but
+     an over-cap day can extend it, and with a single goals/plans entry
+     phaseDayIdx hands that same entry to every day of the rung. So nothing
+     here promises what tomorrow's cap will be — the coarse rungs can make
+     that promise because their closing entry is pinned to their true last
+     day, and these have no earlier entry to fall back to. The live surfaces
+     (today's "tomorrow: cap X", the deferral banner) read the real schedule
+     and say it there instead. */
+  var FINE_RUNGS = [
+    {days:1, cap:19, capText:"19", sessionMax:4, spacingH:3.5,
+     rule:"Max 4 hits/session · 3½h between sessions",
+     desc:"Half a step instead of a whole one. Down 3 from 22, gap out to 3½h — small enough it should barely register, which is the entire argument for taking the stairs this way.",
+     goals:["Down 3 from 22, not 6. Ceiling 19, gap 3½h — a half-step you should barely feel."],
+     plans:[
+       {w:['9a','12:30p','4p','7:30p','11p'],
+        note:'Five windows on a 3½-hour rhythm — 20 slots against a 19 cap, so exactly one window ends a hit short.',
+        do:['Decide now which window ends short, rather than discovering it at 11 p.m.',
+            'The ceiling moved by three and the gap by half an hour. Both are meant to be unremarkable.',
+            'Log every hit as it happens — half-steps only work if the count is honest.']}],
+     why:"Lab trials show THC suppresses withdrawal dose-dependently: the smaller each drop, the smaller the gap your receptors are asked to cover.",
+     ref:"taper"},
+    {days:1, cap:16, capText:"16", sessionMax:4, spacingH:4,
+     rule:"Max 4 hits/session · 4h between sessions",
+     desc:"The same 16 the original plan reached in one jump from 22 — arrived at in two. The ceiling matches; the landing is softer.",
+     goals:["16, gap out to 4h. You got here in two small steps instead of one big one — same ceiling, softer landing."],
+     plans:[
+       {w:['10a','2p','6p','10p'],
+        note:'Four windows × 4 hits is exactly 16 — no slack anywhere in the day.',
+        do:['Every window is exactly the cap now: 4 in each, none spare.',
+            'Push the first window to 10 a.m. even if the morning argues. Mornings are where the taper is won.',
+            'Whichever window you needed least today is information — the next cut will want it.']}],
+     why:"Lab trials show THC suppresses withdrawal dose-dependently — small steps keep the gap your receptors feel small.",
+     ref:"taper"},
+    {days:1, cap:14, capText:"14", sessionMax:4, spacingH:5,
+     rule:"Max 4 hits/session · past 4h the gap steps by the full hour: 5h",
+     desc:"Past the 4-hour mark, where the gap has gotten easier before. From here the clock cuts deeper than the ceiling does.",
+     goals:["14, and the gap jumps a full hour to 5h. Past the 4-hour mark it has gotten easier before — expect the same here."],
+     plans:[
+       {w:['10a','3p','8p'],
+        note:'Three windows × 4 hits = 12, under the 14 cap. The clock is doing more of the work than the ceiling now.',
+        do:['Only three windows fit a 5-hour rhythm. Ride them; don’t engineer a fourth.',
+            'The two spare hits are headroom, not a target — the plan asks for 12.',
+            'Restlessness at the old window times is a cue firing, not a symptom.']}],
+     why:"Cravings crest and pass in minutes — urge-delay is first-line behavioral treatment, and this stretch is where it earns its keep.",
+     ref:"manage"},
+    {days:1, cap:12, capText:"12", sessionMax:3, spacingH:6,
+     rule:"Max 3 hits/session · 6h between sessions",
+     desc:"Well under half of baseline, reached two hits at a time. Most of your waking day is now the space between sessions.",
+     goals:["12 — well under half of baseline — with 6h between sessions. Most of the waking day is gap now."],
+     plans:[
+       {w:['10a','4p','10p'],
+        note:'Three windows × 3 hits = 9, under the 12 cap. Most of the day is the space between them.',
+        do:['Eat a real meal at the old session times — feeding the cue is cheaper than fighting it.',
+            'The session ceiling drops to 3. A window is three hits and closed, however long you sit.',
+            'Six hours is long enough that the 20-minute rule will get used. Set the timer instead of watching the clock.']}],
+     why:"Cues drive use as much as chemistry. Widening the gap removes cue windows — the same target CBT and MET, the best-supported treatments, work on.",
+     ref:"manage"},
+    {days:1, cap:10, capText:"10", sessionMax:3, spacingH:7,
+     rule:"Max 3 hits/session · 7h between sessions",
+     desc:"Double digits for the last time. The daytime is thinning out, and what survives it is what was load-bearing.",
+     goals:["10, gap out to 7h. Double digits for the last time — what’s left is what’s load-bearing."],
+     plans:[
+       {w:['10a','5p','10p'],
+        note:'Three windows × 3 hits = 9 against a 10 cap — the tightest fit of the whole descent.',
+        do:['Three windows still fit, barely. After this rung they stop fitting.',
+            'Whichever of these three you would defend hardest is the one that goes last.',
+            'A mild edge in the gaps is the taper working, not failing.']}],
+     why:"Lab trials show THC suppresses withdrawal dose-dependently — small steps keep the gap your receptors feel small.",
+     ref:"taper"},
+    {days:1, cap:8, capText:"8", sessionMax:3, spacingH:8,
+     rule:"2 sessions · 8h apart · drop all daytime",
+     desc:"The structural cut: no morning window at all. Keep midday and the evening wind-down, nothing between them.",
+     goals:["8, and the morning window goes. Midday and the evening wind-down — nothing between them."],
+     plans:[
+       {w:['12p','8p'],
+        note:'Two windows × 3 hits = 6 — the 8 cap is headroom, not a target.',
+        do:['No morning window at all. Fill the first half of the day with anything that moves.',
+            'Keep only what’s load-bearing: midday, and the evening wind-down.',
+            'The morning is the part that will feel emptiest and the part that pays best.']}],
+     why:"Cues drive use as much as chemistry. Dropping whole sessions removes cue windows — the same target CBT and MET, the best-supported treatments, work on.",
+     ref:"manage"},
+    {days:1, cap:5, capText:"5", sessionMax:3, spacingH:9,
+     rule:"2 sessions · 9h apart · 3 midday, 2 evening",
+     desc:"Five hits across two sittings, nine hours apart. Functionally done for most of the day, and proving it.",
+     goals:["5 across two sittings, 9h apart — 3 at midday, 2 in the evening. Functionally done for most of the day."],
+     plans:[
+       {w:['12p','9p'],
+        note:'Two windows, nine hours apart: 3 hits at midday and 2 in the evening is the entire day.',
+        do:['Three at midday, two at night. Counting them out beforehand is the plan.',
+            'Log the night on the Tonight card — the sleep window is derived from your own baseline, and it needs the nights.',
+            'Nine hours between sittings means the afternoon has to stand on its own. It can.']}],
+     why:"Sleep disturbance outlasts every other withdrawal symptom, and sleep restriction is the CBT-I component that carries the effect — the baseline it needs is gathered before zero.",
+     ref:"withdrawal"},
+    {days:1, cap:3, capText:"2–3", sessionMax:3, spacingH:0, single:true,
+     rule:"Evening only · one session",
+     desc:"One evening sitting, and the daytime schedule is already at zero. Whatever’s left goes in the trash tonight.",
+     goals:["Evening only — 2–3 in one sitting. The daytime is already at zero; tonight the stash goes."],
+     plans:[
+       {w:['8:30p'],
+        note:'One evening sitting — 2–3 hits, then done. The daytime schedule is already at zero.',
+        do:['Nothing all day. You’re functionally quit from wake to dinner — today proves it.',
+            'Before bed, the ritual: whatever’s left goes in the trash. Not saved, not “just in case.”',
+            'Keep the sitting small and deliberate: 2–3 hits, one window, closed.']}],
+     why:"Sleep disturbance outlasts every other withdrawal symptom, and sleep restriction is the CBT-I component that carries the effect — the baseline it needs is gathered before zero.",
+     ref:"withdrawal"},
+    COARSE_RUNGS[COARSE_RUNGS.length-1]   // zero is zero either way — one object, no drift
+  ];
+  var COARSE_CAPS={};
+  COARSE_RUNGS.forEach(function(p){COARSE_CAPS[p.cap]=true;});
+  /* The active ladder. Rungs at or above the switch point stay coarse (they
+     are already walked, and their logged days must keep the rung they were
+     logged against); everything below comes from the finer ladder. With no
+     switch recorded this is exactly COARSE_RUNGS. */
+  /* The rung the switch happens ON keeps its coarse length — it is already
+     part-walked, and shortening it would re-file days that were logged
+     against it. But its closing entry named a next step that is no longer
+     next ("tomorrow goes evening-only" when tomorrow is now 5), so that one
+     entry is swapped for the variant written against the halved successor.
+     Cloned, never mutated: COARSE_RUNGS has to stay true for the un-switched
+     descent, and these objects are shared. */
+  function switchRung(p){
+    var q={},k;
+    for(k in p)q[k]=p[k];
+    q.goals=p.goals.slice();q.plans=p.plans.slice();
+    q.goals[q.goals.length-1]=p.fineClose.goal;
+    q.plans[q.plans.length-1]=p.fineClose.plan;
+    return q;
+  }
+  function buildLadder(d){
+    var fb=d&&d.replan&&d.replan.fineBelow;
+    if(!fb)return COARSE_RUNGS.slice();
+    var out=[],i,p;
+    for(i=0;i<COARSE_RUNGS.length;i++){
+      p=COARSE_RUNGS[i];
+      if(p.cap<fb)continue;
+      if(p.cap===fb&&p.fineClose)p=switchRung(p);
+      out.push(p);
+    }
+    for(i=0;i<FINE_RUNGS.length;i++)if(FINE_RUNGS[i].cap<fb)out.push(FINE_RUNGS[i]);
+    return out;
+  }
+  /* Starts coarse on purpose: normData's legacy migrations walk the ladder to
+     re-file old index-keyed holds, and every save that predates this feature
+     was written against the coarse one. normData itself installs the real
+     ladder on its way out, so every path that replaces data — boot, import,
+     both restores, the cross-tab reload — relands the ladder without having
+     to remember to. relader() is for the one case that mutates fineBelow in
+     place rather than swapping the whole object. */
+  var BASE_PHASES = COARSE_RUNGS.slice();
+  function relader(){BASE_PHASES=buildLadder(data);}
+  // the caps still to come below c, in either ladder, for showing the swap
+  function tailCaps(rungs,c){
+    var out=[];
+    for(var i=0;i<rungs.length;i++)if(rungs[i].cap<c&&rungs[i].cap>0)out.push(rungs[i].capText);
+    return out;
+  }
+  function fineTail(c){return tailCaps(FINE_RUNGS,c);}
+  function coarseTail(c){return tailCaps(COARSE_RUNGS,c);}
+  function capChain(lead,arr){return [lead].concat(arr,['0']).join(' → ');}
   /* Days of automatic extension the whole descent is allowed to spend. Not a
      clinical number — there isn't one — but a bound, which is the part that
      matters: five days is roughly half the original plan's length, enough to
@@ -2042,6 +2244,10 @@ try{
   /* every raw data object (boot, import, snapshot, cross-tab reload) goes
      through here: missing collections get created, and old saves migrate. */
   function normData(d){
+    /* the migrations below re-file holds by walking the ladder, and every
+       save that predates the finer ladder was written against the coarse
+       one — so read it coarse, then install the real ladder on the way out */
+    BASE_PHASES=COARSE_RUNGS.slice();
     d.holds=d.holds||{};d.holdPrompts=d.holdPrompts||{};
     d.urges=d.urges||[];d.dayCheers=d.dayCheers||{};d.ritual=d.ritual||{};
     d.checkins=d.checkins||{};
@@ -2062,7 +2268,7 @@ try{
        cap the day actually broke. The auto-hold engine owns those days now:
        'held' becomes 'ack' (so the engine counts the day itself) and the
        misplaced manual day comes off. lhv 1. */
-    var bi,tgt;
+    var bi,tgt,nh,hk;
     if(d.lhv!==1){
       for(k in d.holdPrompts){
         if(d.holdPrompts[k]==='held'){
@@ -2073,6 +2279,21 @@ try{
         }
       }
       d.lhv=1;
+    }
+    /* Holds used to be keyed by rung INDEX, which was stable only for as long
+       as the ladder was. Switching the rest of the descent to half-steps
+       inserts rungs, and every index below the switch shifts underneath the
+       stored value — the planned extra evening-only day would come back
+       attached to whatever rung had moved into that slot. Re-file by cap:
+       unique within either ladder, and the thing a hold actually refers to.
+       Runs after the lhv pass above, which is still index-keyed. hkv 1. */
+    if(d.hkv!==1){
+      nh={};
+      for(k in d.holds){
+        hk=COARSE_RUNGS[+k];
+        if(hk&&d.holds[k])nh['c'+hk.cap]=d.holds[k];
+      }
+      d.holds=nh;d.hkv=1;
     }
     /* craving history: dots flipped to mean intensity (5 = loud). ckv 2
        flipped values in place; ckv 3 renames the field to 'crave' so a
@@ -2088,7 +2309,19 @@ try{
     // old encoding, flip it into place
     for(k in d.checkins){c=d.checkins[k];
       if(c&&c.craving){c.crave=6-c.craving;delete c.craving;}}
+    // the one place every data-replacing path funnels through, so the ladder
+    // can never be left describing the previous save's descent
+    BASE_PHASES=buildLadder(d);
     return d;
+  }
+  /* Holds are stored by cap and read by rung index — call sites keep saying
+     "this rung" while storage says "this ceiling", which is what survives the
+     ladder changing shape underneath them. */
+  function holdKey(i){var p=BASE_PHASES[i];return p?'c'+p.cap:null;}
+  function holdsAt(i){var k=holdKey(i);return (k&&data.holds[k])||0;}
+  function setHoldsAt(i,v){
+    var k=holdKey(i);if(!k)return;
+    if(v)data.holds[k]=v;else delete data.holds[k];
   }
   var data=normData(loadData());
   var saveFailed=false;
@@ -2165,7 +2398,7 @@ try{
     var slack=SLACK_TOTAL, lockKey=data.replan&&data.replan.lockFrom;
     for(var i=0;i<BASE_PHASES.length;i++){
       var p=BASE_PHASES[i];
-      var start=new Date(cur), end=null, auto=0, manual=data.holds[i]||0;
+      var start=new Date(cur), end=null, auto=0, manual=holdsAt(i);
       // only a capped rung can absorb an eased day; handing one to the
       // zero phase (days:null) invents an adjustment that never happened
       /* Eased days move zero exactly as much as auto-holds do, so they spend
@@ -2241,6 +2474,12 @@ try{
     return sch.length-1;
   }
   function zeroDate(){var s=schedule();return s[s.length-1].start;}
+  /* Calendar days from today to zero — 0 on zero day, negative after. Gates
+     that need "is there still time to gather something before zero" have to
+     ask in days: a rung count means different amounts of time in the two
+     ladders, and the finer one would quietly hand a five-night baseline
+     four nights. */
+  function daysToZero(){return Math.round((zeroDate()-today)/MS_DAY);}
 
   /* ================= counts ================= */
   function entryFor(key,create){
@@ -3165,7 +3404,7 @@ try{
         '<button class="sc-act warn" data-sc="apply" data-k="'+h.key+'">Apply it</button>');
     });
     for(var i=0;i<BASE_PHASES.length;i++){
-      var m=data.holds[i]||0, e=sch[i].eased||0;
+      var m=holdsAt(i), e=sch[i].eased||0;
       if(m>0)rows+=row('','Cap '+BASE_PHASES[i].capText+' · <b>+'+m+' day'+(m>1?'s':'')+'</b> added by hand',
         '<button class="sc-act" data-sc="unhold" data-i="'+i+'">Undo</button>');
       if(m<0)rows+=row('','Cap '+BASE_PHASES[i].capText+' · <b>'+(-m)+' day'+(m<-1?'s':'')+'</b> ended early',
@@ -3175,9 +3414,34 @@ try{
     var hand='';
     if(!isZeroEra&&idx<BASE_PHASES.length-1){
       hand='<div class="sc-hand"><button class="pri" data-sc="hold" data-i="'+idx+'">This step needs another day</button>'+
-        ((data.holds[idx]||0)>0?'<button data-sc="unhold" data-i="'+idx+'">Undo the extra day</button>':'')+
+        (holdsAt(idx)>0?'<button data-sc="unhold" data-i="'+idx+'">Undo the extra day</button>':'')+
         (sch.locked?'<button data-sc="unlock">Let the date move again</button>'
                    :'<button data-sc="lock">Lock the date here</button>')+'</div>';
+    }
+    /* The other answer to a step that is too big. Holding a rung buys a day
+       and moves zero; halving buys a smaller drop and moves nothing, because
+       a coarse rung is two days and the two fine rungs that replace it are
+       one each. Shown as the arithmetic rather than asserted, and offered
+       once — below the switch the ladder is already as fine as it gets. */
+    var fine='';
+    if(!isZeroEra&&idx<BASE_PHASES.length-1){
+      var fb=data.replan.fineBelow;
+      /* Offered only where it can be told truthfully: the rung needs a
+         closing entry written against the halved successor, and there has to
+         be a finer remainder to swap in. A rung with no fineClose can never
+         become a switch point, so no new rung can quietly start lying. */
+      if(!fb&&COARSE_CAPS[cap]&&phase.fineClose&&fineTail(cap).length>coarseTail(cap).length){
+        fine='<div class="sc-fine"><p class="sc-note"><b>This step is too big?</b> Take it in halves instead. '+
+          'The rest of the descent splits into single days — <b>'+capChain(phase.capText,fineTail(cap))+'</b> in place of '+
+          '<b>'+capChain(phase.capText,coarseTail(cap))+'</b> — and zero stays '+WEEKDAYS[z.getDay()]+', '+fmtShort(z)+
+          ', because two one-day rungs cost exactly what one two-day rung did. Smaller drops, less time to settle on each.</p>'+
+          '<div class="sc-hand"><button data-sc="fine">Halve the steps from here</button></div></div>';
+      }else if(fb&&cap>=fb){
+        fine='<div class="sc-fine"><p class="sc-note">Half-steps are on from here: <b>'+capChain(phase.capText,fineTail(fb))+'</b>. '+
+          'This can go back while you are still on the '+phase.capText+' rung — once a half-step rung has been walked, '+
+          'undoing it would re-file days against a cap they were never held to.</p>'+
+          '<div class="sc-hand"><button data-sc="coarse">Back to full steps</button></div></div>';
+      }
     }
     /* Slack is shown as a depleting resource rather than reported after the
        fact, because the whole point is that it is spendable and finite. */
@@ -3196,7 +3460,7 @@ try{
         :isZeroEra
           ?'The descent ran exactly as drawn — every logged day landed at or under its cap.'
           :'Nothing has moved the descent yet — every logged day landed at or under its cap, and no hold was ever offered.')+'</p>'+
-      rows+hand+
+      rows+hand+fine+
       (isZeroEra?''
         :'<p class="sc-note">A day only holds its step when its <em>logged total</em> goes over that day\'s cap. A rough day that still landed under the cap won\'t move anything on its own — use the button above if the step needs more room, or correct the day\'s count from its day page and the whole descent re-adjusts.</p>');
   }
@@ -4145,7 +4409,7 @@ try{
     /* one planned extra day, once: the guide promises exactly one, and a
        nightly re-offer would turn a pressure valve into an endless snooze */
     var xt=$('ritExtend'), xli=BASE_PHASES.length-2;
-    if(onEve&&(data.holds[xli]||0)<1){
+    if(onEve&&holdsAt(xli)<1){
       xt.hidden=false;
       xt.innerHTML='Not ready? A planned extra day beats an unplanned slip — <button class="linklike" id="extendEve">hold evening-only one more day</button> and zero moves to '+fmtShort(addDays(z,1))+'. One planned day is the valve; after that the date stands.';
     }else{xt.hidden=true;}
@@ -4174,7 +4438,9 @@ try{
     return false;
   }
   function ckActive(){
-    if(idx<BASE_PHASES.length-2)return false;
+    // last capped rung, or zero within two days — the rung term alone meant
+    // one night's lead instead of two once that rung could be a single day
+    if(idx<BASE_PHASES.length-2&&daysToZero()>2)return false;
     if(!isZeroEra)return true;
     var n=zeroCalDay();
     if(n<=21)return true;
@@ -6278,8 +6544,18 @@ try{
      so it could only ever hand SL_BASE=5 two nights and the window would
      first be prescribed mid-peak-week. Opening three phases out gives six
      mornings before zero, so the window exists on the day it is first
-     needed, with one night spare. */
-  function sleepActive(){return idx>=BASE_PHASES.length-4;}
+     needed, with one night spare.
+     "Three phases out" was the same arithmetic bug one level up, though: it
+     counts rungs, and a rung is two days in the coarse ladder and one in the
+     finer one — so the half-step descent would have opened this four nights
+     before zero and been one short again. It asks in days now. The sleep
+     clause keeps it open if zero later moves out: the nights are already
+     being gathered, and a card that vanishes mid-diary is its own bug. */
+  function sleepActive(){
+    if(daysToZero()<=SL_BASE+1)return true;
+    for(var k in data.sleep)return true;
+    return false;
+  }
   function renderSleep(){
     var card=$('sleepCard');if(!card)return;
     if(!sleepActive()){card.hidden=true;return;}
@@ -6607,11 +6883,15 @@ try{
     else if(act==='decline')data.holdPrompts[k]='kept'; // and back again — nothing here is one-way
     else if(act==='lock'){data.replan.lockFrom=todayKey;}
     else if(act==='unlock'){delete data.replan.lockFrom;}
-    else if(act==='hold')data.holds[i]=(data.holds[i]||0)+1;
+    /* Re-file the ladder before saving: holds are stored by cap, and the
+       whole app re-derives from the log on the next paint, so the switch
+       needs no migration of its own — only the ladder swapped in first. */
+    else if(act==='fine'){data.replan.fineBelow=cap;data.replan.fineAt=todayKey;relader();}
+    else if(act==='coarse'){delete data.replan.fineBelow;delete data.replan.fineAt;relader();}
+    else if(act==='hold')setHoldsAt(i,holdsAt(i)+1);
     else if(act==='unhold'){
-      var m=data.holds[i]||0;
-      data.holds[i]=m>0?m-1:m<0?m+1:0;
-      if(!data.holds[i])delete data.holds[i];
+      var m=holdsAt(i);
+      setHoldsAt(i,m>0?m-1:m<0?m+1:0);
     }
     save();renderAll();
   });
@@ -6653,7 +6933,7 @@ try{
   $('heldDrop').addEventListener('click',function(){
     var k=$('heldBanner').dataset.ykey;
     if(k)data.dayCheers[k]=1;
-    data.holds[idx]=(data.holds[idx]||0)-1;
+    setHoldsAt(idx,holdsAt(idx)-1);
     save();renderAll();
   });
   $('ckRows').addEventListener('click',function(ev){
@@ -6772,11 +7052,11 @@ try{
   /* zero-eve: a planned extra evening-only day, via the manual-hold engine */
   document.addEventListener('click',function(ev){
     if(!ev.target.closest('#extendEve'))return;
-    if((data.holds[BASE_PHASES.length-2]||0)>=1)return; // one planned day only
+    if(holdsAt(BASE_PHASES.length-2)>=1)return; // one planned day only
     var z=zeroDate(),nz=addDays(z,1);
     if(!confirm('Hold the evening-only step one more day? Zero day moves to '+WEEKDAYS[nz.getDay()]+', '+fmtShort(nz)+'.'))return;
     var li=BASE_PHASES.length-2;
-    data.holds[li]=(data.holds[li]||0)+1;
+    setHoldsAt(li,holdsAt(li)+1);
     save();renderAll();
   });
   $('ritRows').addEventListener('click',function(ev){
