@@ -5239,13 +5239,21 @@ try{
       if(sch[i].end&&sch[i].end<today)continue;
       add(sch[i].start,sch[i].end,'<strong>Cap '+BASE_PHASES[i].capText+'</strong> · '+BASE_PHASES[i].rule);
     }
-    add(z,null,'<strong>Zero day.</strong> The stash went out the night before. You step off from 2–3 hits, not ~30 — the drop your receptors feel is a fraction of cold turkey’s.');
-    add(addDays(z,1),addDays(z,2),'If symptoms come, they typically start here (24–48 h). The figures behind that are from abrupt heavy stops — tapering is the tool the review names for cutting their probability and severity.');
-    add(addDays(z,2),addDays(z,6),'<strong>The peak window</strong> (days 2–6) — the blunted version, pre-shaved by the step-down. Waves, not walls; each passes in minutes.');
-    add(addDays(z,7),addDays(z,13),'Past the peak. The grade flattens — mood and appetite recover first.');
-    add(addDays(z,14),addDays(z,21),'Weeks 2–3 · the climb back to baseline. The adjustment window closes around day 21.');
-    add(addDays(z,22),null,'Beyond · vivid dreams can outlast everything else (REM rebound) — a progress signal, not a warning.');
-    add(addDays(z,29),addDays(z,89),'<strong>Marker days · 30, 60, 90.</strong> Each one a planned reward, funded by the hits that never happened — decide what each earns before it arrives.');
+    /* zeroCalDay() is 1-based — the zero date itself is day 1 — so a band
+       for "day n" starts at addDays(z,n-1). Every withdrawal row here used
+       addDays(z,n) and sat a day late, while the marker row below already
+       used the right convention, so the timeline disagreed with the note
+       printed directly above it. The bands are also disjoint now: they
+       overlapped at z+2 and again from z+29, which lit two rows "· now"
+       on the same day. They mirror zeroTimelineNote's own if-chain. */
+    function dayN(n){return addDays(z,n-1);}
+    add(dayN(1),null,'<strong>Zero day.</strong> The stash went out the night before. You step off from 2–3 hits, not ~30 — the drop your receptors feel is a fraction of cold turkey’s.');
+    add(dayN(2),dayN(2),'If symptoms come, they typically start here (24–48 h). The figures behind that are from abrupt heavy stops — tapering is the tool the review names for cutting their probability and severity.');
+    add(dayN(3),dayN(6),'<strong>The peak window</strong> (days 2–6) — the blunted version, pre-shaved by the step-down. Waves, not walls; each passes in minutes.');
+    add(dayN(7),dayN(13),'Past the peak. The grade flattens — mood and appetite recover first.');
+    add(dayN(14),dayN(21),'Weeks 2–3 · the climb back to baseline. The adjustment window closes around day 21.');
+    add(dayN(22),dayN(29),'Beyond · vivid dreams can outlast everything else (REM rebound) — a progress signal, not a warning.');
+    add(dayN(30),dayN(90),'<strong>Marker days · 30, 60, 90.</strong> Each one a planned reward, funded by the hits that never happened — decide what each earns before it arrives.');
     return '<div class="road">'+rows.map(function(r){
       var endD=r.b||r.a;
       var cur=today>=r.a&&today<=endD;
