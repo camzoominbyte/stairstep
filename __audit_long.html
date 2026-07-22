@@ -1660,7 +1660,7 @@ try{
   'use strict';
 
   /* ================= schedule ================= */
-  var TAPER_START = new Date(2026,6,12); // Jul 12 2026
+  var TAPER_START = new Date(2025,6,12); // Jul 12 2026
   var BASE_PHASES = [
     {days:2, cap:22, capText:"22", sessionMax:4, spacingH:3,
      rule:"Max 4 hits/session · 3h between sessions",
@@ -2110,17 +2110,13 @@ try{
     return Math.max(0,Math.round((d-schedule()[di].start)/MS_DAY));
   }
   /* which entry of a phase's goals/plans a day gets: normally clamp to the
-     last, but EVERY phase's closing entry makes calendar claims about the
-     next step — "tomorrow is zero", "tomorrow drops all daytime use",
-     "tomorrow is the halfway cut to 12", "that's the one tomorrow deletes".
-     Those belong only to the phase's true last scheduled day. This guard
-     used to cover the final capped phase alone, so a held day anywhere
-     earlier in the descent replayed a closing entry and promised a step
-     down that was no longer coming tomorrow — the one thing a self-
-     adjusting schedule must never say. The closing copy moves with the end. */
+     last, but the FINAL capped phase's closing entry makes calendar claims
+     ("tomorrow is zero", "an hour earlier") — those belong only to the
+     phase's true last scheduled day, so held/extended days repeat the
+     generic evening entry instead and the closing copy moves with the end */
   function phaseDayIdx(d,di,len){
     var i=Math.min(len-1,dayInPhase(d,di));
-    if(len>1){
+    if(di===BASE_PHASES.length-2&&len>1){
       var end=schedule()[di].end;
       if(end&&dkeyOf(d)!==dkeyOf(end))i=Math.min(i,len-2);
     }
@@ -2533,9 +2529,7 @@ try{
       if(n===MARKERS[i][0])return 'Day '+n+' · a marker day. '+MARKERS[i][1]+' If a reward was planned for this one, today it gets claimed.';
       if(n<MARKERS[i][0]){
         var t=taperProgress();
-        var out=MARKERS[i][0]-n;
-        return 'Day '+n+' · maintenance now, not withdrawal. Next marker: day '+MARKERS[i][0]+', '+
-          (out===1?'tomorrow':out+' days out')+' — worth deciding now what it earns'+(t.money?' (~$'+t.money+' already banked)':'')+'.';
+        return 'Day '+n+' · maintenance now, not withdrawal. Next marker: day '+MARKERS[i][0]+', '+(MARKERS[i][0]-n)+' days out — worth deciding now what it earns'+(t.money?' (~$'+t.money+' already banked)':'')+'.';
       }
     }
     return 'Day '+n+' · past every marker on the map. The counter only climbs.';
