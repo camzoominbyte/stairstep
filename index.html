@@ -2151,6 +2151,14 @@ try{
     }
     return false;
   }
+  // did this day actually move the descent? ('declined' means it was told not to)
+  function dayHeldTheStep(k){
+    var cz=schedule().causes||[];
+    for(var i=0;i<cz.length;i++){
+      if(cz[i].key===k&&cz[i].kind!=='declined')return true;
+    }
+    return false;
+  }
   // the structured plan for a given day: session windows, honest math, do-list.
   // Held days clamp to the phase's last (widest) day, same as goals.
   function dayPlanOf(d,di){
@@ -2918,7 +2926,15 @@ try{
       // the hero number stays confident-neutral while under, warms as you climb
       $('tallyCount').style.color=count>cap?'var(--clay)':count>=cap*0.8?'var(--amber)':'var(--sand)';
       // advice only when it's needed — a calm day earns a quiet card
-      if(count>cap){$('barNote').textContent='Over the cap — the schedule already adjusted: this step runs one day longer, then the descent resumes.';}
+      if(count>cap){
+        /* asserting the adjustment happened is only safe if it did. The
+           schedule card can decline a hold on ANY day now, today included,
+           so this line could claim an adjustment the engine had been told
+           not to make. Ask the engine's own record. */
+        $('barNote').textContent=dayHeldTheStep(todayKey)
+          ?'Over the cap — the schedule already adjusted: this step runs one day longer, then the descent resumes.'
+          :'Over the cap, and this day is set to keep the original dates — the schedule has not moved. You can hand it back its extra day in The step-down → The schedule, and why.';
+      }
       else if(count===cap){$('barNote').textContent='At the cap. That’s the ceiling — you’re done for today.';}
       else if(cap>0&&count>=cap*0.8){$('barNote').textContent='Close to the ceiling — make the rest of the day about space.';}
       else if(deferredDay(today,idx)){$('barNote').textContent='Today ran past the '+BASE_PHASES[idx+1].capText+' step, so the drop deferred — today rides at '+cap+', and the step down retries tomorrow.';}
@@ -3549,7 +3565,13 @@ try{
         var pend=schedule()[idx].end,nxt=BASE_PHASES[idx+1];
         if(pend&&pend>=today&&c<=nxt.cap&&(countOf(todayKey)||0)<=nxt.cap){
           dropOK=true;
-          var when=pend>today?'Tomorrow':'Today';
+          /* ending the step early takes ONE day off it, so the next cap
+             starts on what is currently the phase's last day — not
+             necessarily tomorrow. With two or more days still to run,
+             "Tomorrow drops to..." was simply the wrong date. */
+          var when=(dkeyOf(pend)===todayKey)?'Today'
+            :(dkeyOf(pend)===dkeyOf(addDays(today,1)))?'Tomorrow'
+            :fmtShort(pend);
           body+=' And '+c+' is already at or under the <em>next</em> cap of <strong>'+nxt.capText+'</strong> — if it felt solid, you can end this step a day early. '+when+' drops to '+nxt.capText+' and the zero date moves a day closer.';
         }
       }
