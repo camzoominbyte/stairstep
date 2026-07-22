@@ -52,6 +52,9 @@
     html{scroll-behavior:auto}
     *{transition:none!important;animation:none!important}
     .reveal{opacity:1!important;transform:none!important}
+    /* killing the animation leaves the draw-in stranded at its start frame,
+       so every stroked chart line stays fully hidden. Land it at the end. */
+    .cz-body .draw,.draw{stroke-dashoffset:0!important}
   }
   body{
     background:var(--bg);
@@ -749,6 +752,7 @@
 
   /* ---- backup ---- */
   .data-btns{display:flex;gap:10px;margin-bottom:10px}
+  .data-btns[hidden]{display:none}  /* author rule outranks the UA [hidden] rule */
   .data-btns button{
     flex:1;font-family:'Karla',sans-serif;font-weight:700;font-size:13.5px;
     padding:11px 0;border-radius:12px;border:1px solid var(--line);
@@ -1982,7 +1986,9 @@ try{
     for(var i=0;i<BASE_PHASES.length;i++){
       var p=BASE_PHASES[i];
       var start=new Date(cur), end=null, auto=0, manual=data.holds[i]||0;
-      var eased=carry; carry=0;
+      // only a capped rung can absorb an eased day; handing one to the
+      // zero phase (days:null) invents an adjustment that never happened
+      var eased=p.days?carry:0; if(p.days)carry=0;
       if(p.days){
         var dur=Math.max(1,p.days+manual+eased), done=0, d=new Date(start);
         // never defer INTO the zero era — a zero-day slip is the record's
@@ -2130,6 +2136,10 @@ try{
     if(di<0)di=0;
     var p=BASE_PHASES[di], g=p.goals;
     if(!g||!g.length)return p.desc;
+    // the zero phase has a single goal entry written for day one — clamping
+    // to it printed "The day counter starts today" on every day after
+    if(di===BASE_PHASES.length-1&&dkeyOf(d)!==dkeyOf(zeroDate()))
+      return 'Zero, still. The counter climbed to here and only goes one way.';
     return g[phaseDayIdx(d,di,g.length)];
   }
   // a deferred step-down day: an extension day riding its phase because it
@@ -2867,7 +2877,7 @@ try{
       card.classList.add('free');
       $('heroCard').hidden=true;
       $('streakChip').hidden=true;
-      $('tallyBtns').style.display='none';
+      $('tallyBtns').style.display=count>0?'flex':'none'; // keep −1 reachable once a slip is logged
       $('statRow').style.display='none';
       $('btnEarlier').style.display='none';
       $('earlierRow').hidden=true;
@@ -2880,7 +2890,7 @@ try{
       if(count>0){
         $('barFill').style.width='100%';$('barFill').style.background='var(--clay)';
         $('barNote').textContent='Slip logged. Data, not doom — every clean day stays banked ('+(zs0?zs0.clean:0)+' so far). Tomorrow the run restarts; the total never resets.';
-        $('btnSlip').textContent='Logged '+count+' today — undo one';
+        $('btnSlip').textContent='Logged '+count+' today — tap to add another';
       }else{
         $('barFill').style.width='100%';$('barFill').style.background='var(--sage)';
         $('barNote').textContent=zeroTimelineNote(Math.max(0,daysFree()),zeroCalDay());
@@ -3614,6 +3624,16 @@ try{
     card.hidden=false;
     $('ritEyebrow').textContent=onZ?'The zero-day ritual':'The night-before ritual';
     var r=data.ritual;
+    /* the completion belongs to the eve it was done for. zeroDate() is
+       derived live, so an over-cap log or a manual hold slides the eve to a
+       new day — and an undated completedAt made that fresh eve render
+       "clean runway for tomorrow" with all five lines ticked, while the
+       stash it describes was back in the house. Re-open it for the new day. */
+    if(r.completedAt&&r.completedFor&&r.completedFor!==todayKey&&
+       !(onZ&&r.completedFor===dkeyOf(addDays(z,-1)))){
+      delete r.completedAt; r.done={}; delete r.completedFor;
+      setTimeout(save,0);
+    }
     if(r.completedAt){
       card.classList.add('done');
       /* the rows stay on the card, ticked — completing the list is a
@@ -3852,7 +3872,10 @@ try{
   var URGE_STALE_MS=2*3600000;
   function dropStaleUrge(){
     if(data.urgeStart&&Date.now()-data.urgeStart>URGE_STALE_MS){
-      data.urgeStart=null;save();return true;
+      // renderUrge runs deep inside renderAll's pass; saving here would
+      // rcClear() the memo the earlier renderers just built and make every
+      // later one recompute the whole day scan. Defer past the paint.
+      data.urgeStart=null;setTimeout(save,0);return true;
     }
     return false;
   }
@@ -4903,7 +4926,9 @@ try{
         chip:dv(spGood===null?'about even':fmtDur(Math.abs(v.spanMs))+(v.spanMs<0?' shorter':' longer'),spGood)}));
     }
     var close;
-    if(m.cls==='over')close='Over the cap — the schedule already holds the phase a day for it, then the descent resumes.';
+    if(m.cls==='over')close=dayHeldTheStep(m.key)
+      ?'Over the cap — the schedule already holds the phase a day for it, then the descent resumes.'
+      :'Over the cap, and this day is set to keep the original dates — the schedule did not move for it.';
     else if(badN===0&&goodN>0)close='Every needle moved the right way.';
     else if(hGood===true&&badN>0)close='Fewer hits — count the win, watch the '+badNames.join(' and ')+'.';
     else if(hGood===false)close='Up on the day before — data, not doom.'+(m.heldRule?' The gaps still held.':'');
@@ -5777,7 +5802,7 @@ try{
 
   /* ================= events ================= */
   function logHit(){
-    entryFor(todayKey,true).hits.push(new Date().toISOString());
+    entryFor(todayKey,true).hits.push(new Date().toISOString());countChanged(todayKey);
     save();renderAll();
     plusOne();popBig();
   }
@@ -5876,10 +5901,14 @@ try{
     if(n>0){setCount(todayKey,n-1);renderAll();}
   });
   $('btnSlip').addEventListener('click',function(){
+    /* This used to DECREMENT whenever today already had a hit, so the Today
+       card could record exactly one slip per day and a second tap deleted
+       the first — flipping the day back to clean. A slip evening is rarely
+       one hit, and "log it honestly" has to mean all of them. It always
+       adds now; undo is the −1 beside it. */
     var n=countOf(todayKey)||0;
-    if(n>0){setCount(todayKey,n-1);renderAll();return;}
-    if(confirm('Log a slip for today? It gets recorded honestly — data, not doom.')){
-      entryFor(todayKey,true).hits.push(new Date().toISOString());
+    if(n>0||confirm('Log a slip for today? It gets recorded honestly — data, not doom.')){
+      entryFor(todayKey,true).hits.push(new Date().toISOString());countChanged(todayKey);
       save();renderAll();
     }
   });
@@ -5926,6 +5955,7 @@ try{
     var ts=new Date(today.getFullYear(),today.getMonth(),today.getDate()+dayShift,+hm[0],+hm[1]);
     if(ts>new Date()){$('earlierMsg').textContent='That time hasn’t happened yet today.';$('earlierMsg').hidden=false;return;}
     entryFor(todayKey,true).hits.push(ts.toISOString());
+    countChanged(todayKey);
     save();renderAll();
     $('earlierMsg').textContent='Added a hit at '+fmtTime(ts)+'. Tap again for another at the same time.';$('earlierMsg').hidden=false;
   });
@@ -6011,6 +6041,7 @@ try{
     if(all){
       var wasDone=!!r.completedAt;
       r.completedAt=r.completedAt||new Date().toISOString();
+      r.completedFor=todayKey; // which eve it was done for — zero can move
       if(!wasDone){
         if(navigator.vibrate)navigator.vibrate([15,60,15,60,25]);
         setTimeout(function(){sparks($('ritualCard'),$('ritualCard'));},300);
