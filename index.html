@@ -3687,7 +3687,16 @@ try{
   function checkinChartSVG(ser){
     var n=Math.min(ser.length,21),s=ser.slice(-n);
     var W=340,H=92,padL=14,padR=8,padT=8,padB=16;
-    function X(i){return padL+(i/(n-1))*(W-padL-padR);}
+    /* Spacing by array index made every reading equidistant, so once the
+       check-in turns weekly past zero day 21 a 7-day step drew the same
+       width as a 1-day step and the line read as an unbroken nightly
+       record. Space by DATE. It also fixes n===1, where i/(n-1) was 0/0
+       and put NaN into every coordinate — a chart that silently blanks. */
+    var t0=n?dateOf(s[0].k).getTime():0, span=n>1?dateOf(s[n-1].k).getTime()-t0:0;
+    function X(i){
+      if(n<2||!span)return padL+(W-padL-padR)/2;
+      return padL+((dateOf(s[i].k).getTime()-t0)/span)*(W-padL-padR);
+    }
     function Y(v){return padT+(1-(v-1)/4)*(H-padT-padB);}
     var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Nightly check-ins: sleep, mood, cravings">';
     [1,3,5].forEach(function(g){
@@ -3872,6 +3881,19 @@ try{
     return 'Stretched '+h+'h'+(r?' '+r+'m':'')+' past the window — fewer, wider-spaced sessions is the taper working.';
   }
   var winTimer=null, lastAlertedOpen=null;
+  /* "Try to stretch it a little longer" is meant to fire once, when a window
+     first opens. lastAlertedOpen was a plain var, so every app launch began
+     with no memory of it and re-fired the nudge for a window that had opened
+     hours earlier — the alert arrived on open, every open, all evening.
+     Remember it with the record; the save is deferred so it cannot clear the
+     per-paint memo in the middle of the render pass that called it. */
+  function alertWindowOnce(openTs){
+    if(lastAlertedOpen===openTs||data.lastWinAlert===openTs)return false;
+    lastAlertedOpen=openTs;
+    data.lastWinAlert=openTs;
+    setTimeout(save,0);
+    return true;
+  }
   function notifOK(){return data.notifyWindows&&'Notification' in window&&Notification.permission==='granted';}
   function windowAlert(){
     if(navigator.vibrate)navigator.vibrate([20,90,20,90,20]);
@@ -3953,7 +3975,7 @@ try{
         setGhRing(100);
         $('ghNote').textContent=gapOpenMsg(Math.floor(-diff/60000));
         // fire the "try to wait" alert once per window, when it first opens
-        if(lastAlertedOpen!==openTs){lastAlertedOpen=openTs;windowAlert();}
+        if(alertWindowOnce(openTs))windowAlert();
       }
     }
     tick();
@@ -3962,7 +3984,7 @@ try{
     var untilOpen=openTs-Date.now();
     if(count<cap&&untilOpen>0&&untilOpen<24*3600000){
       winTimer=setTimeout(function(){
-        if(lastAlertedOpen!==openTs){lastAlertedOpen=openTs;windowAlert();}
+        if(alertWindowOnce(openTs))windowAlert();
         renderGap();
       },untilOpen+400);
     }
@@ -4603,7 +4625,13 @@ try{
     var html='';
     defs.forEach(function(df){
       var W=360,H=110,padL=16,padR=10,padT=14,padB=18;
-      function X(i){return padL+(n===1?0.5:(i/(n-1)))*(W-padL-padR);}
+      // by date, not index — a weekly reading must not draw the same width
+      // as a nightly one (see checkinChartSVG)
+      var bt0=dateOf(s[0].k).getTime(), bspan=n>1?dateOf(s[n-1].k).getTime()-bt0:0;
+      function X(i){
+        if(n<2||!bspan)return padL+0.5*(W-padL-padR);
+        return padL+((dateOf(s[i].k).getTime()-bt0)/bspan)*(W-padL-padR);
+      }
       function Y(v){return padT+(1-(v-1)/4)*(H-padT-padB);}
       var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="'+df[1]+' by night">';
       [1,3,5].forEach(function(g){
@@ -4890,7 +4918,9 @@ try{
     var big;
     if(m.future)big='—';
     else if(m.isZ)big=m.eff>0?(m.eff+'<span class="hstat slip">slip</span>'):('✓<span class="hstat clean">clean</span>');
-    else big=(m.eff||0)+'<small> / '+m.cap+'</small><span class="hstat '+m.cls+'">'+m.stat+(m.partial?' · so far':'')+'</span>';
+    // eff null is "never logged", not zero — coercing it printed a 42px "0 / cap",
+    // visually the best day possible, on a day with no record at all
+    else big=(m.eff===null?'·':m.eff)+'<small> / '+m.cap+'</small><span class="hstat '+m.cls+'">'+m.stat+(m.partial?' · so far':'')+'</span>';
     html+='<div class="dp-head"><div class="dp-eyebrow">'+eyebrow+'</div><div class="dp-big">'+big+'</div></div>';
     if(!m.future)html+=dpMoveGridHTML(m);
     // the day's clock, in the open — stamps and gaps without opening the editor
@@ -6459,16 +6489,27 @@ try{
       if(activeVT&&typeof activeVT.skipTransition==='function')activeVT.skipTransition();
       return;
     }
+    if(adoptNewerRecord())rcClear();
+    renderAll();
+  });
+  /* Reconciliation used to live only in visibilitychange, which fires on a
+     hidden→visible transition. Two contexts BOTH visible — the installed
+     PWA beside the same page in a Safari tab, or iPad Split View — never
+     transition, so each kept writing its own stale copy over the other's
+     logged hits. 'storage' fires in every other context the moment one of
+     them saves, which is exactly the case that was missing. */
+  function adoptNewerRecord(){
     try{
       var raw=localStorage.getItem('ttz2');
-      if(raw){
-        var d=JSON.parse(raw);
-        if(validShape(d)&&(d._ts||0)>(data._ts||0)){
-          data=normData(d);
-        }
-      }
+      if(!raw)return false;
+      var d=JSON.parse(raw);
+      if(validShape(d)&&(d._ts||0)>(data._ts||0)){data=normData(d);return true;}
     }catch(e){}
-    renderAll();
+    return false;
+  }
+  window.addEventListener('storage',function(ev){
+    if(ev.key&&ev.key!=='ttz2')return;
+    if(adoptNewerRecord()){rcClear();renderAll();}
   });
 
   /* clock tick: "left this session", "next session", and the 4am day
@@ -6482,6 +6523,12 @@ try{
     if(todayKey!==tickKey){tickKey=todayKey;renderAll();return;}
     safe(renderToday);
     safe(renderDayHead);
+    safe(renderYday);
+    // the cockpit is the one surface with no scroll and no interaction — a
+    // phone propped in landscape only ever repainted it on rotation, so its
+    // countdown and "since last hit" tiles sat frozen at whatever time it
+    // was turned sideways. It is the view most likely to be left watching.
+    safe(renderDash);
     if(!$('dpOverlay').hidden&&dpKey===todayKey)safe(function(){dpRender(dpKey,true);});
     safe(feelLive);
   },30000);
