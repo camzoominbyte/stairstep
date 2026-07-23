@@ -1570,42 +1570,6 @@ try{
   <p class="ck-note" id="ckNote"></p>
 </div>
 
-<div class="sleepcard" id="sleepCard" hidden>
-  <div class="card-head">
-    <p class="eyebrow" style="color:var(--sage)">Tonight</p>
-    <span class="streak-chip" id="slChip" hidden></span>
-  </div>
-  <div class="sl-win" id="slWin"></div>
-  <p class="rit-lede" id="slLede"></p>
-  <div class="sl-diary" id="slDiary" hidden>
-    <div class="sl-drow" id="slWakeRow">
-      <span class="sl-pair"><label for="slWake2">Fixed wake time — the anchor the window hangs off</label><input type="time" id="slWake2"></span>
-    </div>
-    <p class="sl-dhead" id="slDHead">Last night</p>
-    <div class="sl-drow" id="slForRow" hidden>
-      <span class="sl-pair"><label for="slFor">Morning of</label><input type="date" id="slFor"></span>
-    </div>
-    <div class="sl-drow">
-      <span class="sl-pair"><label for="slIb">Into bed</label><input type="time" id="slIb"></span>
-      <span class="sl-pair"><label for="slOb">Out of bed</label><input type="time" id="slOb"></span>
-    </div>
-    <div class="sl-drow">
-      <span class="sl-pair"><label for="slLat">Minutes to fall asleep</label><input type="number" id="slLat" min="0" max="600" inputmode="numeric"></span>
-      <span class="sl-pair"><label for="slWaso">Minutes awake in the night</label><input type="number" id="slWaso" min="0" max="600" inputmode="numeric"></span>
-    </div>
-    <div class="data-btns"><button class="pri" id="slSave">Log the night</button><button id="slBackfill">Log an earlier morning</button><button id="slClear" hidden>Clear</button></div>
-  </div>
-  <p class="sl-read" id="slRead" hidden></p>
-  <p class="gap-note" id="slNote"></p>
-  <details class="sl-import" id="slImport">
-    <summary>Import from Oura or Apple Health</summary>
-    <p class="sc-note">Your ring already tracks this — an Apple Shortcut can hand it to the app so you don't type it. One-time setup, then a tap a morning (or leave it automatic). <a class="dlink" href="sleep-import.html" target="_blank" rel="noopener">Set up the Shortcut →</a></p>
-    <textarea id="slImportBox" rows="3" placeholder="Paste what the Shortcut copied — a night, a week, or your whole history."></textarea>
-    <div class="data-btns"><button class="pri" id="slImportBtn">Import sleep</button></div>
-    <p class="gap-note" id="slImportMsg" hidden></p>
-  </details>
-</div>
-
 <div class="ladder" id="cmCard" hidden>
   <div class="card-head">
     <p class="eyebrow" style="color:var(--accent)">The ladder</p>
@@ -1650,6 +1614,42 @@ try{
 <main class="view" id="vPlan">
 <div id="stairsWrap">
   <div class="stairs" id="stairs" aria-label="Step-down schedule — daily hit cap, tap a step for details"></div>
+</div>
+
+<div class="sleepcard" id="sleepCard" hidden>
+  <div class="card-head">
+    <p class="eyebrow" style="color:var(--sage)">Tonight · sleep</p>
+    <span class="streak-chip" id="slChip" hidden></span>
+  </div>
+  <div class="sl-win" id="slWin"></div>
+  <p class="rit-lede" id="slLede"></p>
+  <div class="sl-diary" id="slDiary" hidden>
+    <div class="sl-drow" id="slWakeRow">
+      <span class="sl-pair"><label for="slWake2">Fixed wake time — the anchor the window hangs off</label><input type="time" id="slWake2"></span>
+    </div>
+    <p class="sl-dhead" id="slDHead">Last night</p>
+    <div class="sl-drow" id="slForRow" hidden>
+      <span class="sl-pair"><label for="slFor">Morning of</label><input type="date" id="slFor"></span>
+    </div>
+    <div class="sl-drow">
+      <span class="sl-pair"><label for="slIb">Into bed</label><input type="time" id="slIb"></span>
+      <span class="sl-pair"><label for="slOb">Out of bed</label><input type="time" id="slOb"></span>
+    </div>
+    <div class="sl-drow">
+      <span class="sl-pair"><label for="slLat">Minutes to fall asleep</label><input type="number" id="slLat" min="0" max="600" inputmode="numeric"></span>
+      <span class="sl-pair"><label for="slWaso">Minutes awake in the night</label><input type="number" id="slWaso" min="0" max="600" inputmode="numeric"></span>
+    </div>
+    <div class="data-btns"><button class="pri" id="slSave">Log the night</button><button id="slBackfill">Log an earlier morning</button><button id="slClear" hidden>Clear</button></div>
+  </div>
+  <p class="sl-read" id="slRead" hidden></p>
+  <p class="gap-note" id="slNote"></p>
+  <details class="sl-import" id="slImport">
+    <summary>Import from Oura or Apple Health</summary>
+    <p class="sc-note">Your ring already tracks this — an Apple Shortcut can hand it to the app so you don't type it. One-time setup, then a tap a morning (or leave it automatic). <a class="dlink" href="sleep-import.html" target="_blank" rel="noopener">Set up the Shortcut →</a></p>
+    <textarea id="slImportBox" rows="3" placeholder="Paste what the Shortcut copied — a night, a week, or your whole history."></textarea>
+    <div class="data-btns"><button class="pri" id="slImportBtn">Import sleep</button></div>
+    <p class="gap-note" id="slImportMsg" hidden></p>
+  </details>
 </div>
 
 <details class="fold" id="afterFold" hidden>
@@ -2042,7 +2042,7 @@ try{
      plans:[
        {w:['10a','5p','10p'],
         note:'Three windows × 3 hits = 9 against a 10 cap — the tightest fit of the whole descent.',
-        do:['Three windows still fit, barely. After this rung they stop fitting.',
+        do:['Three windows still fit, barely. After this step they stop fitting.',
             'Whichever of these three you would defend hardest is the one that goes last.',
             'A mild edge in the gaps is the taper working, not failing.']}],
      why:"Lab trials show THC suppresses withdrawal dose-dependently — small steps keep the gap your receptors feel small.",
@@ -2085,6 +2085,69 @@ try{
      ref:"withdrawal"},
     COARSE_RUNGS[COARSE_RUNGS.length-1]   // zero is zero either way — one object, no drift
   ];
+  /* ================= the gentle ladder =================
+     The other axis. The finer ladder above answers "this step is too big" by
+     cutting smaller and keeping the finish date; this one answers it by giving
+     each level MORE TIME — about a week apiece instead of two days — which
+     moves zero later, on purpose. That is the trade the standard plan and the
+     finer ladder both decline, and it is the one a decade of daily use has the
+     most evidence behind: the clinical review frames gradual reduction as
+     happening "over an extended period (weeks)", and the heavier and longer
+     the use, the further toward the slow end it points. Same ceilings as the
+     standard plan (16 → 12 → 8 → 2–3), so a standard step's closing line
+     ("tomorrow drops to 12") stays true across the switch and no closing
+     variant is needed. One goals/plans entry each, like the finer ladder;
+     the live surfaces announce the next ceiling. */
+  var GENTLE_RUNGS = [
+    {days:5, cap:16, capText:"16", sessionMax:4, spacingH:4,
+     rule:"Max 4 hits/session · 4h between sessions",
+     desc:"The same 16 the standard plan reaches in a day — held for a week. The gentle path trades speed for settling time: each ceiling gets long enough to feel normal before the next cut, which is the version of 'gradual' the evidence actually describes.",
+     goals:["16, held a full week. Nothing to prove but steadiness — let this ceiling get boring before the next cut."],
+     plans:[
+       {w:['10a','2p','6p','10p'],
+        note:'Four windows × 4 hits is exactly 16 — no slack anywhere. A week at it is the taper, not a delay.',
+        do:['Run the same four windows each day until they feel automatic.',
+            'A week at one ceiling is the whole idea — the evidence for tapering is about easing withdrawal, and time is what eases it.',
+            'Whichever window you needed least is information the next cut will use.']}],
+     why:"The clinical review frames the reduction as happening 'over an extended period (weeks)'. Holding each level about a week is what makes it gradual in the sense the evidence means.",
+     ref:"taper"},
+    {days:5, cap:12, capText:"12", sessionMax:3, spacingH:5.5,
+     rule:"Max 3 hits/session · 5½h between sessions",
+     desc:"Under half of baseline, held a week. The session ceiling drops to 3, and most of your waking day becomes the space between sittings.",
+     goals:["12, a week at it — well under half of baseline. Three windows, 5½h apart, three hits each at most."],
+     plans:[
+       {w:['10a','3:30p','9p'],
+        note:'Three windows × 3 hits = 9, under the 12 cap. Held long enough that the rhythm stops being a fight.',
+        do:['Eat a real meal at the old session times — feeding the cue is cheaper than fighting it.',
+            'A window is three hits and closed, however long you sit.',
+            'A mild edge across a long week here is the taper working, not failing.']}],
+     why:"Cravings crest and pass in minutes — urge-delay is first-line behavioral treatment, and a longer stretch at one ceiling is where it becomes habit rather than willpower.",
+     ref:"manage"},
+    {days:5, cap:8, capText:"8", sessionMax:3, spacingH:7,
+     rule:"2 sessions · 7h apart · drop all daytime",
+     desc:"The structural cut — no morning window — held a full week so the empty morning becomes ordinary before anything else changes.",
+     goals:["8, a week at it. No morning window: midday and the evening wind-down, nothing between. Let the empty morning become normal."],
+     plans:[
+       {w:['1p','8p'],
+        note:'Two windows × 3 hits = 6 — the 8 cap is headroom, not a target. A week here settles the biggest structural change of the taper.',
+        do:['No morning window at all — fill the first half of the day with anything that moves.',
+            'Set up the sleep diary this week, before it is load-bearing, so it is ready before zero.',
+            'The morning is the part that feels emptiest and the part that pays best.']}],
+     why:"Cues drive use as much as chemistry. Dropping the morning window removes its cue — the same target CBT and MET, the best-supported treatments, work on; a week lets the new morning hold.",
+     ref:"manage"},
+    {days:4, cap:3, capText:"2–3", sessionMax:3, spacingH:0, single:true,
+     rule:"Evening only · one session",
+     desc:"Evening only, held several days so daytime-at-zero becomes routine and sleep gets more than one rehearsal before the counter starts.",
+     goals:["Evening only — 2–3 in one sitting, several days of it. The daytime is already at zero; these nights rehearse sleep before zero does."],
+     plans:[
+       {w:['8:30p'],
+        note:'One evening sitting — 2–3 hits, then done. Held a few days so nothing about zero is a first.',
+        do:['Nothing all day. You are functionally quit from wake to dinner — these days prove it.',
+            'Log each night on the Tonight card — the sleep window wants more than one baseline night, and this stretch gives it several.',
+            'The last night, the ritual: whatever is left goes in the trash. Not saved, not “just in case.”']}],
+     why:"Sleep disturbance outlasts every other withdrawal symptom, and sleep restriction is the CBT-I component that carries the effect — several nights of baseline before zero beat one.",
+     ref:"withdrawal"}
+  ];
   var COARSE_CAPS={};
   COARSE_RUNGS.forEach(function(p){COARSE_CAPS[p.cap]=true;});
   /* The active ladder. Rungs at or above the switch point stay coarse (they
@@ -2107,6 +2170,19 @@ try{
     return q;
   }
   function buildLadder(d){
+    /* the gentle path: standard ceilings AT OR ABOVE the switch stay as they
+       were walked; everything below is taken from GENTLE_RUNGS (same ceilings,
+       held about a week each). Because the ceilings match the standard ones,
+       the switch step's closing line still names the right next ceiling, so no
+       closing variant is swapped in. Mutually exclusive with the finer ladder. */
+    var gb=d&&d.replan&&d.replan.slowBelow;
+    if(gb){
+      var g=[],j;
+      for(j=0;j<COARSE_RUNGS.length;j++)if(COARSE_RUNGS[j].cap>=gb)g.push(COARSE_RUNGS[j]);
+      for(j=0;j<GENTLE_RUNGS.length;j++)if(GENTLE_RUNGS[j].cap<gb)g.push(GENTLE_RUNGS[j]);
+      g.push(COARSE_RUNGS[COARSE_RUNGS.length-1]); // zero is zero either way
+      return g;
+    }
     var fb=d&&d.replan&&d.replan.fineBelow;
     if(!fb)return COARSE_RUNGS.slice();
     var out=[],i,p;
@@ -2137,6 +2213,14 @@ try{
   function fineTail(c){return tailCaps(FINE_RUNGS,c);}
   function coarseTail(c){return tailCaps(COARSE_RUNGS,c);}
   function capChain(lead,arr){return [lead].concat(arr,['0']).join(' → ');}
+  // how many extra days the gentle path adds below cap c vs. the standard plan
+  // (both share ceilings, so the caps match and only the day counts differ)
+  function gentleExtraBelow(c){
+    var g=0,s=0,i;
+    for(i=0;i<GENTLE_RUNGS.length;i++)if(GENTLE_RUNGS[i].cap<c&&GENTLE_RUNGS[i].cap>0)g+=GENTLE_RUNGS[i].days;
+    for(i=0;i<COARSE_RUNGS.length;i++)if(COARSE_RUNGS[i].cap<c&&COARSE_RUNGS[i].cap>0)s+=COARSE_RUNGS[i].days;
+    return g-s;
+  }
   /* Days of automatic extension the whole descent is allowed to spend. Not a
      clinical number — there isn't one — but a bound, which is the part that
      matters: five days is roughly half the original plan's length, enough to
@@ -3535,7 +3619,7 @@ try{
       var el=document.createElement('div');
       el.className='phase'+(i<idx?' past':'')+(i===idx?' now':'')+(i===sch.length-1?' zero':'');
       el.id='phase-'+i;
-      var held=(s.eased?'<p class="phase-held">Eased +'+s.eased+' day'+(s.eased>1?'s':'')+' — the rung before ran hard</p>':'')+
+      var held=(s.eased?'<p class="phase-held">Eased +'+s.eased+' day'+(s.eased>1?'s':'')+' — the step before ran hard</p>':'')+
         (s.held?'<p class="phase-held">Held +'+s.held+' day'+(s.held>1?'s':'')+'</p>'
         :s.early?'<p class="phase-held">Finished '+s.early+' day'+(s.early>1?'s':'')+' early</p>':'');
       var capCol=rgbStr(capRGB(p.cap/BASE_PHASES[0].cap));
@@ -3615,7 +3699,7 @@ try{
         '<button class="sc-act" data-sc="unhold" data-i="'+i+'">Undo</button>');
       if(m<0)rows+=row('','Cap '+BASE_PHASES[i].capText+' · <b>'+(-m)+' day'+(m<-1?'s':'')+'</b> ended early',
         '<button class="sc-act" data-sc="unhold" data-i="'+i+'">Undo</button>');
-      if(e>0)rows+=row('','Cap '+BASE_PHASES[i].capText+' · <b>+'+e+' day'+(e>1?'s':'')+' eased in</b> — the rung before ran hard');
+      if(e>0)rows+=row('','Cap '+BASE_PHASES[i].capText+' · <b>+'+e+' day'+(e>1?'s':'')+' eased in</b> — the step before ran hard');
     }
     var hand='';
     if(!isZeroEra&&idx<BASE_PHASES.length-1){
@@ -3624,29 +3708,42 @@ try{
         (sch.locked?'<button data-sc="unlock">Let the date move again</button>'
                    :'<button data-sc="lock">Lock the date here</button>')+'</div>';
     }
-    /* The other answer to a step that is too big. Holding a rung buys a day
-       and moves zero; halving buys a smaller drop and moves nothing, because
-       a coarse rung is two days and the two fine rungs that replace it are
-       one each. Shown as the arithmetic rather than asserted, and offered
-       once — below the switch the ladder is already as fine as it gets. */
+    /* Two answers to "this step is too big": take smaller cuts (the finer
+       ladder — same finish date, because two one-day steps cost what one
+       two-day step did) or take more time at each (the gentle ladder — zero
+       moves later, which for a long daily habit is the trade the evidence
+       leans toward). Both are offered from a standard ceiling; each reverses
+       while you are still on the step you switched on. */
     var fine='';
     if(!isZeroEra&&idx<BASE_PHASES.length-1){
-      var fb=data.replan.fineBelow;
-      /* Offered only where it can be told truthfully: the rung needs a
-         closing entry written against the halved successor, and there has to
-         be a finer remainder to swap in. A rung with no fineClose can never
-         become a switch point, so no new rung can quietly start lying. */
-      if(!fb&&COARSE_CAPS[cap]&&phase.fineClose&&fineTail(cap).length>coarseTail(cap).length){
-        fine='<div class="sc-fine"><p class="sc-note"><b>This step is too big?</b> Take it in halves instead. '+
-          'The rest of the descent splits into single days — <b>'+capChain(phase.capText,fineTail(cap))+'</b> in place of '+
-          '<b>'+capChain(phase.capText,coarseTail(cap))+'</b> — and zero stays '+WEEKDAYS[z.getDay()]+', '+fmtShort(z)+
-          ', because two one-day rungs cost exactly what one two-day rung did. Smaller drops, less time to settle on each.</p>'+
-          '<div class="sc-hand"><button data-sc="fine">Halve the steps from here</button></div></div>';
+      var fb=data.replan.fineBelow, gb=data.replan.slowBelow;
+      if(gb&&cap>=gb){
+        fine='<div class="sc-fine"><p class="sc-note"><b>The gentle pace is on from here.</b> Each ceiling from '+
+          phase.capText+' down is held about a week instead of two days, so zero is later on purpose — the new date is above. '+
+          'This can go back to the standard pace while you are still on the '+phase.capText+' step.</p>'+
+          '<div class="sc-hand"><button data-sc="coarse">Back to the standard pace</button></div></div>';
       }else if(fb&&cap>=fb){
-        fine='<div class="sc-fine"><p class="sc-note">Half-steps are on from here: <b>'+capChain(phase.capText,fineTail(fb))+'</b>. '+
-          'This can go back while you are still on the '+phase.capText+' rung — once a half-step rung has been walked, '+
-          'undoing it would re-file days against a cap they were never held to.</p>'+
+        fine='<div class="sc-fine"><p class="sc-note">Smaller steps are on from here: <b>'+capChain(phase.capText,fineTail(fb))+'</b>. '+
+          'This can go back while you are still on the '+phase.capText+' step — once a smaller step has been walked, '+
+          'undoing it would re-file days against a ceiling they were never held to.</p>'+
           '<div class="sc-hand"><button data-sc="coarse">Back to full steps</button></div></div>';
+      }else if(!fb&&!gb&&COARSE_CAPS[cap]){
+        var offers='';
+        if(phase.fineClose&&fineTail(cap).length>coarseTail(cap).length){
+          offers+='<p class="sc-note"><b>Smaller cuts, same finish.</b> The rest splits into single days — <b>'+
+            capChain(phase.capText,fineTail(cap))+'</b> in place of <b>'+capChain(phase.capText,coarseTail(cap))+
+            '</b> — and zero stays '+WEEKDAYS[z.getDay()]+', '+fmtShort(z)+', because two one-day steps cost exactly what one two-day step did.</p>'+
+            '<div class="sc-hand"><button data-sc="fine">Take smaller steps</button></div>';
+        }
+        var extra=gentleExtraBelow(cap);
+        if(extra>0){
+          var gz=addDays(z,extra);
+          offers+='<p class="sc-note" style="margin-top:12px"><b>More time at each, later finish.</b> Same ceilings — <b>'+
+            capChain(phase.capText,coarseTail(cap))+'</b> — but each held about a week instead of two days. '+
+            'Zero moves to '+WEEKDAYS[gz.getDay()]+', '+fmtShort(gz)+' — about +'+extra+' days. For a decade of daily use the evidence leans this way: gradual reduction “over weeks”, and slower the heavier and longer the use. <a class="dlink" href="guide.html#taper">Why →</a></p>'+
+            '<div class="sc-hand"><button data-sc="slow">Take the rest slower</button></div>';
+        }
+        if(offers)fine='<div class="sc-fine"><p class="sc-note" style="margin-bottom:6px"><b>Is a step too big?</b> Two ways to soften it:</p>'+offers+'</div>';
       }
     }
     /* Slack is shown as a depleting resource rather than reported after the
@@ -6867,7 +6964,7 @@ try{
     if(L.todayClean&&L.toBonus)bits.push(money(CM_BONUS)+' bonus in '+L.toBonus+' day'+(L.toBonus===1?'':'s'));
     if(L.unaccounted>0)bits.push(L.unaccounted+' day'+(L.unaccounted===1?'':'s')+' not accounted for');
     if(L.funded)bits.push('~'+money(L.funded)+' saved so far to fund it');
-    $('cmNote').textContent=bits.join(' · ')||'Each consecutive clean day pays more than the last. A slip resets the rung, never the record.';
+    $('cmNote').textContent=bits.join(' · ')||'Each consecutive clean day pays more than the last. A slip resets the level, never the record.';
   }
   function money(v){
     v=Math.round(v*100)/100;
@@ -7151,8 +7248,9 @@ try{
     /* Re-file the ladder before saving: holds are stored by cap, and the
        whole app re-derives from the log on the next paint, so the switch
        needs no migration of its own — only the ladder swapped in first. */
-    else if(act==='fine'){data.replan.fineBelow=cap;data.replan.fineAt=todayKey;relader();}
-    else if(act==='coarse'){delete data.replan.fineBelow;delete data.replan.fineAt;relader();}
+    else if(act==='fine'){data.replan.fineBelow=cap;data.replan.fineAt=todayKey;delete data.replan.slowBelow;delete data.replan.slowAt;relader();}
+    else if(act==='slow'){data.replan.slowBelow=cap;data.replan.slowAt=todayKey;delete data.replan.fineBelow;delete data.replan.fineAt;relader();}
+    else if(act==='coarse'){delete data.replan.fineBelow;delete data.replan.fineAt;delete data.replan.slowBelow;delete data.replan.slowAt;relader();}
     else if(act==='hold')setHoldsAt(i,holdsAt(i)+1);
     else if(act==='unhold'){
       var m=holdsAt(i);
