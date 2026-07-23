@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#faf6ee">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1d1a14">
+<title>Import sleep from your ring · Taper to Zero</title>
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<style>
+  @font-face{font-family:'Fraunces';src:url('fonts/fraunces.woff2') format('woff2');font-weight:300 600;font-style:normal;font-display:swap}
+  @font-face{font-family:'Fraunces';src:url('fonts/fraunces-italic.woff2') format('woff2');font-weight:300 600;font-style:italic;font-display:swap}
+  @font-face{font-family:'Karla';src:url('fonts/karla.woff2') format('woff2');font-weight:400 700;font-style:normal;font-display:swap}
+  :root{
+    color-scheme:light;
+    --bg:#faf6ee;--surface:#fffdf8;--surface2:#f2ecdf;--line:#e6dcc8;
+    --hair:rgba(59,43,20,.08);--sand:#2e261a;--ink:#5b5140;--muted:#8b7e67;--faint:#c6bba6;
+    --accent:#a5681f;--sage:#647d4b;--clay:#b85335;
+    --shadow-sm:0 4px 14px -6px rgba(59,43,20,.14);
+  }
+  html.dark{
+    color-scheme:dark;
+    --bg:#1d1a14;--surface:#26221a;--surface2:#332d22;--line:#463e2d;
+    --hair:rgba(255,244,222,.09);--sand:#f2e8d5;--ink:#cfc4ad;--muted:#9a8f78;--faint:#6c6353;
+    --accent:#e0a458;--sage:#a3b899;--clay:#d98f75;
+    --shadow-sm:0 4px 14px -6px rgba(0,0,0,.45);
+  }
+  @media (prefers-color-scheme:dark){:root:not(.light){
+    color-scheme:dark;
+    --bg:#1d1a14;--surface:#26221a;--surface2:#332d22;--line:#463e2d;
+    --hair:rgba(255,244,222,.09);--sand:#f2e8d5;--ink:#cfc4ad;--muted:#9a8f78;--faint:#6c6353;
+    --accent:#e0a458;--sage:#a3b899;--clay:#d98f75;
+  }}
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    background:var(--bg);color:var(--ink);font-family:'Karla',sans-serif;
+    font-size:16px;line-height:1.62;max-width:520px;margin:0 auto;
+    padding:calc(20px + env(safe-area-inset-top)) 20px calc(70px + env(safe-area-inset-bottom));
+  }
+  .back{display:inline-block;color:var(--accent);font-weight:700;font-size:14px;text-decoration:none;margin-bottom:16px}
+  .eyebrow{font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  h1{font-family:'Fraunces',serif;font-weight:300;font-size:32px;line-height:1.1;color:var(--sand);margin:6px 0 6px;letter-spacing:-.01em}
+  h1 em{font-style:italic;color:var(--accent)}
+  .lede{color:var(--muted);font-size:15px;margin-bottom:8px}
+  section{
+    background:var(--surface);border:1px solid var(--line);border-radius:18px;
+    padding:20px;margin-top:16px;box-shadow:var(--shadow-sm);
+  }
+  h2{font-family:'Fraunces',serif;font-weight:500;font-size:21px;color:var(--sand);margin-bottom:8px;letter-spacing:-.01em}
+  h2 .num{color:var(--accent);font-style:italic;margin-right:6px}
+  p{margin:9px 0}
+  strong{color:var(--sand)}
+  .hl{color:var(--accent);font-weight:700}
+  ol{margin:10px 0 8px 20px}
+  li{padding:4px 0}
+  code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:var(--surface2);
+    padding:2px 6px;border-radius:6px;color:var(--sand);word-break:break-all}
+  .box{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:12px 0;font-size:13.5px}
+  .box code{background:var(--surface)}
+  .note{font-size:12.5px;color:var(--muted);line-height:1.6;margin-top:10px}
+  .warn{border-left:3px solid var(--clay);padding-left:12px}
+  a{color:var(--accent);font-weight:600}
+</style>
+</head>
+<body>
+<a class="back" href="index.html">← Back to the app</a>
+<p class="eyebrow" style="color:var(--sage)">Tonight · sleep</p>
+<h1>Let your <em>ring</em> fill the diary</h1>
+<p class="lede">Your Oura ring already measures everything the sleep window needs. A one-time Apple Shortcut hands it to the app, so you don't type four numbers every morning — and it can backfill your whole history at once, which is the only way the window is ready before the peak week.</p>
+
+<section>
+  <h2>Why a Shortcut, and not a button</h2>
+  <p>A web app can't read Apple Health (Safari has no Health API), and it can't call Oura directly either — Oura's servers refuse cross-site browser requests. An Apple Shortcut has neither limit, so the Shortcut does the fetching and the app just reads what it hands over. Nothing leaves your phone except the request to your own Oura account.</p>
+</section>
+
+<section>
+  <h2><span class="num">1</span>Get an Oura token</h2>
+  <ol>
+    <li>On any browser, open <a href="https://cloud.ouraring.com/personal-access-tokens" target="_blank" rel="noopener">cloud.ouraring.com/personal-access-tokens</a> and sign in.</li>
+    <li>Tap <strong>Create A New Personal Access Token</strong>, give it a name (&ldquo;Taper&rdquo;), and copy the long string it shows. You only see it once.</li>
+  </ol>
+  <p class="note">A personal token only reads your own data and you can revoke it on that same page anytime.</p>
+</section>
+
+<section>
+  <h2><span class="num">2</span>Build the Shortcut</h2>
+  <p>Open the <strong>Shortcuts</strong> app → <strong>+</strong> → add these actions in order:</p>
+  <ol>
+    <li><strong>Text</strong> — paste your token into it.</li>
+    <li><strong>Get Contents of URL</strong>. Set the URL to<br>
+      <code>https://api.ouraring.com/v2/usercollection/sleep?start_date=2026-06-01&amp;end_date=2026-12-31</code><br>
+      Expand <strong>Headers</strong> and add one: key <code>Authorization</code>, value <code>Bearer </code> followed by the <em>Text</em> from step 1.</li>
+    <li><strong>Copy to Clipboard</strong> — pass it the <em>Contents of URL</em>.</li>
+  </ol>
+  <p>Run it once. Then in the app, open the <strong>Tonight</strong> card → <strong>Import from Oura or Apple Health</strong> → paste → <strong>Import sleep</strong>. The wide date range backfills everything at once; after that you can narrow it.</p>
+  <div class="box">
+    <strong>The app understands Oura's raw response as-is</strong> — you don't have to reformat anything. It reads bedtime, wake time, how long you took to fall asleep and time awake, and keys each night to the morning you got up.
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">3</span>Make it automatic (optional)</h2>
+  <p>To skip even the paste, have the Shortcut open the app with the data attached instead of copying it:</p>
+  <ol>
+    <li>Delete the <strong>Copy to Clipboard</strong> action.</li>
+    <li>Add <strong>URL Encode</strong> — pass it the <em>Contents of URL</em>.</li>
+    <li>Add <strong>Text</strong> with:<br><code>YOUR-APP-URL/index.html#sleep=</code> then the <em>URL&nbsp;Encoded&nbsp;Text</em> right after the <code>=</code>.<br>
+      Replace <code>YOUR-APP-URL</code> with wherever this app lives (the address in your browser when you use it).</li>
+    <li>Add <strong>Open URLs</strong> — pass it that Text.</li>
+  </ol>
+  <p>Now running the Shortcut opens the app and imports silently. Point a <strong>Personal Automation</strong> (Shortcuts → Automation → time of day, each morning) at it and you never touch it again. For a daily run, set the URL's <code>start_date</code> to yesterday so it only pulls the newest night.</p>
+  <p class="note warn">The automatic path depends on your phone opening the installed app rather than Safari, which isn't always reliable. If a morning doesn't land, the paste box from step 2 always works — and the app scrubs the data out of the address bar the moment it reads it, so nothing lingers there.</p>
+</section>
+
+<section>
+  <h2>Apple Health instead of Oura</h2>
+  <p>If you'd rather not make a token, a Shortcut can read the <strong>Find Health Samples</strong> of type <em>Sleep Analysis</em> that Oura writes into Health, and copy those. It works, but Health stores sleep <em>stages</em> rather than the four tidy numbers, so the app has to reconstruct latency and time-awake from them — a little less exact than reading Oura directly. If you have the token, step 2 is the cleaner path.</p>
+</section>
+
+<a class="back" href="index.html" style="margin-top:20px">← Back to the app</a>
+
+<script>
+  (function(){try{
+    var t=localStorage.getItem('ttz-theme');
+    var dark=t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.classList.toggle('dark',dark);
+    document.documentElement.classList.toggle('light',!dark);
+  }catch(e){}})();
+</script>
+</body>
+</html>

@@ -242,6 +242,12 @@
   .sl-read b{color:var(--sand)}
   .sl-read.good b{color:var(--sage)}
   .sl-read.low b{color:var(--clay)}
+  .sl-import{margin-top:12px;border-top:1px solid var(--hair);padding-top:10px}
+  .sl-import summary{font-size:12.5px;font-weight:700;color:var(--sage);cursor:pointer;list-style:none}
+  .sl-import summary::-webkit-details-marker{display:none}
+  .sl-import summary::before{content:"↧ ";opacity:.7}
+  .sl-import textarea{width:100%;box-sizing:border-box;margin:9px 0;font:inherit;font-size:12px;
+    padding:8px 9px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);resize:vertical}
 
   .ladder{
     position:relative;background:var(--surface);
@@ -293,6 +299,7 @@
   .lb-row .lb-k{flex:1;min-width:0}
   .lb-row .lb-k b{color:var(--sand)}
   .lb-v{font-family:'Fraunces',serif;font-weight:600;font-size:16px;color:var(--sage);flex:0 0 auto}
+  .lb-s{font-weight:400;color:var(--muted);font-size:11px}
 
   /* ---- story card (zero-era capstone) ---- */
   .story{
@@ -1571,7 +1578,13 @@ try{
   <div class="sl-win" id="slWin"></div>
   <p class="rit-lede" id="slLede"></p>
   <div class="sl-diary" id="slDiary" hidden>
+    <div class="sl-drow" id="slWakeRow">
+      <span class="sl-pair"><label for="slWake2">Fixed wake time — the anchor the window hangs off</label><input type="time" id="slWake2"></span>
+    </div>
     <p class="sl-dhead" id="slDHead">Last night</p>
+    <div class="sl-drow" id="slForRow" hidden>
+      <span class="sl-pair"><label for="slFor">Morning of</label><input type="date" id="slFor"></span>
+    </div>
     <div class="sl-drow">
       <span class="sl-pair"><label for="slIb">Into bed</label><input type="time" id="slIb"></span>
       <span class="sl-pair"><label for="slOb">Out of bed</label><input type="time" id="slOb"></span>
@@ -1580,10 +1593,17 @@ try{
       <span class="sl-pair"><label for="slLat">Minutes to fall asleep</label><input type="number" id="slLat" min="0" max="600" inputmode="numeric"></span>
       <span class="sl-pair"><label for="slWaso">Minutes awake in the night</label><input type="number" id="slWaso" min="0" max="600" inputmode="numeric"></span>
     </div>
-    <div class="data-btns"><button class="pri" id="slSave">Log the night</button><button id="slClear" hidden>Clear</button></div>
+    <div class="data-btns"><button class="pri" id="slSave">Log the night</button><button id="slBackfill">Log an earlier morning</button><button id="slClear" hidden>Clear</button></div>
   </div>
   <p class="sl-read" id="slRead" hidden></p>
   <p class="gap-note" id="slNote"></p>
+  <details class="sl-import" id="slImport">
+    <summary>Import from Oura or Apple Health</summary>
+    <p class="sc-note">Your ring already tracks this — an Apple Shortcut can hand it to the app so you don't type it. One-time setup, then a tap a morning (or leave it automatic). <a class="dlink" href="sleep-import.html" target="_blank" rel="noopener">Set up the Shortcut →</a></p>
+    <textarea id="slImportBox" rows="3" placeholder="Paste what the Shortcut copied — a night, a week, or your whole history."></textarea>
+    <div class="data-btns"><button class="pri" id="slImportBtn">Import sleep</button></div>
+    <p class="gap-note" id="slImportMsg" hidden></p>
+  </details>
 </div>
 
 <div class="ladder" id="cmCard" hidden>
@@ -2259,6 +2279,10 @@ try{
        cm    : the reward ladder's settings and what's been claimed */
     d.sleep=d.sleep||{};d.plans=d.plans||[];d.cm=d.cm||{};
     d.cm.claimed=d.cm.claimed||{};
+    // days the app actually witnessed after zero. The ladder pays a clean day
+    // only against positive evidence it happened — otherwise a relapse the
+    // user stops logging reads as an unbroken clean streak and pays for it.
+    d.cm.seen=d.cm.seen||{};
     d.sleepCfg=d.sleepCfg||{};d.sleepCfg.declined=d.sleepCfg.declined||{};
     d.replan=d.replan||{};   // {lockFrom:'YYYY-MM-DD'} — the date stops moving from here
     /* legacy holds: before the schedule self-adjusted, the banner's hold
@@ -2396,6 +2420,17 @@ try{
        engine that absorbs miss six exactly like miss one is manufacturing
        the pattern that matters. */
     var slack=SLACK_TOTAL, lockKey=data.replan&&data.replan.lockFrom;
+    /* Once the zero-eve ritual is done the stash is in the trash — so an
+       over-cap last evening must NOT auto-hold the rung and prescribe another
+       dosing day, which for someone who has stripped their home means going to
+       get more, at the highest-stakes moment in the program. The engine
+       already refuses to DEFER into the zero era (nextCap is null for the zero
+       rung); this extends the same principle to the last capped rung's own
+       over-cap hold. renderRitual states exactly this rule for the manual
+       valve — "once the ritual is done and the stash is out, the road only
+       goes forward" — and the engine used to contradict it. The day is still
+       recorded; it just leaves zero where the user last saw it. */
+    var ritualSealed=!!(data.ritual&&data.ritual.completedAt);
     /* One day, one charge. The boundary check below can absorb the day after a
        rung ends — and when it does it bumps `auto`, which re-opens the while
        loop over that very same date, where the in-loop check charged it a
@@ -2428,7 +2463,10 @@ try{
                recorded here as it is decided, so the schedule can explain
                itself without a second walk that could disagree with this one */
             if(c!==null&&c>p.cap&&!charged[dk]){
+              // the zero rung is length-1; the last capped rung is length-2
+              var sealed=ritualSealed&&i===BASE_PHASES.length-2;
               if(resp==='kept'||resp==='held')causes.push({kind:'declined',key:dk,d:new Date(d),c:c,cap:p.cap,i:i});
+              else if(sealed)causes.push({kind:'noslack',key:dk,d:new Date(d),c:c,cap:p.cap,i:i,sealed:true});
               else if(slack<=0||(lockKey&&dk>=lockKey))
                 causes.push({kind:'noslack',key:dk,d:new Date(d),c:c,cap:p.cap,i:i,locked:!!(lockKey&&dk>=lockKey)});
               else{slack--;auto++;causes.push({kind:'over',key:dk,d:new Date(d),c:c,cap:p.cap,i:i});}
@@ -2485,6 +2523,12 @@ try{
     return sch.length-1;
   }
   function zeroDate(){var s=schedule();return s[s.length-1].start;}
+  /* The FROZEN zero, for everything counted after it. zeroDate() is re-derived
+     from the taper log on every paint, so editing a taper-era day weeks after
+     zero would otherwise jerk the days-free counter, the clean total and the
+     whole reward ladder to a new anchor. Once the boundary is crossed it is
+     stamped (markSeenToday) and never moves; before that it is the live date. */
+  function zeroDay(){return data.zeroAt?dateOf(data.zeroAt):zeroDate();}
   /* Calendar days from today to zero — 0 on zero day, negative after. Gates
      that need "is there still time to gather something before zero" have to
      ask in days: a rung count means different amounts of time in the two
@@ -2706,28 +2750,35 @@ try{
       // run, which resets on a post-zero slip) — so match it here, or a slip
       // makes the two halves of the card disagree. A projected future day in
       // the schedule detail has no streak yet, so use the calendar offset.
-      var off=dkeyOf(d)===todayKey?Math.max(1,daysFree()):Math.round((d-zeroDate())/MS_DAY)+1;
-      if(off>21)return null;
-      /* the run can restart; the receptor adjustment cannot. Once the
-         window has closed by the CALENDAR, a slip must not replay the
-         24–48h onset and the days-2–6 peak underneath a timeline note
-         that (correctly) says withdrawal isn't starting over. Same guard
-         zeroTimelineNote already applies — the two halves of this card
-         have to agree. */
-      if(Math.round((d-zeroDate())/MS_DAY)+1>21)return null;
-      if(off<=6)slots.push({s:null,t:'waves',kind:'edge',
+      /* Physiology keys to the CALENDAR, never to the run. daysFree resets on
+         a slip; the receptors do not — so choosing the acute-withdrawal slots
+         by the run replayed the "first ripples · 24–48h" onset the morning
+         after a lapse at day 12. Keyed to real days since zero, a slip that
+         far in correctly shows no onset slot at all. The counter is the only
+         thing that reads the run; this reads the calendar, same as the
+         timeline note it sits beside. */
+      var cal=Math.round((d-zeroDate())/MS_DAY)+1;
+      if(cal>21||cal<1)return null;
+      if(cal<=6)slots.push({s:null,t:'waves',kind:'edge',
         head:'Waves, not walls.',
-        body:(off<=2?'First ripples land in this 24–48h window':'This is the days-2–6 peak the research maps')+' — irritability, restlessness, low appetite. Each wave crests and passes in minutes, and you arrive tapered: expect the blunted version.',
+        body:(cal<=2?'First ripples land in this 24–48h window':'This is the days-2–6 peak the research maps')+' — irritability, restlessness, low appetite. Each wave crests and passes in minutes, and you arrive tapered: expect the blunted version.',
         fix:'Move every day, eat at the old session times, keep the calendar boring.'});
-      if(off<=5)slots.push({s:1185,e:1320,t:'~8–9p',kind:'ghost',
+      if(cal<=5)slots.push({s:1185,e:1320,t:'~8–9p',kind:'ghost',
         head:'The ghost window.',
-        body:'The old evening sitting is the last cue standing — it fires on schedule for the first several nights'+(off>=4?', and it’s fading now':'')+'. It crests in minutes and is gone in 20.',
+        body:'The old evening sitting is the last cue standing — it fires on schedule for the first several nights'+(cal>=4?', and it’s fading now':'')+'. It crests in minutes and is gone in 20.',
         fix:'Start the 20-minute timer the moment it lands. It has never outlasted you.'});
+      /* the night fix used to prescribe "hold the window" unconditionally —
+         but with a baseline still gathering there IS no window, so it named a
+         thing not on screen during the exact week it matters most. Read the
+         real state. */
+      var slp=sleepPlan();
       slots.push({s:null,t:'night',kind:'night',
         head:'Sleep, the long tail.',
-        body:off<=6?'Falling asleep may be the hardest part of the day — the sleep system is relearning to run itself. Vivid dreams are REM waking back up.'
+        body:cal<=6?'Falling asleep may be the hardest part of the day — the sleep system is relearning to run itself. Vivid dreams are REM waking back up.'
           :'Odd sleep and vivid dreams settle last — weeks, not days. A bad night this far in means nothing.',
-        fix:'Hold the window and the fixed wake time every night, no exceptions — sleep is the symptom most often named in going back.'});
+        fix:(slp.state==='running'&&slp.bed!==null)
+          ?'Hold the window ('+min2hm(slp.bed)+'–'+min2hm(slp.wake)+') and the fixed wake time every night — sleep is the symptom most often named in going back.'
+          :'Keep one fixed wake time every morning and log the four sleep numbers — sleep is the symptom most often named in going back, and the window is prescribed once the diary has its first few nights.'});
       return {intro:'',slots:slots};
     }
     var pl=dayPlanOf(d,di);
@@ -2973,19 +3024,19 @@ try{
     return latest?dateOf(latest):null;
   }
   function daysFree(){
-    var since=lastUseDay(), z=zeroDate();
+    var since=lastUseDay(), z=zeroDay();
     var from=(since&&since>=addDays(z,-1))?addDays(since,1):z;
     // round, not floor: two local midnights differ by N*24h ±1h across a DST
     // change, and floor turns the minus case into a day the counter repeats
     return Math.round((today-from)/MS_DAY)+1;
   }
   // calendar days since zero day (1-based) — unlike daysFree, never resets
-  function zeroCalDay(){return Math.round((today-zeroDate())/MS_DAY)+1;}
+  function zeroCalDay(){return Math.round((today-zeroDay())/MS_DAY)+1;}
 
   /* slip-resilient zero-era counters: a slip resets the current run,
      but total clean days and the best run are banked for good */
   function zeroStats(){return rc('zs',function(){
-    var z=zeroDate();
+    var z=zeroDay();
     if(today<z)return null;
     var clean=0,run=0,best=0,slips=0,d=new Date(z);
     while(d<=today){
@@ -3051,8 +3102,13 @@ try{
     var lat=Number(e.lat), waso=Number(e.waso);
     if(!isFinite(lat)||lat<0)lat=0;
     if(!isFinite(waso)||waso<0)waso=0;
+    /* A fat-fingered 480 for 48 used to floor tst to 0 silently — one bad
+       baseline night then dropped the whole window to the 5.5h floor and set
+       the wake anchor, with no Undo. lat+waso can't exceed time in bed; when
+       it does the entry is a typo, not a 0%-efficiency night, so it is not a
+       night at all (the card flags it for re-entry rather than acting on it). */
+    if(lat+waso>=tib)return null;
     var tst=tib-lat-waso;
-    if(tst<0)tst=0;                           // over-reported awake time floors, never inverts
     return {key:key,ib:ib,ob:ob,tib:tib,tst:tst,se:tib?(tst/tib)*100:0};
   }
   function sleepNights(){return rc('slN',function(){
@@ -3125,6 +3181,74 @@ try{
     return ns.slice(Math.max(0,ns.length-(n||SL_PERIOD)));
   }
 
+  /* ---- importing sleep from a wearable ----
+     A PWA cannot read HealthKit or call the Oura API directly — Safari has no
+     Health API, and Oura's servers send no CORS headers, so a browser fetch is
+     blocked before it leaves the page (both verified). An Apple Shortcut has
+     neither limit, so the Shortcut fetches and the app parses. The user keeps
+     the four-numbers-a-morning diary; this just fills it from a ring they
+     already wear, which is also the only way this user reaches a five-night
+     baseline before their peak week.
+
+     Two clock times sit in an Oura timestamp: read the wall-clock digits
+     straight from the ISO string (they already carry the ring's local offset)
+     rather than through new Date(), which would re-project them into whatever
+     timezone this browser is in. A night is keyed to the date it ENDED — the
+     morning you got up — matching the diary's own rule. */
+  function isoClock(s){var m=/T(\d{2}):(\d{2})/.exec(String(s));return m?m[1]+':'+m[2]:null;}
+  function isoDate(s){var m=/^(\d{4}-\d{2}-\d{2})/.exec(String(s));return m?m[1]:null;}
+  function parseSleepImport(text){
+    var raw;
+    try{raw=JSON.parse(text);}catch(e){throw new Error('That is not valid data — copy exactly what the Shortcut produced.');}
+    // accept Oura's own {data:[...]} response, a bare array, or one record
+    var arr=raw&&raw.data&&raw.data.length!==undefined?raw.data
+           :(raw&&raw.length!==undefined?raw:[raw]);
+    var out=[];
+    for(var i=0;i<arr.length;i++){
+      var r=arr[i]; if(!r||typeof r!=='object')continue;
+      // skip naps — only main sleeps set a baseline
+      if(r.type&&/nap/i.test(r.type))continue;
+      var ib,ob,lat,waso,key;
+      if(r.bedtime_start&&r.bedtime_end){          // Oura v2 shape
+        ib=isoClock(r.bedtime_start);ob=isoClock(r.bedtime_end);
+        key=isoDate(r.bedtime_end);
+        lat=r.latency!=null?Math.round(r.latency/60):0;   // Oura reports seconds
+        waso=r.awake_time!=null?Math.round(r.awake_time/60):0;
+      }else{                                        // already in the app's shape
+        ib=r.ib;ob=r.ob;lat=+r.lat||0;waso=+r.waso||0;
+        key=r.key||r.day||isoDate(r.date);
+      }
+      if(!key||hm2min(ib)===null||hm2min(ob)===null)continue;
+      out.push({key:key,ib:ib,ob:ob,lat:Math.max(0,lat||0),waso:Math.max(0,waso||0)});
+    }
+    return out;
+  }
+  // merge parsed nights into the diary; returns {added, updated, skipped}.
+  // Validated through sleepNight so a garbage row can never enter the store.
+  function importSleepNights(nights){
+    var added=0,updated=0,skipped=0;
+    nights.forEach(function(n){
+      var cand={ib:n.ib,ob:n.ob,lat:n.lat,waso:n.waso};
+      // reuse the one validator: an implausible row is skipped, not stored
+      var probe={}; probe[n.key]=cand;
+      var saved=data.sleep[n.key];
+      data.sleep[n.key]=cand;
+      if(!sleepNight(n.key)){ if(saved)data.sleep[n.key]=saved; else delete data.sleep[n.key]; skipped++; return; }
+      if(saved===undefined)added++; else updated++;
+    });
+    if(added||updated)save();
+    return {added:added,updated:updated,skipped:skipped};
+  }
+  /* The night being edited in the diary. The get-up date is the REAL calendar
+     date, never the 4am-shifted todayKey the engine header warns against
+     borrowing — a diary filled at 3am belongs to today, not yesterday. When
+     the backfill row is open, its date wins so a missed morning is reachable. */
+  function slDiaryKey(){
+    var row=$('slForRow'), inp=$('slFor');
+    if(row&&!row.hidden&&inp&&/^\d{4}-\d{2}-\d{2}$/.test(inp.value))return inp.value;
+    return dkeyOf(new Date());
+  }
+
   /* ================= after zero: if-then plans =================
      Forming an if-then plan ("if CUE, then RESPONSE") is the one behaviour-
      change move here with meta-analytic support at essentially no cost.
@@ -3159,14 +3283,19 @@ try{
     }
     /* A band has to be narrow enough to BE a cue. Heavy even use produces
        one ten-hour run that is technically the peak and useless as a plan —
-       "if it's 9am–7pm" is a day, not a trigger. Anything wider than four
-       hours collapses to its single busiest hour, which is a sentence you
-       can actually pre-commit against. */
+       "if it's 9am–7pm" is a day, not a trigger. But collapsing a wide band to
+       its single busiest HOUR threw away the habit and lied about its size: a
+       six-hour evening block holding 46% of every hit was offered as "6pm ·
+       8%". Keep the densest contiguous three-hour sub-run instead — narrow
+       enough to pre-commit against, and its share is the share of that run. */
     bands.forEach(function(b){
       if(b.h2-b.h1>=4){
-        var pk=b.h1;
-        for(var j=b.h1;j<=b.h2;j++)if(hrs[j]>hrs[pk])pk=j;
-        b.h1=b.h2=pk;b.n=hrs[pk];
+        var w=3, bestS=b.h1, bestN=-1;
+        for(var s=b.h1;s<=b.h2-w+1;s++){
+          var sum=0;for(var j=s;j<s+w;j++)sum+=hrs[j];
+          if(sum>bestN){bestN=sum;bestS=s;}
+        }
+        b.h1=bestS;b.h2=bestS+w-1;b.n=bestN;
       }
       b.share=Math.round(b.n/tot*100);
     });
@@ -3212,13 +3341,27 @@ try{
     if(n<=0)return 0;
     return CM_START+CM_INC*(n-1)+(n%CM_EVERY===0?CM_BONUS:0);
   }
+  /* Positive evidence a past day was witnessed clean: the app was open that
+     day (seen) or a nightly check-in exists. A day with neither is not a slip
+     and not a paid day — it is unaccounted for, and it breaks the run because
+     "consecutive clean" can only mean consecutive OBSERVED clean. */
+  function cmObserved(dk){return !!(data.cm.seen[dk]||data.checkins[dk]);}
   function cmLadder(){return rc('cm',function(){
-    var z=zeroDate();
+    var z=zeroDay();
     if(today<z)return null;
-    var run=0,earned=0,d=new Date(z),resets=0;
-    while(d<=today){
-      if((countOf(dkeyOf(d))||0)>0){if(run)resets++;run=0;}
-      else{run++;earned+=cmValueOn(run);}
+    /* Two fixes live here. (1) Settle through YESTERDAY only: a day still in
+       progress has not "held", and paying it let a morning claim be banked
+       before an evening slip, which then pinned owed to 0 for a week. Today is
+       reported as pending instead. (2) Pay only observed days: walking to today
+       and crediting `!hits` counted every un-opened day as clean, so a relapse
+       the user stopped logging paid out real money — the exact behaviour the
+       ladder exists to prevent. */
+    var run=0,earned=0,resets=0,unaccounted=0,d=new Date(z);
+    while(dkeyOf(d)<todayKey){
+      var dk=dkeyOf(d);
+      if((countOf(dk)||0)>0){if(run)resets++;run=0;}
+      else if(cmObserved(dk)){run++;earned+=cmValueOn(run);}
+      else{run=0;unaccounted++;}
       d=addDays(d,1);
     }
     var claimed=0;
@@ -3226,13 +3369,26 @@ try{
       var v=Number(data.cm.claimed[k]);
       if(isFinite(v)&&v>0)claimed+=v;
     }
+    var todayClean=(countOf(todayKey)||0)===0;
+    var displayRun=run+(todayClean?1:0);
     var tp=taperProgress();
-    return {run:run,earned:Math.round(earned),claimed:Math.round(claimed),
-            owed:Math.max(0,Math.round(earned-claimed)),resets:resets,
-            today:cmValueOn(run),next:cmValueOn(run+1),
-            toBonus:run>0?(CM_EVERY-(run%CM_EVERY))%CM_EVERY:CM_EVERY,
+    return {run:run,displayRun:displayRun,earned:Math.round(earned),claimed:Math.round(claimed),
+            owed:Math.max(0,Math.round(earned-claimed)),resets:resets,unaccounted:unaccounted,
+            todayClean:todayClean,pending:todayClean?cmValueOn(run+1):0,
+            next:cmValueOn(displayRun+1),
+            toBonus:displayRun>0?(CM_EVERY-(displayRun%CM_EVERY))%CM_EVERY:CM_EVERY,
             funded:tp.money};
   });}
+  // witness today, once, whenever the app is open after zero — the evidence
+  // cmObserved reads back. Written straight to storage; no re-render needed.
+  function markSeenToday(){
+    if(!isZeroEra)return;
+    var dirty=false;
+    // freeze the zero anchor the first time we render past it (H12)
+    if(!data.zeroAt){data.zeroAt=dkeyOf(zeroDate());dirty=true;}
+    if(!data.cm.seen[todayKey]){data.cm.seen[todayKey]=1;dirty=true;}
+    if(dirty)save();
+  }
 
   /* ================= after zero: the twelve weeks that matter =================
      The app used to end its real work on zero day and hand over a counter.
@@ -3277,7 +3433,14 @@ try{
     // A slip resets n (the run) but not the physiology — once the
     // adjustment window has closed by the calendar, a young run must not
     // replay the withdrawal timeline as if it were starting over.
-    if(cd&&cd>21&&n<=21)return 'Day '+n+' of the new run · withdrawal isn’t restarting — that adjustment closed weeks ago. A lapse costs a run, never the physiology. The counter climbs again from here.';
+    /* A slip resets the run (n) but never the receptors. The guard used to
+       fire only for a slip AFTER day 21 (cd>21), so a lapse anywhere in the
+       first three weeks — the densest slice of the lapse window — fell through
+       to the onset/peak copy below and told the user acute withdrawal was
+       starting over. It fires on ANY reset now: cd>n means the calendar has
+       run ahead of the run, which only happens after a slip. Reads the real
+       calendar day so the physiology stays anchored to zero, not to the run. */
+    if(cd&&cd>n)return 'Day '+cd+' since zero · day '+n+' of a new run — withdrawal isn’t restarting, that adjustment closed '+(cd>29?'weeks ago':(cd-1)+' day'+(cd-1===1?'':'s')+' ago')+'. A lapse costs a run, never the physiology, and a first lapse predicts nothing — it’s the pattern that matters. The counter climbs again from here.';
     if(n<=2)return 'Days 1–2 · if symptoms come, they start about now — and you arrive tapered, so expect the blunted version. Waves, not walls.';
     if(n<=6)return 'Day '+n+' · the days-2–6 peak window — already shaved down by the step-down you did. This is as hard as it gets, and it passes.';
     if(n<=13)return 'Day '+n+' · past the peak window. Withdrawal fades over 2–3 weeks — the grade flattens from here.';
@@ -3423,8 +3586,14 @@ try{
     var sch=schedule(), causes=sch.causes||[], z=zeroDate(), bz=baseZeroDate();
     var moved=Math.round((z-bz)/MS_DAY);
     var rows='';
+    // after zero the descent is history — its rows explain what happened but
+    // are no longer live decisions, so their Undo/Apply buttons come off (an
+    // edit here would rewrite a finished record). The zero anchor is frozen
+    // regardless (zeroDay), so the counters wouldn't move, but the record
+    // should read as settled.
+    var settled=isZeroEra;
     function row(cls,txt,act){
-      return '<div class="sc-row'+(cls?' '+cls:'')+'"><span class="sc-k">'+txt+'</span>'+(act||'')+'</div>';
+      return '<div class="sc-row'+(cls?' '+cls:'')+'"><span class="sc-k">'+txt+'</span>'+((settled?'':act)||'')+'</div>';
     }
     causes.forEach(function(h){
       var head=fmtShort(h.d)+' · <b>'+h.c+' of '+h.cap+'</b> — ';
@@ -3432,7 +3601,9 @@ try{
         '<button class="sc-act" data-sc="decline" data-k="'+h.key+'">Undo</button>');
       else if(h.kind==='defer')rows+=row('',head+'the step-down deferred: the day rode the '+h.rode+' cap and the drop retried after it',
         '<button class="sc-act" data-sc="decline" data-k="'+h.key+'">Undo</button>');
-      else if(h.kind==='noslack')rows+=row('declined',head+(h.locked
+      else if(h.kind==='noslack')rows+=row('declined',head+(h.sealed
+        ?'the ritual was done and the stash was out — this day did not move zero, and the road only goes forward'
+        :h.locked
         ?'the date was locked — this day did not move it'
         :'no slack left — this day did not move the date'),'');
       else rows+=row('declined',head+'hold declined, dates left alone',
@@ -6621,7 +6792,7 @@ try{
     var card=$('sleepCard');if(!card)return;
     if(!sleepActive()){card.hidden=true;return;}
     card.hidden=false;
-    var p=sleepPlan(), e=data.sleep[todayKey], n=sleepNight(todayKey);
+    var dk=slDiaryKey(), p=sleepPlan(), e=data.sleep[dk], n=sleepNight(dk);
     var win=$('slWin'), chip=$('slChip');
     if(p.state==='running'&&p.wake!==null){
       win.hidden=false;
@@ -6631,13 +6802,32 @@ try{
     }else{
       win.hidden=true;chip.hidden=true;
     }
-    $('slLede').textContent=p.state==='baseline'
-      ? 'Logging the baseline — '+p.have+' of '+p.need+' nights. Sleep as you normally would for now; the window gets set from what actually happens, not from what it should be.'
-      : 'Into bed at '+min2hm(p.bed)+', up at '+min2hm(p.wake)+' — every day, including the ones after a bad night. Only go to bed inside the window, and only when sleepy.';
-    // the diary describes the night you just got up from, so it is keyed to today
+    if(p.state==='baseline'){
+      /* say what's actually true and when the window arrives, rather than a
+         bare "N of 5" that never changes and never escalates. The window needs
+         SL_BASE nights; each night still missing pushes it a day past today. */
+      var short=p.need-p.have, proj=addDays(today,short);
+      var dz=daysToZero();
+      var lede='Logging the baseline — '+p.have+' of '+p.need+' nights.';
+      if(p.have===0&&dz>=0&&dz<short)
+        lede+=' At one a morning the window lands '+fmtShort(proj)+' — after zero ('+fmtShort(zeroDate())+'). Import from your ring to have it ready sooner, or log the last few mornings below.';
+      else if(dz>=0)
+        lede+=' The window is prescribed '+(short<=0?'now':fmtShort(proj)+', once the diary has '+p.need)+'. Sleep as you normally would — it is set from what happens, not what should.';
+      else
+        lede+=' '+short+' more to go; sleep as you normally would — the window is set from what actually happens, not what should.';
+      $('slLede').textContent=lede;
+    }else{
+      $('slLede').textContent='Into bed at '+min2hm(p.bed)+', up at '+min2hm(p.wake)+' — every day, including the ones after a bad night. Only go to bed inside the window, and only when sleepy.';
+    }
+    // the wake anchor lives here now, where the ritual says it does and where
+    // the diary is — it was only on the Plan tab's collapsed fold before
+    $('slWake2').value=data.sleepCfg.wake||'';
+    // the diary describes the night you just got up from, keyed to that morning
     var dia=$('slDiary');
     dia.hidden=false;
-    $('slDHead').textContent=e?'Last night — logged':'Last night';
+    var bfOn=!$('slForRow').hidden;
+    $('slDHead').textContent=bfOn?'Editing '+fmtShort(dateOf(dk)):(e?'Last night — logged':'Last night');
+    $('slBackfill').textContent=bfOn?'Back to last night':'Log an earlier morning';
     $('slIb').value=(e&&e.ib)||'';
     $('slOb').value=(e&&e.ob)||'';
     $('slLat').value=(e&&e.lat!==undefined&&e.lat!=='')?e.lat:'';
@@ -6663,13 +6853,19 @@ try{
     if(!L||!isZeroEra){card.hidden=true;return;}
     card.hidden=false;
     var chip=$('cmChip');
-    chip.hidden=!L.run;
-    chip.textContent=L.run+' day'+(L.run===1?'':'s')+' running';
-    $('cmVal').textContent=L.run?money(L.today):money(cmValueOn(1));
-    $('cmLbl').textContent=L.run?'earned today — tomorrow pays '+money(L.next):'a clean day today starts the ladder again';
+    chip.hidden=!L.displayRun;
+    chip.textContent=L.displayRun+' day'+(L.displayRun===1?'':'s')+' running';
+    // today is in progress, so its value is pending, not earned — it banks
+    // tomorrow if the day holds. Naming it "earned today" is what let a
+    // morning claim precede an evening slip.
+    $('cmVal').textContent=money(L.todayClean?L.pending:cmValueOn(1));
+    $('cmLbl').textContent=L.todayClean
+      ?'pending today — banks tomorrow if it holds, then '+money(L.next)
+      :'a clean day tomorrow starts the ladder again';
     var bits=[];
     if(L.owed>0)bits.push(money(L.owed)+' banked and unclaimed');
-    if(L.run&&L.toBonus)bits.push(money(CM_BONUS)+' bonus in '+L.toBonus+' day'+(L.toBonus===1?'':'s'));
+    if(L.todayClean&&L.toBonus)bits.push(money(CM_BONUS)+' bonus in '+L.toBonus+' day'+(L.toBonus===1?'':'s'));
+    if(L.unaccounted>0)bits.push(L.unaccounted+' day'+(L.unaccounted===1?'':'s')+' not accounted for');
     if(L.funded)bits.push('~'+money(L.funded)+' saved so far to fund it');
     $('cmNote').textContent=bits.join(' · ')||'Each consecutive clean day pays more than the last. A slip resets the rung, never the record.';
   }
@@ -6775,11 +6971,12 @@ try{
     }
     var rows='';
     function r(k,v){return '<div class="lb-row"><span class="lb-k">'+k+'</span><span class="lb-v">'+v+'</span></div>';}
-    rows+=r('Current run · <b>'+L.run+' clean day'+(L.run===1?'':'s')+'</b>',money(L.today));
+    rows+=r('Current run · <b>'+L.displayRun+' clean day'+(L.displayRun===1?'':'s')+'</b>',L.todayClean?money(L.pending)+' pending':'—');
     rows+=r('Tomorrow, if it stays clean',money(L.next));
-    rows+=r('Earned since zero',money(L.earned));
+    rows+=r('Earned since zero <span class="lb-s">(settled days)</span>',money(L.earned));
     rows+=r('Claimed',money(L.claimed));
     rows+=r('<b>Banked, unclaimed</b>',money(L.owed));
+    if(L.unaccounted)rows+=r('Days not accounted for <span class="lb-s">(app not opened — unpaid)</span>',String(L.unaccounted));
     if(L.resets)rows+=r('Resets so far',String(L.resets));
     box.innerHTML=rows+
       '<div class="sc-hand">'+(L.owed>0?'<button class="pri" data-cm="claim">Claim '+money(L.owed)+'</button>':'')+
@@ -6791,6 +6988,7 @@ try{
   function renderAll(){
     rcClear();
     computeToday();
+    markSeenToday();   // witness today for the ladder before anything reads it
     [renderCountdown,renderStairs,renderPhases,renderTodayPlan,renderSchedCtl,renderSchedStrip,
      renderToday,renderYday,renderTrend,renderDayHead,renderJourney,renderHistory,renderHoldBanner,renderDayHeld,
      renderRitual,renderCheckin,renderSleep,renderLadder,renderAfter,
@@ -6942,7 +7140,13 @@ try{
     var act=b.dataset.sc, k=b.dataset.k, i=+b.dataset.i;
     if(act==='apply')delete data.holdPrompts[k];        // let the day hold its step after all
     else if(act==='decline')data.holdPrompts[k]='kept'; // and back again — nothing here is one-way
-    else if(act==='lock'){data.replan.lockFrom=todayKey;}
+    // lock from TOMORROW, not today: the button says "lock the date HERE", and
+    // today may itself be a charged extension day — an inclusive lockKey
+    // (dk>=todayKey) reclassified today, refunding its extension and yanking
+    // zero a day earlier while dropping the user two rungs mid-afternoon. The
+    // date the user is looking at includes today's already-applied moves;
+    // freeze everything after it.
+    else if(act==='lock'){data.replan.lockFrom=dkeyOf(addDays(today,1));}
     else if(act==='unlock'){delete data.replan.lockFrom;}
     /* Re-file the ladder before saving: holds are stored by cap, and the
        whole app re-derives from the log on the next paint, so the switch
@@ -7015,18 +7219,56 @@ try{
   $('slSave').addEventListener('click',function(){
     var ib=$('slIb').value,ob=$('slOb').value;
     if(!ib||!ob){$('slNote').textContent='Both bed times are needed — the window is derived from how long you were in bed.';return;}
-    var lat=$('slLat').value,waso=$('slWaso').value;
-    data.sleep[todayKey]={ib:ib,ob:ob,lat:lat===''?0:Math.max(0,+lat||0),waso:waso===''?0:Math.max(0,+waso||0)};
+    var dk=slDiaryKey();
+    var cand={ib:ib,ob:ob,lat:$('slLat').value===''?0:Math.max(0,+$('slLat').value||0),
+              waso:$('slWaso').value===''?0:Math.max(0,+$('slWaso').value||0)};
+    // validate before committing — a typo (lat+waso ≥ time in bed) used to set
+    // the window silently; warn instead of storing a 0%-efficiency night
+    var prev=data.sleep[dk]; data.sleep[dk]=cand;
+    if(!sleepNight(dk)){
+      if(prev)data.sleep[dk]=prev; else delete data.sleep[dk];
+      $('slNote').textContent='Those numbers don’t add up — the minutes to fall asleep plus minutes awake are longer than the whole time in bed. Check for a slipped digit.';
+      return;
+    }
     save();renderAll();
     if(navigator.vibrate)navigator.vibrate([10,50,14]);
   });
+  $('slWake2').addEventListener('change',function(){
+    var v=this.value;
+    if(v)data.sleepCfg.wake=v; else delete data.sleepCfg.wake;
+    save();renderAll();
+  });
+  $('slBackfill').addEventListener('click',function(){
+    var row=$('slForRow');
+    row.hidden=!row.hidden;
+    if(!row.hidden&&!$('slFor').value)$('slFor').value=dkeyOf(addDays(new Date(),-1));
+    renderAll();
+  });
+  $('slFor').addEventListener('change',renderAll);
   $('slClear').addEventListener('click',function(){
-    delete data.sleep[todayKey];
+    var dk=slDiaryKey();
+    delete data.sleep[dk];
     /* a decision the engine made ABOUT this night stops describing anything
        once the night is gone — same rule countChanged follows for a
        corrected count, and for the same reason */
-    if(data.sleepCfg.declined[todayKey])delete data.sleepCfg.declined[todayKey];
+    if(data.sleepCfg.declined[dk])delete data.sleepCfg.declined[dk];
     save();renderAll();
+  });
+  $('slImportBtn').addEventListener('click',function(){
+    var msg=$('slImportMsg');msg.hidden=false;
+    var txt=$('slImportBox').value.trim();
+    if(!txt){msg.textContent='Paste what the Shortcut copied first.';return;}
+    var nights;
+    try{nights=parseSleepImport(txt);}
+    catch(e){msg.textContent=e.message;return;}
+    if(!nights.length){msg.textContent='No sleep nights found in that. Copy exactly what the Shortcut produced.';return;}
+    var r=importSleepNights(nights);
+    msg.textContent=r.added+' night'+(r.added===1?'':'s')+' added'+
+      (r.updated?', '+r.updated+' updated':'')+
+      (r.skipped?', '+r.skipped+' skipped as implausible':'')+'.';
+    $('slImportBox').value='';
+    renderAll();
+    if(navigator.vibrate)navigator.vibrate([10,50,14]);
   });
   $('sleepCtl').addEventListener('change',function(ev){
     if(ev.target.id!=='slWake')return;
@@ -7690,6 +7932,31 @@ try{
     if(!$('dpOverlay').hidden&&dpKey===todayKey&&!dpEditOpen)safe(function(){dpRender(dpKey,true);});
     safe(feelLive);
   },30000);
+
+  /* Automatic sleep hand-off: a Shortcut can open the app at
+     …/index.html#sleep=<encoded JSON> and the nights import with no taps, then
+     the fragment is scrubbed from the URL and history so a reload can't
+     re-import or leak the data. The fragment never reaches a server. This is
+     the no-tap path; the paste box in the sleep card is the dependable one. */
+  function importFromHash(){
+    var h=location.hash||'';
+    var m=/[#&](?:sleep|oura)=([^&]+)/.exec(h);
+    if(!m)return;
+    var payload;
+    try{payload=decodeURIComponent(m[1]);}catch(e){return;}
+    // clear the fragment first, whatever happens next
+    try{history.replaceState(null,'',location.pathname+location.search);}catch(e){location.hash='';}
+    var nights;
+    try{nights=parseSleepImport(payload);}catch(e){return;}
+    if(!nights.length)return;
+    var r=importSleepNights(nights);
+    if(r.added||r.updated){
+      rcClear();renderAll();
+      try{var msg=$('slImportMsg');if(msg){msg.hidden=false;msg.textContent='Imported from your ring — '+r.added+' night'+(r.added===1?'':'s')+' added'+(r.updated?', '+r.updated+' updated':'')+'.';}}catch(e){}
+    }
+  }
+  safe(importFromHash);
+  window.addEventListener('hashchange',function(){safe(importFromHash);});
 
   renderAll();
   booted=true;
