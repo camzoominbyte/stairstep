@@ -2090,31 +2090,88 @@ try{
     q.plans[q.plans.length-1]=p.fineClose.plan;
     return q;
   }
+  /* ================= the rebuilt descent =================
+     The pace switches soften a step that is coming; the rebase answers a
+     descent that has already come apart. When the slack is spent and the days
+     are landing whole levels above the cap, the plan has stopped describing
+     anything — a ceiling the days ignore is not a taper, it is a number. So
+     the descent is rebuilt to meet the days where they are: re-enter at a
+     ceiling the log shows actually holds, then the fine ladder down from
+     there at TWO days a step instead of one. Half the drop, twice the time to
+     settle — the shape the log says this person can walk.
+     Everything above the rebase keeps its steps and its dates: walked days
+     stay filed against the ceilings they were lived under, and only the tail
+     is new. The extension budget refills for the rebuilt descent — slack
+     exists to stop DRIFT, and a rebase is the opposite of drift: the
+     explicit, dated choice the spent budget was designed to force. */
+  function rungAtCap(c){
+    for(var i=0;i<FINE_RUNGS.length;i++)if(FINE_RUNGS[i].cap===c)return FINE_RUNGS[i];
+    for(i=0;i<COARSE_RUNGS.length;i++)if(COARSE_RUNGS[i].cap===c)return COARSE_RUNGS[i];
+    return null;
+  }
+  /* A rebuilt rung is its fine original given two days, and marked: holdKey
+     stores rb rungs under 'r'+cap, so a manual hold left on the walked
+     descent's rung of the same cap can't bleed into the new one. The fine
+     copy already survives multi-day life — its single goals/plans entry was
+     written to make no promises about tomorrow. */
+  function rebClone(p){
+    var q={},k;for(k in p)q[k]=p[k];
+    q.days=2;q.rb=true;
+    return q;
+  }
+  // the re-entry rung — its own opening copy, because its predecessor is not
+  // a rung but the gap between the plan and the days
+  function rebEntry(c){
+    var src=rungAtCap(c);if(!src)return null;
+    var q=rebClone(src);
+    q.desc="Re-entry. The ladder comes back to meet the days where they have actually been landing — a ceiling the log shows you can hold, then the rest of the descent in half-steps, two days each.";
+    q.goals=["The descent restarts from here. Land under "+q.capText+" — the log says you can — and let two days at each step make this boring again."];
+    return q;
+  }
   function buildLadder(d){
     /* the gentle path: standard ceilings AT OR ABOVE the switch stay as they
        were walked; everything below is taken from GENTLE_RUNGS (same ceilings,
        held about a week each). Because the ceilings match the standard ones,
        the switch step's closing line still names the right next ceiling, so no
        closing variant is swapped in. Mutually exclusive with the finer ladder. */
-    var gb=d&&d.replan&&d.replan.slowBelow;
+    var gb=d&&d.replan&&d.replan.slowBelow, base, i, p;
     if(gb){
-      var g=[],j;
-      for(j=0;j<COARSE_RUNGS.length;j++)if(COARSE_RUNGS[j].cap>=gb)g.push(COARSE_RUNGS[j]);
-      for(j=0;j<GENTLE_RUNGS.length;j++)if(GENTLE_RUNGS[j].cap<gb)g.push(GENTLE_RUNGS[j]);
-      g.push(COARSE_RUNGS[COARSE_RUNGS.length-1]); // zero is zero either way
-      return g;
+      base=[];
+      for(i=0;i<COARSE_RUNGS.length;i++)if(COARSE_RUNGS[i].cap>=gb)base.push(COARSE_RUNGS[i]);
+      for(i=0;i<GENTLE_RUNGS.length;i++)if(GENTLE_RUNGS[i].cap<gb)base.push(GENTLE_RUNGS[i]);
+      base.push(COARSE_RUNGS[COARSE_RUNGS.length-1]); // zero is zero either way
+    }else{
+      var fb=d&&d.replan&&d.replan.fineBelow;
+      if(!fb)base=COARSE_RUNGS.slice();
+      else{
+        base=[];
+        for(i=0;i<COARSE_RUNGS.length;i++){
+          p=COARSE_RUNGS[i];
+          if(p.cap<fb)continue;
+          if(p.cap===fb&&p.fineClose)p=switchRung(p);
+          base.push(p);
+        }
+        for(i=0;i<FINE_RUNGS.length;i++)if(FINE_RUNGS[i].cap<fb)base.push(FINE_RUNGS[i]);
+      }
     }
-    var fb=d&&d.replan&&d.replan.fineBelow;
-    if(!fb)return COARSE_RUNGS.slice();
-    var out=[],i,p;
-    for(i=0;i<COARSE_RUNGS.length;i++){
-      p=COARSE_RUNGS[i];
-      if(p.cap<fb)continue;
-      if(p.cap===fb&&p.fineClose)p=switchRung(p);
-      out.push(p);
-    }
-    for(i=0;i<FINE_RUNGS.length;i++)if(FINE_RUNGS[i].cap<fb)out.push(FINE_RUNGS[i]);
+    var rb=d&&d.replan&&d.replan.rebase;
+    var entry=rb?rebEntry(rb.cap):null;
+    if(!entry)return base;
+    /* the walked descent keeps every rung (its logged days stay filed where
+       they were lived); the zero object comes off the end and returns after
+       the rebuilt tail — zero is zero either way */
+    var out=base.slice(0,base.length-1);
+    out.push(entry);
+    for(i=0;i<FINE_RUNGS.length;i++)
+      if(FINE_RUNGS[i].cap>0&&FINE_RUNGS[i].cap<rb.cap)out.push(rebClone(FINE_RUNGS[i]));
+    out.push(base[base.length-1]);
     return out;
+  }
+  // calendar length of a descent rebuilt from cap c — mirrors buildLadder
+  function rebLen(c){
+    var n=1;
+    for(var i=0;i<FINE_RUNGS.length;i++)if(FINE_RUNGS[i].cap>0&&FINE_RUNGS[i].cap<c)n++;
+    return n*2;
   }
   /* Starts coarse on purpose: normData's legacy migrations walk the ladder to
      re-file old index-keyed holds, and every save that predates this feature
@@ -2288,6 +2345,17 @@ try{
     // user stops logging reads as an unbroken clean streak and pays for it.
     d.cm.seen=d.cm.seen||{};
     d.replan=d.replan||{};   // {lockFrom:'YYYY-MM-DD'} — the date stops moving from here
+    /* replan.rebase {at:'YYYY-MM-DD',cap:N}: from `at`, the descent is rebuilt
+       out of cap N in half-steps of two days each. Malformed → dropped whole:
+       an anchor the ladder can't source a rung for would leave buildLadder and
+       the walk disagreeing about where the new descent begins. */
+    if(d.replan.rebase!==undefined){
+      var rz=d.replan.rebase;
+      if(!(rz&&typeof rz==='object'&&!(rz instanceof Array)&&
+           typeof rz.at==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(rz.at)&&
+           rz.at>dkeyOf(TAPER_START)&&
+           typeof rz.cap==='number'&&!!rungAtCap(rz.cap)))delete d.replan.rebase;
+    }
     /* legacy holds: before the schedule self-adjusted, the banner's hold
        button wrote holdPrompts[day]='held' AND bumped data.holds — and since
        the banner fired the morning AFTER, the manual day usually landed on
@@ -2344,7 +2412,10 @@ try{
   /* Holds are stored by cap and read by rung index — call sites keep saying
      "this rung" while storage says "this ceiling", which is what survives the
      ladder changing shape underneath them. */
-  function holdKey(i){var p=BASE_PHASES[i];return p?'c'+p.cap:null;}
+  /* rb rungs key apart on purpose: after a rebase the ladder can hold two
+     rungs at the same ceiling — one walked, one rebuilt — and a hold left on
+     the walked one must not hand the new one a phantom extra day. */
+  function holdKey(i){var p=BASE_PHASES[i];return p?(p.rb?'r':'c')+p.cap:null;}
   function holdsAt(i){var k=holdKey(i);return (k&&data.holds[k])||0;}
   function setHoldsAt(i,v){
     var k=holdKey(i);if(!k)return;
@@ -2423,6 +2494,17 @@ try{
        engine that absorbs miss six exactly like miss one is manufacturing
        the pattern that matters. */
     var slack=SLACK_TOTAL, lockKey=data.replan&&data.replan.lockFrom;
+    /* the rebase anchor, read off the ladder itself so the walk can never
+       disagree with buildLadder about whether a rebuilt tail exists */
+    var rbDate=null,rbKey=null,rebCapVal=null,rbEntered=false;
+    for(var ri=0;ri<BASE_PHASES.length;ri++)if(BASE_PHASES[ri].rb){
+      rbKey=data.replan.rebase.at;rbDate=dateOf(rbKey);break;
+    }
+    function relbl(start,end){
+      if(!end)return fmtShort(start)+' →';
+      if(start.getMonth()===end.getMonth())return fmtShort(start)+'–'+end.getDate();
+      return fmtShort(start)+'–'+fmtShort(end);
+    }
     /* Once the zero-eve ritual is done the stash is in the trash — so an
        over-cap last evening must NOT auto-hold the rung and prescribe another
        dosing day, which for someone who has stripped their home means going to
@@ -2446,6 +2528,27 @@ try{
     var charged={};
     for(var i=0;i<BASE_PHASES.length;i++){
       var p=BASE_PHASES[i];
+      /* crossing into the rebuilt descent: close any gap (the last walked rung
+         rides its cap to the rebase eve), land the anchor, refill the budget.
+         Slack refills because this is a NEW descent chosen on a date, not the
+         old one drifting — and carry resets with it: strain in the abandoned
+         tail has nothing to say about steps that were rebuilt to be smaller. */
+      if(rbDate&&p.rb&&!rbEntered){
+        rbEntered=true;rebCapVal=p.cap;
+        if(cur<rbDate){
+          var pv=out[out.length-1];
+          if(pv&&pv.end){pv.end=addDays(rbDate,-1);pv.lbl=relbl(pv.start,pv.end);}
+          cur=new Date(rbDate);
+        }
+        slack=SLACK_TOTAL;carry=0;
+      }
+      /* a pre-rebase rung the walk never reached — skipped by the rebuild. It
+         stays in the ladder so every other rung keeps its index, but it gets
+         no dates and no days. */
+      if(rbDate&&!p.rb&&p.days&&cur>=rbDate){
+        out.push({start:null,end:null,lbl:'',skipped:true,held:0,early:0,eased:0});
+        continue;
+      }
       var start=new Date(cur), end=null, auto=0, manual=holdsAt(i);
       // only a capped rung can absorb an eased day; handing one to the
       // zero phase (days:null) invents an adjustment that never happened
@@ -2459,7 +2562,11 @@ try{
         // never defer INTO the zero era — a zero-day slip is the record's
         // business, not the schedule's
         var nextCap=(BASE_PHASES[i+1]&&BASE_PHASES[i+1].cap>0)?BASE_PHASES[i+1].cap:null;
+        // a walked-descent rung halts at the rebase eve: everything from the
+        // anchor forward is the rebuilt descent's business, charges and all
+        var stop=(rbDate&&!p.rb)?rbDate:null;
         while(done<dur+auto){
+          if(stop&&d>=stop)break;
           if(d<=lim){
             var dk=dkeyOf(d), c=countOf(dk), resp=data.holdPrompts[dk];
             /* every day that moved the descent — or was told not to — is
@@ -2479,7 +2586,7 @@ try{
           // the phase is out of days — but if the would-be first day of the
           // next step already ran past the NEXT cap, the step-down deferred:
           // absorb that day here at this cap and retry the drop after it
-          if(done===dur+auto&&nextCap!==null&&d<=lim){
+          if(done===dur+auto&&nextCap!==null&&d<=lim&&!(stop&&d>=stop)){
             var dk2=dkeyOf(d), c2=countOf(dk2), r2=data.holdPrompts[dk2];
             // a declined deferral needs no entry here: the day then falls
             // into the next phase, where the in-loop check records it once
@@ -2493,33 +2600,39 @@ try{
             }
           }
         }
-        end=addDays(start,dur+auto-1);
-        cur=addDays(start,dur+auto);
+        /* done, not dur+auto: the two agree except when a walked-descent rung
+           was halted at the rebase eve, where done is the days it truly got */
+        end=addDays(start,Math.max(1,done)-1);
+        cur=addDays(start,Math.max(1,done));
         // strain propagation: every 2 hard extra days here ease the next
         // step by one base day (the drop that follows a struggling rung
         // is the risky one). Nothing carries into the zero era — the last
         // capped rung's strain already holds itself.
         carry=Math.floor(auto/2);
       }
-      var lbl;
-      if(!end){lbl=fmtShort(start)+' →';}
-      else if(start.getMonth()===end.getMonth()){lbl=fmtShort(start)+'–'+end.getDate();}
-      else{lbl=fmtShort(start)+'–'+fmtShort(end);}
+      var lbl=relbl(start,end);
       // net them out: an auto-hold cancelled by an early step-down is a
       // phase that ran its base length — report it as neither
       var net=auto+manual;
       out.push({start:start,end:end,lbl:lbl,held:Math.max(0,net),early:Math.max(0,-net),eased:eased});
     }
+    /* causes from before the anchor are the old descent's settled history —
+       flagged so the receipts can say so and keep their buttons off */
+    if(rbKey)causes.forEach(function(c){if(c.key<rbKey)c.pre=true;});
     out.causes=causes;
     out.slack=slack;                    // extension days still available
+                                        // (the rebuilt descent's own, when rebased)
     out.slackTotal=SLACK_TOTAL;
     out.locked=!!lockKey;
+    out.rebased=rbKey;                  // 'YYYY-MM-DD' when a rebuilt descent is live
+    out.rebCap=rebCapVal;               // its re-entry ceiling
     return out;
   }
   function phaseIndexFor(day){
     var sch=schedule();
     if(day<sch[0].start)return -1;
     for(var i=0;i<sch.length;i++){
+      if(!sch[i].start)continue;   // a rung the rebuild skipped — no dates, no days
       var end=sch[i].end||new Date(2100,0,1);
       if(day>=sch[i].start && day<=end)return i;
     }
@@ -3282,6 +3395,7 @@ try{
       setTimeout(function(){stairs.classList.remove('anim');},1200);
     }
     sch.forEach(function(s,i){
+      if(s.skipped)return;   // never walked — the rebuild stepped past it
       var p=BASE_PHASES[i];
       var el=document.createElement('div');
       var isNow=i===idx, isPast=i<idx;
@@ -3321,6 +3435,7 @@ try{
     var sch=schedule();
     var wrap=$('phases');wrap.innerHTML='';
     sch.forEach(function(s,i){
+      if(s.skipped)return;   // never walked — the rebuild stepped past it
       var p=BASE_PHASES[i];
       var el=document.createElement('div');
       el.className='phase'+(i<idx?' past':'')+(i===idx?' now':'')+(i===sch.length-1?' zero':'');
@@ -3369,6 +3484,28 @@ try{
     for(var i=0;i<BASE_PHASES.length;i++){if(BASE_PHASES[i].days)d=addDays(d,BASE_PHASES[i].days);}
     return d;
   }
+  /* Where a rebuilt descent would re-enter: the smallest rung that clears the
+     median of the last three fully-logged days. Median, not mean — one clean
+     outlier day should not drag re-entry to a ceiling the other two days
+     disprove — and the plan meets the days, never the other way around. */
+  function rebSuggest(){
+    var vals=[], d=addDays(today,-1), tries=0, startD=schedule()[0].start;
+    while(vals.length<3&&tries<14&&d>=startD){
+      var c=countOf(dkeyOf(d));
+      if(c!==null)vals.push(c);
+      d=addDays(d,-1);tries++;
+    }
+    if(vals.length<3)return null;
+    var s=vals.slice().sort(function(a,b){return a-b;}), med=s[1];
+    var rungs=[],i;
+    for(i=0;i<FINE_RUNGS.length;i++)if(FINE_RUNGS[i].cap>0)rungs.push(FINE_RUNGS[i]);
+    rungs.push(COARSE_RUNGS[0]);   // the ladder's top is the last resort
+    rungs.sort(function(a,b){return a.cap-b.cap;});
+    for(i=0;i<rungs.length;i++)if(rungs[i].cap>=med)
+      return {cap:rungs[i].cap,capText:rungs[i].capText,med:med,last:vals.slice().reverse()};
+    var top=rungs[rungs.length-1];
+    return {cap:top.cap,capText:top.capText,med:med,last:vals.slice().reverse()};
+  }
   function renderSchedCtl(){
     var box=$('schedCtl');if(!box)return;
     if(idx<0){box.hidden=true;return;}
@@ -3387,6 +3524,16 @@ try{
     }
     causes.forEach(function(h){
       var head=fmtShort(h.d)+' · <b>'+h.c+' of '+h.cap+'</b> — ';
+      /* days from before the rebuild: settled history of the descent that was
+         abandoned. Stated, muted, and without buttons — undoing one would
+         re-cut dates that no longer exist. */
+      if(h.pre){
+        rows+=row('declined',head+(h.kind==='over'?'held its cap a day longer'
+          :h.kind==='defer'?'the step-down deferred'
+          :h.kind==='noslack'?'recorded; the dates stayed'
+          :'hold declined')+' · before the rebuild','');
+        return;
+      }
       if(h.kind==='over')rows+=row('',head+'held the '+h.cap+' cap a day longer',
         '<button class="sc-act" data-sc="decline" data-k="'+h.key+'">Undo</button>');
       else if(h.kind==='defer')rows+=row('',head+'the step-down deferred: the day rode the '+h.rode+' cap and the drop retried after it',
@@ -3400,6 +3547,7 @@ try{
         '<button class="sc-act warn" data-sc="apply" data-k="'+h.key+'">Apply it</button>');
     });
     for(var i=0;i<BASE_PHASES.length;i++){
+      if(sch[i].skipped)continue;   // never walked — nothing of it to explain
       var m=holdsAt(i), e=sch[i].eased||0;
       if(m>0)rows+=row('','Cap '+BASE_PHASES[i].capText+' · <b>+'+m+' day'+(m>1?'s':'')+'</b> added by hand',
         '<button class="sc-act" data-sc="unhold" data-i="'+i+'">Undo</button>');
@@ -3421,7 +3569,10 @@ try{
        leans toward). Both are offered from a standard ceiling; each reverses
        while you are still on the step you switched on. */
     var fine='';
-    if(!isZeroEra&&idx<BASE_PHASES.length-1){
+    /* after a rebuild the pace switches are moot — the rebuilt tail is
+       half-steps at two days by construction, and the walked descent's pace
+       survives only as history, which re-filing would falsify */
+    if(!isZeroEra&&idx<BASE_PHASES.length-1&&!sch.rebased){
       var fb=data.replan.fineBelow, gb=data.replan.slowBelow;
       if(gb&&cap>=gb){
         fine='<div class="sc-fine"><p class="sc-note"><b>The gentle pace is on from here.</b> Each ceiling from '+
@@ -3452,15 +3603,47 @@ try{
         if(offers)fine='<div class="sc-fine"><p class="sc-note" style="margin-bottom:6px"><b>Is a step too big?</b> Two ways to soften it:</p>'+offers+'</div>';
       }
     }
+    /* The third answer, offered only at the moment it is true: the budget is
+       spent, the schedule has stopped adjusting, and the last three full days
+       sit above today's cap — the plan has stopped describing anything. A
+       hold buys a day, the pace switches soften steps still to come, but none
+       of them can close a gap of whole levels that has already opened. Shown
+       as the arithmetic, like every card here: what the days actually were,
+       where re-entry lands, what zero becomes. */
+    var reb='';
+    if(!isZeroEra&&!sch.rebased&&!sch.locked&&sch.slack<=0){
+      var sug=rebSuggest();
+      if(sug&&sug.cap>cap){
+        var nz=addDays(today,rebLen(sug.cap));
+        reb='<div class="sc-fine"><p class="sc-note"><b>The plan and the days have come apart.</b> '+
+          'The last three full days landed <b>'+sug.last.join(', ')+'</b> against a cap of '+cap+', and the slack is spent — '+
+          'the dates above are no longer describing what is happening. The third answer, after holding and softening: '+
+          'rebuild the descent from where the days are. Re-enter at <b>'+sug.capText+'</b> — a ceiling your log shows holding — '+
+          'and take the rest in half-steps, two days each: <b>'+capChain(sug.capText,fineTail(sug.cap))+'</b>. '+
+          'Zero lands '+WEEKDAYS[nz.getDay()]+', '+fmtShort(nz)+'. Later than the date above, and honestly reachable, '+
+          'which the date above is not. Every logged day keeps its record, and the extension budget refills for the new descent.</p>'+
+          '<div class="sc-hand"><button class="pri" data-sc="reb" data-cap="'+sug.cap+'">Rebuild the descent from '+sug.capText+'</button></div></div>';
+      }
+    }else if(sch.rebased===todayKey){
+      reb='<div class="sc-fine"><p class="sc-note">The descent was rebuilt today, re-entering at <b>'+sch.rebCap+'</b>. '+
+        'It can still go back — tomorrow the rebuilt steps will have logged days against them, and undoing it then '+
+        'would re-file those days against ceilings they were never held to.</p>'+
+        '<div class="sc-hand"><button data-sc="unreb">Undo — back to the old descent</button></div></div>';
+    }
     /* Slack is shown as a depleting resource rather than reported after the
        fact, because the whole point is that it is spendable and finite. */
     var slackLine;
     if(sch.locked)slackLine='<span style="color:var(--sage)">Date locked</span> — over-cap days from the lock forward are recorded, and leave the dates alone.';
-    else if(sch.slack>0)slackLine='<b>'+sch.slack+' of '+sch.slackTotal+'</b> extension day'+(sch.slack===1?'':'s')+' left. When they are gone the schedule stops moving zero and the choice becomes yours.';
+    else if(sch.slack>0)slackLine='<b>'+sch.slack+' of '+sch.slackTotal+'</b> extension day'+(sch.slack===1?'':'s')+' left'+
+      (sch.rebased?' on the rebuilt descent — the budget refills at a rebuild, because slack exists to stop drift and a rebuild is a dated choice, not drift':'')+
+      '. When they are gone the schedule stops moving zero and the choice becomes yours.';
     else slackLine='<span style="color:var(--clay)">Slack spent.</span> The schedule is no longer extending itself — an over-cap day now gets recorded and the date holds. That is the design, not a failure: the evidence for tapering is about easing withdrawal, not about improving the odds of stopping, and a date that keeps moving spends the part that does.';
     box.innerHTML='<h3>The schedule, and why</h3>'+
       '<p class="sc-zero">Zero: '+WEEKDAYS[z.getDay()]+', '+fmtShort(z)+
-        (moved>0?' <span style="color:var(--amber)">· '+moved+' day'+(moved>1?'s':'')+' later than the original plan</span>'
+        /* against a rebuilt descent, "later than the original plan" stops
+           meaning anything — the honest annotation is the rebuild itself */
+        (sch.rebased?' <span style="color:var(--sage)">· descent rebuilt '+fmtShort(dateOf(sch.rebased))+', re-entering at '+sch.rebCap+'</span>'
+        :moved>0?' <span style="color:var(--amber)">· '+moved+' day'+(moved>1?'s':'')+' later than the original plan</span>'
         :moved<0?' <span style="color:var(--sage)">· '+(-moved)+' day'+(moved<-1?'s':'')+' earlier than the original plan</span>'
         :' · exactly the original plan')+'</p>'+
       '<p class="sc-note" style="margin:0 0 10px">'+slackLine+'</p>'+
@@ -3469,7 +3652,7 @@ try{
         :isZeroEra
           ?'The descent ran exactly as drawn — every logged day landed at or under its cap.'
           :'Nothing has moved the descent yet — every logged day landed at or under its cap, and no hold was ever offered.')+'</p>'+
-      rows+hand+fine+
+      rows+hand+reb+fine+
       (isZeroEra?''
         :'<p class="sc-note">A day only holds its step when its <em>logged total</em> goes over that day\'s cap. A rough day that still landed under the cap won\'t move anything on its own — use the button above if the step needs more room, or correct the day\'s count from its day page and the whole descent re-adjusts.</p>');
   }
@@ -3516,7 +3699,10 @@ try{
     if(yd>=start){
       var tM=dayMetrics(todayKey), yM=dayMetrics(dkeyOf(yd));
       var plan;
-      if(cap<yM.cap){
+      if(cap>yM.cap){
+        // only a rebuild can raise the ceiling — say so, or "holding" lies
+        plan='<span class="tp-vs-k hold">Rebuilt</span> — the descent re-entered at <b>'+phase.capText+'</b>, up from the '+yM.capText+' the days weren\'t holding. Under '+cap+' is the whole job now.';
+      }else if(cap<yM.cap){
         plan='<span class="tp-vs-k down">↓ Ceiling dropped</span> from <b>'+yM.capText+'</b> yesterday — <b>'+(yM.cap-cap)+' fewer</b> today.';
       }else{
         if(!phase.single&&tM.reqGapH>yM.reqGapH){
@@ -6838,6 +7024,11 @@ try{
     else if(act==='fine'){data.replan.fineBelow=cap;data.replan.fineAt=todayKey;delete data.replan.slowBelow;delete data.replan.slowAt;relader();}
     else if(act==='slow'){data.replan.slowBelow=cap;data.replan.slowAt=todayKey;delete data.replan.fineBelow;delete data.replan.fineAt;relader();}
     else if(act==='coarse'){delete data.replan.fineBelow;delete data.replan.fineAt;delete data.replan.slowBelow;delete data.replan.slowAt;relader();}
+    /* the rebuild: anchor today, re-enter at the offered cap. The lock comes
+       off with it — it froze the OLD descent's dates, and carrying it forward
+       would freeze the new ones from birth (the card can re-lock). */
+    else if(act==='reb'){data.replan.rebase={at:todayKey,cap:+b.dataset.cap};delete data.replan.lockFrom;relader();}
+    else if(act==='unreb'){delete data.replan.rebase;relader();}
     else if(act==='hold')setHoldsAt(i,holdsAt(i)+1);
     else if(act==='unhold'){
       var m=holdsAt(i);
