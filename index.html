@@ -401,6 +401,21 @@
   .yd-count{font-family:'Fraunces',serif;font-weight:600;font-size:17px;color:var(--sand)}
   .yd-count small{font-family:'Karla',sans-serif;font-size:11.5px;color:var(--muted);font-weight:400}
   .yd-go{color:var(--faint);font-size:17px;line-height:1;flex:0 0 auto}
+  /* two clocks side by side: yesterday's finished day, today's still being
+     written. Same rail, same rules — the comparison is the point. */
+  .yd-cols{display:flex;align-items:flex-start;gap:13px}
+  .yd-col{flex:1 1 0;min-width:0}
+  .yd-col+.yd-col{border-left:1px solid var(--hair);padding-left:13px}
+  .yd-col .yd-open{flex-wrap:wrap;row-gap:1px}
+  .yd-col .yd-when{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .yd-col .yd-count{flex-basis:100%;order:4}
+  /* .tdy, not .today — that class name belongs to the Today plan card */
+  .yd-col.tdy .eyebrow{color:var(--sage)}
+  /* the stretch running right now — sage, because it's the one that can grow */
+  .yr-gap.live .yr-rail::before{background:var(--sage);width:3px;left:5.5px}
+  .yr-gap.live .yr-dur{color:var(--sage);font-weight:800}
+  .yr-tag.live{color:var(--sage);background:rgba(100,125,75,.12)}
+  html.dark .yr-tag.live{background:rgba(163,184,153,.16)}
   .yd-live[hidden]{display:none}
   /* the day as a vertical rail: one node per sitting, the gap to the next
      riding the segment between them, and the longest stretch lit amber.
@@ -1514,14 +1529,27 @@ try{
 </div>
 
 <div class="yday" id="ydayCard" hidden>
-  <button class="yd-open" id="ydOpen">
-    <span class="eyebrow">Yesterday</span>
-    <span class="yd-when" id="ydWhen"></span>
-    <span class="yd-count" id="ydCount"></span>
-    <span class="yd-go" aria-hidden="true">›</span>
-  </button>
-  <div class="yrail" id="ydRail"></div>
-  <p class="lg-line" id="ydLongest"></p>
+  <div class="yd-cols">
+    <div class="yd-col">
+      <button class="yd-open" id="ydOpen">
+        <span class="eyebrow">Yesterday</span>
+        <span class="yd-when" id="ydWhen"></span>
+        <span class="yd-go" aria-hidden="true">›</span>
+        <span class="yd-count" id="ydCount"></span>
+      </button>
+      <div class="yrail" id="ydRail"></div>
+      <p class="lg-line" id="ydLongest"></p>
+    </div>
+    <div class="yd-col tdy">
+      <button class="yd-open" id="tdOpen">
+        <span class="eyebrow">Today</span>
+        <span class="yd-when" id="tdWhen"></span>
+        <span class="yd-go" aria-hidden="true">›</span>
+        <span class="yd-count" id="tdCount"></span>
+      </button>
+      <div class="yrail" id="tdRail"></div>
+    </div>
+  </div>
   <p class="yd-live" id="ydLive" hidden></p>
 </div>
 
@@ -3938,29 +3966,12 @@ try{
      how much further that longest stretch got pushed than the day before.
      One tap opens the full day page. */
   function ydayKey(){return dkeyOf(addDays(today,-1));}
-  function renderYday(){
-    var card=$('ydayCard');
-    if(!card)return;
-    var yd=addDays(today,-1);
-    if(yd<schedule()[0].start){card.hidden=true;return;}
-    var k=ydayKey(), m=dayMetrics(k);
-    // nothing to show a clock for — no timed hits, no untimed ones, no slip
-    /* a clean zero-era day is all zeroes by design — sessions [], adj 0,
-       eff 0 — so this guard hid the Yesterday card every morning after a
-       clean night and left the 'clean' arm below unreachable. At zero the
-       card's whole job is to say the day held. */
-    if(m.isZ&&!m.future){card.hidden=false;}
-    else if(!m.sessions.length&&!m.adj&&!m.eff){card.hidden=true;return;}
-    card.hidden=false;
-    $('ydWhen').textContent=WEEKDAYS[yd.getDay()].slice(0,3)+' '+fmtShort(yd);
-    $('ydCount').innerHTML=m.isZ
-      ?(m.eff>0?m.eff+' <small>· slip</small>':'<small>clean</small>')
-      :((m.eff||0)+' <small>of '+m.cap+' · '+m.stat+'</small>');
-    $('ydOpen').setAttribute('aria-label',
-      'Yesterday, '+$('ydWhen').textContent+', '+$('ydCount').textContent+' — open in full');
-    // the day as a vertical rail, read top-to-bottom: a node per sitting, the
-    // gap that opens into it riding the segment above, the longest lit amber.
-    // Each session has at most one preceding gap (the overnight one for si 0).
+  /* one day's clock as a vertical rail, read top-to-bottom: a node per
+     sitting, the gap that opens into it riding the segment above, the longest
+     lit amber. Each session has at most one preceding gap (the overnight one
+     for si 0). Shared verbatim by both columns of the card, so yesterday and
+     today can never drift apart in how they draw a day. */
+  function railHTML(m){
     var rail='';
     m.sessions.forEach(function(sess,si){
       m.gapSpans.forEach(function(g,gi){
@@ -3984,6 +3995,30 @@ try{
     if(m.adj>0&&m.sessions.length)rail+='<div class="yr-block yr-node">'+
       '<span class="yr-rail"><span class="yr-dot hollow"></span></span>'+
       '<span class="yr-body"><span class="yr-extra">'+m.adj+' more · logged without times</span></span></div>';
+    return rail;
+  }
+  function renderYday(){
+    var card=$('ydayCard');
+    if(!card)return;
+    var yd=addDays(today,-1);
+    if(yd<schedule()[0].start){card.hidden=true;return;}
+    var k=ydayKey(), m=dayMetrics(k);
+    // nothing to show a clock for — no timed hits, no untimed ones, no slip
+    /* a clean zero-era day is all zeroes by design — sessions [], adj 0,
+       eff 0 — so this guard hid the Yesterday card every morning after a
+       clean night and left the 'clean' arm below unreachable. At zero the
+       card's whole job is to say the day held. */
+    if(m.isZ&&!m.future){card.hidden=false;}
+    else if(!m.sessions.length&&!m.adj&&!m.eff){card.hidden=true;return;}
+    card.hidden=false;
+    // date only — at half a card wide, a weekday prefix just truncates
+    $('ydWhen').textContent=fmtShort(yd);
+    $('ydCount').innerHTML=m.isZ
+      ?(m.eff>0?m.eff+' <small>· slip</small>':'<small>clean</small>')
+      :((m.eff||0)+' <small>of '+m.cap+' · '+m.stat+'</small>');
+    $('ydOpen').setAttribute('aria-label',
+      'Yesterday, '+$('ydWhen').textContent+', '+$('ydCount').textContent+' — open in full');
+    var rail=railHTML(m);
     $('ydRail').innerHTML=rail;
     $('ydRail').hidden=!rail;
     // a day with one sitting has no gap to name — say so rather than sit empty
@@ -3994,6 +4029,34 @@ try{
         ?'<span class="yd-none">Nothing logged. A whole day at zero.</span>'
         :'<span class="yd-none">Logged without times — open the day to stamp them.</span>';
     $('ydLongest').innerHTML=lg;
+    /* ---- today, the same clock, still being written ---- */
+    var tm=dayMetrics(todayKey);
+    $('tdWhen').textContent=fmtShort(today);
+    // "so far", never a verdict — the day isn't finished, so it doesn't get
+    // judged the way yesterday's closed total does
+    $('tdCount').innerHTML=tm.isZ
+      ?(tm.eff>0?tm.eff+' <small>· slip</small>':'<small>clean so far</small>')
+      :((tm.eff||0)+' <small>of '+tm.cap+' so far</small>');
+    $('tdOpen').setAttribute('aria-label',
+      'Today, '+$('tdWhen').textContent+', '+$('tdCount').textContent+' — open in full');
+    var trail=railHTML(tm);
+    /* the stretch running right now rides the bottom of today's rail — the
+       one gap still open, drawn sage because it's the one that can grow. The
+       clock tick re-renders this card, so the duration stays current. Not at
+       zero: there the whole day is the stretch, and the counters own it. */
+    var last=lastHitEver();
+    if(!tm.isZ&&last&&Date.now()-last.getTime()<48*3600000){
+      var dayStart=new Date(today.getFullYear(),today.getMonth(),today.getDate(),DAY_CUTOFF_H);
+      var on=last<dayStart;
+      trail+='<div class="yr-block yr-gap live'+(on?' overnight':'')+'">'+
+        '<span class="yr-rail"></span>'+
+        '<span class="yr-body"><span class="yr-dur">'+fmtDur(Date.now()-last.getTime())+'</span>'+
+        '<span class="yr-tag live">running</span>'+
+        (on?'<span class="yr-since">since '+fmtTime(last)+'</span>':'')+
+        '</span></div>';
+    }
+    $('tdRail').innerHTML=trail||('<p class="yd-none">'+
+      (tm.isZ?'Nothing on the clock — that is the point.':'Nothing on the clock yet.')+'</p>');
     ydLiveTick();
   }
   /* today's longest stretch — including the one still running — measured
@@ -4026,6 +4089,7 @@ try{
     }
   }
   $('ydOpen').addEventListener('click',function(){openDayPage(ydayKey());});
+  $('tdOpen').addEventListener('click',function(){openDayPage(todayKey);});
 
   /* the descent, big picture: every day drawn against the old ~30/day line,
      so the whole story reads in one glance — tall bars then, slivers now */
