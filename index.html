@@ -205,49 +205,11 @@
   .ck-note{font-size:12.5px;color:var(--muted);margin:12px 0 0}
   .ck-note.done{color:var(--sage);font-weight:700}
 
-  /* ---- after zero: sleep window, if-then plans, reward ladder ----
+  /* ---- after zero: if-then plans, reward ladder ----
      Card roots deliberately set no `display`, so the plain [hidden]
      attribute still hides them. Anything inside that DOES take a display
      gets its own [hidden] rule immediately after, later in the sheet than
      the rule it has to beat — equal specificity, last one wins. */
-  .sleepcard{
-    position:relative;background:var(--surface);
-    border:1px solid var(--line);border-left:3px solid var(--sage);border-radius:14px;
-    padding:18px;margin:-6px 0 24px;
-  }
-  .sl-win{
-    display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
-    font-family:'Fraunces',serif;font-weight:600;font-size:26px;color:var(--sand);
-    margin:2px 0 6px;
-  }
-  .sl-win[hidden]{display:none}
-  .sl-win .sl-to{color:var(--faint);font-size:20px}
-  .sl-win .sl-dur{font-family:'Karla',sans-serif;font-size:12.5px;font-weight:700;
-    color:var(--sage);background:rgba(100,125,75,.1);border-radius:999px;padding:3px 9px}
-  .sl-diary{margin-top:14px;border-top:1px solid var(--hair);padding-top:13px}
-  .sl-diary[hidden]{display:none}
-  .sl-dhead{font-family:'Karla',sans-serif;font-weight:700;font-size:13px;color:var(--ink);margin:0 0 9px}
-  /* pairs wrap as units — a label that wraps away from its own input reads
-     as a label for the next one */
-  .sl-drow{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:9px}
-  .sl-pair{display:flex;align-items:center;gap:7px;flex:0 1 auto}
-  .sl-drow label{font-size:11.5px;color:var(--muted);flex:0 0 auto}
-  .sl-drow input{
-    font:inherit;font-size:14px;padding:7px 9px;border:1px solid var(--line);
-    border-radius:9px;background:var(--surface);color:var(--sand);min-width:0;flex:0 1 auto;
-  }
-  .sl-drow input[type="number"]{width:72px}
-  .sl-read{font-size:12.5px;color:var(--ink);margin:11px 0 0;line-height:1.55}
-  .sl-read[hidden]{display:none}
-  .sl-read b{color:var(--sand)}
-  .sl-read.good b{color:var(--sage)}
-  .sl-read.low b{color:var(--clay)}
-  .sl-import{margin-top:12px;border-top:1px solid var(--hair);padding-top:10px}
-  .sl-import summary{font-size:12.5px;font-weight:700;color:var(--sage);cursor:pointer;list-style:none}
-  .sl-import summary::-webkit-details-marker{display:none}
-  .sl-import summary::before{content:"↧ ";opacity:.7}
-  .sl-import textarea{width:100%;box-sizing:border-box;margin:9px 0;font:inherit;font-size:12px;
-    padding:8px 9px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);resize:vertical}
 
   .ladder{
     position:relative;background:var(--surface);
@@ -1616,42 +1578,6 @@ try{
   <div class="stairs" id="stairs" aria-label="Step-down schedule — daily hit cap, tap a step for details"></div>
 </div>
 
-<div class="sleepcard" id="sleepCard" hidden>
-  <div class="card-head">
-    <p class="eyebrow" style="color:var(--sage)">Tonight · sleep</p>
-    <span class="streak-chip" id="slChip" hidden></span>
-  </div>
-  <div class="sl-win" id="slWin"></div>
-  <p class="rit-lede" id="slLede"></p>
-  <div class="sl-diary" id="slDiary" hidden>
-    <div class="sl-drow" id="slWakeRow">
-      <span class="sl-pair"><label for="slWake2">Fixed wake time — the anchor the window hangs off</label><input type="time" id="slWake2"></span>
-    </div>
-    <p class="sl-dhead" id="slDHead">Last night</p>
-    <div class="sl-drow" id="slForRow" hidden>
-      <span class="sl-pair"><label for="slFor">Morning of</label><input type="date" id="slFor"></span>
-    </div>
-    <div class="sl-drow">
-      <span class="sl-pair"><label for="slIb">Into bed</label><input type="time" id="slIb"></span>
-      <span class="sl-pair"><label for="slOb">Out of bed</label><input type="time" id="slOb"></span>
-    </div>
-    <div class="sl-drow">
-      <span class="sl-pair"><label for="slLat">Minutes to fall asleep</label><input type="number" id="slLat" min="0" max="600" inputmode="numeric"></span>
-      <span class="sl-pair"><label for="slWaso">Minutes awake in the night</label><input type="number" id="slWaso" min="0" max="600" inputmode="numeric"></span>
-    </div>
-    <div class="data-btns"><button class="pri" id="slSave">Log the night</button><button id="slBackfill">Log an earlier morning</button><button id="slClear" hidden>Clear</button></div>
-  </div>
-  <p class="sl-read" id="slRead" hidden></p>
-  <p class="gap-note" id="slNote"></p>
-  <details class="sl-import" id="slImport">
-    <summary>Import from Oura or Apple Health</summary>
-    <p class="sc-note">Your ring already tracks this — an Apple Shortcut can hand it to the app so you don't type it. One-time setup, then a tap a morning (or leave it automatic). <a class="dlink" href="sleep-import.html" target="_blank" rel="noopener">Set up the Shortcut →</a></p>
-    <textarea id="slImportBox" rows="3" placeholder="Paste what the Shortcut copied — a night, a week, or your whole history."></textarea>
-    <div class="data-btns"><button class="pri" id="slImportBtn">Import sleep</button></div>
-    <p class="gap-note" id="slImportMsg" hidden></p>
-  </details>
-</div>
-
 <details class="fold" id="afterFold" hidden>
   <summary><span class="fold-t">After zero</span><span class="fold-live" id="afterFoldLive"></span></summary>
   <div class="fold-body">
@@ -1660,16 +1586,13 @@ try{
   <h2>After zero</h2>
   <div class="zp-head" id="zpHead"></div>
 
-  <h3 class="ac-h">The sleep window, and why</h3>
-  <div class="schedctl" id="sleepCtl"></div>
-
   <h3 class="ac-h">If–then plans</h3>
   <div class="planlist" id="planList"></div>
 
   <h3 class="ac-h">The ladder</h3>
   <div class="ladderbox" id="cmBox"></div>
 
-  <p class="d-evid">Honest footnote: sleep restriction and stimulus control are the CBT-I components that carry the effect in component trials — sleep hygiene, the advice most apps ship, tests inert, so it isn't here. The reward ladder follows contingency-management design, which is the best-evidenced treatment for cannabis use disorder; the trials verified abstinence externally, and paying yourself on your own word is the weaker form of it. <a class="dlink" href="guide.html#after">The evidence →</a></p>
+  <p class="d-evid">Honest footnote: the reward ladder follows contingency-management design, which is the best-evidenced treatment for cannabis use disorder; the trials verified abstinence externally, and paying yourself on your own word is the weaker form of it. <a class="dlink" href="guide.html#after">The evidence →</a></p>
 </div>
   </div>
 </details>
@@ -1727,14 +1650,12 @@ try{
     </div>
   </details>
   <details>
-    <summary>Sleep — the real project</summary>
+    <summary>Sleep — the long tail</summary>
     <div class="d-body">
       <p>Expect off sleep and <strong>vivid dreams for several weeks or more</strong> after zero — the research finds sleep disturbance outlasts every other symptom. The dreams are REM rebound: your brain rebooting dreaming after a decade of suppression. <span class="ok">It's a progress signal, not a problem.</span></p>
-      <p>Sleep is also the symptom most often named in going back, so guarding it <em>is</em> relapse prevention — but <strong>not with a sleep kit.</strong> When the components of CBT-I are tested against each other, the ones carrying the effect are sleep restriction and stimulus control. <span class="warn">Sleep hygiene — the wind-down, the dark room, the advice every app ships — tests inert.</span> So this app stopped shipping it. The Tonight card runs the two that work:</p>
-      <p><strong>Sleep restriction.</strong> Your time in bed gets compressed down onto the sleep that is actually happening, so the drive to sleep concentrates instead of spreading thin across ten restless hours. The window is set from your own diary, not from a number someone picked, and it earns time back as efficiency climbs. Expect to feel <em>sleepier</em> before you feel better — that is the mechanism, not a side effect. Don't drive drowsy, and check with a doctor first if you have bipolar disorder, a seizure disorder, a parasomnia, or untreated sleep apnea.</p>
-      <p><strong>Stimulus control.</strong> The bed is for sleep only. Go only when sleepy, not merely when it's time. If you're awake and it's dragging, get up, go elsewhere, come back when sleepy — and keep the wake time fixed no matter how the night went. The point is to stop the bed being a place where you practise lying awake.</p>
+      <p>Sleep is also the symptom most often named in going back, so guarding it <em>is</em> relapse prevention. The pieces of CBT-I that actually carry the effect are simple: keep a <strong>fixed wake time</strong> no matter how the night went, use the bed only for sleep, and go when you're sleepy rather than when it's just the time. The wind-down routines every app ships test inert against those two.</p>
       <p>And don't hand the old evening window to a nightcap — <strong>alcohol is a swap, not an exit</strong>, and it worsens the exact sleep rebound it promises to fix. A sleeping pill is a fair question for a prescriber, but worth knowing: in a randomised trial of extended-release zolpidem for cannabis use disorder it did settle sleep, and then sleep problems came back when the drug stopped, with no significant gain in staying off.</p>
-      <p>A random bad night at week 4 or 5 means nothing. Don't read into single nights — the window only ever moves on a week of them.</p>
+      <p>A random bad night at week 4 or 5 means nothing. Don't read into single nights.</p>
       <p class="d-evid">Withdrawal timeline from the same clinical review; the component and trial findings are in the guide. <a class="dlink" href="guide.html#withdrawal">Sources →</a></p>
     </div>
   </details>
@@ -1930,33 +1851,33 @@ try{
        {w:['1p','9p'],
         note:'Same two windows, an hour further apart — the last multi-window day of the taper.',
         do:['Midday and evening, nothing between. Tomorrow goes evening-only.',
-            'Start the sleep diary tonight on the Tonight card — every night logged before zero is one the window doesn’t have to guess at.',
+            'Hold a fixed wake time from here on — a steady wake does more for zero-week sleep than any single good night.',
             'Look back: 22 down to 8, and the ceiling has only ever gone one way.']}],
      fineClose:{goal:"Hold 8, gap out to 8h. Next is 5 across two sittings, not evening-only — the last step got halved.",
        plan:{w:['1p','9p'],
         note:'Same two windows, an hour further apart. With the steps halved this is no longer the last multi-window day — tomorrow’s 5 still has two.',
         do:['Midday and evening, nothing between. Tomorrow is 5: three at midday, two at night.',
-            'Start the sleep diary tonight on the Tonight card — every night logged before zero is one the window doesn’t have to guess at.',
+            'Hold a fixed wake time from here on — a steady wake does more for zero-week sleep than any single good night.',
             'Look back: 22 down to 8, and the ceiling has only ever gone one way.']}},
      why:"Cues drive use as much as chemistry. Dropping whole sessions removes cue windows — the same target CBT and MET, the best-supported treatments, work on.",
      ref:"manage"},
     {days:2, cap:3, capText:"2–3", sessionMax:3, spacingH:0, single:true,
      rule:"Evening only · one session",
-     desc:"Functionally done all day and proving it. Start the sleep diary now so the window is already prescribed before zero.",
-     goals:["Evening only from here — 2–3, one session. You're functionally done all day; start the sleep diary tonight.",
+     desc:"Functionally done all day and proving it. A fixed wake time from here gives sleep its best shot at zero week.",
+     goals:["Evening only from here — 2–3, one session. You're functionally done all day; hold a fixed wake time tonight.",
             "One last evening at 2–3, an hour earlier than last night. Tomorrow is zero — whatever's left goes tonight."],
      plans:[
        {w:['9p'],
         note:'One evening sitting — 2–3 hits, then done. The daytime schedule is already at zero.',
         do:['Nothing all day. You’re functionally quit from wake to dinner — today proves it.',
-            'Log tonight’s sleep, before zero — the window gets derived from your own baseline, not from a number someone picked.',
+            'Hold a fixed wake time tonight — sleep settles fastest on a steady wake, not on a perfect night.',
             'Keep the sitting small and deliberate: 2–3 hits, one window, closed.']},
        {w:['8p'],
         note:'The last window of the taper — pulled an hour earlier, so sleep gets one rehearsal at standing on its own before zero.',
         do:['One final evening sitting — 2–3, an hour earlier than yesterday. Bed arrives with the THC already fading.',
             'Before bed, the ritual: whatever’s left goes in the trash. Not saved, not “just in case.”',
             'Tomorrow the day counter starts. You step off from 2–3 hits, not ~30 — the drop is already mostly behind you.']}],
-     why:"Sleep disturbance outlasts every other withdrawal symptom, and sleep restriction is the CBT-I component that carries the effect — the baseline it needs is gathered before zero.",
+     why:"Sleep disturbance outlasts every other withdrawal symptom — a fixed wake time and keeping the bed for sleep are the pieces of CBT-I that actually carry the effect.",
      ref:"withdrawal"},
     {days:null, cap:0, capText:"0",
      rule:"Whatever's left goes in the trash the night before",
@@ -2067,9 +1988,9 @@ try{
        {w:['12p','9p'],
         note:'Two windows, nine hours apart: 3 hits at midday and 2 in the evening is the entire day.',
         do:['Three at midday, two at night. Counting them out beforehand is the plan.',
-            'Log the night on the Tonight card — the sleep window is derived from your own baseline, and it needs the nights.',
+            'Keep a fixed wake time tonight — a steady wake does more for sleep than any one good night.',
             'Nine hours between sittings means the afternoon has to stand on its own. It can.']}],
-     why:"Sleep disturbance outlasts every other withdrawal symptom, and sleep restriction is the CBT-I component that carries the effect — the baseline it needs is gathered before zero.",
+     why:"Sleep disturbance outlasts every other withdrawal symptom — a fixed wake time and keeping the bed for sleep are the pieces of CBT-I that actually carry the effect.",
      ref:"withdrawal"},
     {days:1, cap:3, capText:"2–3", sessionMax:3, spacingH:0, single:true,
      rule:"Evening only · one session",
@@ -2081,7 +2002,7 @@ try{
         do:['Nothing all day. You’re functionally quit from wake to dinner — today proves it.',
             'Before bed, the ritual: whatever’s left goes in the trash. Not saved, not “just in case.”',
             'Keep the sitting small and deliberate: 2–3 hits, one window, closed.']}],
-     why:"Sleep disturbance outlasts every other withdrawal symptom, and sleep restriction is the CBT-I component that carries the effect — the baseline it needs is gathered before zero.",
+     why:"Sleep disturbance outlasts every other withdrawal symptom — a fixed wake time and keeping the bed for sleep are the pieces of CBT-I that actually carry the effect.",
      ref:"withdrawal"},
     COARSE_RUNGS[COARSE_RUNGS.length-1]   // zero is zero either way — one object, no drift
   ];
@@ -2131,7 +2052,7 @@ try{
        {w:['1p','8p'],
         note:'Two windows × 3 hits = 6 — the 8 cap is headroom, not a target. A week here settles the biggest structural change of the taper.',
         do:['No morning window at all — fill the first half of the day with anything that moves.',
-            'Set up the sleep diary this week, before it is load-bearing, so it is ready before zero.',
+            'Hold a fixed wake time this week — the sleep habit that carries into zero week is a steady wake.',
             'The morning is the part that feels emptiest and the part that pays best.']}],
      why:"Cues drive use as much as chemistry. Dropping the morning window removes its cue — the same target CBT and MET, the best-supported treatments, work on; a week lets the new morning hold.",
      ref:"manage"},
@@ -2143,9 +2064,9 @@ try{
        {w:['8:30p'],
         note:'One evening sitting — 2–3 hits, then done. Held a few days so nothing about zero is a first.',
         do:['Nothing all day. You are functionally quit from wake to dinner — these days prove it.',
-            'Log each night on the Tonight card — the sleep window wants more than one baseline night, and this stretch gives it several.',
+            'Keep a fixed wake time each night — a steady wake is what carries sleep through zero week.',
             'The last night, the ritual: whatever is left goes in the trash. Not saved, not “just in case.”']}],
-     why:"Sleep disturbance outlasts every other withdrawal symptom, and sleep restriction is the CBT-I component that carries the effect — several nights of baseline before zero beat one.",
+     why:"Sleep disturbance outlasts every other withdrawal symptom — a fixed wake time and keeping the bed for sleep are the pieces of CBT-I that actually carry the effect.",
      ref:"withdrawal"}
   ];
   var COARSE_CAPS={};
@@ -2358,16 +2279,14 @@ try{
     /* after-zero collections. All three are additive: an older backup that
        predates them imports clean and just starts empty, which is why they
        get no migration version — absence is a valid state, not a stale one.
-       sleep : morning-filled diary, keyed by the date you GOT UP
        plans : if-then plans, the only place the app stores free text
        cm    : the reward ladder's settings and what's been claimed */
-    d.sleep=d.sleep||{};d.plans=d.plans||[];d.cm=d.cm||{};
+    d.plans=d.plans||[];d.cm=d.cm||{};
     d.cm.claimed=d.cm.claimed||{};
     // days the app actually witnessed after zero. The ladder pays a clean day
     // only against positive evidence it happened — otherwise a relapse the
     // user stops logging reads as an unbroken clean streak and pays for it.
     d.cm.seen=d.cm.seen||{};
-    d.sleepCfg=d.sleepCfg||{};d.sleepCfg.declined=d.sleepCfg.declined||{};
     d.replan=d.replan||{};   // {lockFrom:'YYYY-MM-DD'} — the date stops moving from here
     /* legacy holds: before the schedule self-adjusted, the banner's hold
        button wrote holdPrompts[day]='held' AND bumped data.holds — and since
@@ -2851,18 +2770,11 @@ try{
         head:'The ghost window.',
         body:'The old evening sitting is the last cue standing — it fires on schedule for the first several nights'+(cal>=4?', and it’s fading now':'')+'. It crests in minutes and is gone in 20.',
         fix:'Start the 20-minute timer the moment it lands. It has never outlasted you.'});
-      /* the night fix used to prescribe "hold the window" unconditionally —
-         but with a baseline still gathering there IS no window, so it named a
-         thing not on screen during the exact week it matters most. Read the
-         real state. */
-      var slp=sleepPlan();
       slots.push({s:null,t:'night',kind:'night',
         head:'Sleep, the long tail.',
         body:cal<=6?'Falling asleep may be the hardest part of the day — the sleep system is relearning to run itself. Vivid dreams are REM waking back up.'
           :'Odd sleep and vivid dreams settle last — weeks, not days. A bad night this far in means nothing.',
-        fix:(slp.state==='running'&&slp.bed!==null)
-          ?'Hold the window ('+min2hm(slp.bed)+'–'+min2hm(slp.wake)+') and the fixed wake time every night — sleep is the symptom most often named in going back.'
-          :'Keep one fixed wake time every morning and log the four sleep numbers — sleep is the symptom most often named in going back, and the window is prescribed once the diary has its first few nights.'});
+        fix:'Keep one fixed wake time every morning, and use the bed only for sleep — those are the CBT-I pieces that actually hold. Sleep is the symptom most often named in going back.'});
       return {intro:'',slots:slots};
     }
     var pl=dayPlanOf(d,di);
@@ -2941,7 +2853,7 @@ try{
       head:'Sleep.',
       body:di<=1?'Should mostly hold — the evening window still does its old job.'
         :di<=3?'Falling asleep may take longer and dreams start turning vivid — REM waking back up. Recovery, not a warning.'
-        :'The sleep diary starts tonight, before zero — it is what the window gets derived from, and sleep is the symptom that lasts longest.',
+        :'Hold a fixed wake time from here — sleep is the symptom that lasts longest, and a steady wake is what settles it.',
       fix:di<=1?'Keep the wind-down consistent anyway — it’s rehearsal for zero.'
         :di<=3?'Screens down early; a hot shower is the cheapest sleep aid there is.'
         :'Run the whole ritual even if you feel fine.'});
@@ -3131,208 +3043,6 @@ try{
     return {clean:clean,run:run,best:best,slips:slips};
   });}
 
-  /* ================= after zero: the sleep engine =================
-     Sleep disturbance outlasts every other withdrawal symptom and is the
-     one most often named in a return to use, so it gets exactly what the
-     taper got: a window derived from what was actually logged, retitrated
-     on a fixed rule, explaining and undoing every move it makes.
-     What this implements is sleep RESTRICTION — the CBT-I component the
-     component trials find carries the effect, alongside stimulus control.
-     Sleep hygiene is the component that tests inert, which is why the old
-     "sleep kit" copy is gone rather than merely joined.
-     The diary is keyed by the date you GOT UP, because that is the morning
-     you fill it in. A night is therefore always keyed one day later than
-     the evening it started — the 4am cutoff does not apply here and must
-     not be borrowed, or a 1am bedtime lands in the wrong night. */
-  /* Spielman's protocol sets the floor at 5.5 hours and holds it there even
-     for someone whose average sleep is lower — this is the safety bound, not
-     a rounding, and unsupervised is exactly the setting to take the
-     conservative end of the published range (trials have run 5.0). */
-  var SL_FLOOR=330;    // 5.5h in bed, whatever the average says
-  var SL_UP=85;        // efficiency % at or above which the window earns time
-  var SL_DOWN=80;      // below which it gives time back (80–84 holds)
-  var SL_STEP=15;      // minutes moved per titration
-  var SL_PERIOD=7;     // nights per titration window — a change is followed a week before the next
-  var SL_BASE=5;       // nights of diary before a window can be prescribed at all
-
-  function hm2min(s){
-    if(typeof s!=='string')return null;
-    var m=/^(\d{1,2}):(\d{2})$/.exec(s);
-    if(!m)return null;
-    var h=+m[1],mi=+m[2];
-    if(h>23||mi>59)return null;
-    return h*60+mi;
-  }
-  function min2hm(n){
-    n=((Math.round(n)%1440)+1440)%1440;
-    return pad(Math.floor(n/60))+':'+pad(n%60);
-  }
-  function slDur(n){
-    n=Math.max(0,Math.round(n));
-    var h=Math.floor(n/60),m=n%60;
-    return h?(h+'h'+(m?' '+m+'m':'')):(m+'m');
-  }
-  /* One night, validated at the point of use rather than repaired on import:
-     a diary row is free-form user input and a single NaN in it would poison
-     the mean that sets the window, silently, for a week. Anything that
-     doesn't parse is simply not a night. */
-  function sleepNight(key){
-    var e=data.sleep[key];
-    if(!e||typeof e!=='object')return null;
-    var ib=hm2min(e.ib), ob=hm2min(e.ob);
-    if(ib===null||ob===null)return null;
-    var tib=ob-ib; if(tib<=0)tib+=1440;      // the ordinary case: bed before midnight
-    if(tib<60||tib>1080)return null;          // under an hour or over 18 — a typo, not a night
-    var lat=Number(e.lat), waso=Number(e.waso);
-    if(!isFinite(lat)||lat<0)lat=0;
-    if(!isFinite(waso)||waso<0)waso=0;
-    /* A fat-fingered 480 for 48 used to floor tst to 0 silently — one bad
-       baseline night then dropped the whole window to the 5.5h floor and set
-       the wake anchor, with no Undo. lat+waso can't exceed time in bed; when
-       it does the entry is a typo, not a 0%-efficiency night, so it is not a
-       night at all (the card flags it for re-entry rather than acting on it). */
-    if(lat+waso>=tib)return null;
-    var tst=tib-lat-waso;
-    return {key:key,ib:ib,ob:ob,tib:tib,tst:tst,se:tib?(tst/tib)*100:0};
-  }
-  function sleepNights(){return rc('slN',function(){
-    var ks=Object.keys(data.sleep||{}).sort(), out=[];
-    ks.forEach(function(k){
-      if(!/^\d{4}-\d{2}-\d{2}$/.test(k))return;
-      if(k>todayKey)return;                   // a diary can't describe a night that hasn't happened
-      var n=sleepNight(k);
-      if(n)out.push(n);
-    });
-    return out;
-  });}
-  function mean(a){
-    if(!a.length)return 0;
-    var s=0;for(var i=0;i<a.length;i++)s+=a[i];
-    return s/a.length;
-  }
-  /* The window is derived, never stored — same rule the taper engine follows,
-     for the same reason: a stored plan and a log that disagrees is a plan
-     that quietly stops describing anything. Every titration it performs is
-     pushed onto causes as it is decided, so the card can explain the window
-     from one walk instead of a second one that could disagree. */
-  function sleepPlan(){return rc('slP',sleepBuildPlan);}
-  function sleepBuildPlan(){
-    var ns=sleepNights(), causes=[];
-    var wake=hm2min(data.sleepCfg.wake);
-    if(ns.length<SL_BASE){
-      return {state:'baseline',have:ns.length,need:SL_BASE,causes:causes,
-              wake:wake,win:null,bed:null,nights:ns};
-    }
-    var base=ns.slice(0,SL_BASE);
-    /* The opening prescription is average total sleep TIME, not time in bed:
-       the whole mechanism is compressing the bed window down onto the sleep
-       that is actually happening, so the drive to sleep concentrates. */
-    var win=Math.max(SL_FLOOR,Math.round(mean(base.map(function(n){return n.tst;}))));
-    causes.push({kind:'start',key:base[base.length-1].key,d:dateOf(base[base.length-1].key),
-                 win:win,se:mean(base.map(function(n){return n.se;})),
-                 floored:win===SL_FLOOR});
-    // an unset wake time falls back to what the baseline actually did
-    if(wake===null&&base.length)wake=Math.round(mean(base.map(function(n){return n.ob;})))%1440;
-    /* Titrate in completed blocks of SL_PERIOD nights after the baseline.
-       A partial block at the end is left alone: acting on four nights of a
-       seven-night rule is the engine inventing a decision the rule never
-       made. */
-    var rest=ns.slice(SL_BASE), i;
-    for(i=0;i+SL_PERIOD<=rest.length;i+=SL_PERIOD){
-      var blk=rest.slice(i,i+SL_PERIOD);
-      var last=blk[blk.length-1];
-      var se=mean(blk.map(function(n){return n.se;}));
-      var was=win, kind;
-      if(data.sleepCfg.declined[last.key]){
-        causes.push({kind:'declined',key:last.key,d:dateOf(last.key),se:se,win:win});
-        continue;
-      }
-      if(se>=SL_UP){win+=SL_STEP;kind='extend';}
-      else if(se<SL_DOWN){win-=SL_STEP;kind='contract';}
-      else kind='hold';
-      if(win<SL_FLOOR){win=SL_FLOOR;if(kind==='contract')kind='floor';}
-      causes.push({kind:kind,key:last.key,d:dateOf(last.key),se:se,from:was,to:win,win:win});
-    }
-    var partial=rest.length-i;
-    return {state:'running',win:win,wake:wake,
-            bed:wake===null?null:((wake-win)%1440+1440)%1440,
-            causes:causes,nights:ns,partial:partial,
-            due:partial===0&&rest.length>0?0:SL_PERIOD-partial};
-  }
-  // the most recent nights, for the card's at-a-glance efficiency read
-  function sleepRecent(n){
-    var ns=sleepNights();
-    return ns.slice(Math.max(0,ns.length-(n||SL_PERIOD)));
-  }
-
-  /* ---- importing sleep from a wearable ----
-     A PWA cannot read HealthKit or call the Oura API directly — Safari has no
-     Health API, and Oura's servers send no CORS headers, so a browser fetch is
-     blocked before it leaves the page (both verified). An Apple Shortcut has
-     neither limit, so the Shortcut fetches and the app parses. The user keeps
-     the four-numbers-a-morning diary; this just fills it from a ring they
-     already wear, which is also the only way this user reaches a five-night
-     baseline before their peak week.
-
-     Two clock times sit in an Oura timestamp: read the wall-clock digits
-     straight from the ISO string (they already carry the ring's local offset)
-     rather than through new Date(), which would re-project them into whatever
-     timezone this browser is in. A night is keyed to the date it ENDED — the
-     morning you got up — matching the diary's own rule. */
-  function isoClock(s){var m=/T(\d{2}):(\d{2})/.exec(String(s));return m?m[1]+':'+m[2]:null;}
-  function isoDate(s){var m=/^(\d{4}-\d{2}-\d{2})/.exec(String(s));return m?m[1]:null;}
-  function parseSleepImport(text){
-    var raw;
-    try{raw=JSON.parse(text);}catch(e){throw new Error('That is not valid data — copy exactly what the Shortcut produced.');}
-    // accept Oura's own {data:[...]} response, a bare array, or one record
-    var arr=raw&&raw.data&&raw.data.length!==undefined?raw.data
-           :(raw&&raw.length!==undefined?raw:[raw]);
-    var out=[];
-    for(var i=0;i<arr.length;i++){
-      var r=arr[i]; if(!r||typeof r!=='object')continue;
-      // skip naps — only main sleeps set a baseline
-      if(r.type&&/nap/i.test(r.type))continue;
-      var ib,ob,lat,waso,key;
-      if(r.bedtime_start&&r.bedtime_end){          // Oura v2 shape
-        ib=isoClock(r.bedtime_start);ob=isoClock(r.bedtime_end);
-        key=isoDate(r.bedtime_end);
-        lat=r.latency!=null?Math.round(r.latency/60):0;   // Oura reports seconds
-        waso=r.awake_time!=null?Math.round(r.awake_time/60):0;
-      }else{                                        // already in the app's shape
-        ib=r.ib;ob=r.ob;lat=+r.lat||0;waso=+r.waso||0;
-        key=r.key||r.day||isoDate(r.date);
-      }
-      if(!key||hm2min(ib)===null||hm2min(ob)===null)continue;
-      out.push({key:key,ib:ib,ob:ob,lat:Math.max(0,lat||0),waso:Math.max(0,waso||0)});
-    }
-    return out;
-  }
-  // merge parsed nights into the diary; returns {added, updated, skipped}.
-  // Validated through sleepNight so a garbage row can never enter the store.
-  function importSleepNights(nights){
-    var added=0,updated=0,skipped=0;
-    nights.forEach(function(n){
-      var cand={ib:n.ib,ob:n.ob,lat:n.lat,waso:n.waso};
-      // reuse the one validator: an implausible row is skipped, not stored
-      var probe={}; probe[n.key]=cand;
-      var saved=data.sleep[n.key];
-      data.sleep[n.key]=cand;
-      if(!sleepNight(n.key)){ if(saved)data.sleep[n.key]=saved; else delete data.sleep[n.key]; skipped++; return; }
-      if(saved===undefined)added++; else updated++;
-    });
-    if(added||updated)save();
-    return {added:added,updated:updated,skipped:skipped};
-  }
-  /* The night being edited in the diary. The get-up date is the REAL calendar
-     date, never the 4am-shifted todayKey the engine header warns against
-     borrowing — a diary filled at 3am belongs to today, not yesterday. When
-     the backfill row is open, its date wins so a missed morning is reachable. */
-  function slDiaryKey(){
-    var row=$('slForRow'), inp=$('slFor');
-    if(row&&!row.hidden&&inp&&/^\d{4}-\d{2}-\d{2}$/.test(inp.value))return inp.value;
-    return dkeyOf(new Date());
-  }
-
   /* ================= after zero: if-then plans =================
      Forming an if-then plan ("if CUE, then RESPONSE") is the one behaviour-
      change move here with meta-analytic support at essentially no cost.
@@ -3483,17 +3193,13 @@ try{
      then sleep, then the ordinary life the habit used to be wired into. */
   var ZERO_PHASES=[
     {d1:1,d2:7,t:'The peak week',
-     f:'Withdrawal crests days 2–6 and passes. Nothing here needs fixing — it needs outlasting.',
-     em:'sleep'},
+     f:'Withdrawal crests days 2–6 and passes. Nothing here needs fixing — it needs outlasting.'},
     {d1:8,d2:21,t:'The fade',
-     f:'Symptoms flatten out across weeks 2–3. Sleep is the one still moving, so it gets the attention.',
-     em:'sleep'},
+     f:'Symptoms flatten out across weeks 2–3. Sleep is the one still moving — expect odd nights and vivid dreams, and don\'t read into any single one.'},
     {d1:22,d2:42,t:'Maintenance',
-     f:'The receptor adjustment is largely done. What is left is habit, and habit lives in specific hours of specific days.',
-     em:'plans'},
+     f:'The receptor adjustment is largely done. What is left is habit, and habit lives in specific hours of specific days.'},
     {d1:43,d2:84,t:'Consolidation',
-     f:'Past the window where most returns happen. The window keeps titrating, the plans keep their hours, and the ladder keeps paying.',
-     em:'ladder'}
+     f:'Past the window where most returns happen. The plans keep their hours and the ladder keeps paying.'}
   ];
   function zeroPhaseFor(n){
     for(var i=0;i<ZERO_PHASES.length;i++){
@@ -4669,8 +4375,7 @@ try{
     {k:'flower',t:'The flower — in the trash, out of the house'},
     {k:'pieces',t:'Pieces, papers, grinder — gone or given away'},
     {k:'friend',t:'Friend reminded: tomorrow is zero day',tZ:'Friend reminded: today is zero day'},
-    {k:'backup',t:'Backup copied out to Notes — the record survives the phone'},
-    {k:'sleep',t:'Wake time set on the Tonight card — the anchor the window hangs off'}
+    {k:'backup',t:'Backup copied out to Notes — the record survives the phone'}
   ];
   function ritRowsHTML(r,onZ){
     return RITUAL_ITEMS.map(function(it){
@@ -6865,84 +6570,6 @@ try{
       ' · zero '+fmtShort(zeroDate());
   }
 
-  /* ---- after zero: tonight's window ----
-     The titration rule needs a baseline, and a baseline gathered after zero
-     is a baseline gathered during the worst week — so it is gathered before.
-     This opened in the final taper phase to match the check-in, which was
-     wrong by arithmetic rather than by taste: that phase is two days long,
-     so it could only ever hand SL_BASE=5 two nights and the window would
-     first be prescribed mid-peak-week. Opening three phases out gives six
-     mornings before zero, so the window exists on the day it is first
-     needed, with one night spare.
-     "Three phases out" was the same arithmetic bug one level up, though: it
-     counts rungs, and a rung is two days in the coarse ladder and one in the
-     finer one — so the half-step descent would have opened this four nights
-     before zero and been one short again. It asks in days now. The sleep
-     clause keeps it open if zero later moves out: the nights are already
-     being gathered, and a card that vanishes mid-diary is its own bug. */
-  function sleepActive(){
-    if(daysToZero()<=SL_BASE+1)return true;
-    for(var k in data.sleep)return true;
-    return false;
-  }
-  function renderSleep(){
-    var card=$('sleepCard');if(!card)return;
-    if(!sleepActive()){card.hidden=true;return;}
-    card.hidden=false;
-    var dk=slDiaryKey(), p=sleepPlan(), e=data.sleep[dk], n=sleepNight(dk);
-    var win=$('slWin'), chip=$('slChip');
-    if(p.state==='running'&&p.wake!==null){
-      win.hidden=false;
-      win.innerHTML='<span>'+min2hm(p.bed)+'</span><span class="sl-to">→</span><span>'+min2hm(p.wake)+
-        '</span><span class="sl-dur">'+slDur(p.win)+' in bed</span>';
-      chip.hidden=false;chip.textContent=p.nights.length+' night'+(p.nights.length===1?'':'s');
-    }else{
-      win.hidden=true;chip.hidden=true;
-    }
-    if(p.state==='baseline'){
-      /* say what's actually true and when the window arrives, rather than a
-         bare "N of 5" that never changes and never escalates. The window needs
-         SL_BASE nights; each night still missing pushes it a day past today. */
-      var short=p.need-p.have, proj=addDays(today,short);
-      var dz=daysToZero();
-      var lede='Logging the baseline — '+p.have+' of '+p.need+' nights.';
-      if(p.have===0&&dz>=0&&dz<short)
-        lede+=' At one a morning the window lands '+fmtShort(proj)+' — after zero ('+fmtShort(zeroDate())+'). Import from your ring to have it ready sooner, or log the last few mornings below.';
-      else if(dz>=0)
-        lede+=' The window is prescribed '+(short<=0?'now':fmtShort(proj)+', once the diary has '+p.need)+'. Sleep as you normally would — it is set from what happens, not what should.';
-      else
-        lede+=' '+short+' more to go; sleep as you normally would — the window is set from what actually happens, not what should.';
-      $('slLede').textContent=lede;
-    }else{
-      $('slLede').textContent='Into bed at '+min2hm(p.bed)+', up at '+min2hm(p.wake)+' — every day, including the ones after a bad night. Only go to bed inside the window, and only when sleepy.';
-    }
-    // the wake anchor lives here now, where the ritual says it does and where
-    // the diary is — it was only on the Plan tab's collapsed fold before
-    $('slWake2').value=data.sleepCfg.wake||'';
-    // the diary describes the night you just got up from, keyed to that morning
-    var dia=$('slDiary');
-    dia.hidden=false;
-    var bfOn=!$('slForRow').hidden;
-    $('slDHead').textContent=bfOn?'Editing '+fmtShort(dateOf(dk)):(e?'Last night — logged':'Last night');
-    $('slBackfill').textContent=bfOn?'Back to last night':'Log an earlier morning';
-    $('slIb').value=(e&&e.ib)||'';
-    $('slOb').value=(e&&e.ob)||'';
-    $('slLat').value=(e&&e.lat!==undefined&&e.lat!=='')?e.lat:'';
-    $('slWaso').value=(e&&e.waso!==undefined&&e.waso!=='')?e.waso:'';
-    $('slClear').hidden=!e;
-    var read=$('slRead');
-    if(n){
-      read.hidden=false;
-      var se=Math.round(n.se);
-      read.className='sl-read'+(se>=SL_UP?' good':se<SL_DOWN?' low':'');
-      read.innerHTML='<b>'+slDur(n.tst)+'</b> asleep of <b>'+slDur(n.tib)+'</b> in bed · efficiency <b>'+se+'%</b>'+
-        (p.state==='running'&&p.due>0?' · '+p.due+' more night'+(p.due===1?'':'s')+' before the window retitrates':'');
-    }else read.hidden=true;
-    $('slNote').textContent=p.state==='baseline'
-      ? 'Four numbers a morning. Estimates are fine — the rule only needs the shape, not a lab.'
-      : 'Efficiency at or above '+SL_UP+'% over a week earns 15 minutes back; under '+SL_DOWN+'% gives 15 up. The window never goes below '+slDur(SL_FLOOR)+'.';
-  }
-
   /* ---- after zero: the ladder ---- */
   function renderLadder(){
     var card=$('cmCard');if(!card)return;
@@ -6974,15 +6601,14 @@ try{
   /* ---- after zero: the whole program, on the Plan tab ---- */
   function renderAfter(){
     var fold=$('afterFold');if(!fold)return;
-    if(!sleepActive()){fold.hidden=true;return;}
+    // opens at zero and runs the twelve weeks — nothing here is pre-zero anymore
+    if(!isZeroEra){fold.hidden=true;return;}
     fold.hidden=false;
-    var n=isZeroEra?zeroCalDay():0, zp=isZeroEra?zeroPhaseFor(n):null;
-    $('afterFoldLive').textContent=isZeroEra?(zp?zp.t:'Graduated'):'Starts at zero';
+    var n=zeroCalDay(), zp=zeroPhaseFor(n);
+    $('afterFoldLive').textContent=zp?zp.t:'Graduated';
     // header: which of the twelve weeks this is, and what it is for
     var head='';
-    if(!isZeroEra){
-      head='<p class="zp-t">Starts at zero</p><p class="zp-f">The baseline is being gathered now so the sleep window is already set when zero arrives. Everything else here opens on zero day.</p>';
-    }else if(zp){
+    if(zp){
       head='<p class="zp-t">'+zp.t+' · day '+n+'</p><p class="zp-f">'+zp.f+'</p><div class="zp-bar">';
       for(var w=1;w<=12;w++){
         var cw=Math.ceil(n/7);
@@ -6990,50 +6616,11 @@ try{
       }
       head+='</div><p class="zp-f" style="font-size:11.5px;color:var(--muted)">Week '+Math.ceil(n/7)+' of 12 — the span the relapse data actually covers.</p>';
     }else{
-      head='<p class="zp-t">Graduated · day '+n+'</p><p class="zp-f">Past the twelve weeks the risk data maps. The window, the plans and the ladder all keep running — they just stop being a program.</p>';
+      head='<p class="zp-t">Graduated · day '+n+'</p><p class="zp-f">Past the twelve weeks the risk data maps. The plans and the ladder keep running — they just stop being a program.</p>';
     }
     $('zpHead').innerHTML=head;
-    renderSleepCtl();
     renderPlanList();
     renderCmBox();
-  }
-
-  /* The window explains itself the same way the descent does: every
-     titration the engine performed, in the order it performed them, each
-     one undoable. An adjustment you can't see or reverse is the failure
-     mode this app already learned once. */
-  function renderSleepCtl(){
-    var box=$('sleepCtl'),p=sleepPlan();
-    var rows='';
-    function row(cls,txt,act){
-      return '<div class="sc-row'+(cls?' '+cls:'')+'"><span class="sc-k">'+txt+'</span>'+(act||'')+'</div>';
-    }
-    (p.causes||[]).forEach(function(c){
-      var head=fmtShort(c.d)+' · <b>'+Math.round(c.se)+'%</b> — ';
-      if(c.kind==='start')rows+=row('',head+'baseline set the window to <b>'+slDur(c.win)+'</b>'+(c.floored?' (the '+slDur(SL_FLOOR)+' floor, not the average)':''));
-      else if(c.kind==='extend')rows+=row('',head+'earned '+SL_STEP+' minutes: '+slDur(c.from)+' → <b>'+slDur(c.to)+'</b>',
-        '<button class="sc-act" data-sl="decline" data-k="'+c.key+'">Undo</button>');
-      else if(c.kind==='contract')rows+=row('',head+'gave '+SL_STEP+' minutes up: '+slDur(c.from)+' → <b>'+slDur(c.to)+'</b>',
-        '<button class="sc-act" data-sl="decline" data-k="'+c.key+'">Undo</button>');
-      else if(c.kind==='floor')rows+=row('',head+'would have contracted, but <b>'+slDur(SL_FLOOR)+'</b> is the floor',
-        '<button class="sc-act" data-sl="decline" data-k="'+c.key+'">Undo</button>');
-      else if(c.kind==='hold')rows+=row('',head+'between '+SL_DOWN+'% and '+SL_UP+'% — window held at <b>'+slDur(c.win)+'</b>',
-        '<button class="sc-act" data-sl="decline" data-k="'+c.key+'">Undo</button>');
-      else rows+=row('declined',head+'titration declined, window left at <b>'+slDur(c.win)+'</b>',
-        '<button class="sc-act warn" data-sl="apply" data-k="'+c.key+'">Apply it</button>');
-    });
-    var wake=data.sleepCfg.wake||(p.wake!==null?min2hm(p.wake):'');
-    // no <h3> here: the section already titles this block, and renderSchedCtl's
-    // self-titling pattern doesn't apply to a card that isn't standing alone
-    box.innerHTML=
-      (p.state==='baseline'
-        ?'<p class="sc-sum">'+p.have+' of '+p.need+' nights logged. The window is prescribed from your own average sleep once the baseline is in — not from a number someone picked.</p>'
-        :'<p class="sc-zero">'+min2hm(p.bed)+' → '+min2hm(p.wake)+' · '+slDur(p.win)+' in bed</p>'+
-         '<p class="sc-sum">Re-derived from the diary every time this screen paints. Here is everything that set it:</p>')+
-      rows+
-      '<div class="sc-hand"><label style="font-size:11.5px;color:var(--muted);align-self:center">Fixed wake time</label>'+
-      '<input type="time" id="slWake" value="'+esc(wake)+'" style="font:inherit;font-size:13.5px;padding:7px 9px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--sand)"></div>'+
-      '<p class="sc-note">The wake time is the anchor and does not move — not for a bad night, not for a weekend. The bed time is what the window shifts. Sleep restriction deliberately builds sleep pressure, so expect to feel sleepier before you feel better; don\'t drive drowsy, and talk to a doctor first if you have bipolar disorder, a seizure disorder, a parasomnia, or untreated sleep apnea.</p>';
   }
 
   function renderPlanList(){
@@ -7088,7 +6675,7 @@ try{
     markSeenToday();   // witness today for the ladder before anything reads it
     [renderCountdown,renderStairs,renderPhases,renderTodayPlan,renderSchedCtl,renderSchedStrip,
      renderToday,renderYday,renderTrend,renderDayHead,renderJourney,renderHistory,renderHoldBanner,renderDayHeld,
-     renderRitual,renderCheckin,renderSleep,renderLadder,renderAfter,
+     renderRitual,renderCheckin,renderLadder,renderAfter,
      renderBackupNudge,renderStory,renderUrge,renderGap,renderGlass,renderDash,renderFoldSums,
      renderUndoRestore].forEach(safe);
     if(!$('detailOverlay').hidden)safe(renderXtras);
@@ -7313,74 +6900,7 @@ try{
     }
     if(!$('detailOverlay').hidden)renderXtras();
   });
-  /* ---- after zero: diary, window, plans, ladder ---- */
-  $('slSave').addEventListener('click',function(){
-    var ib=$('slIb').value,ob=$('slOb').value;
-    if(!ib||!ob){$('slNote').textContent='Both bed times are needed — the window is derived from how long you were in bed.';return;}
-    var dk=slDiaryKey();
-    var cand={ib:ib,ob:ob,lat:$('slLat').value===''?0:Math.max(0,+$('slLat').value||0),
-              waso:$('slWaso').value===''?0:Math.max(0,+$('slWaso').value||0)};
-    // validate before committing — a typo (lat+waso ≥ time in bed) used to set
-    // the window silently; warn instead of storing a 0%-efficiency night
-    var prev=data.sleep[dk]; data.sleep[dk]=cand;
-    if(!sleepNight(dk)){
-      if(prev)data.sleep[dk]=prev; else delete data.sleep[dk];
-      $('slNote').textContent='Those numbers don’t add up — the minutes to fall asleep plus minutes awake are longer than the whole time in bed. Check for a slipped digit.';
-      return;
-    }
-    save();renderAll();
-    if(navigator.vibrate)navigator.vibrate([10,50,14]);
-  });
-  $('slWake2').addEventListener('change',function(){
-    var v=this.value;
-    if(v)data.sleepCfg.wake=v; else delete data.sleepCfg.wake;
-    save();renderAll();
-  });
-  $('slBackfill').addEventListener('click',function(){
-    var row=$('slForRow');
-    row.hidden=!row.hidden;
-    if(!row.hidden&&!$('slFor').value)$('slFor').value=dkeyOf(addDays(new Date(),-1));
-    renderAll();
-  });
-  $('slFor').addEventListener('change',renderAll);
-  $('slClear').addEventListener('click',function(){
-    var dk=slDiaryKey();
-    delete data.sleep[dk];
-    /* a decision the engine made ABOUT this night stops describing anything
-       once the night is gone — same rule countChanged follows for a
-       corrected count, and for the same reason */
-    if(data.sleepCfg.declined[dk])delete data.sleepCfg.declined[dk];
-    save();renderAll();
-  });
-  $('slImportBtn').addEventListener('click',function(){
-    var msg=$('slImportMsg');msg.hidden=false;
-    var txt=$('slImportBox').value.trim();
-    if(!txt){msg.textContent='Paste what the Shortcut copied first.';return;}
-    var nights;
-    try{nights=parseSleepImport(txt);}
-    catch(e){msg.textContent=e.message;return;}
-    if(!nights.length){msg.textContent='No sleep nights found in that. Copy exactly what the Shortcut produced.';return;}
-    var r=importSleepNights(nights);
-    msg.textContent=r.added+' night'+(r.added===1?'':'s')+' added'+
-      (r.updated?', '+r.updated+' updated':'')+
-      (r.skipped?', '+r.skipped+' skipped as implausible':'')+'.';
-    $('slImportBox').value='';
-    renderAll();
-    if(navigator.vibrate)navigator.vibrate([10,50,14]);
-  });
-  $('sleepCtl').addEventListener('change',function(ev){
-    if(ev.target.id!=='slWake')return;
-    var v=ev.target.value;
-    if(v)data.sleepCfg.wake=v; else delete data.sleepCfg.wake;
-    save();renderAll();
-  });
-  $('sleepCtl').addEventListener('click',function(ev){
-    var b=ev.target.closest('[data-sl]');if(!b)return;
-    var k=b.dataset.k;
-    if(b.dataset.sl==='decline')data.sleepCfg.declined[k]=1;
-    else delete data.sleepCfg.declined[k];
-    save();renderAll();
-  });
+  /* ---- after zero: plans, ladder ---- */
   $('planList').addEventListener('click',function(ev){
     var b=ev.target.closest('[data-pl]');if(!b)return;
     var act=b.dataset.pl,ed=$('plEdit');
@@ -8030,31 +7550,6 @@ try{
     if(!$('dpOverlay').hidden&&dpKey===todayKey&&!dpEditOpen)safe(function(){dpRender(dpKey,true);});
     safe(feelLive);
   },30000);
-
-  /* Automatic sleep hand-off: a Shortcut can open the app at
-     …/index.html#sleep=<encoded JSON> and the nights import with no taps, then
-     the fragment is scrubbed from the URL and history so a reload can't
-     re-import or leak the data. The fragment never reaches a server. This is
-     the no-tap path; the paste box in the sleep card is the dependable one. */
-  function importFromHash(){
-    var h=location.hash||'';
-    var m=/[#&](?:sleep|oura)=([^&]+)/.exec(h);
-    if(!m)return;
-    var payload;
-    try{payload=decodeURIComponent(m[1]);}catch(e){return;}
-    // clear the fragment first, whatever happens next
-    try{history.replaceState(null,'',location.pathname+location.search);}catch(e){location.hash='';}
-    var nights;
-    try{nights=parseSleepImport(payload);}catch(e){return;}
-    if(!nights.length)return;
-    var r=importSleepNights(nights);
-    if(r.added||r.updated){
-      rcClear();renderAll();
-      try{var msg=$('slImportMsg');if(msg){msg.hidden=false;msg.textContent='Imported from your ring — '+r.added+' night'+(r.added===1?'':'s')+' added'+(r.updated?', '+r.updated+' updated':'')+'.';}}catch(e){}
-    }
-  }
-  safe(importFromHash);
-  window.addEventListener('hashchange',function(){safe(importFromHash);});
 
   renderAll();
   booted=true;
