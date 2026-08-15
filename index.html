@@ -3567,6 +3567,10 @@ try{
      onset 24–48h, peak days 2–6, fading over 2–3 weeks, sleep last.
      Past the adjustment window the marker days carry the story — each one
      a contingency-management stop: clean time pays for something real. */
+  /* How long the lapse reassurance stays on screen, in days of the new run.
+     One week, matching ckSlipWatch's window — the stretch the evidence calls
+     riskiest after a lapse, and the only stretch that line is written for. */
+  var SLIP_ECHO_D=7;
   var MARKERS=[
     [30,'One month. The loops that ran ten years are running on you now.'],
     [60,'Two months — the habit isn’t holding its breath anymore, and neither are you.'],
@@ -3640,13 +3644,34 @@ try{
        starting over. It fires on ANY reset now: cd>n means the calendar has
        run ahead of the run, which only happens after a slip. Reads the real
        calendar day so the physiology stays anchored to zero, not to the run. */
-    if(cd&&cd>n)return 'Day '+cd+' since zero · day '+n+' of a new run — withdrawal isn’t restarting, that adjustment closed '+(cd>29?'weeks ago':(cd-1)+' day'+(cd-1===1?'':'s')+' ago')+'. A lapse costs a run, never the physiology, and a first lapse predicts nothing — it’s the pattern that matters. The counter climbs again from here.';
+    var slipped=!!(cd&&cd>n);
+    /* ...but it belongs to the days right AFTER the lapse, not to the rest of
+       the person's life. As an unconditional early return it owned everything
+       that followed: cd stays ahead of n for good once a run has been broken,
+       so one slip on day three replaced the entire post-zero narrative
+       permanently — no marker countdown at day 30, 90 or 365, no maintenance
+       framing, just the same lapse reassurance every morning forever, while
+       the person who never slipped got the whole ladder. The line itself says
+       a first lapse predicts nothing; the code was making it predict
+       everything. It echoes for the first week of the new run — the same
+       window the check-in tightens for — and then the ordinary timeline
+       resumes. */
+    if(slipped&&n<=SLIP_ECHO_D)
+      return 'Day '+cd+' since zero · day '+n+' of a new run — withdrawal isn’t restarting, that adjustment closed '+(cd>29?'weeks ago':(cd-1)+' day'+(cd-1===1?'':'s')+' ago')+'. A lapse costs a run, never the physiology, and a first lapse predicts nothing — it’s the pattern that matters. The counter climbs again from here.';
+    /* Past the echo, both clocks keep running and each keeps its own job: the
+       physiology follows the calendar since zero, which no lapse restarted,
+       and the milestones follow the run, because "30 days clean" can only mean
+       thirty consecutive ones. Naming the run in the lead is what stops the
+       two from being read as the same number. */
+    var lead=slipped?'Day '+n+' of this run':'Day '+n;
     /* The acute rows read the clock the research is written in — hours since
        the last dose — and only fall back to the day count when nothing is
        logged to time from. The lapse guard above still runs first: after a
        slip the hours reset but the receptors do not, and being dragged back to
        "peak" by one hit is exactly the thing that copy exists to refuse. */
-    var aw=acuteWindow();
+    // after a lapse the hours run from the lapse, not from the quit — the one
+    // clock these rows must never be given
+    var aw=slipped?null:acuteWindow();
     if(aw&&n<=21){
       var hh=Math.floor(aw.h);
       // plain text only: one of this function's two call sites writes it into
@@ -3660,21 +3685,28 @@ try{
       if(aw.i===3)return aw.full+' full days since the last dose · past the peak. Withdrawal fades across 2–3 weeks — the grade flattens from here.';
       return aw.full+' full days since the last dose · weeks 2–3, the climb back to baseline. Odd sleep and vivid dreams settle last, and can run past a month — that’s recovery, not relapse risk.';
     }
-    if(n<=2)return 'Days 1–2 · if symptoms come, they start about now — and you arrive tapered, so expect the blunted version. Waves, not walls.';
-    if(n<=6)return 'Day '+n+' · the days-2–6 peak window — already shaved down by the step-down you did. This is as hard as it gets, and it passes.';
-    if(n<=13)return 'Day '+n+' · past the peak window. Withdrawal fades over 2–3 weeks — the grade flattens from here.';
-    if(n<=21)return 'Day '+n+' · weeks 2–3, the climb back to baseline. Odd sleep and vivid dreams settle last — that’s recovery, not relapse risk.';
-    if(n<=29)return 'Past the three-week mark — the receptor adjustment the research tracks is largely done. Mood still consistently low from here deserves a professional look; sleep alone gets until week four — it settles last. First marker ahead: day 30.';
+    /* the withdrawal rows only ever describe an unbroken stretch — after a
+       lapse the receptors are on the calendar's clock, which the row below
+       states outright rather than dressing the run up as physiology */
+    if(!slipped){
+      if(n<=2)return 'Days 1–2 · if symptoms come, they start about now — and you arrive tapered, so expect the blunted version. Waves, not walls.';
+      if(n<=6)return 'Day '+n+' · the days-2–6 peak window — already shaved down by the step-down you did. This is as hard as it gets, and it passes.';
+      if(n<=13)return 'Day '+n+' · past the peak window. Withdrawal fades over 2–3 weeks — the grade flattens from here.';
+      if(n<=21)return 'Day '+n+' · weeks 2–3, the climb back to baseline. Odd sleep and vivid dreams settle last — that’s recovery, not relapse risk.';
+    }else if(cd<=21){
+      return lead+' · '+cd+' days since zero, and the adjustment is still tracking that date — the lapse cost the run, not the progress underneath it. Odd sleep and vivid dreams settle last.';
+    }
+    if(n<=29)return lead+' · past the three-week mark'+(slipped?' since zero':'')+' — the receptor adjustment the research tracks is largely done. Mood still consistently low from here deserves a professional look; sleep alone gets until week four — it settles last. First marker ahead: day 30.';
     for(var i=0;i<MARKERS.length;i++){
-      if(n===MARKERS[i][0])return 'Day '+n+' · a marker day. '+MARKERS[i][1]+' If a reward was planned for this one, today it gets claimed.';
+      if(n===MARKERS[i][0])return lead+' · a marker day. '+MARKERS[i][1]+' If a reward was planned for this one, today it gets claimed.';
       if(n<MARKERS[i][0]){
         var t=taperProgress();
         var out=MARKERS[i][0]-n;
-        return 'Day '+n+' · maintenance now, not withdrawal. Next marker: day '+MARKERS[i][0]+', '+
+        return lead+' · maintenance now, not withdrawal. Next marker: day '+MARKERS[i][0]+', '+
           (out===1?'tomorrow':out+' days out')+' — worth deciding now what it earns'+(t.money?' (~$'+t.money+' already banked)':'')+'.';
       }
     }
-    return 'Day '+n+' · past every marker on the map. The counter only climbs.';
+    return lead+' · past every marker on the map. The counter only climbs.';
   }
 
   function renderCountdown(){
@@ -3952,7 +3984,17 @@ try{
     var box=$('schedCtl');if(!box)return;
     if(idx<0){box.hidden=true;return;}
     box.hidden=false;
-    var sch=schedule(), causes=sch.causes||[], z=zeroDate(), bz=baseZeroDate();
+    /* In the zero era the boundary the whole app counts from is the STAMPED
+       one (zeroDay), not the live derivation — that is the point of stamping
+       it. This card went on printing the live one, so correcting any taper-era
+       day afterwards left the schedule card announcing one zero date while the
+       header counted days from another, with nothing on screen admitting the
+       two were different numbers. Show what is actually being counted from,
+       and when the derivation has since drifted, say so instead of silently
+       picking a side. */
+    var sch=schedule(), causes=sch.causes||[], live=zeroDate(), bz=baseZeroDate();
+    var z=isZeroEra?zeroDay():live;
+    var drift=isZeroEra&&dkeyOf(live)!==dkeyOf(z);
     var moved=Math.round((z-bz)/MS_DAY);
     var rows='';
     // after zero the descent is history — its rows explain what happened but
@@ -4117,7 +4159,10 @@ try{
         :sch.rebased?' <span style="color:var(--sage)">· descent rebuilt '+fmtShort(dateOf(sch.rebased))+', re-entering at '+sch.rebCap+'</span>'
         :moved>0?' <span style="color:var(--amber)">· '+moved+' day'+(moved>1?'s':'')+' later than the original plan</span>'
         :moved<0?' <span style="color:var(--sage)">· '+(-moved)+' day'+(moved<-1?'s':'')+' earlier than the original plan</span>'
-        :' · exactly the original plan')+'</p>'+
+        :' · exactly the original plan')+
+        (isZeroEra?' <span style="color:var(--muted)">· stamped, and everything counts from here</span>':'')+'</p>'+
+      (drift?'<p class="sc-note" style="margin:0 0 10px">Correcting a taper day since then re-derives the descent to <b>'+
+        fmtShort(live)+'</b>, but the boundary above is the one already stamped and paid against, so it stands — the counters would otherwise jump every time an old day was edited. The record below still reflects the correction.</p>':'')+
       '<p class="sc-note" style="margin:0 0 10px">'+slackLine+'</p>'+
       '<p class="sc-sum">'+(rows
         ?'The descent is re-derived from your log every time this screen paints. Here is everything that moved it:'
@@ -5482,6 +5527,27 @@ try{
       $('gapNote').hidden=true;
       bell.style.display='none';
       var zTick=function(){
+        /* A day with a hit on it is not a withdrawal day, and the hero must
+           not narrate one. Reading the phase straight off the window put
+           "Peak · days 2–6 — the crest, timed from your last hit" directly
+           beside a ring reading 30m, half an hour after a dose: incoherent on
+           its face, and the clause about timing was false as well, since a
+           broken run moves the phase anchor to the zero date. What is true
+           and worth showing at that moment is the thing a slip cannot touch —
+           the banked total. The ring keeps running, because the run it is now
+           measuring started with that hit. */
+        if((countOf(todayKey)||0)>0){
+          var zsl=zeroStats(), aws=acuteWindow();
+          setTxt('ghSince',fmtClean(aws?aws.ms:0));
+          setGhRing(0);
+          wrap.classList.remove('open');
+          $('heroSlbl').textContent='Banked';
+          setTxt('heroScore',String(zsl?zsl.clean:0));
+          $('heroGrade').textContent='clean days';
+          $('ghRule').textContent='a slip never wipes the total';
+          $('ghNote').innerHTML='Logged today, so the run restarts — the total beside it does not. The clock here is already counting the next one.';
+          return;
+        }
         var aw=acuteWindow();
         if(!aw){
           setTxt('ghSince','—');setGhRing(0);
@@ -5788,8 +5854,22 @@ try{
     var pv=paceVsYesterday();
     var paceS=!pv?80:pv.t<pv.y?100:pv.t===pv.y?75:Math.max(40,75-10*(pv.t-pv.y));
     var total2=Math.round(capS*0.4+spaceS*0.25+sessS*0.2+paceS*0.15);
+    /* A day with nothing logged scores ~97 and used to be labelled "Locked
+       in" — a verdict on a day that has not happened. Every component reads
+       full marks from an empty record (nothing over cap, no session too big,
+       no gap too short), so the number is at its highest when it knows least,
+       and a 9am check-in got congratulated before the first window even
+       opened. The score still runs — it is a live compliance reading and that
+       is fine — but until the record has something in it the label says so
+       rather than passing judgement. */
+    var unread=!tM.sessions.length;
     return {total:total2,
-      label:total2>=85?'Locked in':total2>=70?'On track':total2>=55?'Holding':'Rough day — data, not doom',
+      /* em-dash split on purpose: the cockpit ring prints label.split(' — ')[0]
+         into a 140-wide SVG, where anything past ~10 characters runs off the
+         edge, so the short half leads and the explanation rides behind it —
+         the same shape 'Rough day — data, not doom' already uses. */
+      label:unread?'Nothing yet — nothing logged today'
+        :total2>=85?'Locked in':total2>=70?'On track':total2>=55?'Holding':'Rough day — data, not doom',
       parts:[
         {name:'Cap margin',score:capS},
         {name:'Session gaps',score:spaceS},
@@ -7437,11 +7517,18 @@ try{
     rows+=r('Earned since zero <span class="lb-s">(settled days)</span>',money(L.earned));
     rows+=r('Claimed',money(L.claimed));
     rows+=r('<b>Banked, unclaimed</b>',money(L.owed));
-    if(L.unaccounted)rows+=r('Days not accounted for <span class="lb-s">(app not opened — unpaid)</span>',String(L.unaccounted));
+    /* An unopened day does not just go unpaid — it BREAKS the run, which is
+       why this card can read "1 day running" beside a header saying 95 days
+       off and look, reasonably, like a bug. The rule is defensible (the
+       voucher trials counted a missed screen as a positive), but it was never
+       stated anywhere before it bit, and a number that contradicts the one
+       above it without explanation is a number people stop trusting. */
+    if(L.unaccounted)rows+=r('Days not accounted for <span class="lb-s">(app not opened — unpaid, and each one restarts the run)</span>',String(L.unaccounted));
     if(L.resets)rows+=r('Resets so far',String(L.resets));
     box.innerHTML=rows+
       '<div class="sc-hand">'+(L.owed>0?'<button class="pri" data-cm="claim">Claim '+money(L.owed)+'</button>':'')+
       '<button data-cm="who">'+(data.cm.who?'Verifier: '+esc(data.cm.who):'Name a verifier')+'</button></div>'+
+      (L.unaccounted?'<p class="sc-note"><b>Why the run here can trail the days-off counter.</b> This ladder pays only days it witnessed — a day the app never opened is not evidence of anything, so it goes unpaid <em>and</em> restarts the level, the same way a missed urine screen counted as a positive in the trials this is modelled on. The days-off counter above is a different measure and keeps every one of them. Opening the app is what witnesses a day; a nightly check-in does it too.</p>':'')+
       '<p class="sc-note">Escalating reinforcement with a reset on lapse is the schedule the contingency-management trials used, and it is the best-evidenced treatment for cannabis use disorder. One difference matters and is worth saying plainly: those trials verified abstinence with urine screens. A ladder you pay yourself on your own word is the weak form. Naming someone who holds the money and asks makes it closer to the thing that was actually tested.</p>';
   }
 
