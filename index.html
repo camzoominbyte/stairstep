@@ -496,6 +496,10 @@
   .gap-hero.open .gh-time{color:#c8d4bd}
   .gh-lbl{font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:#9c9080;font-weight:700}
   .hero-right{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;padding-right:40px}
+  /* no bell in the zero era, so nothing to clear — and the phase word is a
+     word, not a two-digit score, so it needs the room */
+  .gap-hero.zero .hero-right{padding-right:0}
+  .gap-hero.zero .hero-score{font-size:34px}
   .hero-slbl{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:#9c9080;font-weight:700}
   .hero-srow{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
   .hero-score{font-family:'Fraunces',serif;font-weight:600;font-size:44px;line-height:1;color:#f0e8da}
@@ -1495,7 +1499,7 @@ try{
         </div>
       </div>
       <div class="hero-right">
-        <span class="hero-slbl">Taper score</span>
+        <span class="hero-slbl" id="heroSlbl">Taper score</span>
         <div class="hero-srow">
           <span class="hero-score" id="heroScore">–</span>
           <span class="hero-grade" id="heroGrade"></span>
@@ -3569,6 +3573,61 @@ try{
     [90,'Ninety days — the marker treatment programs graduate on.'],
     [180,'Half a year clean.'],
     [365,'One year. The story card was written for this day.']];
+  /* ================= the acute window, timed from the last dose =================
+     Every number in the withdrawal literature is anchored to the last DOSE:
+     onset 24–48h after cessation, symptoms peaking across days 2–6, most of it
+     resolved inside two to three weeks, and sleep and dreams the last to
+     settle. (Connor et al., Addiction 2022 — the same review the taper's pace
+     comes from.)
+     This app read those windows off the day counter instead, which is a
+     CALENDAR count: "day 1" is the whole of the first logical day whether the
+     last hit landed at 12:05am or 11:55pm. So a last hit at 11pm on zero eve
+     got told "symptoms start about now" one hour in, and a log like this one —
+     last hit 5pm, zero dated the following day — ran the timeline half a day
+     ahead of the body it was describing. An early finish widens the same gap,
+     because zero is deliberately back-dated to a whole day.
+     Hours since the last hit is the honest clock, and it is the one the
+     research is written in. The day counter still owns the milestones (day 30,
+     60, 90 are counted in days, and mean days), so both live here, each
+     answering the question it is actually the right unit for. */
+  var ACUTE=[
+    {to:24,  k:'Quiet',    sub:'before onset',
+     n:'Withdrawal usually starts <strong>24–48h</strong> after the last dose, so this stretch is mostly habit rather than chemistry — which is not the same as easy.'},
+    {to:48,  k:'Onset',    sub:'the 24–48h window',
+     n:'The window where symptoms usually begin. You arrive tapered, so expect the blunted version of it.'},
+    {to:144, k:'Peak',     sub:'days 2–6',
+     n:'<strong>Days 2–6</strong> is the crest, timed from your last hit. It does not get worse than this, and it passes.'},
+    {to:336, k:'Fading',   sub:'days 7–14',
+     n:'The peak is behind you and the grade flattens across weeks 2–3. Sleep and vivid dreams settle last.'},
+    {to:504, k:'Settling', sub:'weeks 2–3',
+     n:'The climb back to baseline. Odd sleep can run past a month — that is recovery finishing, not relapse starting.'},
+    {to:1/0, k:'Settled',  sub:'past the acute window',
+     n:'Past the acute window the research tracks. What is left is habit, and habit lives in particular hours of particular days.'}
+  ];
+  /* null when nothing is logged — there is no last dose to time from, and the
+     day counter is then the only honest clock we have. */
+  function acuteWindow(){
+    var last=lastHitEver();
+    if(!last)return null;
+    var h=(Date.now()-last.getTime())/3600000;
+    if(h<0)h=0;                                  // a forward-dated import
+    /* The clock and the phase are two different questions, and a lapse is
+       where they come apart. Time since the last hit stays exactly that — it
+       is the run, and the ring says so. But the acute WINDOW is receptor
+       adaptation, and one hit on day five does not restart it: the physiology
+       has been adjusting since the quit began. So once a slip has broken the
+       run, the phase is measured from the zero boundary instead, which is the
+       same rule the timeline copy already keeps ("a lapse costs a run, never
+       the physiology"). Without this the hero announced a fresh days-2–6 peak
+       directly above a card explaining that withdrawal was not restarting. */
+    var ph=h;
+    if(isZeroEra&&zeroCalDay()>Math.max(0,daysFree()))
+      ph=Math.max(h,(Date.now()-zeroDay().getTime())/3600000);
+    for(var i=0;i<ACUTE.length;i++)if(ph<ACUTE[i].to)
+      return {h:h,ms:h*3600000,phase:ACUTE[i].k,sub:ACUTE[i].sub,note:ACUTE[i].n,
+              full:Math.floor(h/24),last:last,i:i};
+    return null;
+  }
   function zeroTimelineNote(n,cd){
     // cd = calendar days since zero, passed only by today's call sites.
     // A slip resets n (the run) but not the physiology — once the
@@ -3582,6 +3641,25 @@ try{
        run ahead of the run, which only happens after a slip. Reads the real
        calendar day so the physiology stays anchored to zero, not to the run. */
     if(cd&&cd>n)return 'Day '+cd+' since zero · day '+n+' of a new run — withdrawal isn’t restarting, that adjustment closed '+(cd>29?'weeks ago':(cd-1)+' day'+(cd-1===1?'':'s')+' ago')+'. A lapse costs a run, never the physiology, and a first lapse predicts nothing — it’s the pattern that matters. The counter climbs again from here.';
+    /* The acute rows read the clock the research is written in — hours since
+       the last dose — and only fall back to the day count when nothing is
+       logged to time from. The lapse guard above still runs first: after a
+       slip the hours reset but the receptors do not, and being dragged back to
+       "peak" by one hit is exactly the thing that copy exists to refuse. */
+    var aw=acuteWindow();
+    if(aw&&n<=21){
+      var hh=Math.floor(aw.h);
+      // plain text only: one of this function's two call sites writes it into
+      // textContent, where markup would show up as markup
+      if(aw.i===0)return 'Hour '+hh+' · the first day is usually the quiet one — cannabis withdrawal typically starts 24–48h after the last dose, so what you feel now is mostly the habit, not the chemistry. It is still the stretch where the reaching happens.';
+      if(aw.i===1)return 'Hour '+hh+' · the 24–48h onset window, where symptoms usually begin — and you arrive tapered, so expect the blunted version. Waves, not walls.';
+      if(aw.i===2)return 'Hour '+hh+' · the days-2–6 peak, measured from your last hit rather than the date — already shaved down by the step-down you did. This is as hard as it gets, and it passes.';
+      /* whole days ELAPSED, phrased as a duration — "day 6" beside a counter
+         reading "day 7 off" looks like a contradiction, when in fact six full
+         days done and being inside the seventh are the same fact in two units */
+      if(aw.i===3)return aw.full+' full days since the last dose · past the peak. Withdrawal fades across 2–3 weeks — the grade flattens from here.';
+      return aw.full+' full days since the last dose · weeks 2–3, the climb back to baseline. Odd sleep and vivid dreams settle last, and can run past a month — that’s recovery, not relapse risk.';
+    }
     if(n<=2)return 'Days 1–2 · if symptoms come, they start about now — and you arrive tapered, so expect the blunted version. Waves, not walls.';
     if(n<=6)return 'Day '+n+' · the days-2–6 peak window — already shaved down by the step-down you did. This is as hard as it gets, and it passes.';
     if(n<=13)return 'Day '+n+' · past the peak window. Withdrawal fades over 2–3 weeks — the grade flattens from here.';
@@ -4206,9 +4284,13 @@ try{
     var count=countOf(todayKey)||0;
     if(isZeroEra){
       card.classList.add('free');
-      $('heroCard').hidden=true;
+      /* the hero stays, minus its taper furniture: the ring is now the clean
+         clock and the right column the withdrawal phase, which is the pair of
+         numbers this era is actually about. Hiding the whole card was what
+         took the exact time-since-last-hit off the screen at zero. */
+      $('heroCard').hidden=false;
       $('streakChip').hidden=true;
-      $('tallyBtns').style.display='none'; // it lives inside #heroCard, which this branch hides
+      $('tallyBtns').style.display='none';
       $('statRow').style.display='none';
       $('btnEarlier').style.display='none';
       $('earlierRow').hidden=true;
@@ -5384,8 +5466,51 @@ try{
     if(gapTick){clearInterval(gapTick);gapTick=null;}
     if(winTimer){clearTimeout(winTimer);winTimer=null;}
     var wrap=$('gapHero'),bell=$('gapBell');
-    if(isZeroEra||idx<0){wrap.hidden=true;$('gapNote').hidden=true;return;}
+    if(idx<0){wrap.hidden=true;$('gapNote').hidden=true;return;}
+    /* Zero era: the ring stops being a countdown to the next session and
+       becomes the only thing it was ever really measuring — time since the
+       last dose. This used to be hidden the moment zero arrived, which threw
+       away the app's most precise number at exactly the point it turns into
+       the number that matters, leaving a whole-day counter to answer "how long
+       has it been". The ring fills across the acute window (the last hit → the
+       end of the days-2–6 peak) and then stays full: after that the honest
+       reading is that the acute part is behind you, not that a bar is still
+       loading. */
+    if(isZeroEra){
+      wrap.hidden=false;
+      wrap.classList.add('zero');
+      $('gapNote').hidden=true;
+      bell.style.display='none';
+      var zTick=function(){
+        var aw=acuteWindow();
+        if(!aw){
+          setTxt('ghSince','—');setGhRing(0);
+          setTxt('heroScore','—');
+          $('ghRule').textContent='clean';
+          $('ghNote').textContent='Nothing is logged, so there is no last dose to count from.';
+          return;
+        }
+        setTxt('ghSince',fmtClean(aw.ms));
+        setGhRing(Math.min(100,aw.h/144*100));
+        // sage once the peak is behind, the same signal "open" carries on the taper
+        wrap.classList.toggle('open',aw.i>=3);
+        $('heroSlbl').textContent='Withdrawal';
+        setTxt('heroScore',aw.phase);
+        $('heroGrade').textContent='';
+        $('ghRule').textContent=aw.sub;
+        /* the hero explains its own ring — the fuller day-by-day timeline
+           already runs on the Today card below, and printing it twice on one
+           screen is how a card stops being read */
+        $('ghNote').innerHTML=aw.note;
+      };
+      zTick();
+      gapTick=setInterval(zTick,20000);
+      return;
+    }
     wrap.hidden=false;
+    wrap.classList.remove('zero','open');
+    $('heroSlbl').textContent='Taper score';
+    bell.style.display='';
     var count=countOf(todayKey)||0;
     var gapH=phase.single?0:spacingHNow();
     var reqMs=gapH*3600000;
@@ -6853,6 +6978,15 @@ try{
   function fmtDur(ms){
     var m=Math.max(0,Math.floor(ms/60000)),h=Math.floor(m/60);
     return h?h+'h '+pad(m%60)+'m':m+'m';
+  }
+  /* The clean clock. Under two days it stays in hours and minutes, because
+     that is the unit the first two days are actually lived in; past that it
+     rolls to days and hours, because "168h 04m" is a number nobody reads. */
+  function fmtClean(ms){
+    if(!(ms>0))return '0m';
+    if(ms<48*3600000)return fmtDur(ms);
+    var h=Math.floor(ms/3600000);
+    return Math.floor(h/24)+'d '+(h%24)+'h';
   }
   /* The stretch running right now, once it has outgrown every closed gap of
      the day — one place decides it, so no two surfaces can disagree about
