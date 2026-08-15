@@ -799,9 +799,10 @@
   .sc-fine{margin-top:13px;padding-top:12px;border-top:1px solid var(--line)}
   .sc-fine .sc-note{margin-top:0}
   .sc-fine .sc-note b{color:var(--sand)}
-  /* standalone host for the landing offer on Today — the sc-fine separator
-     rule is for stacking inside the schedule card, not for a card of its own */
-  #landCard .sc-fine{border-top:none;margin-top:0;padding-top:0}
+  /* standalone hosts for the landing and finish offers on Today — the sc-fine
+     separator rule is for stacking inside the schedule card, not for a card
+     of its own */
+  #landCard .sc-fine,#finishCard .sc-fine{border-top:none;margin-top:0;padding-top:0}
 
   /* ---- collapsibles ---- */
   details{border:1px solid var(--line);border-radius:18px;background:var(--surface);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow-sm)}
@@ -1462,6 +1463,15 @@ try{
 <div class="schedctl" id="landCard" hidden>
   <h3>The fifth move</h3>
   <div id="landCardBody"></div>
+</div>
+
+<!-- the sixth move, and it leads for the same reason the fifth does: every
+     card below it — the hero, the tally, the session windows — is written for
+     a taper still running, and this one exists for the morning that stopped
+     being true. Also offered on the Plan tab's schedule card. -->
+<div class="schedctl" id="finishCard" hidden>
+  <h3>The sixth move</h3>
+  <div id="finishCardBody"></div>
 </div>
 
 <div class="ritual" id="ritualCard" hidden>
@@ -2514,6 +2524,27 @@ try{
            typeof lz.cap==='number'&&!!landRungAt(lz.cap)&&
            !(d.replan.rebase&&lz.at<=d.replan.rebase.at)))delete d.replan.landing;
     }
+    /* replan.finish {at:'YYYY-MM-DD',on:'YYYY-MM-DD'}: zero lands on `at`, and
+       every capped rung from there is one the person walked past. No cap to
+       validate — this anchor adds no rungs, it ends them — but it must postdate
+       both rebuild anchors for the same reason a landing must postdate a
+       rebase: the walk hands each anchor the days after it, and two anchors
+       claiming the same days is a corrupt save, not a schedule.
+       `on` is the day the move was TAKEN, and it is the only anchor here that
+       needs one: a rebuild is always anchored on the day it is chosen, while
+       this one back-dates to the day after the last hit. The undo window has
+       to key on the choice, not on the date it landed. A missing or malformed
+       `on` drops just that field — the record survives without its undo, which
+       is the safe direction to fail in. */
+    if(d.replan.finish!==undefined){
+      var fz=d.replan.finish;
+      if(!(fz&&typeof fz==='object'&&!(fz instanceof Array)&&
+           typeof fz.at==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(fz.at)&&
+           fz.at>dkeyOf(TAPER_START)&&
+           !(d.replan.rebase&&fz.at<=d.replan.rebase.at)&&
+           !(d.replan.landing&&fz.at<=d.replan.landing.at)))delete d.replan.finish;
+      else if(typeof fz.on!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(fz.on))delete fz.on;
+    }
     /* legacy holds: before the schedule self-adjusted, the banner's hold
        button wrote holdPrompts[day]='held' AND bumped data.holds — and since
        the banner fired the morning AFTER, the manual day usually landed on
@@ -2664,6 +2695,14 @@ try{
     for(ri=0;ri<BASE_PHASES.length;ri++)if(BASE_PHASES[ri].ld){
       ldKey=data.replan.landing.at;ldDate=dateOf(ldKey);break;
     }
+    /* The finish anchor. Read straight off data, not off the ladder like the
+       other two — it adds no rung to disagree about. It is the only anchor
+       that shortens the descent: every capped rung from here on is one the
+       person stopped needing before the calendar got to it, so the walk hands
+       them no days and zero starts on this date. */
+    var fnKey=(data.replan&&data.replan.finish)?data.replan.finish.at:null;
+    var fnDate=fnKey?dateOf(fnKey):null;
+    var fnOn=(data.replan&&data.replan.finish&&data.replan.finish.on)||null;
     function relbl(start,end){
       if(!end)return fmtShort(start)+' →';
       if(start.getMonth()===end.getMonth())return fmtShort(start)+'–'+end.getDate();
@@ -2727,6 +2766,15 @@ try{
         out.push({start:null,end:null,lbl:'',skipped:true,held:0,early:0,eased:0});
         continue;
       }
+      /* the same skip, from the other end of the plan. A rebuild steps PAST
+         rungs on its way to a new tail; the finish stops needing them at all.
+         This one covers landing rungs too — the early finish is exactly the
+         case where the rebuilt landing's own steps are the ones left unwalked,
+         and the guard above deliberately exempts them. */
+      if(p.days&&fnDate&&cur>=fnDate){
+        out.push({start:null,end:null,lbl:'',skipped:true,held:0,early:0,eased:0});
+        continue;
+      }
       var start=new Date(cur), end=null, auto=0, manual=holdsAt(i);
       // only a capped rung can absorb an eased day; handing one to the
       // zero phase (days:null) invents an adjustment that never happened
@@ -2745,6 +2793,10 @@ try{
         // rung stops at the rebase; a rebased rung stops at the landing.
         var stop=(rbDate&&!p.rb&&!p.ld)?rbDate:null;
         if(ldDate&&!p.ld&&(!stop||ldDate<stop))stop=ldDate;
+        // and every rung halts at the finish, whichever descent it belongs to:
+        // from that date the days are zero days, and a capped rung must not
+        // charge, defer or hold against one
+        if(fnDate&&(!stop||fnDate<stop))stop=fnDate;
         while(done<dur+auto){
           if(stop&&d>=stop)break;
           if(d<=lim){
@@ -2810,6 +2862,8 @@ try{
     out.rebCap=rebCapVal;               // its re-entry ceiling
     out.landed=ldKey;                   // 'YYYY-MM-DD' when a rebuilt landing is live
     out.ldCap=ldCapVal;                 // its re-entry ceiling
+    out.finished=fnKey;                 // 'YYYY-MM-DD' where an early finish landed zero
+    out.finishedOn=fnOn;                // and the day that choice was made
     return out;
   }
   function phaseIndexFor(day){
@@ -3705,6 +3759,15 @@ try{
   function landSuggest(){
     if(!isZeroEra)return null;
     if(data.replan.landing)return null;
+    /* not after an early finish. The fifth move is for a zero the calendar
+       imposed before the person was ready; an early finish is a zero they
+       chose ahead of it, with days of evidence behind it. A slip on that is a
+       lapse on a quit that had already started — the counter's business, the
+       territory the lapse copy already covers — and rebuilding a taper under
+       it would trade a working quit for more dosing days. It also keeps the
+       two tails from claiming the same days: one anchor ends the descent, the
+       other extends it, and they cannot both own the calendar from here. */
+    if(data.replan.finish)return null;
     if(data.ritual&&data.ritual.completedAt)return null;
     if(zeroCalDay()>7)return null;
     var z=zeroDay();
@@ -3746,6 +3809,66 @@ try{
       'Two footnotes, stated before you take it: a softer landing eases the withdrawal — it does not raise the odds, which get made after zero either way. And this move exists once. After this landing, zero is zero, and a slip there is the counter\'s business, not the schedule\'s.</p>'+
       '<div class="sc-hand"><button class="pri" data-sc="land" data-cap="'+sug.cap+'">Rebuild the landing — zero '+fmtShort(nz)+'</button></div>'+
       '<p class="sc-note">Leaving this untouched is also an answer: today stays a lapse on the quit\'s first stretch — recorded, survivable, and the counter climbs from tomorrow.</p></div>';
+  }
+  /* ================= the sixth move: finished early =================
+     Every other move in this app answers a descent that is behind its plan.
+     This one answers the opposite, and until it existed the app had no way to
+     hear it: the person stopped before the schedule did. The log goes quiet,
+     the caps keep coming, and the Today card goes on prescribing an evening
+     sitting to someone who has already had their last one — the plan stating
+     a fact instead of reading one, which is the failure this whole card
+     exists to prevent.
+     The date it lands on is not a choice. Withdrawal is timed from the last
+     dose, so the day after the last logged hit IS day one whatever the
+     calendar says; leaving zero three days out doesn't postpone anything, it
+     just mis-dates the counter, the twelve-week arc and every marker hung off
+     them. The move renames the day to the true one.
+     The one-day valve on the morning banner is the small version of this and
+     could never reach here: it takes a single day off the current rung, it
+     needs yesterday's count logged to fire at all, and no number of taps can
+     shorten a rung below one day — so a person two whole days past their last
+     hit has no path down. */
+  function finishSuggest(){
+    if(isZeroEra)return null;                         // there is nothing left to end
+    if(data.replan.finish)return null;                // taken; the schedule card owns the undo
+    if(idx<0||idx>=BASE_PHASES.length-1)return null;
+    if((countOf(todayKey)||0)>0)return null;          // today has a hit in it — not finished
+    var last=lastUseDay();
+    if(!last)return null;                             // nothing logged: no last dose to date this from
+    var first=addDays(last,1);
+    /* A day still in progress has not held — the same rule the morning banner
+       keeps ("exclude today so the banner never promises a day not yet held").
+       The evening is the hard part and it hasn't happened yet, so the earliest
+       honest zero day is one that has finished. */
+    if(dkeyOf(first)>=todayKey)return null;
+    var z=zeroDate();
+    if(first>=z)return null;                          // would move zero later, or not at all
+    var sch=schedule(), steps=[], i;
+    for(i=idx;i<BASE_PHASES.length-1;i++){
+      if(!sch[i].start||sch[i].skipped)continue;
+      if(sch[i].end&&sch[i].end<first)continue;       // a rung already fully walked
+      steps.push(BASE_PHASES[i].capText);
+    }
+    return {at:dkeyOf(first),first:first,
+            clear:Math.round((today-first)/MS_DAY),   // COMPLETE days at zero behind today
+            pulled:Math.round((z-first)/MS_DAY),      // how far the date comes in
+            lastHit:lastHitEver(),lastDay:last,steps:steps,z:z};
+  }
+  function finishOfferHTML(sug){
+    var f=sug.first, lh=sug.lastHit;
+    return '<div class="sc-fine"><p class="sc-note"><b>You got there before the schedule did.</b> '+
+      'The last hit on the record is '+(lh?fmtTime(lh)+' on ':'')+fmtShort(sug.lastDay)+'. Since then the log holds <b>'+
+      sug.clear+' complete day'+(sug.clear===1?'':'s')+' with nothing in '+(sug.clear===1?'it':'them')+'</b>, and today is at zero too — '+
+      'while the schedule still has '+(sug.steps.length?'<b>'+sug.steps.join(' → ')+'</b> to hand out':'capped days to hand out')+
+      ' and zero sitting on '+fmtShort(sug.z)+'. That is the plan describing a taper you have already finished walking.</p>'+
+      /* .sc-fine zeroes the top margin on its notes so the first one sits flush
+         under the rule; a second paragraph has to put it back */
+      '<p class="sc-note" style="margin-top:10px">So the sixth move, and the only one here that pulls the date toward you: <b>finish early</b>. '+
+      'Zero moves to <b>'+WEEKDAYS[f.getDay()]+', '+fmtShort(f)+'</b> — the day after your last hit, '+sug.pulled+' day'+(sug.pulled===1?'':'s')+
+      ' in from '+fmtShort(sug.z)+' — and the steps still on the calendar close unwalked, because they were dosing days and you have stopped needing them. '+
+      'Nothing about the withdrawal changes: that clock started at the last hit either way. What changes is that the counter, the twelve weeks and every marker after them start counting from the day your body actually did.</p>'+
+      '<div class="sc-hand"><button class="pri" data-sc="finish" data-k="'+sug.at+'">Finish early — zero '+fmtShort(f)+'</button></div>'+
+      '<p class="sc-note">Read the dates before you tap: this counts days the log left <em>empty</em> as days at zero. If anything belongs on one of them, log it from its day page first and this will re-read the record. Reversible today — after that the boundary is stamped and the road goes forward.</p></div>';
   }
   function renderSchedCtl(){
     var box=$('schedCtl');if(!box)return;
@@ -3871,6 +3994,19 @@ try{
         'would re-file those days against ceilings they were never held to.</p>'+
         '<div class="sc-hand"><button data-sc="unreb">Undo — back to the old descent</button></div></div>';
     }
+    /* the sixth move, offered and reversed in the same place as the rest.
+       Its undo stays available only on the day it was TAKEN — which is not the
+       date it landed on, so it keys off finishedOn. By tomorrow the zero anchor
+       is stamped and the counter has been paying against it. */
+    var fin='';
+    var fsg=finishSuggest();
+    if(fsg)fin=finishOfferHTML(fsg);
+    else if(sch.finishedOn===todayKey){
+      fin='<div class="sc-fine"><p class="sc-note">The descent was closed out today — zero moved back to <b>'+
+        fmtShort(dateOf(sch.finished))+'</b>, the day after the last hit on the record. '+
+        'It can still go back to the schedule as it stood; tomorrow the counter will have been paying against this boundary.</p>'+
+        '<div class="sc-hand"><button data-sc="unfinish">Undo — back to the schedule as it stood</button></div></div>';
+    }
     /* the fifth move lives here too — the schedule card is where every other
        move is offered and reversed, and the zero-era Today card carries the
        same offer where the moment actually finds you */
@@ -3898,7 +4034,8 @@ try{
       '<p class="sc-zero">Zero: '+WEEKDAYS[z.getDay()]+', '+fmtShort(z)+
         /* against a rebuilt descent, "later than the original plan" stops
            meaning anything — the honest annotation is the rebuild itself */
-        (sch.landed?' <span style="color:var(--sage)">· landing rebuilt '+fmtShort(dateOf(sch.landed))+', re-entering at '+(landRungAt(sch.ldCap)?landRungAt(sch.ldCap).capText:sch.ldCap)+'</span>'
+        (sch.finished?' <span style="color:var(--sage)">· finished early '+fmtShort(dateOf(sch.finished))+', the day after the last hit</span>'
+        :sch.landed?' <span style="color:var(--sage)">· landing rebuilt '+fmtShort(dateOf(sch.landed))+', re-entering at '+(landRungAt(sch.ldCap)?landRungAt(sch.ldCap).capText:sch.ldCap)+'</span>'
         :sch.rebased?' <span style="color:var(--sage)">· descent rebuilt '+fmtShort(dateOf(sch.rebased))+', re-entering at '+sch.rebCap+'</span>'
         :moved>0?' <span style="color:var(--amber)">· '+moved+' day'+(moved>1?'s':'')+' later than the original plan</span>'
         :moved<0?' <span style="color:var(--sage)">· '+(-moved)+' day'+(moved<-1?'s':'')+' earlier than the original plan</span>'
@@ -3909,7 +4046,7 @@ try{
         :isZeroEra
           ?'The descent ran exactly as drawn — every logged day landed at or under its cap.'
           :'Nothing has moved the descent yet — every logged day landed at or under its cap, and no hold was ever offered.')+'</p>'+
-      rows+hand+reb+land+fine+
+      rows+hand+fin+reb+land+fine+
       (isZeroEra?''
         :'<p class="sc-note">A day only holds its step when its <em>logged total</em> goes over that day\'s cap. A rough day that still landed under the cap won\'t move anything on its own — use the button above if the step needs more room, or correct the day\'s count from its day page and the whole descent re-adjusts.</p>');
   }
@@ -4080,6 +4217,7 @@ try{
       var lo=landSuggest();
       $('landCard').hidden=!lo;
       if(lo)$('landCardBody').innerHTML=landOfferHTML(lo);
+      $('finishCard').hidden=true;   // its whole condition is a taper still running
       $('todayEyebrow').textContent='Days off';
       setNum('tallyCount',Math.max(0,daysFree()),true);
       $('tallyCount').style.color=count>0?'var(--clay)':'var(--sage)';
@@ -4099,6 +4237,11 @@ try{
     }else{
       card.classList.remove('free');
       $('landCard').hidden=true;
+      /* the sixth move, surfaced above a hero that is still counting down to a
+         date the log has already passed */
+      var fo=finishSuggest();
+      $('finishCard').hidden=!fo;
+      if(fo)$('finishCardBody').innerHTML=finishOfferHTML(fo);
       $('heroCard').hidden=false;
       $('tallyBtns').style.display='flex';
       $('statRow').style.display='flex';
@@ -4877,7 +5020,17 @@ try{
     var z=zeroDate();
     var onEve=todayKey===dkeyOf(addDays(z,-1));
     var onZ=todayKey===dkeyOf(z);
-    if(!(onEve||onZ)){card.hidden=true;return;}
+    /* An early finish back-dates zero, so both of those can be false on the
+       first morning of a quit that has already begun — and the one card whose
+       job is to get the stash out of the house would never render at all. The
+       ritual is about the room, not the date: while a finish is live and the
+       list has never been completed, it stays open. It is also the reason the
+       finish can't simply be treated as "zero happened, move on" — the whole
+       point of the eve is that it is done before the first unmedicated night,
+       and finishing early skips the calendar slot it used to live in. */
+    var owed=isZeroEra&&!!data.replan.finish&&!(data.ritual&&data.ritual.completedAt);
+    if(!(onEve||onZ||owed)){card.hidden=true;return;}
+    if(owed)onZ=true;    // zero is already here; the copy should say so
     card.hidden=false;
     $('ritEyebrow').textContent=onZ?'The zero-day ritual':'The night-before ritual';
     var r=data.ritual;
@@ -4906,7 +5059,9 @@ try{
       return;
     }
     card.classList.remove('done');
-    $('ritLede').innerHTML=(onZ
+    $('ritLede').innerHTML=(owed
+      ?'Zero is already behind you — which means this list never got its night. It is the one piece the early finish skipped, and the only one that is about the room rather than the date: whatever is still in the house is still a loaded cue. '
+      :onZ
       ?'Zero day. Before anything else, finish stripping the environment — home shouldn’t be a loaded cue during the peak window. '
       :'Tomorrow the counter flips to days off. Tonight, strip the environment — cues drive use as much as chemistry. ')+
       '<a class="dlink" href="guide.html#relapse">The research →</a>';
@@ -7346,6 +7501,31 @@ try{
     /* undo restores the zero era; the anchor restamps itself on the next
        zero-era paint, to the same date the schedule still derives */
     else if(act==='unland'){delete data.replan.landing;relader();}
+    /* the finish: zero lands on the day after the last logged hit, and the
+       capped rungs from there close unwalked. Two pieces of housekeeping the
+       back-date makes necessary.
+       The frozen zero comes off so markSeenToday can restamp the boundary to
+       the earlier date — the same reason the landing clears it.
+       And the days between the new zero and today get witnessed. markSeenToday
+       only runs in the zero era, so days back-dated INTO it were never marked
+       — cmObserved would read every one of them as unaccounted and break the
+       run, on days the person has just testified to by name and date. The
+       tap is the witness, which is the same standing a nightly check-in has.
+       Only completed days: today gets its own mark from markSeenToday, on the
+       ordinary terms, once the evening has actually happened. */
+    else if(act==='finish'){
+      var fk=b.dataset.k;
+      var fd=dateOf(fk);
+      while(dkeyOf(fd)<todayKey){data.cm.seen[dkeyOf(fd)]=1;fd=addDays(fd,1);}
+      data.replan.finish={at:fk,on:todayKey};
+      delete data.zeroAt;
+      delete data.replan.lockFrom;   // it froze dates this move has just moved
+      relader();
+    }
+    /* undo puts the remaining rungs back. The witness marks stay: they record
+       that the app knew about those days, which stayed true, and cmObserved
+       only ever reads days at or after the zero anchor. */
+    else if(act==='unfinish'){delete data.replan.finish;delete data.zeroAt;relader();}
     else if(act==='hold')setHoldsAt(i,holdsAt(i)+1);
     else if(act==='unhold'){
       var m=holdsAt(i);
@@ -7356,6 +7536,7 @@ try{
   $('schedCtl').addEventListener('click',handleSchedAct);
   $('todayPlan').addEventListener('click',handleSchedAct);
   $('landCard').addEventListener('click',handleSchedAct);
+  $('finishCard').addEventListener('click',handleSchedAct);
   $('btnEarlier').addEventListener('click',function(){
     var r=$('earlierRow');
     r.hidden=!r.hidden;
