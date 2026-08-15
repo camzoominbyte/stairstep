@@ -26,7 +26,7 @@ A small personal PWA for tracking a 10-day cannabis taper (Jul 12–22, 2026), t
 - Flexible in both directions: a day already lived at the next cap can end its step a day early, pulling zero closer
 - And a sixth move for the opposite failure — a taper that ended before its schedule did. When the log holds a complete day with nothing on it and today is at zero too, the app offers to **finish early**: zero moves to the day after the last logged hit, the capped days still on the calendar close unwalked, and the counters re-date to the day withdrawal actually started (it is timed from the last dose either way). Reversible on the day it's taken; the zero-eve ritual stays open until it's done, since finishing early skips the evening it used to live on
 - "The story" capstone card in the zero era — the whole taper in numbers, shareable
-- Optional money-saved tracking (set a rough cost per hit in the trend detail)
+- Optional money-saved tracking: give it what a normal week used to cost and it derives the rest, since nobody can price a single hit but everyone knows the weekly number. Feeds the hero's running total and the reward ladder
 - Every chart is tap-to-expand (⤢) into a full-screen, fully labeled version — hour histogram, day punchcard, pace, avoided, day-vs-cap, nightly check-ins, and session gaps; swipe sideways (or tap the dots) to page between them, and lines draw themselves in
 - Rotate the phone for the cockpit: a full-bleed six-tile live dashboard (today, taper score ring, next-window countdown, urge timer, the week, zero day) — every tile taps through to its detail page
 - Tap any history row to correct its count

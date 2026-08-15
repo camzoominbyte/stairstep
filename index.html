@@ -2382,6 +2382,11 @@ try{
      matters: five days is roughly half the original plan's length, enough to
      absorb a genuinely bad patch and not enough for zero to walk away. */
   var SLACK_TOTAL=5;
+  /* The ~30/day starting point every "avoided" and money figure is measured
+     against. Declared up here with the other constants because normData reads
+     it to derive a cost per hit, and normData runs long before the rendering
+     half of this file — left further down, the migration divided by undefined. */
+  var BASELINE=30;
   var MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var WEEKDAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   var MS_DAY=86400000;
@@ -2522,6 +2527,19 @@ try{
     // only against positive evidence it happened — otherwise a relapse the
     // user stops logging reads as an unbroken clean streak and pays for it.
     d.cm.seen=d.cm.seen||{};
+    /* money settings. spendPerWeek is what the user actually typed;
+       costPerHit is the derived unit every money surface multiplies by. A
+       stored weekly figure always wins, so a hand-edited backup can't leave
+       the two disagreeing about what a day is worth. */
+    if(d.spendPerWeek!==undefined){
+      var spw=Number(d.spendPerWeek);
+      if(isFinite(spw)&&spw>0){d.spendPerWeek=spw;d.costPerHit=spw/7/BASELINE;}
+      else{delete d.spendPerWeek;}
+    }
+    if(d.costPerHit!==undefined){
+      var cph=Number(d.costPerHit);
+      if(isFinite(cph)&&cph>0)d.costPerHit=cph;else{delete d.costPerHit;delete d.spendPerWeek;}
+    }
     d.replan=d.replan||{};   // {lockFrom:'YYYY-MM-DD'} — the date stops moving from here
     /* replan.rebase {at:'YYYY-MM-DD',cap:N}: from `at`, the descent is rebuilt
        out of cap N in half-steps of two days each. Malformed → dropped whole:
@@ -5884,7 +5902,6 @@ try{
     ((ye&&ye.hits)||[]).forEach(function(iso){if(new Date(iso).getTime()<=yCut)yCount++;});
     return {y:yCount,t:countOf(todayKey)||0};
   }
-  var BASELINE=30; // the ~30/day starting point the copy references
   /* dayTotals()/progressStats() lived here — absorbed into taperProgress() */
   /* Oura-style daily score: weighted contributors, all from logged data */
   function scoreToday(){
@@ -6309,7 +6326,7 @@ try{
     var money=(data.costPerHit&&maxV>0)?Math.round(maxV*data.costPerHit):null;
     return roChart(svg,'Slide along the line — it only ever rises.')+
       '<p class="chart-note">Every hit under the ~'+BASELINE+'/day baseline, stacking up since day one.'+
-      (money!==null?' At your cost per hit that’s <strong>≈ $'+money.toLocaleString()+'</strong> not spent.':'')+'</p>';
+      (money!==null?' At '+(data.spendPerWeek?'about $'+data.spendPerWeek+' a week':'your rate')+' that’s <strong>≈ $'+money.toLocaleString()+'</strong> not spent.':'')+'</p>';
   }
 
   function bigTrendHTML(){
@@ -7324,8 +7341,8 @@ try{
         '<div class="stat" style="animation:none"><span class="sv" style="color:var(--sage)">'+tp.avoided+'</span><span class="sl">hits not smoked</span></div>'+
         '<div class="stat" style="animation:none"><span class="sv">'+tp.streak+'</span><span class="sl">day streak held</span></div></div>';
       html2+=(tp.money!==null)
-        ?'<p class="chart-note">≈ <strong style="color:var(--sage)">$'+tp.money.toLocaleString()+'</strong> not spent vs the ~'+BASELINE+'/day baseline · <button class="linklike" id="costSet">edit cost</button></p>'
-        :'<p class="chart-note"><button class="linklike" id="costSet">Track money saved →</button></p>';
+        ?'<p class="chart-note">≈ <strong style="color:var(--sage)">$'+tp.money.toLocaleString()+'</strong> not spent vs the ~'+BASELINE+'/day baseline'+(data.spendPerWeek?', at about $'+data.spendPerWeek+' a week':'')+' · <button class="linklike" id="costSet">edit weekly spend</button></p>'
+        :'<p class="chart-note"><button class="linklike" id="costSet">Track money saved — what did a normal week cost? →</button></p>';
       var av=avoidedChartSVG();
       if(av){
         html2+='<h3 class="xtra-h" style="margin-top:16px">What you didn’t smoke</h3>'+zoomable('avoided',av)+
@@ -7961,12 +7978,18 @@ try{
   /* money saved: opt-in, needs one rough number */
   document.addEventListener('click',function(ev){
     if(!ev.target.closest('#costSet'))return;
-    var cur=data.costPerHit||'';
-    var v=prompt('About how much does one hit cost, in dollars? Rough is fine — e.g. 0.50. Leave blank to stop tracking.',cur);
+    /* Ask in the unit people actually know. Nobody can price a single hit —
+       the honest answer to that question is a shrug and a guess — but everyone
+       knows roughly what a week costs them. Divide here instead, against
+       BASELINE, which is the same number every money surface multiplies back
+       by: a fully clean day is then worth exactly one seventh of the weekly
+       figure, so the arithmetic closes instead of drifting. */
+    var cur=data.spendPerWeek||(data.costPerHit?Math.round(data.costPerHit*BASELINE*7):'');
+    var v=prompt('About how much did a normal week cost you, in dollars? Rough is fine — e.g. 120. Leave blank to stop tracking.',cur);
     if(v===null)return;
     var n=parseFloat(v);
-    if(String(v).trim()===''){delete data.costPerHit;}
-    else if(n>0){data.costPerHit=n;}
+    if(String(v).trim()===''){delete data.costPerHit;delete data.spendPerWeek;}
+    else if(n>0){data.spendPerWeek=n;data.costPerHit=n/7/BASELINE;}
     else return;
     save();renderAll();
     if(!$('detailOverlay').hidden)renderXtras();
