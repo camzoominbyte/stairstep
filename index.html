@@ -494,7 +494,21 @@
     color:#f0e8da;font-variant-numeric:tabular-nums;
   }
   .gap-hero.open .gh-time{color:#c8d4bd}
+  /* seconds ride under the big units rather than inside them: "1d 17h 09m 32s"
+     on one line overflows a 126px ring, and the two-line split keeps the
+     leading number readable at a glance while the tail does the ticking */
+  .gh-sec{font-size:12.5px;font-weight:700;color:#c2b49d;font-variant-numeric:tabular-nums;letter-spacing:.03em}
+  .gh-sec[hidden]{display:none}
+  .gap-hero.open .gh-sec{color:#b6c3a8}
   .gh-lbl{font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:#9c9080;font-weight:700}
+  /* the gains strip: what the clock is earning, on the same card as the clock */
+  .gh-gains{display:flex;gap:8px;margin-top:11px;padding-top:10px;border-top:1px solid rgba(240,232,218,.1)}
+  .gh-gains[hidden]{display:none}
+  .gh-gain{flex:1;min-width:0}
+  .gh-gain b{display:block;font-family:'Fraunces',serif;font-weight:600;font-size:19px;
+    line-height:1.1;color:#f0e8da;font-variant-numeric:tabular-nums}
+  .gh-gain span{display:block;font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;
+    color:#9c9080;font-weight:700;margin-top:2px}
   .hero-right{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;padding-right:40px}
   /* no bell in the zero era, so nothing to clear — and the phase word is a
      word, not a two-digit score, so it needs the room */
@@ -1493,8 +1507,13 @@ try{
           <circle class="ring-track" cx="70" cy="70" r="60"/>
           <circle class="ring-fill" id="ghRing" cx="70" cy="70" r="60" transform="rotate(-90 70 70)"/>
         </svg>
+        <!-- the clock ticks once a second, so it must not be an aria-live
+             region: a screen reader would read it aloud every second and the
+             page would be unusable. The wrapper carries a coarse label that
+             only changes when the minute does. -->
         <div class="ring-inner">
-          <span class="gh-time" id="ghSince" role="status">–</span>
+          <span class="gh-time" id="ghSince">–</span>
+          <span class="gh-sec" id="ghSub" aria-hidden="true" hidden></span>
           <span class="gh-lbl" id="ghLbl">since last hit</span>
         </div>
       </div>
@@ -1509,6 +1528,8 @@ try{
       <button class="gap-bell" id="gapBell" type="button" aria-label="Remind me to wait when the window opens">🔕</button>
     </div>
     <p class="gh-note" id="ghNote"></p>
+    <!-- what the clock above is buying, counted from the same instant -->
+    <div class="gh-gains" id="ghGains" hidden></div>
   </div>
   <div class="tally-btns" id="tallyBtns">
     <button class="minus" id="btnMinus" aria-label="Remove one hit">−1</button>
@@ -3714,7 +3735,11 @@ try{
     if(isZeroEra){
       var n=daysFree();
       var zs=zeroStats();
-      $('countdown').innerHTML='Zero date cleared. <strong>Day '+Math.max(0,n)+'</strong> off.'+
+      // exact first, ordinal second — the header was the other surface saying
+      // "Day 2 off" while the clock underneath it read 41 hours
+      var x=zeroExact();
+      $('countdown').innerHTML=(x?'<strong>'+x+'</strong> since the last hit · day '+Math.max(0,n)
+                                 :'Zero date cleared. <strong>Day '+Math.max(0,n)+'</strong> off')+
         (zs&&zs.slips?' · '+zs.clean+' clean total · best run '+zs.best:'');
     }else{
       var left=taperProgress().daysToZero;
@@ -4345,11 +4370,13 @@ try{
       $('landCard').hidden=!lo;
       if(lo)$('landCardBody').innerHTML=landOfferHTML(lo);
       $('finishCard').hidden=true;   // its whole condition is a taper still running
-      $('todayEyebrow').textContent='Days off';
+      // "Day", not "Days off" — it is the ordinal you are living, and the
+      // exact elapsed beside it is what says how far into it you are
+      $('todayEyebrow').textContent='Day';
       setNum('tallyCount',Math.max(0,daysFree()),true);
       $('tallyCount').style.color=count>0?'var(--clay)':'var(--sage)';
+      $('capLabel').textContent=zeroCapLabel();
       var zs0=zeroStats();
-      $('capLabel').textContent=(zs0&&zs0.slips)?'this run · '+zs0.clean+' clean in total':'and climbing';
       if(count>0){
         $('barFill').style.width='100%';$('barFill').style.background='var(--clay)';
         $('barNote').textContent='Slip logged. Data, not doom — every clean day stays banked ('+(zs0?zs0.clean:0)+' so far). Tomorrow the run restarts; the total never resets.';
@@ -5502,6 +5529,19 @@ try{
       }else{new Notification('Try to stretch it a little longer',{body:body});}
     }catch(e){}
   }
+  /* One place writes the ring's clock, so the two lines can never disagree
+     about which instant they are showing. Writes only on change: at 1Hz an
+     unconditional textContent set is a layout thrash a second, forever. */
+  function setClock(sp){
+    var a=$('ghSince'), b=$('ghSub');
+    if(a&&a.textContent!==sp.big)a.textContent=sp.big;
+    if(!b)return;
+    if(sp.small){
+      if(b.textContent!==sp.small)b.textContent=sp.small;
+      if(b.hidden)b.hidden=false;
+    }else if(!b.hidden)b.hidden=true;
+  }
+  var zLastMin=-1;   // last minute the once-a-minute zero-era surfaces painted
   var GH_CIRC=2*Math.PI*60;
   function setGhRing(pct){
     var c=$('ghRing');if(!c)return;
@@ -5537,8 +5577,8 @@ try{
            the banked total. The ring keeps running, because the run it is now
            measuring started with that hit. */
         if((countOf(todayKey)||0)>0){
-          var zsl=zeroStats(), aws=acuteWindow();
-          setTxt('ghSince',fmtClean(aws?aws.ms:0));
+          var zsl=zeroStats(), aws=acuteWindow(), sps=splitClean(aws?aws.ms:0);
+          setClock(sps);
           setGhRing(0);
           wrap.classList.remove('open');
           $('heroSlbl').textContent='Banked';
@@ -5546,17 +5586,22 @@ try{
           $('heroGrade').textContent='clean days';
           $('ghRule').textContent='a slip never wipes the total';
           $('ghNote').innerHTML='Logged today, so the run restarts — the total beside it does not. The clock here is already counting the next one.';
+          $('ghGains').hidden=true;
           return;
         }
         var aw=acuteWindow();
         if(!aw){
-          setTxt('ghSince','—');setGhRing(0);
+          setClock({big:'—',small:''});setGhRing(0);
           setTxt('heroScore','—');
           $('ghRule').textContent='clean';
           $('ghNote').textContent='Nothing is logged, so there is no last dose to count from.';
+          $('ghGains').hidden=true;
           return;
         }
-        setTxt('ghSince',fmtClean(aw.ms));
+        setClock(splitClean(aw.ms));
+        var gn=cleanGains(aw.ms);
+        $('ghGains').hidden=false;
+        $('ghGains').innerHTML=gainsHTML(gn);
         setGhRing(Math.min(100,aw.h/144*100));
         // sage once the peak is behind, the same signal "open" carries on the taper
         wrap.classList.toggle('open',aw.i>=3);
@@ -5568,9 +5613,20 @@ try{
            already runs on the Today card below, and printing it twice on one
            screen is how a card stops being read */
         $('ghNote').innerHTML=aw.note;
+        /* the header and the day card carry the same elapsed figure, but they
+           only change once a minute — repainting their markup every second to
+           show an identical string is work nobody sees */
+        var mn=Math.floor(aw.ms/60000);
+        if(mn!==zLastMin){
+          zLastMin=mn;
+          safe(renderCountdown);
+          var cl=$('capLabel');if(cl)cl.textContent=zeroCapLabel();
+        }
       };
       zTick();
-      gapTick=setInterval(zTick,20000);
+      // once a second: this clock is the point of the screen, and a number
+      // that jumps in twenty-second steps reads as stalled rather than live
+      gapTick=setInterval(zTick,1000);
       return;
     }
     wrap.hidden=false;
@@ -5583,11 +5639,17 @@ try{
     $('ghRule').textContent=phase.single?'evening only':'today’s gap · '+fmtGapH(gapH);
     var last=lastHitEver();
     var openTs=(last&&reqMs>0)?last.getTime()+reqMs:0;
+    /* The taper clock ticks every second too — the stretch since the last hit
+       IS the taper, and watching it move is most of what this card is for.
+       Only the clock runs at 1Hz: the sticky-bar window and yesterday's live
+       rail re-read day metrics, so they keep the old twenty-second cadence
+       rather than doing that work sixty times a minute. */
+    var beat=0;
     function tick(){
-      renderGlassWin();
-      safe(ydLiveTick);
+      if(beat%20===0){renderGlassWin();safe(ydLiveTick);}
+      beat++;
       if(!last){
-        $('ghSince').textContent='—';
+        setClock({big:'—',small:''});
         setGhRing(0);
         wrap.classList.remove('open');
         $('ghNote').innerHTML='Nothing logged yet — the clock starts at the first hit. '+
@@ -5595,7 +5657,7 @@ try{
         return;
       }
       var since=Date.now()-last.getTime();
-      $('ghSince').textContent=fmtDur(since);
+      setClock(splitClean(since));
       if(count>=cap){
         wrap.classList.add('open');
         setGhRing(100);
@@ -5635,7 +5697,7 @@ try{
       }
     }
     tick();
-    gapTick=setInterval(tick,20000);
+    gapTick=setInterval(tick,1000);
     // precise foreground alert at the moment the window opens
     var untilOpen=openTs-Date.now();
     if(count<cap&&untilOpen>0&&untilOpen<24*3600000){
@@ -7059,14 +7121,49 @@ try{
     var m=Math.max(0,Math.floor(ms/60000)),h=Math.floor(m/60);
     return h?h+'h '+pad(m%60)+'m':m+'m';
   }
-  /* The clean clock. Under two days it stays in hours and minutes, because
-     that is the unit the first two days are actually lived in; past that it
-     rolls to days and hours, because "168h 04m" is a number nobody reads. */
-  function fmtClean(ms){
-    if(!(ms>0))return '0m';
-    if(ms<48*3600000)return fmtDur(ms);
-    var h=Math.floor(ms/3600000);
-    return Math.floor(h/24)+'d '+(h%24)+'h';
+  /* The clean clock, split so the ring can show all of it. The leading pair of
+     units is the number you read at a glance; the tail is what ticks.
+     Days lead as soon as there is one, and that is the point rather than a
+     formatting preference: "41h 09m" beside a counter reading DAY 2 is what
+     made the app look like it was rounding 1¾ days up to two. "1d 17h" cannot
+     be misread that way — it says exactly how far past one day you are. */
+  function splitClean(ms){
+    if(!(ms>0))ms=0;
+    var s=Math.floor(ms/1000), m=Math.floor(s/60), h=Math.floor(m/60), d=Math.floor(h/24);
+    if(h<1)  return {big:m+'m '+pad(s%60)+'s', small:'',                     plain:m+'m'};
+    if(d<1)  return {big:h+'h '+pad(m%60)+'m', small:pad(s%60)+'s',          plain:h+'h '+pad(m%60)+'m'};
+    return     {big:d+'d '+(h%24)+'h',        small:pad(m%60)+'m '+pad(s%60)+'s',
+                plain:d+'d '+(h%24)+'h '+pad(m%60)+'m'};
+  }
+  function fmtClean(ms){return splitClean(ms).plain;}
+  /* What the clock is buying, counted continuously from the same instant so it
+     moves with it instead of stepping once a midnight. Against the ~30/day
+     baseline the rest of the app measures everything against. */
+  function cleanGains(ms){
+    var notTaken=Math.floor(Math.max(0,ms)/86400000*BASELINE);
+    return {notTaken:notTaken,
+            money:(data.costPerHit&&notTaken>0)?Math.round(notTaken*data.costPerHit):null,
+            urges:(data.urges||[]).length};
+  }
+  /* "DAYS OFF · 2" beside a ring reading 41h was the app rounding 1¾ days up
+     and calling it two. The day number itself is right and has to stay — the
+     markers, the ladder and the twelve-week arc are all counted in calendar
+     days and mean calendar days — so what changes is that it stops standing
+     alone: the ordinal says which day you are in, and the exact elapsed sits
+     next to it saying how much of it is actually behind you. */
+  function zeroExact(){var aw=acuteWindow();return aw?splitClean(aw.ms).plain:null;}
+  function zeroCapLabel(){
+    var zs=zeroStats();
+    if((countOf(todayKey)||0)>0)return 'run restarts tomorrow · '+(zs?zs.clean:0)+' banked';
+    var x=zeroExact();
+    if(!x)return 'and climbing';
+    return x+' clean'+(zs&&zs.slips?' · '+zs.clean+' banked in total':'');
+  }
+  function gainsHTML(g){
+    var t='<div class="gh-gain"><b>'+g.notTaken.toLocaleString()+'</b><span>not taken</span></div>';
+    if(g.money!==null)t+='<div class="gh-gain"><b>$'+g.money.toLocaleString()+'</b><span>saved</span></div>';
+    if(g.urges)t+='<div class="gh-gain"><b>'+g.urges+'</b><span>urges outlasted</span></div>';
+    return t;
   }
   /* The stretch running right now, once it has outgrown every closed gap of
      the day — one place decides it, so no two surfaces can disagree about
