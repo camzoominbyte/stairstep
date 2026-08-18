@@ -4159,33 +4159,48 @@ try{
   function restartSuggest(){
     if(!isZeroEra)return null;
     if(data.replan.restart)return null;
-    var vals=[],d=new Date(today),tries=0;
-    while(vals.length<3&&tries<10){
+    /* Only the CURRENT run of using days: walk back from yesterday and stop at
+       the first clean one. Reaching further crosses the stretch the quit
+       actually held and starts picking up days from the taper before it, which
+       is how a re-entry ceiling came out BELOW what the log shows happening
+       now — three clean days in the middle, and a median of "2, 15, 5" reads
+       5 while yesterday was 15. A ceiling the day is already over by lunchtime
+       is not the plan meeting the days, it is the plan setting them up. */
+    var run=[],d=addDays(today,-1),tries=0;
+    while(tries<21){
       var c=countOf(dkeyOf(d));
-      if(c!==null&&c>0)vals.push(c);
-      d=addDays(d,-1);tries++;
+      if(c===null||c===0)break;
+      run.push(c);d=addDays(d,-1);tries++;
     }
-    if(!vals.length)return null;                     // nothing logged: nothing to read
-    var med=vals.length>=3?vals.slice().sort(function(a,b){return a-b;})[1]
-           :Math.max.apply(null,vals);
+    var tc=countOf(todayKey)||0;
+    if(!run.length&&tc<=0)return null;
+    /* Complete days set the ceiling; today can only raise it. A day still
+       being lived has no business arguing the ceiling DOWN — it is not
+       finished — but it must not be born over its own ceiling either, which is
+       the same floor the rebuilt landing's re-entry keeps. */
+    var med=run.length>=3?run.slice(0,3).sort(function(a,b){return a-b;})[1]
+           :run.length?Math.max.apply(null,run):0;
+    var need=Math.max(med,tc,1);
     var pool=FINE_RUNGS.concat(COARSE_RUNGS).filter(function(q){return q.cap>0;})
       .sort(function(a,b){return a.cap-b.cap;});
     var rung=null;
-    for(var i=0;i<pool.length;i++)if(pool[i].cap>=med){rung=pool[i];break;}
+    for(var i=0;i<pool.length;i++)if(pool[i].cap>=need){rung=pool[i];break;}
     if(!rung)rung=COARSE_RUNGS[0];
-    // days in the last week carrying hits — the "pattern, not one night" test
-    var days=0;
-    for(i=0;i<7;i++)if((countOf(dkeyOf(addDays(today,-i)))||0)>0)days++;
-    return {cap:rung.cap,capText:rung.capText,med:med,last:vals.slice().reverse(),
-            days:days,pattern:days>=3,
+    // a return is days, not a night: today counts toward the pattern, but on
+    // its own it is still the lapse the counter already handles
+    var using=run.length+(tc>0?1:0);
+    return {cap:rung.cap,capText:rung.capText,med:med,run:run.slice(0,3).reverse(),
+            todayC:tc,days:using,pattern:using>=2,
             newZero:addDays(today,rsLen(rung.cap)),
-            held:Math.max(0,daysFree()),banked:(zeroStats()||{}).clean||0};
+            banked:(zeroStats()||{}).clean||0};
   }
   function restartOfferHTML(sug){
     var nz=sug.newZero;
     return '<div class="sc-fine"><p class="sc-note"><b>Using again, and the ladder is behind you.</b> '+
-      'The last '+(sug.last.length===1?'logged day':sug.last.length+' logged days')+' came in at <b>'+sug.last.join(', ')+
-      '</b>, against a plan that has nothing left to hand out — the descent finished, and what is on the other side of it is not a schedule, it is a counter. '+
+      (sug.run.length?'The last '+(sug.run.length===1?'full day':sug.run.length+' full days')+' of it came in at <b>'+sug.run.join(', ')+
+        '</b>'+(sug.todayC?', and today is at <b>'+sug.todayC+'</b> already':'')
+       :'Today is at <b>'+sug.todayC+'</b>')+
+      ', against a plan that has nothing left to hand out — the descent finished, and what is on the other side of it is not a schedule, it is a counter. '+
       'That is the one thing this app could not do for you until now: a return had no move, only a smaller number.</p>'+
       '<p class="sc-note" style="margin-top:10px">So the seventh move: <b>start again</b>, from where the days actually are. '+
       'Re-enter at <b>'+sug.capText+'</b> — the ceiling your own log says you are holding — and take the rest in half-steps, two days each: <b>'+
