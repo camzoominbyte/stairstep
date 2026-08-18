@@ -803,6 +803,18 @@
     background:var(--surface2);color:var(--accent);cursor:pointer;
   }
   .sc-act.warn{color:var(--clay);border-color:rgba(158,90,62,.4)}
+  /* the re-entry chooser: a rung is a choice, so it gets a control that looks
+     like one — a grid rather than a single button pretending to be the answer */
+  .rs-picks{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+  .rs-pick{
+    flex:1 1 auto;min-width:74px;font-family:'Karla',sans-serif;cursor:pointer;
+    padding:8px 6px;border-radius:12px;border:1px solid var(--line);
+    background:var(--surface2);color:var(--ink);text-align:center;
+  }
+  .rs-pick b{display:block;font-family:'Fraunces',serif;font-weight:600;font-size:19px;line-height:1.1;color:var(--sand)}
+  .rs-pick span{display:block;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:3px}
+  .rs-pick.on{border-color:var(--amber);background:rgba(224,164,88,.1)}
+  .rs-pick.on b{color:var(--amber)}
   .sc-hand{display:flex;gap:9px;margin-top:11px}
   .sc-hand button{
     flex:1;font-family:'Karla',sans-serif;font-weight:700;font-size:13px;
@@ -4194,6 +4206,24 @@ try{
             newZero:addDays(today,rsLen(rung.cap)),
             banked:(zeroStats()||{}).clean||0};
   }
+  /* Every ceiling the ladder can start from, at or above what today already
+     holds. The log picks a recommendation; it does not get to pick FOR you.
+     A re-entry ceiling is the one number in this move that decides how the
+     next fortnight feels, and the person choosing it knows things the record
+     does not — whether this was a week or a night, whether they want to walk
+     back down gently or cut hard. The floor is today's own count, because a
+     rung the day has already passed is a day born over its own cap. */
+  function restartRungs(floor){
+    var seen={},out=[],pool=FINE_RUNGS.concat(COARSE_RUNGS),i,q;
+    for(i=0;i<pool.length;i++){
+      q=pool[i];
+      if(q.cap<=0||q.cap<floor||seen[q.cap])continue;
+      seen[q.cap]=1;
+      out.push({cap:q.cap,capText:q.capText,zero:addDays(today,rsLen(q.cap))});
+    }
+    out.sort(function(a,b){return a.cap-b.cap;});
+    return out;
+  }
   function restartOfferHTML(sug){
     var nz=sug.newZero;
     return '<div class="sc-fine"><p class="sc-note"><b>Using again, and the ladder is behind you.</b> '+
@@ -4203,11 +4233,19 @@ try{
       ', against a plan that has nothing left to hand out — the descent finished, and what is on the other side of it is not a schedule, it is a counter. '+
       'That is the one thing this app could not do for you until now: a return had no move, only a smaller number.</p>'+
       '<p class="sc-note" style="margin-top:10px">So the seventh move: <b>start again</b>, from where the days actually are. '+
-      'Re-enter at <b>'+sug.capText+'</b> — the ceiling your own log says you are holding — and take the rest in half-steps, two days each: <b>'+
-      capChain(sug.capText,fineTail(sug.cap))+'</b>. Zero lands <b>'+WEEKDAYS[nz.getDay()]+', '+fmtShort(nz)+'</b>, and the extension budget refills. '+
+      'Re-enter at a ceiling you can actually hold and take the rest in half-steps, two days each — from <b>'+sug.capText+
+      '</b>, the one your log reads, that is <b>'+capChain(sug.capText,fineTail(sug.cap))+'</b>, with zero on <b>'+
+      WEEKDAYS[nz.getDay()]+', '+fmtShort(nz)+'</b>. The extension budget refills either way. '+
       'Nothing is erased and nothing is overwritten: the first descent, every day of it, and the '+sug.banked+' clean day'+(sug.banked===1?'':'s')+
       ' it reached all stay exactly as logged. The new ladder starts below where the last one did <em>because</em> of them.</p>'+
-      '<div class="sc-hand"><button class="pri" data-sc="restart" data-cap="'+sug.cap+'">Start again at '+sug.capText+' — zero '+fmtShort(nz)+'</button></div>'+
+      '<p class="sc-note" style="margin-top:11px"><b>Pick the ceiling you actually want.</b> '+
+        sug.capText+' is what the log reads, not a verdict — every rung the ladder has is here, and each one shows where zero lands if you start there. '+
+        'Lower is a harder first week and a nearer zero; higher is a gentler re-entry and a later one. Below '+
+        (sug.todayC>0?'today\'s '+sug.todayC:'one')+' is not offered, because that is a day already over its own cap.</p>'+
+      '<div class="rs-picks">'+restartRungs(Math.max(sug.todayC,1)).map(function(r){
+        return '<button class="rs-pick'+(r.cap===sug.cap?' on':'')+'" data-sc="restart" data-cap="'+r.cap+'">'+
+          '<b>'+r.capText+'</b><span>zero '+fmtShort(r.zero)+'</span></button>';
+      }).join('')+'</div>'+
       '<p class="sc-note">A return inside the first months is the common case, not the failure case — near half of quits see one, which is exactly why this move exists instead of an empty screen. If today was one night rather than a change of direction, leave this alone: the counter already handles a lapse, and it restarts on its own tomorrow.</p></div>';
   }
   function renderSchedCtl(){
