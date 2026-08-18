@@ -56,7 +56,13 @@
        so every stroked chart line stays fully hidden. Land it at the end. */
     .cz-body .draw,.draw{stroke-dashoffset:0!important}
   }
+  /* The page scrolls one way. Anything wide — the staircase, the day strip,
+     a chart — scrolls inside its own box; nothing is allowed to drag the
+     document sideways, because a shifted page hides the left edge of every
+     card at once and there is no affordance saying it happened. */
+  html{overflow-x:hidden}
   body{
+    overflow-x:hidden;
     background:var(--bg);
     color:var(--ink);
     font-family:'Karla',sans-serif;
@@ -275,9 +281,21 @@
   .linklike{background:none;border:none;padding:0;color:var(--accent);font-family:'Karla',sans-serif;font-size:12.5px;font-weight:700;cursor:pointer;text-decoration:underline}
 
   /* ---- staircase: a colour-coded descent, warm at the top → sage at zero ---- */
-  .stairs{display:flex;gap:4px;margin:16px 0 34px;align-items:flex-end}
+  /* A restart puts a second descent on the ladder, so this can be twenty-odd
+     columns rather than ten. flex:1 alone could not shrink them past their
+     min-content width (.glbl is nowrap), so the row simply grew and took the
+     whole page with it. It scrolls itself now, and the columns hold a legible
+     34px instead of being squeezed to nothing. The top padding is for the
+     raised "now" step and its pip: overflow-x:auto makes overflow-y auto too,
+     which would otherwise clip both. */
+  .stairs{
+    display:flex;gap:4px;margin:16px 0 34px;align-items:flex-end;
+    overflow-x:auto;padding:14px 2px 0;margin-left:-2px;margin-right:-2px;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;
+  }
+  .stairs::-webkit-scrollbar{display:none}
   .stepcol{
-    flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:8px;
+    flex:1 0 34px;display:flex;flex-direction:column;justify-content:flex-end;gap:8px;
     height:184px;cursor:pointer;position:relative;
   }
   .stepcol:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
@@ -3948,11 +3966,29 @@ try{
       function go(){
         var f=$('stepFold');
         if(f&&!f.open)f.open=true; // instant, so the scroll target exists before we move
-        $('phase-'+i).scrollIntoView();
+        // inline:'nearest' or this scrolls the horizontal ancestors too — the
+        // staircase is one of them now, and so was the document before it was clipped
+        $('phase-'+i).scrollIntoView({block:'start',inline:'nearest'});
       }
       el.addEventListener('click',go);
       el.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
       stairs.appendChild(el);
+    });
+    centreStrips();
+  }
+  /* With two descents on one ladder the current step can sit far to the right,
+     so both horizontal strips land on today rather than on a taper that
+     finished weeks ago. It has to be callable AFTER the view is shown: these
+     live on the Plan tab, which is display:none until you open it, and an
+     element with no width measures every offset as zero — which is why doing
+     this at render time alone left both strips parked at the far left. */
+  function centreStrips(){
+    [[$('stairs'),'.stepcol.now'],[$('schedStrip'),'.sday.today']].forEach(function(pair){
+      var box=pair[0];
+      if(!box||!box.clientWidth)return;
+      var t=box.querySelector(pair[1]);
+      if(!t)return;
+      box.scrollLeft=Math.max(0,t.offsetLeft-box.clientWidth/2+t.clientWidth/2);
     });
   }
 
@@ -4591,8 +4627,7 @@ try{
       d=addDays(d,1);
     }
     el.innerHTML=html;
-    var focus=el.querySelector('.sday.today');
-    if(focus)el.scrollLeft=focus.offsetLeft-el.clientWidth/2+focus.clientWidth/2;
+    centreStrips();
   }
   $('schedStrip').addEventListener('click',function(ev){
     var c=ev.target.closest('.sday');if(!c)return;
@@ -8470,6 +8505,8 @@ try{
         window.scrollTo({top:0,behavior:'instant'});
         if(navigator.vibrate)navigator.vibrate(4);
       }
+      // now that the view has a width, put the strips on today
+      if(v==='plan')setTimeout(function(){try{centreStrips();}catch(e){}},0);
     }
     document.querySelectorAll('.tab').forEach(function(t){
       t.addEventListener('click',function(){setView(t.dataset.view);});
