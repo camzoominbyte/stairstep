@@ -2303,12 +2303,15 @@ try{
     var q=rsClone(src);
     q.desc="Starting again, from where the days actually are. The same ladder, re-entered at a ceiling your own log says you are holding — and every step below it half the size, two days each.";
     q.goals=["Back on the ladder at "+q.capText+". The first descent is not undone by this one; it is the reason this one starts lower than the last did."];
-    q.plans=[
-      {w:['8:30p'],
-       note:'Land under '+q.capText+' today. This is a re-entry, not a reset — the record behind it stands.',
-       do:['Log honestly today, including what already happened. The ladder can only meet days it can see.',
-           'One ceiling at a time. The date at the bottom is derived, not promised.',
-           'The clean days you banked are still banked — a return costs the run, not the record.']}];
+    /* The day's windows come from the rung and are NOT rewritten here. This
+       first shipped overriding them with a single evening sitting, copied from
+       the landing entry — where one sitting is the whole point, because those
+       rungs are evening-only by construction. At a re-entry ceiling of 12 it
+       said "one window, 8:30p" directly beneath "12 hits max · 3 a session ·
+       6h between sessions", which is four sittings' worth of hits in one
+       window and three rules contradicted at a glance. The rung already knows
+       how its day is laid out; the restart only changes why you are on it,
+       which is what desc and goals are for. Same shape as rebEntry. */
     return q;
   }
   /* The interlude: the stretch the first quit actually held, given a rung of
