@@ -794,6 +794,20 @@
   }
   .phase.zero{background:var(--surface);border-color:#c3cda4;border-left:3px solid var(--sage)}
   .phase.zero .phase-cap{color:var(--sage)}
+  /* the rung as a disclosure: the card keeps its own frame, so the global
+     details chrome is overridden rather than layered on */
+  details.phase{overflow:hidden;box-shadow:var(--shadow-sm)}
+  details.phase>summary{
+    padding:0;display:grid;grid-template-columns:1fr auto;align-items:start;
+    column-gap:12px;color:inherit;font-weight:400;
+  }
+  details.phase>summary::after{align-self:center;font-size:20px}
+  .phase-sum{grid-column:1;display:block;min-width:0}
+  details.phase .phase-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  details.phase .phase-rule{display:block;font-size:13px;color:var(--sage);margin:2px 0 0;font-weight:700}
+  details.phase .phase-held{display:block}
+  .phase-body{padding-top:2px}
+  .phase-body>p:first-child{margin-top:8px}
 
   /* ---- the schedule control: why the dates are what they are, and the
      one place they can be moved by hand ---- */
@@ -892,6 +906,49 @@
   }
   .sc-why>summary::after,.sc-recs>summary::after{font-size:17px}
   .sc-why[open]>summary,.sc-recs[open]>summary{color:var(--sand)}
+
+  /* ---- the Plan tab's segmented control ----
+     Sticky under the app header, because its whole job is to stay reachable
+     while a pane scrolls: a section index that scrolls away with the content
+     is the same wayfinding problem it was meant to fix. Horizontal scroll
+     rather than wrap — four segments on a 375px screen is tight, and a control
+     that reflows to two rows stops reading as one control. */
+  .pseg{
+    /* below where the scroll-triggered glass bar lands, so the two never
+       overlap: that bar is fixed at z-60 and would otherwise sit on top of
+       this one the moment the page moves */
+    position:sticky;top:calc(env(safe-area-inset-top) + 46px);z-index:30;
+    display:flex;gap:4px;padding:8px 2px 8px;margin:0 0 2px;
+    overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+    background:var(--bg);box-shadow:0 6px 10px -8px rgba(59,43,20,.18);
+  }
+  .pseg::-webkit-scrollbar{display:none}
+  .pseg-b{
+    flex:1 0 auto;white-space:nowrap;cursor:pointer;font-family:'Karla',sans-serif;
+    font-weight:700;font-size:13px;letter-spacing:.01em;
+    padding:9px 14px;border-radius:11px;border:1px solid transparent;
+    background:var(--surface2);color:var(--muted);
+    display:inline-flex;align-items:center;gap:6px;justify-content:center;
+    transition:background .2s,color .2s,border-color .2s;
+  }
+  .pseg-b[aria-selected="true"]{background:rgba(224,164,88,.13);border-color:var(--amber);color:var(--amber)}
+  .pseg-b:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  /* the dot is the whole point of the control for someone who does not know a
+     decision is waiting — it marks the pane that has one */
+  .pseg-dot{width:7px;height:7px;border-radius:50%;background:var(--amber);flex:0 0 auto;animation:psegPulse 2.4s ease-in-out infinite}
+  .pseg-b[aria-selected="true"] .pseg-dot{background:var(--amber)}
+  @keyframes psegPulse{0%,100%{opacity:1}50%{opacity:.35}}
+  @media (prefers-reduced-motion:reduce){.pseg-dot{animation:none}}
+  .pseg-live{
+    font-size:12.5px;color:var(--muted);margin:0 4px 12px;
+    font-variant-numeric:tabular-nums;line-height:1.45;
+  }
+  .pseg-empty{font-size:13px;color:var(--muted);line-height:1.6;margin:6px 4px 0;padding:22px 16px;
+    border:1px dashed var(--line);border-radius:16px;text-align:center}
+  .ppane[hidden]{display:none}
+  .ppane{animation:paneIn .32s var(--spring) both}
+  @keyframes paneIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.ppane{animation:none}}
 
   /* ---- collapsibles ---- */
   details{border:1px solid var(--line);border-radius:18px;background:var(--surface);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow-sm)}
@@ -1739,13 +1796,52 @@ try{
 </main>
 
 <main class="view" id="vPlan">
-<div id="stairsWrap">
-  <div class="stairs" id="stairs" aria-label="Step-down schedule — daily hit cap, tap a step for details"></div>
+<!-- The Plan tab used to be two accordions, one of which held everything: the
+     day's whole prescription, the schedule card with its full record and every
+     available move, the day strip, and a card per rung — thirteen thousand
+     characters in one open fold. It was navigable only by scrolling, so
+     anything below the first screenful was findable only by knowing it was
+     there. Four jobs live on this tab and they are not the same job: what am I
+     doing today, what does the whole descent look like, what can I change, and
+     what happens after zero. Each gets a pane, and the segmented control says
+     out loud that the other three exist. -->
+<nav class="pseg" id="planSeg" role="tablist" aria-label="Plan sections">
+  <button class="pseg-b" data-pane="today" role="tab" aria-selected="false">Today</button>
+  <button class="pseg-b" data-pane="ladder" role="tab" aria-selected="false">Ladder</button>
+  <button class="pseg-b" data-pane="adjust" role="tab" aria-selected="false">Change plan<i class="pseg-dot" id="planSegDot" hidden></i></button>
+  <button class="pseg-b" data-pane="after" role="tab" aria-selected="false" hidden>After zero</button>
+</nav>
+<p class="pseg-live" id="planSegLive"></p>
+
+<div class="ppane" data-pane="today" hidden>
+<div class="section openable" id="todaySection" data-title="Today's step">
+  <button class="xopen" data-target="todaySection" data-title="Today's step" aria-label="Open today's step in detail">⤢</button>
+  <h2>Today's step</h2>
+  <div class="tplan" id="todayPlan"></div>
+  <div class="xtra" id="stepXtra"></div>
+</div>
 </div>
 
-<details class="fold" id="afterFold" hidden>
-  <summary><span class="fold-t">After zero</span><span class="fold-live" id="afterFoldLive"></span></summary>
-  <div class="fold-body">
+<div class="ppane" data-pane="ladder" hidden>
+<div class="section openable" id="stepSection" data-title="The ladder">
+  <button class="xopen" data-target="stepSection" data-title="The ladder" aria-label="Open the ladder in detail">⤢</button>
+  <h2>The ladder</h2>
+  <div id="stairsWrap">
+    <div class="stairs" id="stairs" aria-label="Step-down schedule — daily hit cap, tap a step for details"></div>
+  </div>
+  <p class="sched-cap">The whole descent — tap any day for its full plan. <a class="dlink" href="guide.html#playbook">The written playbook →</a></p>
+  <div class="sched-strip" id="schedStrip" aria-label="Day-by-day schedule — tap a day for details"></div>
+  <div id="phases"></div>
+  <p class="d-evid" style="border-top:none;padding-top:0;margin-top:4px">Honest footnote: the research backs slow, stepped reduction over weeks, but no trial prescribes exact step sizes or session gaps — the caps carry the evidence-backed principle, and the daily-widening gaps are the structure that enforces it (each urge between windows is a wave the 20-minute rule already handles). That's why a hard day holds a step instead of breaking the plan — and a held day keeps its widest gap. <a class="dlink" href="guide.html#taper">The evidence →</a></p>
+</div>
+</div>
+
+<div class="ppane" data-pane="adjust" hidden>
+  <div class="schedctl" id="schedCtl" hidden></div>
+  <p class="pseg-empty" id="planAdjustEmpty" hidden></p>
+</div>
+
+<div class="ppane" data-pane="after" hidden>
 <div class="section openable" id="afterSection" data-title="After zero">
   <button class="xopen" data-target="afterSection" data-title="After zero" aria-label="Open the after-zero plan in detail">⤢</button>
   <h2>After zero</h2>
@@ -1759,25 +1855,7 @@ try{
 
   <p class="d-evid">Honest footnote: the reward ladder follows contingency-management design, which is the best-evidenced treatment for cannabis use disorder; the trials verified abstinence externally, and paying yourself on your own word is the weaker form of it. <a class="dlink" href="guide.html#after">The evidence →</a></p>
 </div>
-  </div>
-</details>
-
-<details class="fold" id="stepFold">
-  <summary><span class="fold-t">The step-down</span><span class="fold-live" id="stepFoldLive"></span></summary>
-  <div class="fold-body">
-<div class="section openable" id="stepSection" data-title="The step-down">
-  <button class="xopen" data-target="stepSection" data-title="The step-down" aria-label="Open the step-down in detail">⤢</button>
-  <h2>The step-down</h2>
-  <div class="tplan" id="todayPlan"></div>
-  <div class="schedctl" id="schedCtl" hidden></div>
-  <p class="sched-cap">The whole descent — tap any day for its full plan. <a class="dlink" href="guide.html#playbook">The written playbook →</a></p>
-  <div class="sched-strip" id="schedStrip" aria-label="Day-by-day schedule — tap a day for details"></div>
-  <div class="xtra" id="stepXtra"></div>
-  <div id="phases"></div>
-  <p class="d-evid" style="border-top:none;padding-top:0;margin-top:4px">Honest footnote: the research backs slow, stepped reduction over weeks, but no trial prescribes exact step sizes or session gaps — the caps carry the evidence-backed principle, and the daily-widening gaps are the structure that enforces it (each urge between windows is a wave the 20-minute rule already handles). That's why a hard day holds a step instead of breaking the plan — and a held day keeps its widest gap. <a class="dlink" href="guide.html#taper">The evidence →</a></p>
 </div>
-  </div>
-</details>
 </main>
 
 <main class="view" id="vMore">
@@ -4158,11 +4236,14 @@ try{
       el.setAttribute('role','button');el.setAttribute('tabindex','0');
       el.setAttribute('aria-label','Jump to '+s.lbl+' details');
       function go(){
-        var f=$('stepFold');
-        if(f&&!f.open)f.open=true; // instant, so the scroll target exists before we move
+        // instant, so the scroll target exists before we move
+        setPlanPane('ladder');
+        var t=$('phase-'+i);
+        if(!t)return;
+        t.open=true;   // a jump to a rung that stays shut has landed on nothing
         // inline:'nearest' or this scrolls the horizontal ancestors too — the
         // staircase is one of them now, and so was the document before it was clipped
-        $('phase-'+i).scrollIntoView({block:'start',inline:'nearest'});
+        t.scrollIntoView({block:'start',inline:'nearest'});
       }
       el.addEventListener('click',go);
       el.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
@@ -4192,9 +4273,16 @@ try{
     sch.forEach(function(s,i){
       if(s.skipped)return;   // never walked — the rebuild stepped past it
       var p=BASE_PHASES[i];
-      var el=document.createElement('div');
+      /* One rung, one disclosure. Expanded, twenty-one of these were the bulk
+         of the Plan tab — a wall you could only read by scrolling through it,
+         when what the list is actually for is finding a rung. The summary
+         carries what you scan by (dates, ceiling, rule); everything else waits
+         for a tap. The step you are on opens itself, because that one you are
+         not looking for — you are already standing on it. */
+      var el=document.createElement('details');
       el.className='phase'+(i<idx?' past':'')+(i===idx?' now':'')+(i===sch.length-1?' zero':'');
       el.id='phase-'+i;
+      if(i===idx)el.open=true;
       var held=(s.eased?'<p class="phase-held">Eased +'+s.eased+' day'+(s.eased>1?'s':'')+' — the step before ran hard</p>':'')+
         (s.held?'<p class="phase-held">Held +'+s.held+' day'+(s.held>1?'s':'')+'</p>'
         :s.early?'<p class="phase-held">Finished '+s.early+' day'+(s.early>1?'s':'')+' early</p>':'');
@@ -4215,11 +4303,15 @@ try{
         if(dayRows)dayRows='<div class="phase-days">'+dayRows+'</div>';
       }
       el.innerHTML=
-        '<div class="phase-top"><span class="phase-dates">'+s.lbl+(i===idx?' · now':'')+'</span>'+
-        '<span class="phase-cap" style="color:'+capCol+'">'+p.capText+'<small> '+(p.cap>0?'hits/day':'')+'</small></span></div>'+
-        held+'<p class="phase-rule">'+p.rule+'</p><p>'+p.desc+'</p>'+
+        '<summary><span class="phase-sum">'+
+          '<span class="phase-top"><span class="phase-dates">'+s.lbl+(i===idx?' · now':'')+'</span>'+
+          '<span class="phase-cap" style="color:'+capCol+'">'+p.capText+'<small> '+(p.cap>0?'hits/day':'')+'</small></span></span>'+
+          held+'<span class="phase-rule">'+p.rule+'</span>'+
+        '</span></summary>'+
+        '<div class="phase-body"><p>'+p.desc+'</p>'+
         dayRows+
-        (p.why?'<p class="phase-evid">'+p.why+' <a href="guide.html#'+p.ref+'">sources →</a></p>':'');
+        (p.why?'<p class="phase-evid">'+p.why+' <a href="guide.html#'+p.ref+'">sources →</a></p>':'')+
+        '</div>';
       wrap.appendChild(el);
     });
   }
@@ -4670,10 +4762,11 @@ try{
        of them can close a gap of whole levels that has already opened. Shown
        as the arithmetic, like every card here: what the days actually were,
        where re-entry lands, what zero becomes. */
-    var reb='';
+    var reb='', rebLive=false, landLive=false;
     if(!isZeroEra&&!sch.rebased&&!sch.landed&&!sch.locked&&sch.slack<=0){
       var sug=rebSuggest();
       if(sug&&sug.cap>cap){
+        rebLive=true;
         var nz=addDays(today,rebLen(sug.cap));
         reb='<div class="sc-fine"><p class="sc-note"><b>The plan and the days have come apart.</b> '+
           'The last three full days landed <b>'+sug.last.join(', ')+'</b> against a cap of '+cap+', and the slack is spent — '+
@@ -4736,7 +4829,7 @@ try{
     var land='';
     if(isZeroEra){
       var lsg=landSuggest();
-      if(lsg)land=landOfferHTML(lsg);
+      if(lsg){land=landOfferHTML(lsg);landLive=true;}
     }else if(sch.landed===todayKey){
       var lr=landRungAt(sch.ldCap);
       land='<div class="sc-fine"><p class="sc-note">The landing was rebuilt today, re-entering at <b>'+(lr?lr.capText:sch.ldCap)+'</b>. '+
@@ -4764,6 +4857,10 @@ try{
        settled history, so the moves lead and the receipts fold in behind them.
        When there is nothing to decide the card reads exactly as before. */
     var lead=rst+fin+r2+reb+land;
+    /* What the Plan tab's dot is for. Only a live OFFER counts — the same
+       strings also carry the same-day undo of a move already taken, and a
+       receipt is not something to decide. */
+    planDecision=!!(r2g||rsg||fsg||rebLive||landLive);
     var rows2=rows;
     if(rows&&nRows>4){
       rows2='<details class="sc-recs"'+(lead?'':' open')+'><summary>'+nRows+
@@ -4784,7 +4881,14 @@ try{
         (isZeroEra?' <span style="color:var(--muted)">· stamped, and everything counts from here</span>':'')+'</p>'+
       (drift?'<p class="sc-note" style="margin:0 0 10px">Correcting a taper day since then re-derives the descent to <b>'+
         fmtShort(live)+'</b>, but the boundary above is the one already stamped and paid against, so it stands — the counters would otherwise jump every time an old day was edited. The record below still reflects the correction.</p>':'')+
-      '<p class="sc-note" style="margin:0 0 10px">'+slackLine+'</p>'+
+      /* Context sits below a live decision and above a settled one. The slack
+         line and the "re-derived from your log" note are both explanation of
+         how the descent got here — worth reading, and not worth reading FIRST
+         when the card is asking you to choose something. The offer already
+         states the same fact about the budget in the sentence that depends on
+         it. With nothing pending, they lead as they always did. */
+      (lead?lead:'')+
+      '<p class="sc-note" style="margin:'+(lead?'14px 0 10px':'0 0 10px')+'">'+slackLine+'</p>'+
       /* "Here is everything that moved it:" was a colon pointing at the rows
          directly beneath it. With a live decision above them and the rows
          themselves folded, it pointed at neither — the fold's own summary says
@@ -4795,7 +4899,7 @@ try{
         :isZeroEra
           ?'The descent ran exactly as drawn — every logged day landed at or under its cap.'
           :'Nothing has moved the descent yet — every logged day landed at or under its cap, and no hold was ever offered.')+'</p>'+
-      lead+rows2+hand+fine+
+      rows2+hand+fine+
       (isZeroEra?''
         :'<p class="sc-note">A day only holds its step when its <em>logged total</em> goes over that day\'s cap. A rough day that still landed under the cap won\'t move anything on its own — use the button above if the step needs more room, or correct the day\'s count from its day page and the whole descent re-adjusts.</p>');
   }
@@ -8126,7 +8230,7 @@ try{
 
   /* live one-line summary on the step-down fold header */
   function renderFoldSums(){
-    var el=$('stepFoldLive');if(!el)return;
+    var el=$('planSegLive');if(!el)return;
     var t=taperProgress(), start=schedule()[0].start;
     if(today<start)el.textContent='Starts '+fmtShort(start)+' · zero '+fmtShort(zeroDate());
     else if(isZeroEra)el.textContent='Day '+Math.max(0,daysFree())+' at zero · the descent, kept';
@@ -8165,12 +8269,16 @@ try{
 
   /* ---- after zero: the whole program, on the Plan tab ---- */
   function renderAfter(){
-    var fold=$('afterFold');if(!fold)return;
-    // opens at zero and runs the twelve weeks — nothing here is pre-zero anymore
-    if(!isZeroEra){fold.hidden=true;return;}
-    fold.hidden=false;
+    /* the After-zero pane and its segment appear together: a segment that
+       leads to an empty pane is a worse lie than no segment at all */
+    var seg=planSegBtn('after');if(!seg)return;
+    if(!isZeroEra){
+      seg.hidden=true;
+      if(planPane==='after')setPlanPane('today');
+      return;
+    }
+    seg.hidden=false;
     var n=zeroCalDay(), zp=zeroPhaseFor(n);
-    $('afterFoldLive').textContent=zp?zp.t:'Graduated';
     // header: which of the twelve weeks this is, and what it is for
     var head='';
     if(zp){
@@ -8249,7 +8357,7 @@ try{
      renderToday,renderYday,renderTrend,renderDayHead,renderJourney,renderHistory,renderHoldBanner,renderDayHeld,
      renderRitual,renderCheckin,renderLadder,renderAfter,
      renderBackupNudge,renderStory,renderUrge,renderGap,renderGlass,renderDash,renderFoldSums,
-     renderUndoRestore].forEach(safe);
+     renderUndoRestore,renderPlanSeg].forEach(safe);
     if(!$('detailOverlay').hidden)safe(renderXtras);
     // a day edited through a chart's tap-to-open must repaint the chart under it
     if(!$('czOverlay').hidden&&czKey)safe(function(){openChartZoom(czKey);});
@@ -8797,6 +8905,61 @@ try{
     $('dataMsg').textContent='Snapshot from '+snap.t+' restored. (The data it replaced was stashed.)';
   });
 
+  /* ================= the Plan tab's panes =================
+     Four jobs, four panes, one control that names them. The pane is remembered
+     between visits, except when a decision is live — see setView. */
+  var PANE_KEY='ttz-plan-pane';
+  var PANES=['today','ladder','adjust','after'];
+  var planPane='today';
+  var planDecision=false;   // set by renderSchedCtl: is a move actually on offer
+  function planSegBtn(n){return document.querySelector('.pseg-b[data-pane="'+n+'"]');}
+  function setPlanPane(n){
+    if(PANES.indexOf(n)<0)n='today';
+    var b=planSegBtn(n);
+    if(!b||b.hidden)n='today';           // never land on a segment that isn't there
+    planPane=n;
+    document.querySelectorAll('.ppane').forEach(function(p){
+      p.hidden=p.dataset.pane!==n;
+    });
+    document.querySelectorAll('.pseg-b').forEach(function(t){
+      t.setAttribute('aria-selected',t.dataset.pane===n?'true':'false');
+    });
+    try{localStorage.setItem(PANE_KEY,n);}catch(e){}
+    // the chosen segment scrolls itself into view when the control overflows
+    var cur=planSegBtn(n);
+    if(cur&&cur.scrollIntoView)try{cur.scrollIntoView({block:'nearest',inline:'nearest'});}catch(e){}
+    /* Both horizontal strips live on the ladder pane, and a hidden pane has no
+       width — every offset measures zero and they park at the far left, which
+       for a two-descent ladder means opening on a taper that finished weeks
+       ago. Re-centre the moment the pane is actually laid out. */
+    if(n==='ladder'&&typeof centreStrips==='function')requestAnimationFrame(centreStrips);
+  }
+  (function(){
+    var saved=null;
+    try{saved=localStorage.getItem(PANE_KEY);}catch(e){}
+    planPane=PANES.indexOf(saved)>=0?saved:'today';
+    setPlanPane(planPane);
+  })();
+  document.getElementById('planSeg').addEventListener('click',function(ev){
+    var b=ev.target.closest('.pseg-b');
+    if(!b)return;
+    setPlanPane(b.dataset.pane);
+    if(navigator.vibrate)navigator.vibrate(3);
+  });
+  /* The dot, and the empty state. Between them they answer the two questions a
+     person has about this pane without opening it: is there anything here, and
+     if not, why not. */
+  function renderPlanSeg(){
+    var dot=$('planSegDot');
+    if(dot)dot.hidden=!planDecision;
+    var empty=$('planAdjustEmpty'), ctl=$('schedCtl');
+    if(empty){
+      var bare=!ctl||ctl.hidden;
+      empty.hidden=!bare;
+      if(bare)empty.textContent='Nothing to change yet — the descent hasn\'t started. The schedule, its record, and every way to adjust it live here once it has.';
+    }
+  }
+
   /* ---- glass bar ---- */
   function renderGlass(){
     var gt=$('gbToday'),gz=$('gbZero');
@@ -8839,8 +9002,11 @@ try{
         t.setAttribute('aria-current',t.dataset.view===v?'page':'false');
       });
       try{localStorage.setItem(VIEW_KEY,v);}catch(e){}
-      // a tab tap is intent to look — unfold the section it leads to
-      if(v==='plan'&&$('stepFold'))$('stepFold').open=true;
+      // a tab tap is intent to look. On the Plan tab that means landing on the
+      // pane that has something waiting rather than wherever you were last:
+      // a pending decision is the reason you opened this tab, even when you
+      // don't know the decision exists.
+      if(v==='plan')setPlanPane(planDecision?'adjust':planPane);
       if(v==='more'&&$('sysFold'))$('sysFold').open=true;
       if(!first){
         window.scrollTo({top:0,behavior:'instant'});
