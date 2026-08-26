@@ -896,6 +896,13 @@
     background:rgba(224,164,88,.14);color:var(--amber);
   }
   .r2-undo{font-size:11.5px;color:var(--muted);text-align:center;margin:7px 0 0}
+  .gap-picks{display:flex;flex-wrap:nowrap;gap:5px;margin-top:10px}
+  .gap-pick{
+    flex:1 1 0;min-width:0;white-space:nowrap;cursor:pointer;font-family:'Karla',sans-serif;
+    font-weight:700;font-size:12.5px;padding:9px 4px;border-radius:11px;
+    border:1px solid var(--line);background:var(--surface2);color:var(--ink);text-align:center;
+  }
+  .gap-pick.on{border-color:var(--amber);background:rgba(224,164,88,.12);color:var(--amber)}
   /* the reasoning, one fold down: inline text, not a card of its own — it
      lives INSIDE a card already and the global details style would draw a
      second box around it */
@@ -1944,7 +1951,7 @@ try{
 </details>
 </main>
 
-<p class="footer">The cap only goes down. The gaps only widen.</p>
+<p class="footer" id="footerLine">The cap only goes down. The gaps only widen.</p>
 
 <nav class="tabbar" id="tabbar" aria-label="App sections">
   <button class="tab on" data-view="today" aria-label="Today">
@@ -2707,6 +2714,18 @@ try{
      it to derive a cost per hit, and normData runs long before the rendering
      half of this file — left further down, the migration divided by undefined. */
   var BASELINE=30;
+  /* ================= the gap ceiling =================
+     The widening between-sitting gap is the taper's enforcement mechanism —
+     the cap says how much, the gap says the day cannot be one long sitting.
+     But a gap is only structure if it is followed, and a rung can ask for more
+     hours than a person's day has shape for: someone awake twenty hours with
+     six sittings in them is not going to hold 9h, and a rule broken daily
+     stops being a rule and starts being evidence that the plan is fiction.
+     So the gap gets a ceiling the person sets. It only ever NARROWS what the
+     ladder asks — a rung whose own gap is already under the ceiling keeps it,
+     because this exists to make the structure reachable, not to loosen a step
+     that was already fitting. */
+  var GAP_CHOICES=[3,4,5,6];
   var MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var WEEKDAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   var MS_DAY=86400000;
@@ -2933,6 +2952,11 @@ try{
        being walked), its cap must exist on a ladder that can supply the rung,
        and `hold` must be one of the offered paces — an unrecognised number
        would hand buildLadder a rung length the offer never showed anyone. */
+    /* gapMaxH: the ceiling on between-sitting hours, in whole hours off the
+       offered list. Anything else is a hand-edited or corrupted save, and an
+       unrecognised number would put a gap on screen that no control can undo. */
+    if(d.gapMaxH!==undefined&&
+       !(typeof d.gapMaxH==='number'&&GAP_CHOICES.indexOf(d.gapMaxH)>=0))delete d.gapMaxH;
     if(d.replan.restart&&d.replan.restart.rebuild!==undefined){
       var qz=d.replan.restart.rebuild;
       if(!(qz&&typeof qz==='object'&&!(qz instanceof Array)&&
@@ -3409,7 +3433,8 @@ try{
   // Spacing can step up daily within a phase ([day1, day2] arrays). Held
   // days run past the array and clamp to the last (widest) value, so a
   // hold never loosens the structure.
-  function spacingHOn(d,di){
+  // what the ladder itself asks for, before any ceiling
+  function spacingRawOn(d,di){
     if(di<0)di=0;
     var sp=BASE_PHASES[di].spacingH;
     if(!sp)return 0;
@@ -3417,6 +3442,14 @@ try{
     var off=Math.round((d-schedule()[di].start)/MS_DAY);
     return sp[Math.max(0,Math.min(sp.length-1,off))];
   }
+  // the ceiling, or 0 when none is set
+  function gapMax(){
+    var m=(typeof data!=='undefined'&&data)?data.gapMaxH:0;
+    return (typeof m==='number'&&m>0)?m:0;
+  }
+  // narrows only — a rung already inside the ceiling keeps its own gap
+  function gapCap(v){var m=gapMax();return (m&&v>m)?m:v;}
+  function spacingHOn(d,di){return gapCap(spacingRawOn(d,di));}
   function spacingHNow(){return idx>=BASE_PHASES.length-1?0:spacingHOn(today,idx);}
   // which day within its phase a date falls on (0-based), and that day's goal
   function dayInPhase(d,di){
@@ -3480,11 +3513,83 @@ try{
   }
   // the structured plan for a given day: session windows, honest math, do-list.
   // Held days clamp to the phase's last (widest) day, same as goals.
+  /* ---- window arithmetic, for a day whose gap has been narrowed ---- */
+  function winMin(t){                       // '8:30p' -> minutes past midnight
+    var m=/^(\d{1,2})(?::(\d{2}))?([ap])$/.exec(t);
+    if(!m)return null;
+    var h=(+m[1])%12;
+    if(m[3]==='p')h+=12;
+    return h*60+(m[2]?+m[2]:0);
+  }
+  function winStr(mins){
+    mins=((Math.round(mins)%1440)+1440)%1440;
+    var h=Math.floor(mins/60), mm=mins%60, ap=h>=12?'p':'a', hh=h%12;
+    if(!hh)hh=12;
+    return hh+(mm?':'+(mm<10?'0':'')+mm:'')+ap;
+  }
+  /* Re-space a rung's day inside the span it already used: same first window,
+     same last window, as many sittings between them as the narrower gap allows.
+     Keeping the SPAN is the point. Simply stepping the new gap forward from the
+     first window would pull the last one hours earlier and leave the whole
+     evening unplanned — and for a day that runs past midnight the evening is
+     exactly where a plan is worth having. The count is still bounded by what
+     the cap can fill, so a narrowed gap never writes sittings the ceiling
+     cannot pay for. */
+  /* Does a line of advice assert the rung's own gap length in words or
+     figures? Two of them do ("Six hours is long enough…", "Nine hours between
+     sittings…"), and under a narrowed ceiling they are the schedule
+     contradicting itself in the same card — a rule reading 4h above a bullet
+     insisting on six. Cheaper and more honest to drop the line than to leave
+     it arguing with the number directly over it. */
+  var HOUR_WORDS={2:'two',3:'three',4:'four',5:'five',6:'six',7:'seven',
+                  8:'eight',9:'nine',10:'ten',11:'eleven',12:'twelve'};
+  function namesHours(line,h){
+    var w=HOUR_WORDS[h];
+    return new RegExp('\\b('+(w?w+'|':'')+h+')[\\s\u2011-]?hour','i').test(line);
+  }
+  function regapPlan(pl,p,rawH,gapH){
+    if(!pl||!pl.w||pl.w.length<2||p.single||!gapH||!(gapH<rawH))return pl;
+    var a=winMin(pl.w[0]), b=winMin(pl.w[pl.w.length-1]);
+    if(a===null||b===null)return pl;
+    var span=b-a;
+    if(span<=0)span+=1440;
+    var n=Math.max(pl.w.length,Math.floor(span/(gapH*60))+1);
+    var maxN=Math.max(1,Math.ceil(p.cap/p.sessionMax));
+    if(n>maxN)n=maxN;
+    if(n<2)return pl;
+    var w=[],i;
+    for(i=0;i<n;i++)w.push(winStr(a+span*i/(n-1)));
+    /* A narrower ceiling does not always change the day: at a low cap the
+       sitting count is what binds, and the same two windows come back out.
+       Hand the original plan back untouched when that happens — its note is
+       written prose, and replacing it with generated arithmetic that says the
+       same thing is a downgrade. */
+    if(w.join()===pl.w.join())return pl;
+    var per=Math.min(p.sessionMax,Math.ceil(p.cap/n)), room=per*n;
+    var q={},k;
+    for(k in pl)q[k]=pl[k];
+    q.w=w;
+    if(pl.do&&pl.do.length){
+      var kept=pl.do.filter(function(t){return !namesHours(t,rawH);});
+      if(kept.length!==pl.do.length)
+        kept.push(fmtGapH(gapH)+' between sittings is your number, not this rung\'s '+fmtGapH(rawH)+
+          '. It is short enough that the 20-minute rule is what carries the wait — set the timer instead of watching the clock.');
+      q.do=kept;
+    }
+    q.note=n+' window'+(n===1?'':'s')+' at '+fmtGapH(gapH)+' — your setting, narrower than the '+
+      fmtGapH(rawH)+' this rung asks for. At '+per+' a sitting that is '+room+
+      ' of room against a cap of '+p.capText+
+      (room>p.cap?', so the cap is what ends the day, not the clock.'
+       :room===p.cap?' — exactly the cap, so every window has to run short of nothing.'
+       :'.');
+    return q;
+  }
   function dayPlanOf(d,di){
     if(di<0)di=0;
     var p=BASE_PHASES[di];
     if(!p.plans||!p.plans.length)return null;
-    return p.plans[phaseDayIdx(d,di,p.plans.length)];
+    var pl=p.plans[phaseDayIdx(d,di,p.plans.length)];
+    return regapPlan(pl,p,spacingRawOn(d,di),spacingHOn(d,di));
   }
   function winsHTML(pl){
     if(!pl||!pl.w||!pl.w.length)return '';
@@ -4225,9 +4330,13 @@ try{
       var gapTxt;
       if(p.cap<=0)gapTxt='free';
       else if(p.single)gapTxt='evening';
-      else gapTxt=typeof p.spacingH==='number'
-        ?fmtGapH(p.spacingH)+' gap'
-        :fmtGapH(p.spacingH[0])+'→'+fmtGapH(p.spacingH[p.spacingH.length-1]);
+      else{
+        // through the ceiling: a rung labelled 8h while the rule says 4h is
+        // the schedule disagreeing with itself on the same screen
+        var g0=gapCap(typeof p.spacingH==='number'?p.spacingH:p.spacingH[0]);
+        var g1=gapCap(typeof p.spacingH==='number'?p.spacingH:p.spacingH[p.spacingH.length-1]);
+        gapTxt=g0===g1?fmtGapH(g0)+' gap':fmtGapH(g0)+'→'+fmtGapH(g1);
+      }
       var gapCol=isNow?'':(' style="color:'+rgbStr(mixPaper(col,isPast?.45:.15))+'"');
       el.innerHTML='<div class="step" style="height:'+barH+'px;background:'+bg+'">'+
         '<span class="cap" style="color:'+num+'">'+p.capText+'</span></div>'+
@@ -4707,6 +4816,28 @@ try{
         '<button class="sc-act" data-sc="unhold" data-i="'+i+'">Undo</button>');
       if(e>0)nRows++,rows+=row('','Cap '+BASE_PHASES[i].capText+' · <b>+'+e+' day'+(e>1?'s':'')+' eased in</b> — the step before ran hard');
     }
+    /* The gap ceiling. It sits with the hold and the lock because it is the
+       same kind of control — a hand on the schedule rather than a move that
+       rebuilds it — and unlike them it is a standing preference, not a dated
+       one-off, so it carries no undo of its own: pick another value, or put it
+       back to what the ladder asks. */
+    var gapCtl='';
+    if(!isZeroEra&&idx>=0&&idx<BASE_PHASES.length-1&&!phase.single&&spacingRawOn(today,idx)>0){
+      var rawNow=spacingRawOn(today,idx), curMax=gapMax(), effNow=spacingHOn(today,idx);
+      gapCtl='<div class="sc-fine"><p class="sc-note"><b>Hours between sittings.</b> '+
+        'This rung asks for <b>'+fmtGapH(rawNow)+'</b>'+
+        (curMax&&effNow<rawNow?', narrowed to <b>'+fmtGapH(effNow)+'</b> by your setting':
+         curMax?', already inside your '+fmtGapH(curMax)+' setting':'')+
+        '. The widening gap is what the taper actually enforces — the cap says how much, the gap says the day can\'t be one long sitting. '+
+        'This is where to say it is asking more hours than your day has shape for. It only ever narrows: a rung already under your setting keeps its own.</p>'+
+        '<div class="gap-picks">'+
+        '<button class="gap-pick'+(!curMax?' on':'')+'" data-sc="gapmax" data-h="0">As planned</button>'+
+        GAP_CHOICES.map(function(h){
+          return '<button class="gap-pick'+(curMax===h?' on':'')+'" data-sc="gapmax" data-h="'+h+'">'+fmtGapH(h)+'</button>';
+        }).join('')+'</div>'+
+        (curMax?'<p class="sc-note">The day\'s windows re-space to match, inside the hours the rung already used — the plan and the rule stop contradicting each other. Every rung below this one is narrowed the same way.</p>':'')+
+        '</div>';
+    }
     var hand='';
     if(!isZeroEra&&idx<BASE_PHASES.length-1){
       hand='<div class="sc-hand"><button class="pri" data-sc="hold" data-i="'+idx+'">This step needs another day</button>'+
@@ -4899,7 +5030,7 @@ try{
         :isZeroEra
           ?'The descent ran exactly as drawn — every logged day landed at or under its cap.'
           :'Nothing has moved the descent yet — every logged day landed at or under its cap, and no hold was ever offered.')+'</p>'+
-      rows2+hand+fine+
+      rows2+hand+gapCtl+fine+
       (isZeroEra?''
         :'<p class="sc-note">A day only holds its step when its <em>logged total</em> goes over that day\'s cap. A rough day that still landed under the cap won\'t move anything on its own — use the button above if the step needs more room, or correct the day\'s count from its day page and the whole descent re-adjusts.</p>');
   }
@@ -8357,7 +8488,7 @@ try{
      renderToday,renderYday,renderTrend,renderDayHead,renderJourney,renderHistory,renderHoldBanner,renderDayHeld,
      renderRitual,renderCheckin,renderLadder,renderAfter,
      renderBackupNudge,renderStory,renderUrge,renderGap,renderGlass,renderDash,renderFoldSums,
-     renderUndoRestore,renderPlanSeg].forEach(safe);
+     renderUndoRestore,renderPlanSeg,renderFooterLine].forEach(safe);
     if(!$('detailOverlay').hidden)safe(renderXtras);
     // a day edited through a chart's tap-to-open must repaint the chart under it
     if(!$('czOverlay').hidden&&czKey)safe(function(){openChartZoom(czKey);});
@@ -8601,6 +8732,12 @@ try{
     else if(act==='unr2'){
       if(data.replan.restart)delete data.replan.restart.rebuild;
       relader();
+    }
+    /* a standing preference, not a dated move: no anchor, no undo row, and it
+       re-derives every surface that reads a gap on the next paint */
+    else if(act==='gapmax'){
+      var gh=+b.dataset.h||0;
+      if(gh)data.gapMaxH=gh;else delete data.gapMaxH;
     }
     else if(act==='hold')setHoldsAt(i,holdsAt(i)+1);
     else if(act==='unhold'){
@@ -8949,6 +9086,16 @@ try{
   /* The dot, and the empty state. Between them they answer the two questions a
      person has about this pane without opening it: is there anything here, and
      if not, why not. */
+  /* The motto asserts the two things the ladder guarantees. A gap ceiling
+     makes the second half untrue — the gaps widen up to a line the person
+     drew — and a footer insisting otherwise is the app arguing with a setting
+     it offers. The first half never stops being true. */
+  function renderFooterLine(){
+    var el=$('footerLine');if(!el)return;
+    var m=gapMax();
+    el.textContent=m?'The cap only goes down. The gaps widen to '+fmtGapH(m)+' and hold.'
+                     :'The cap only goes down. The gaps only widen.';
+  }
   function renderPlanSeg(){
     var dot=$('planSegDot');
     if(dot)dot.hidden=!planDecision;
