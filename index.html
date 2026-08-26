@@ -850,7 +850,48 @@
   /* standalone hosts for the landing and finish offers on Today — the sc-fine
      separator rule is for stacking inside the schedule card, not for a card
      of its own */
-  #landCard .sc-fine,#finishCard .sc-fine,#restartCard .sc-fine{border-top:none;margin-top:0;padding-top:0}
+  #landCard .sc-fine,#finishCard .sc-fine,#restartCard .sc-fine,#rebuildCard .sc-fine{border-top:none;margin-top:0;padding-top:0}
+
+  /* ---- picking a schedule ----
+     The pace chips this move first shipped with were the restart's ceiling
+     chips reused, and they were the wrong instrument. A ceiling is one number
+     and a chip holds it fine; a PACE is a whole ladder — how many rungs, how
+     long each is held, where zero lands — and a 74px chip reading "3 days"
+     over "ZERO SEP 16" shows one of those three. Worse, they applied on the
+     tap, so the only way to find out what an option meant was to take it.
+     These are full rows instead: the ladder written out, the length, the date,
+     and one line on what the pace feels like — then a single button that says
+     what it is about to do. Select, look, then commit. */
+  .r2-opts{display:flex;flex-direction:column;gap:8px;margin-top:11px}
+  .r2-opt{
+    display:block;width:100%;text-align:left;cursor:pointer;font-family:'Karla',sans-serif;
+    padding:11px 12px;border-radius:14px;border:1px solid var(--line);
+    background:var(--surface2);color:var(--ink);
+  }
+  .r2-opt-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+  .r2-opt-n{font-family:'Fraunces',serif;font-weight:600;font-size:16px;color:var(--sand)}
+  .r2-opt-z{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;white-space:nowrap}
+  .r2-opt-l{display:block;font-size:12px;color:var(--ink);margin-top:6px;font-variant-numeric:tabular-nums}
+  .r2-opt-w{display:block;font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.45}
+  .r2-opt.on{border-color:var(--amber);background:rgba(224,164,88,.1)}
+  .r2-opt.on .r2-opt-n,.r2-opt.on .r2-opt-z{color:var(--amber)}
+  .r2-go{
+    display:block;width:100%;margin-top:11px;cursor:pointer;
+    font-family:'Karla',sans-serif;font-weight:700;font-size:14px;padding:13px 0;
+    border-radius:14px;border:1px solid var(--amber);
+    background:rgba(224,164,88,.14);color:var(--amber);
+  }
+  .r2-undo{font-size:11.5px;color:var(--muted);text-align:center;margin:7px 0 0}
+  /* the reasoning, one fold down: inline text, not a card of its own — it
+     lives INSIDE a card already and the global details style would draw a
+     second box around it */
+  .sc-why,.sc-recs{border:none;border-radius:0;background:transparent;box-shadow:none;margin:11px 0 0;overflow:visible}
+  .sc-why>summary,.sc-recs>summary{
+    padding:9px 0 0;font-size:12px;font-weight:700;color:var(--muted);
+    border-top:1px solid var(--line);
+  }
+  .sc-why>summary::after,.sc-recs>summary::after{font-size:17px}
+  .sc-why[open]>summary,.sc-recs[open]>summary{color:var(--sand)}
 
   /* ---- collapsibles ---- */
   details{border:1px solid var(--line);border-radius:18px;background:var(--surface);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow-sm)}
@@ -1526,6 +1567,18 @@ try{
 <div class="schedctl" id="finishCard" hidden>
   <h3>The sixth move</h3>
   <div id="finishCardBody"></div>
+</div>
+
+<!-- the eighth move. It leads Today for the same reason the fifth, sixth and
+     seventh do: every card below it is written for a descent that is still
+     describing the days, and this one exists for the morning that stopped
+     being true. It shipped without this card and lived only on the Plan tab,
+     under every receipt the descent had ever generated — which is a decision
+     the app wants you to make, filed behind the history of decisions you
+     already made. Also offered on the schedule card, like the rest. -->
+<div class="schedctl" id="rebuildCard" hidden>
+  <h3>The eighth move</h3>
+  <div id="rebuildCardBody"></div>
 </div>
 
 <div class="ritual" id="ritualCard" hidden>
@@ -4461,28 +4514,47 @@ try{
     return {cap:sug.cap,capText:sug.capText,med:sug.med,last:sug.last,
             rsCap:sch.rsCap,since:sch.restarted,over:over,total:total};
   }
+  /* The transient pick. Not stored in data — nothing has been chosen until the
+     commit button is pressed, and a half-made choice has no business surviving
+     a reload. Defaults to three: two days a rung is the pace this descent has
+     been walking, so it is the one option the log has already argued against. */
+  var r2Sel=3;
   function restart2OfferHTML(sug){
     var rsRung=rungAtCap(sug.rsCap), rsText=rsRung?rsRung.capText:sug.rsCap;
-    return '<div class="sc-fine"><p class="sc-note"><b>The second descent has come apart too.</b> '+
-      'It re-entered at <b>'+rsText+'</b> on '+fmtShort(dateOf(sug.since))+' and has been stepping down at two days a rung ever since. '+
-      'The last three full days came in at <b>'+sug.last.join(', ')+'</b> against a cap of '+cap+
-      (sug.total?', '+sug.over+' of the '+sug.total+' logged days since the restart landed over their ceiling':'')+
-      ', and the slack is spent. The ladder is below the days again, and holding a step for one more day cannot close a gap of whole rungs.</p>'+
-      '<p class="sc-note" style="margin-top:10px">So the eighth move: <b>rebuild this descent</b>, the way the first one could be. '+
-      'Re-enter at <b>'+sug.capText+'</b> — the median of those three days, snapped up to a rung — and walk <b>'+
-      capChain(sug.capText,r2Tail(sug.cap))+'</b>. Two rungs the last ladder did not have sit at the bottom on purpose: '+
-      'the restart exists because a quit came apart, and <b>2–3 straight to nothing</b> is the largest single drop in the plan. '+
-      'Every day already logged keeps the ceiling it was lived under, and the extension budget refills.</p>'+
-      '<p class="sc-note" style="margin-top:11px"><b>Pick the pace.</b> Two days a rung is what this descent has been walking — '+
-      'it is offered again because the log, not the app, is the thing that gets to say whether it was too fast. '+
-      'Each one shows the date zero lands on if you take it. For daily use of this length the evidence leans slower: '+
-      'gradual reduction “over weeks”. <a class="dlink" href="guide.html#taper">Why →</a></p>'+
-      '<div class="rs-picks">'+R2_PACES.map(function(p){
+    var chain=capChain(sug.capText,r2Tail(sug.cap));
+    var sel=r2Pace(r2Sel).hold, selZ=addDays(today,r2Len(sug.cap,sel));
+    /* The lede is the arithmetic and nothing else. The reasoning that used to
+       open this card is all still here, one fold down — it is the best thing
+       about it — but it was three paragraphs standing between a person and the
+       only control on the card, and the control is the part that is urgent. */
+    return '<div class="sc-fine">'+
+      '<p class="sc-note" style="font-size:13px;color:var(--ink)"><b>This schedule has stopped describing your days.</b> '+
+      'Your last three full days: <b>'+sug.last.join(', ')+'</b>. Today\'s cap: <b>'+cap+'</b>. '+
+      (sug.total?sug.over+' of the '+sug.total+' days since you restarted landed over their ceiling, and the':'The')+
+      ' extension days are spent — so the ceiling will keep dropping and nothing will stop it.</p>'+
+      '<p class="sc-note" style="font-size:13px;color:var(--ink);margin-top:9px">'+
+      'Pick a new one. Each starts today at <b>'+sug.capText+'</b> — the middle of those three days — and every day you have already logged keeps the ceiling it was lived under.</p>'+
+      '<div class="r2-opts">'+R2_PACES.map(function(p){
         var z=addDays(today,r2Len(sug.cap,p.hold));
-        return '<button class="rs-pick'+(p.hold===3?' on':'')+'" data-sc="r2" data-cap="'+sug.cap+'" data-hold="'+p.hold+'">'+
-          '<b>'+p.hold+' days</b><span>zero '+fmtShort(z)+'</span></button>';
+        var len=r2Len(sug.cap,p.hold);
+        return '<button class="r2-opt'+(p.hold===sel?' on':'')+'" data-sc="r2pick" data-hold="'+p.hold+'">'+
+          '<span class="r2-opt-h"><span class="r2-opt-n">'+p.name+'</span>'+
+          '<span class="r2-opt-z">'+len+' days · zero '+fmtShort(z)+'</span></span>'+
+          '<span class="r2-opt-l">'+chain+'</span>'+
+          '<span class="r2-opt-w">'+p.note+'</span></button>';
       }).join('')+'</div>'+
-      '<p class="sc-note">'+R2_PACES.map(function(p){return '<b>'+p.hold+' days</b> — '+p.note;}).join('<br>')+'</p></div>';
+      '<button class="r2-go" data-sc="r2" data-cap="'+sug.cap+'" data-hold="'+sel+'">'+
+        'Start this schedule — zero '+WEEKDAYS[selZ.getDay()]+', '+fmtShort(selZ)+'</button>'+
+      '<p class="r2-undo">Nothing is erased, and you can undo it for the rest of today.</p>'+
+      '<details class="sc-why"><summary>Why this, and what it changes</summary>'+
+      '<p class="sc-note">It re-entered at <b>'+rsText+'</b> on '+fmtShort(dateOf(sug.since))+
+      ' and has been stepping down at two days a rung ever since, while the log stayed where it was. '+
+      'Holding a step for one more day cannot close a gap of whole rungs — that is what this move is for, and it is the same move the first descent got when the same thing happened to it.</p>'+
+      '<p class="sc-note">Two rungs the last ladder did not have sit at the bottom on purpose: the restart exists because a quit came apart, and <b>2–3 straight to nothing</b> is the largest single drop in the plan. '+
+      'The extension budget refills, so the new ladder has its own five days of give.</p>'+
+      '<p class="sc-note">Two days a rung is offered because it is what this descent has been walking, and the log — not the app — is the thing that gets to say whether it was too fast. '+
+      'For daily use of this length the evidence leans slower: gradual reduction “over weeks”. <a class="dlink" href="guide.html#taper">Why →</a></p>'+
+      '</details></div>';
   }
   function renderSchedCtl(){
     var box=$('schedCtl');if(!box)return;
@@ -4500,7 +4572,7 @@ try{
     var z=isZeroEra?zeroDay():live;
     var drift=isZeroEra&&dkeyOf(live)!==dkeyOf(z);
     var moved=Math.round((z-bz)/MS_DAY);
-    var rows='';
+    var rows='', nRows=0;
     // after zero the descent is history — its rows explain what happened but
     // are no longer live decisions, so their Undo/Apply buttons come off (an
     // edit here would rewrite a finished record). The zero anchor is frozen
@@ -4516,32 +4588,32 @@ try{
          abandoned. Stated, muted, and without buttons — undoing one would
          re-cut dates that no longer exist. */
       if(h.pre){
-        rows+=row('declined',head+(h.kind==='over'?'held its cap a day longer'
+        nRows++,rows+=row('declined',head+(h.kind==='over'?'held its cap a day longer'
           :h.kind==='defer'?'the step-down deferred'
           :h.kind==='noslack'?'recorded; the dates stayed'
           :'hold declined')+' · before the rebuild','');
         return;
       }
-      if(h.kind==='over')rows+=row('',head+'held the '+h.cap+' cap a day longer',
+      if(h.kind==='over')nRows++,rows+=row('',head+'held the '+h.cap+' cap a day longer',
         '<button class="sc-act" data-sc="decline" data-k="'+h.key+'">Undo</button>');
-      else if(h.kind==='defer')rows+=row('',head+'the step-down deferred: the day rode the '+h.rode+' cap and the drop retried after it',
+      else if(h.kind==='defer')nRows++,rows+=row('',head+'the step-down deferred: the day rode the '+h.rode+' cap and the drop retried after it',
         '<button class="sc-act" data-sc="decline" data-k="'+h.key+'">Undo</button>');
-      else if(h.kind==='noslack')rows+=row('declined',head+(h.sealed
+      else if(h.kind==='noslack')nRows++,rows+=row('declined',head+(h.sealed
         ?'the ritual was done and the stash was out — this day did not move zero, and the road only goes forward'
         :h.locked
         ?'the date was locked — this day did not move it'
         :'no slack left — this day did not move the date'),'');
-      else rows+=row('declined',head+'hold declined, dates left alone',
+      else nRows++,rows+=row('declined',head+'hold declined, dates left alone',
         '<button class="sc-act warn" data-sc="apply" data-k="'+h.key+'">Apply it</button>');
     });
     for(var i=0;i<BASE_PHASES.length;i++){
       if(sch[i].skipped)continue;   // never walked — nothing of it to explain
       var m=holdsAt(i), e=sch[i].eased||0;
-      if(m>0)rows+=row('','Cap '+BASE_PHASES[i].capText+' · <b>+'+m+' day'+(m>1?'s':'')+'</b> added by hand',
+      if(m>0)nRows++,rows+=row('','Cap '+BASE_PHASES[i].capText+' · <b>+'+m+' day'+(m>1?'s':'')+'</b> added by hand',
         '<button class="sc-act" data-sc="unhold" data-i="'+i+'">Undo</button>');
-      if(m<0)rows+=row('','Cap '+BASE_PHASES[i].capText+' · <b>'+(-m)+' day'+(m<-1?'s':'')+'</b> ended early',
+      if(m<0)nRows++,rows+=row('','Cap '+BASE_PHASES[i].capText+' · <b>'+(-m)+' day'+(m<-1?'s':'')+'</b> ended early',
         '<button class="sc-act" data-sc="unhold" data-i="'+i+'">Undo</button>');
-      if(e>0)rows+=row('','Cap '+BASE_PHASES[i].capText+' · <b>+'+e+' day'+(e>1?'s':'')+' eased in</b> — the step before ran hard');
+      if(e>0)nRows++,rows+=row('','Cap '+BASE_PHASES[i].capText+' · <b>+'+e+' day'+(e>1?'s':'')+' eased in</b> — the step before ran hard');
     }
     var hand='';
     if(!isZeroEra&&idx<BASE_PHASES.length-1){
@@ -4683,6 +4755,20 @@ try{
        :sch.rebased?' on the rebuilt descent — the budget refills at a rebuild, because slack exists to stop drift and a rebuild is a dated choice, not drift':'')+
       '. When they are gone the schedule stops moving zero and the choice becomes yours.';
     else slackLine='<span style="color:var(--clay)">Slack spent.</span> The schedule is no longer extending itself — an over-cap day now gets recorded and the date holds. That is the design, not a failure: the evidence for tapering is about easing withdrawal, not about improving the odds of stopping, and a date that keeps moving spends the part that does.';
+    /* Order of business. This card used to print the receipts first — every
+       day that ever moved the descent, oldest first, buttons and all — and put
+       any live offer underneath them. For a descent with a long history that
+       is a decision the app is asking you to make, filed behind a scrolling
+       log of the decisions you already made; the person this card exists for
+       has to know it is down there to find it. A pending choice outranks
+       settled history, so the moves lead and the receipts fold in behind them.
+       When there is nothing to decide the card reads exactly as before. */
+    var lead=rst+fin+r2+reb+land;
+    var rows2=rows;
+    if(rows&&nRows>4){
+      rows2='<details class="sc-recs"'+(lead?'':' open')+'><summary>'+nRows+
+        ' days moved the descent — show the record</summary>'+rows+'</details>';
+    }
     box.innerHTML='<h3>The schedule, and why</h3>'+
       '<p class="sc-zero">Zero: '+WEEKDAYS[z.getDay()]+', '+fmtShort(z)+
         /* against a rebuilt descent, "later than the original plan" stops
@@ -4699,12 +4785,17 @@ try{
       (drift?'<p class="sc-note" style="margin:0 0 10px">Correcting a taper day since then re-derives the descent to <b>'+
         fmtShort(live)+'</b>, but the boundary above is the one already stamped and paid against, so it stands — the counters would otherwise jump every time an old day was edited. The record below still reflects the correction.</p>':'')+
       '<p class="sc-note" style="margin:0 0 10px">'+slackLine+'</p>'+
+      /* "Here is everything that moved it:" was a colon pointing at the rows
+         directly beneath it. With a live decision above them and the rows
+         themselves folded, it pointed at neither — the fold's own summary says
+         how many days are in there, so the lead-in stops promising a list. */
       '<p class="sc-sum">'+(rows
-        ?'The descent is re-derived from your log every time this screen paints. Here is everything that moved it:'
+        ?('The descent is re-derived from your log every time this screen paints.'+
+          (rows2===rows?' Here is everything that moved it:':''))
         :isZeroEra
           ?'The descent ran exactly as drawn — every logged day landed at or under its cap.'
           :'Nothing has moved the descent yet — every logged day landed at or under its cap, and no hold was ever offered.')+'</p>'+
-      rows+hand+rst+fin+r2+reb+land+fine+
+      lead+rows2+hand+fine+
       (isZeroEra?''
         :'<p class="sc-note">A day only holds its step when its <em>logged total</em> goes over that day\'s cap. A rough day that still landed under the cap won\'t move anything on its own — use the button above if the step needs more room, or correct the day\'s count from its day page and the whole descent re-adjusts.</p>');
   }
@@ -4879,6 +4970,7 @@ try{
       $('landCard').hidden=!lo;
       if(lo)$('landCardBody').innerHTML=landOfferHTML(lo);
       $('finishCard').hidden=true;   // its whole condition is a taper still running
+      $('rebuildCard').hidden=true;  // likewise — it rebuilds a descent still being walked
       /* leads the Today screen only on a pattern — a single night is the
          counter's business, and the cards below already say so kindly */
       var rso=restartSuggest();
@@ -4911,6 +5003,11 @@ try{
       var fo=finishSuggest();
       $('finishCard').hidden=!fo;
       if(fo)$('finishCardBody').innerHTML=finishOfferHTML(fo);
+      /* the eighth move, surfaced where the gap between the plan and the days
+         is actually being lived — not only on the tab you have to go looking on */
+      var r2o=restart2Suggest();
+      $('rebuildCard').hidden=!r2o;
+      if(r2o)$('rebuildCardBody').innerHTML=restart2OfferHTML(r2o);
       $('heroCard').hidden=false;
       $('tallyBtns').style.display='flex';
       $('statRow').style.display='flex';
@@ -8377,6 +8474,15 @@ try{
        its own rebuild away with it rather than inheriting this one. The lock
        comes off for the same reason it does at every other rebuild — it froze
        dates this move has just replaced, and the card can re-lock. */
+    /* selecting a pace changes nothing on the record — it moves a highlight and
+       rewrites the commit button's date. Repaint and leave without saving: a
+       pick that wrote to storage would mark the backup stale for a decision
+       that has not been made yet. */
+    else if(act==='r2pick'){
+      r2Sel=+b.dataset.hold||3;
+      renderAll();
+      return;
+    }
     else if(act==='r2'){
       if(data.replan.restart){
         data.replan.restart.rebuild={at:todayKey,cap:+b.dataset.cap,hold:+b.dataset.hold||2};
@@ -8400,6 +8506,7 @@ try{
   $('landCard').addEventListener('click',handleSchedAct);
   $('finishCard').addEventListener('click',handleSchedAct);
   $('restartCard').addEventListener('click',handleSchedAct);
+  $('rebuildCard').addEventListener('click',handleSchedAct);
   $('btnEarlier').addEventListener('click',function(){
     var r=$('earlierRow');
     r.hidden=!r.hidden;
