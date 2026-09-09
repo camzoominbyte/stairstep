@@ -4817,20 +4817,39 @@ try{
      the last three fully-logged days. Same rule as the rebase's, over the
      fuller pool — with 7, 6 and 4 in it the ceiling it lands on can be one the
      coarse ladder could not express, which is the point of having them. */
+  /* SEVEN logged days, not three. The three-day window is right for the
+     restart, where the last three days ARE the situation — a relapse is
+     current events. It is wrong here, and wrong in the expensive direction.
+     A descent mid-walk has weeks of evidence about what this person can
+     actually hold, and three days catches whichever end of it happened last:
+     a log reading 7, 7, 7, 7, 13, 12, 15 is someone who held seven for most of
+     a week and then had three bad days when the ceiling dropped below it, and
+     the three-day median calls that 13 and prescribes a re-entry at 14 —
+     throwing away the best evidence in the record because it is four days old.
+     The seven-day median reads the same log as 7, which is the number that was
+     demonstrated. It only diverges from the short window when there is a mix,
+     and a mix means the lower number was proven; when a person has genuinely
+     escalated, every day in the window is high and both windows agree.
+     Still floored by today's own count, for the reason the restart's picker
+     is: a rung the day has already passed is a day born over its own cap. */
   function r2Suggest(){
     var vals=[], d=addDays(today,-1), tries=0, startD=schedule()[0].start;
-    while(vals.length<3&&tries<14&&d>=startD){
+    while(vals.length<7&&tries<21&&d>=startD){
       var c=countOf(dkeyOf(d));
       if(c!==null)vals.push(c);
       d=addDays(d,-1);tries++;
     }
     if(vals.length<3)return null;
-    var med=vals.slice().sort(function(a,b){return a-b;})[1];
+    var sorted=vals.slice().sort(function(a,b){return a-b;});
+    var med=sorted[Math.floor(sorted.length/2)];
+    var need=Math.max(med,countOf(todayKey)||0);
     var pool=descentPool().slice().reverse();       // shallowest first
-    for(var i=0;i<pool.length;i++)if(pool[i].cap>=med)
-      return {cap:pool[i].cap,capText:pool[i].capText,med:med,last:vals.slice().reverse()};
-    var top=COARSE_RUNGS[0];
-    return {cap:top.cap,capText:top.capText,med:med,last:vals.slice().reverse()};
+    var out={med:med,days:vals.length,last:vals.slice(0,3).reverse(),held:sorted[0]};
+    for(var i=0;i<pool.length;i++)if(pool[i].cap>=need){
+      out.cap=pool[i].cap;out.capText=pool[i].capText;return out;
+    }
+    out.cap=COARSE_RUNGS[0].cap;out.capText=COARSE_RUNGS[0].capText;
+    return out;
   }
   function restart2Suggest(){
     if(isZeroEra)return null;
@@ -4865,7 +4884,7 @@ try{
       }
       d=addDays(d,1);
     }
-    return {cap:sug.cap,capText:sug.capText,med:sug.med,last:sug.last,
+    return {cap:sug.cap,capText:sug.capText,med:sug.med,last:sug.last,days:sug.days,
             rsCap:sch.rsCap,since:sch.restarted,over:over,total:total};
   }
   /* The transient pick. Not stored in data — nothing has been chosen until the
@@ -4887,8 +4906,9 @@ try{
   // ceilings a person can re-enter at by hand: above today's, and no higher
   // than the descent already started from — this move rebuilds a ladder, it
   // does not undo the decision to be on one
-  function r2ManualRungs(){
-    var sch=schedule(), top=sch.rsCap||COARSE_RUNGS[0].cap, out=[];
+  function r2ManualRungs(sugCap){
+    var sch=schedule(), top=Math.max(sch.rsCap||0,sugCap||0,COARSE_RUNGS[0].cap===undefined?0:0), out=[];
+    if(!top)top=COARSE_RUNGS[0].cap;
     descentPool().forEach(function(q){
       if(q.cap>cap&&q.cap<=top)out.push(q);
     });
@@ -4900,13 +4920,14 @@ try{
     var entryRung=r2RungAt(entryCap)||{capText:String(entryCap)};
     var chain=capChain(entryRung.capText,r2Tail(entryCap));
     var sel=r2Pace(r2Sel).hold, selZ=addDays(today,r2Len(entryCap,sel));
-    var picks=r2ManualRungs();
+    var picks=r2ManualRungs(sug.cap);
     var lede=manual
       ? '<p class="sc-note" style="font-size:13px;color:var(--ink)"><b>Pick a ceiling you can actually hold.</b> '+
         'Today\'s is <b>'+cap+'</b>'+(sug.last?', and your last three full days were <b>'+sug.last.join(', ')+'</b>':'')+'. '+
         'You do not have to blow a ceiling to be allowed to say it is too low — a step you can see you cannot take is worth changing before it is a day you failed rather than a number you fixed.</p>'
       : '<p class="sc-note" style="font-size:13px;color:var(--ink)"><b>This schedule has stopped describing your days.</b> '+
-        'Your last three full days: <b>'+sug.last.join(', ')+'</b>. Today\'s cap: <b>'+cap+'</b>. '+
+        'Your last three full days: <b>'+sug.last.join(', ')+'</b>'+
+        (sug.days>3?' (median of the last '+sug.days+': <b>'+sug.med+'</b>)':'')+'. Today\'s cap: <b>'+cap+'</b>. '+
         (sug.total?sug.over+' of the '+sug.total+' days since you restarted landed over their ceiling, and the':'The')+
         ' extension days are spent — so the ceiling will keep dropping and nothing will stop it.</p>';
     var capRow=picks.length
