@@ -2356,6 +2356,71 @@ try{
      why:"Cues drive use as much as chemistry — running the evening ritual nearly empty rehearses the exact hours zero has to hold, with the smallest dose still aboard.",
      ref:"manage"}
   ];
+  /* ================= the low rungs =================
+     The fine ladder thins out exactly where it is hardest. Below the daytime
+     cut it reads 8 → 5 → 2–3: a 37% drop, then a 40% drop, in the stretch
+     where every attempt on this record has actually come apart — the first
+     descent ran 8–11 against a cap of 3, the quit that followed held three
+     days, and the second descent stalled again at the bottom. Higher up a
+     missing rung costs a hard afternoon; down here it is the difference
+     between a step and a cliff, because the same percentage is a smaller and
+     smaller absolute number of hits to hold onto.
+     So three rungs fill it in: 7, 6 and 4. With them the tail walks
+     8 → 7 → 6 → 5 → 4 → 3 → 2 → 1 → 0 and no step below the daytime cut asks
+     for more than a single hit at a time.
+     They belong to the rebuilt tail only. A first descent that is walking its
+     ladder fine does not need nine rungs to get from 8 to zero, and lengthening
+     everyone's bottom to solve a bottom that broke would be treating the plan
+     as the patient. */
+  var LOW_RUNGS = [
+    {days:1, cap:7, capText:"7", sessionMax:3, spacingH:8,
+     rule:"2 sessions · 8h apart · one hit lighter",
+     desc:"The same two sittings as 8, one hit lighter. Nothing about the day's shape changes — only the count inside it.",
+     goals:["7 across the same two sittings. The shape is yesterday's; the number is one smaller."],
+     plans:[
+       {w:['12p','8p'],
+        note:'The same two windows as 8. Four at midday and three in the evening, or three and four — the day is unchanged, the count is one lighter.',
+        do:['Change nothing about when you sit. The only difference today is one hit.',
+            'Decide before the first window which sitting gives up the hit, so the evening is not the one negotiating.',
+            'A step this small is meant to be boring. Boring is the whole point of it.']}],
+     why:"Lab trials show THC suppresses withdrawal dose-dependently — the smaller the drop, the smaller the gap your receptors are asked to cover.",
+     ref:"taper"},
+    {days:1, cap:6, capText:"6", sessionMax:3, spacingH:8,
+     rule:"2 sessions · 8h apart · 3 and 3",
+     desc:"Six, split evenly: three at midday, three in the evening. The first day the two sittings are the same size.",
+     goals:["6 — three at midday, three in the evening. Even, countable, and the last day before the sittings start shrinking."],
+     plans:[
+       {w:['12p','8p'],
+        note:'Three and three. Both windows are full at the session ceiling, which means the cap and the sitting rule now agree exactly.',
+        do:['Count them out in advance: three, then three. Nothing is left to decide in the moment.',
+            'This is the last rung where a sitting is still full. From here they get smaller.',
+            'If one of the two feels load-bearing and the other does not, note which — that is the one that goes last.']}],
+     why:"Cues drive use as much as chemistry — holding the sittings steady while the dose falls is what rehearses the ritual without it.",
+     ref:"manage"},
+    {days:1, cap:4, capText:"4", sessionMax:2, spacingH:9,
+     rule:"2 sessions · 9h apart · 2 and 2",
+     desc:"Two and two, nine hours apart. The sitting itself is shrinking now, not just the day.",
+     goals:["4 — two at midday, two in the evening. The sitting is what is getting smaller from here."],
+     plans:[
+       {w:['12p','9p'],
+        note:'Two windows of two. The session ceiling drops with the cap now — a sitting is two hits and closed, however long you sit.',
+        do:['Two, then two. The session ceiling is two from here, so a third in one sitting is over the rule even under the cap.',
+            'Keep the evening window where it has always been. The hour is the ritual; the dose is what is leaving it.',
+            'Hold a fixed wake time — sleep settles last, and a steady wake is what settles it.']}],
+     why:"Sleep disturbance outlasts every other withdrawal symptom, and a fixed wake time is the piece of CBT-I that carries the effect.",
+     ref:"withdrawal"}
+  ];
+  /* every capped rung a rebuilt tail can walk, steepest first */
+  function descentPool(){
+    return FINE_RUNGS.concat(LOW_RUNGS,LANDING_RUNGS)
+      .filter(function(q){return q.cap>0;})
+      .sort(function(a,b){return b.cap-a.cap;});
+  }
+  function r2RungAt(c){
+    var pool=descentPool();
+    for(var i=0;i<pool.length;i++)if(pool[i].cap===c)return pool[i];
+    return COARSE_RUNGS[0].cap===c?COARSE_RUNGS[0]:null;
+  }
   var COARSE_CAPS={};
   COARSE_RUNGS.forEach(function(p){COARSE_CAPS[p.cap]=true;});
   /* The active ladder. Rungs at or above the switch point stay coarse (they
@@ -2517,25 +2582,41 @@ try{
      one. Same single-entry constraint as every other rebuilt rung — the fine
      and landing originals were written to promise nothing about tomorrow, so
      they survive being given more than one day. */
-  function r2Clone(p,hold){
+  function r2Clone(p,hold,gen){
     var q={},k;for(k in p)q[k]=p[k];
-    q.days=Math.max(1,hold||2);q.rs=true;q.r2=true;delete q.rb;delete q.ld;
+    q.days=Math.max(1,hold||2);q.rs=true;q.r2=true;q.r2i=gen||0;
+    delete q.rb;delete q.ld;
     return q;
   }
-  function r2Entry(c,hold){
-    var src=landRungAt(c);if(!src)return null;
-    var q=r2Clone(src,hold);
+  function r2Entry(c,hold,gen){
+    var src=r2RungAt(c);if(!src)return null;
+    var q=r2Clone(src,hold,gen);
     q.desc="The second descent, rebuilt. The restart re-entered where the days were on its first night; this re-enters where they have actually been landing since — and gives every step below it more room than the last ladder did.";
     q.goals=["Back at "+q.capText+", on a ladder paced for the days in your log rather than the day you restarted on. Land under it and the schedule is describing something real again."];
     return q;
   }
   // the caps a rebuilt second descent walks below its entry, in descent order
-  function r2Tail(c){return tailCaps(FINE_RUNGS.concat(LANDING_RUNGS),c);}
+  function r2Tail(c){return tailCaps(descentPool(),c);}
   // calendar length of a second descent rebuilt from cap c — mirrors buildLadder
   function r2Len(c,hold){
-    var n=1,pool=FINE_RUNGS.concat(LANDING_RUNGS);
-    for(var i=0;i<pool.length;i++)if(pool[i].cap>0&&pool[i].cap<c)n++;
+    var n=1,pool=descentPool();
+    for(var i=0;i<pool.length;i++)if(pool[i].cap<c)n++;
     return n*Math.max(1,hold||2);
+  }
+  /* Every rebuild the restarted descent has taken, oldest first. Stored as a
+     LIST rather than the single object this shipped with, and that is the whole
+     point of the change: a rebuild written into one slot can only ever happen
+     once, so the move built to answer "the ladder has stopped describing my
+     days" answered it exactly one time and then became another spent move —
+     which is the failure it exists to fix, arriving one level up.
+     Each entry is its own dated re-entry that supersedes the tail before it.
+     Nothing is re-filed: every rung already walked keeps its dates and its
+     logged days, and only the stretch after the newest anchor is new. */
+  function rebuildsOf(d){
+    var rs=d&&d.replan&&d.replan.restart;
+    if(!rs)return [];
+    if(rs.rebuilds&&rs.rebuilds.length)return rs.rebuilds;
+    return rs.rebuild?[rs.rebuild]:[];   // the single-slot shape, read forward
   }
   /* ================= the rebuilt landing =================
      The rebase answers a descent that has come apart; this answers the one
@@ -2662,12 +2743,14 @@ try{
        days keep the ceiling they were lived under (the walk hands dates to the
        ones the rebuild stepped past, and no days), then the re-entry and its
        tail, then the same zero object the rest of the app compares against. */
-    var r2=rs.rebuild, r2e=r2?r2Entry(r2.cap,r2.hold):null;
-    if(r2e){
+    var rbs=rebuildsOf(d), g, r2, r2e, pool=descentPool();
+    for(g=0;g<rbs.length;g++){
+      r2=rbs[g];
+      r2e=r2Entry(r2.cap,r2.hold,g);
+      if(!r2e)continue;
       out.push(r2e);
-      var pool=FINE_RUNGS.concat(LANDING_RUNGS);
       for(i=0;i<pool.length;i++)
-        if(pool[i].cap>0&&pool[i].cap<r2.cap)out.push(r2Clone(pool[i],r2.hold));
+        if(pool[i].cap<r2.cap)out.push(r2Clone(pool[i],r2.hold,g));
     }
     out.push(zero);
     return out;
@@ -2957,13 +3040,33 @@ try{
        unrecognised number would put a gap on screen that no control can undo. */
     if(d.gapMaxH!==undefined&&
        !(typeof d.gapMaxH==='number'&&GAP_CHOICES.indexOf(d.gapMaxH)>=0))delete d.gapMaxH;
-    if(d.replan.restart&&d.replan.restart.rebuild!==undefined){
-      var qz=d.replan.restart.rebuild;
-      if(!(qz&&typeof qz==='object'&&!(qz instanceof Array)&&
-           typeof qz.at==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(qz.at)&&
-           qz.at>d.replan.restart.at&&
-           typeof qz.cap==='number'&&!!landRungAt(qz.cap)&&
-           typeof qz.hold==='number'&&r2Pace(qz.hold).hold===qz.hold))delete d.replan.restart.rebuild;
+    if(d.replan.restart){
+      var rsN=d.replan.restart;
+      // the single-slot shape folds into the list; both are read on the way in
+      if(rsN.rebuild!==undefined&&!rsN.rebuilds){rsN.rebuilds=[rsN.rebuild];}
+      delete rsN.rebuild;
+      if(rsN.rebuilds!==undefined){
+        if(!(rsN.rebuilds instanceof Array))delete rsN.rebuilds;
+        else{
+          /* Each entry must postdate the restart AND the entry before it: the
+             walk hands every anchor the days after it, so two anchors out of
+             order would have the later tail claiming days the earlier one is
+             still walking. Anything malformed truncates the list THERE rather
+             than dropping it whole — the re-entries before a bad one describe
+             days that were really lived under them. */
+          var okList=[],prevAt=rsN.at;
+          for(var qi=0;qi<rsN.rebuilds.length;qi++){
+            var qz=rsN.rebuilds[qi];
+            if(!(qz&&typeof qz==='object'&&!(qz instanceof Array)&&
+                 typeof qz.at==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(qz.at)&&
+                 qz.at>prevAt&&
+                 typeof qz.cap==='number'&&!!r2RungAt(qz.cap)&&
+                 typeof qz.hold==='number'&&r2Pace(qz.hold).hold===qz.hold))break;
+            okList.push(qz);prevAt=qz.at;
+          }
+          if(okList.length)rsN.rebuilds=okList;else delete rsN.rebuilds;
+        }
+      }
     }
     /* legacy holds: before the schedule self-adjusted, the banner's hold
        button wrote holdPrompts[day]='held' AND bumped data.holds — and since
@@ -3034,7 +3137,13 @@ try{
   // r2 is read before rs: a rebuilt-restart rung carries both flags, and a
   // hold left on the restart rung of the same cap must not follow it into the
   // rebuild — the same separation 'l' and 'r' already keep from 'c'
-  function holdKey(i){var p=BASE_PHASES[i];return p?(p.r2?'2':p.rs?'s':p.ld?'l':p.rb?'r':'c')+p.cap:null;}
+  function holdKey(i){
+    var p=BASE_PHASES[i];
+    if(!p)return null;
+    // generation 0 keeps the '2'+cap shape earlier saves already wrote
+    var pre=p.r2?(p.r2i>0?'2'+p.r2i+'_':'2'):p.rs?'s':p.ld?'l':p.rb?'r':'c';
+    return pre+p.cap;
+  }
   function holdsAt(i){var k=holdKey(i);return (k&&data.holds[k])||0;}
   function setHoldsAt(i,v){
     var k=holdKey(i);if(!k)return;
@@ -3142,11 +3251,20 @@ try{
        first two so the walk can never disagree with buildLadder about whether
        a rebuilt tail exists. It is always the newest anchor on the calendar:
        it can only be taken while a restart is already running. */
-    var r2Date=null,r2Key=null,r2CapVal=null,r2Hold=null,r2Entered=false;
-    for(ri=0;ri<BASE_PHASES.length;ri++)if(BASE_PHASES[ri].r2){
-      r2Key=data.replan.restart.rebuild.at;r2Date=dateOf(r2Key);
-      r2Hold=data.replan.restart.rebuild.hold||2;break;
-    }
+    /* One anchor per rebuild generation. A rung belonging to generation g runs
+       until generation g+1's anchor and no further — restart rungs are
+       generation -1 and stop at the first rebuild. That is the same rule the
+       rebase and landing crossings already use, applied down a list instead of
+       to a single date. */
+    var rbList=rebuildsOf(data);
+    var r2Dates=rbList.map(function(r){return dateOf(r.at);});
+    var r2Entered=rbList.map(function(){return false;});
+    var r2Key=rbList.length?rbList[rbList.length-1].at:null;
+    var r2Date=r2Dates.length?r2Dates[0]:null;      // where the rebuilt tail begins
+    var r2CapVal=null,r2Hold=rbList.length?(rbList[rbList.length-1].hold||2):null;
+    // the anchor that ends a rung of generation g (-1 = the restart's own rungs)
+    function nextAnchor(g){var n=(g==null?-1:g)+1;return n<r2Dates.length?r2Dates[n]:null;}
+    function genOf(p){return p.r2?(p.r2i||0):-1;}
     function relbl(start,end){
       if(!end)return fmtShort(start)+' →';
       if(start.getMonth()===end.getMonth())return fmtShort(start)+'–'+end.getDate();
@@ -3222,19 +3340,21 @@ try{
          budget refills — a rebuild is a dated choice, and the strain of a
          ladder that was outrunning the days has nothing to say about steps
          that were just rebuilt to be slower. */
-      if(r2Date&&p.r2&&!r2Entered){
-        r2Entered=true;r2CapVal=p.cap;
-        if(cur<r2Date){
+      var pg=genOf(p), pAnchor=nextAnchor(pg);
+      if(p.r2&&r2Dates[pg]&&!r2Entered[pg]){
+        r2Entered[pg]=true;r2CapVal=p.cap;
+        var ad=r2Dates[pg];
+        if(cur<ad){
           var pr=out[out.length-1];
-          if(pr&&pr.end){pr.end=addDays(r2Date,-1);pr.lbl=relbl(pr.start,pr.end);}
-          cur=new Date(r2Date);
+          if(pr&&pr.end){pr.end=addDays(ad,-1);pr.lbl=relbl(pr.start,pr.end);}
+          cur=new Date(ad);
         }
         slack=SLACK_TOTAL;carry=0;
       }
-      /* a restart rung the rebuild stepped past. Same treatment the rebase and
+      /* a rung a later rebuild stepped past. Same treatment the rebase and
          landing give the rungs they skip: it stays in the ladder so every
          other rung keeps its index, and it gets no dates and no days. */
-      if(p.days&&p.rs&&!p.r2&&r2Date&&cur>=r2Date){
+      if(p.days&&p.rs&&pAnchor&&cur>=pAnchor){
         out.push({start:null,end:null,lbl:'',skipped:true,held:0,early:0,eased:0});
         continue;
       }
@@ -3269,9 +3389,9 @@ try{
         // from that date the days are zero days, and a capped rung must not
         // charge, defer or hold against one
         if(fnDate&&!p.rs&&(!stop||fnDate<stop))stop=fnDate;
-        // and a restart rung halts at the second descent's rebuild: from that
-        // date the days belong to the rebuilt tail, charges and all
-        if(r2Date&&p.rs&&!p.r2&&(!stop||r2Date<stop))stop=r2Date;
+        // and every restarted rung halts at the next rebuild's anchor: from
+        // that date the days belong to the newer tail, charges and all
+        if(p.rs&&pAnchor&&(!stop||pAnchor<stop))stop=pAnchor;
         while(done<dur+auto){
           if(stop&&d>=stop)break;
           if(d<=lim){
@@ -4693,12 +4813,45 @@ try{
        describing them, and a hold is the cheaper answer);
      and the log landing a whole rung above today's ceiling — the one
        condition none of the smaller answers can fix. */
+  /* Where a rebuilt tail re-enters: the smallest rung clearing the median of
+     the last three fully-logged days. Same rule as the rebase's, over the
+     fuller pool — with 7, 6 and 4 in it the ceiling it lands on can be one the
+     coarse ladder could not express, which is the point of having them. */
+  function r2Suggest(){
+    var vals=[], d=addDays(today,-1), tries=0, startD=schedule()[0].start;
+    while(vals.length<3&&tries<14&&d>=startD){
+      var c=countOf(dkeyOf(d));
+      if(c!==null)vals.push(c);
+      d=addDays(d,-1);tries++;
+    }
+    if(vals.length<3)return null;
+    var med=vals.slice().sort(function(a,b){return a-b;})[1];
+    var pool=descentPool().slice().reverse();       // shallowest first
+    for(var i=0;i<pool.length;i++)if(pool[i].cap>=med)
+      return {cap:pool[i].cap,capText:pool[i].capText,med:med,last:vals.slice().reverse()};
+    var top=COARSE_RUNGS[0];
+    return {cap:top.cap,capText:top.capText,med:med,last:vals.slice().reverse()};
+  }
   function restart2Suggest(){
     if(isZeroEra)return null;
     var sch=schedule();
-    if(!sch.restarted||sch.rebuilt)return null;
+    if(!sch.restarted)return null;
+    /* Not once-only any more, and that is the fix. The guard here used to be
+       `sch.rebuilt`, copied from the moves above it on the reasoning that a
+       descent rebuildable forever is zero receding one mercy at a time. That
+       reasoning holds for moves that BUY TIME and it does not hold for this
+       one, which buys a reachable ceiling: the re-entry is read off the log
+       and can never be argued upward, and the evidence gate below — budget
+       spent, days landing a whole rung above the cap — is not a thing a person
+       can want their way into. Spending it once and then having no answer the
+       second time the ladder outran the days was the exact failure this move
+       was written for, arriving one level up.
+       What the budget still bounds is the drift; what stays bounded here is
+       the day: one re-entry per day, so a rung gets a night before it is
+       judged. */
+    if(sch.rebuilt===todayKey)return null;
     if(sch.locked||sch.slack>0)return null;
-    var sug=rebSuggest();
+    var sug=r2Suggest();
     if(!sug||sug.cap<=cap)return null;
     // how the restarted descent has actually gone: logged days since the
     // re-entry, and how many of them landed over the ceiling they were given
@@ -4720,41 +4873,70 @@ try{
      a reload. Defaults to three: two days a rung is the pace this descent has
      been walking, so it is the one option the log has already argued against. */
   var r2Sel=3;
-  function restart2OfferHTML(sug){
+  /* The ceiling to re-enter at. Null follows the recommendation; a tap pins
+     one. Transient like the pace — nothing is chosen until the commit. */
+  var r2SelCap=null;
+  /* Manual mode. The automatic offer fires on evidence: budget spent, days
+     landing a whole rung above the cap. That is the right trigger for a plan
+     that has already broken, and it is the wrong one — the only one — for a
+     person who can see the next step coming and knows they cannot hold it.
+     Complying and miserable produces no evidence at all, so the app had
+     nothing to say to "this is not realistic" until it had already stopped
+     being true. This is that sentence, given a button. */
+  var r2Open=false;
+  // ceilings a person can re-enter at by hand: above today's, and no higher
+  // than the descent already started from — this move rebuilds a ladder, it
+  // does not undo the decision to be on one
+  function r2ManualRungs(){
+    var sch=schedule(), top=sch.rsCap||COARSE_RUNGS[0].cap, out=[];
+    descentPool().forEach(function(q){
+      if(q.cap>cap&&q.cap<=top)out.push(q);
+    });
+    return out.sort(function(a,b){return a.cap-b.cap;});
+  }
+  function restart2OfferHTML(sug,manual){
     var rsRung=rungAtCap(sug.rsCap), rsText=rsRung?rsRung.capText:sug.rsCap;
-    var chain=capChain(sug.capText,r2Tail(sug.cap));
-    var sel=r2Pace(r2Sel).hold, selZ=addDays(today,r2Len(sug.cap,sel));
-    /* The lede is the arithmetic and nothing else. The reasoning that used to
-       open this card is all still here, one fold down — it is the best thing
-       about it — but it was three paragraphs standing between a person and the
-       only control on the card, and the control is the part that is urgent. */
-    return '<div class="sc-fine">'+
-      '<p class="sc-note" style="font-size:13px;color:var(--ink)"><b>This schedule has stopped describing your days.</b> '+
-      'Your last three full days: <b>'+sug.last.join(', ')+'</b>. Today\'s cap: <b>'+cap+'</b>. '+
-      (sug.total?sug.over+' of the '+sug.total+' days since you restarted landed over their ceiling, and the':'The')+
-      ' extension days are spent — so the ceiling will keep dropping and nothing will stop it.</p>'+
-      '<p class="sc-note" style="font-size:13px;color:var(--ink);margin-top:9px">'+
-      'Pick a new one. Each starts today at <b>'+sug.capText+'</b> — the middle of those three days — and every day you have already logged keeps the ceiling it was lived under.</p>'+
+    var entryCap=(r2SelCap&&r2RungAt(r2SelCap))?r2SelCap:sug.cap;
+    var entryRung=r2RungAt(entryCap)||{capText:String(entryCap)};
+    var chain=capChain(entryRung.capText,r2Tail(entryCap));
+    var sel=r2Pace(r2Sel).hold, selZ=addDays(today,r2Len(entryCap,sel));
+    var picks=r2ManualRungs();
+    var lede=manual
+      ? '<p class="sc-note" style="font-size:13px;color:var(--ink)"><b>Pick a ceiling you can actually hold.</b> '+
+        'Today\'s is <b>'+cap+'</b>'+(sug.last?', and your last three full days were <b>'+sug.last.join(', ')+'</b>':'')+'. '+
+        'You do not have to blow a ceiling to be allowed to say it is too low — a step you can see you cannot take is worth changing before it is a day you failed rather than a number you fixed.</p>'
+      : '<p class="sc-note" style="font-size:13px;color:var(--ink)"><b>This schedule has stopped describing your days.</b> '+
+        'Your last three full days: <b>'+sug.last.join(', ')+'</b>. Today\'s cap: <b>'+cap+'</b>. '+
+        (sug.total?sug.over+' of the '+sug.total+' days since you restarted landed over their ceiling, and the':'The')+
+        ' extension days are spent — so the ceiling will keep dropping and nothing will stop it.</p>';
+    var capRow=picks.length
+      ? '<p class="sc-note" style="font-size:13px;color:var(--ink);margin-top:9px"><b>Re-enter at</b>'+
+        (manual?'':' — <b>'+sug.capText+'</b> is what your log reads, and you can take a different one')+':</p>'+
+        '<div class="gap-picks">'+picks.map(function(q){
+          return '<button class="gap-pick'+(q.cap===entryCap?' on':'')+'" data-sc="r2cap" data-cap="'+q.cap+'">'+q.capText+'</button>';
+        }).join('')+'</div>'
+      : '<p class="sc-note" style="font-size:13px;color:var(--ink);margin-top:9px">Re-entering at <b>'+entryRung.capText+'</b>.</p>';
+    return '<div class="sc-fine">'+lede+capRow+
+      '<p class="sc-note" style="font-size:13px;color:var(--ink);margin-top:11px">'+
+      'Every day you have already logged keeps the ceiling it was lived under. Pick the pace:</p>'+
       '<div class="r2-opts">'+R2_PACES.map(function(p){
-        var z=addDays(today,r2Len(sug.cap,p.hold));
-        var len=r2Len(sug.cap,p.hold);
+        var z=addDays(today,r2Len(entryCap,p.hold));
+        var len=r2Len(entryCap,p.hold);
         return '<button class="r2-opt'+(p.hold===sel?' on':'')+'" data-sc="r2pick" data-hold="'+p.hold+'">'+
           '<span class="r2-opt-h"><span class="r2-opt-n">'+p.name+'</span>'+
           '<span class="r2-opt-z">'+len+' days · zero '+fmtShort(z)+'</span></span>'+
           '<span class="r2-opt-l">'+chain+'</span>'+
           '<span class="r2-opt-w">'+p.note+'</span></button>';
       }).join('')+'</div>'+
-      '<button class="r2-go" data-sc="r2" data-cap="'+sug.cap+'" data-hold="'+sel+'">'+
+      '<button class="r2-go" data-sc="r2" data-cap="'+entryCap+'" data-hold="'+sel+'">'+
         'Start this schedule — zero '+WEEKDAYS[selZ.getDay()]+', '+fmtShort(selZ)+'</button>'+
-      '<p class="r2-undo">Nothing is erased, and you can undo it for the rest of today.</p>'+
+      '<p class="r2-undo">Nothing is erased, and you can undo it for the rest of today.'+
+      (manual?' <button class="sc-act" data-sc="r2close">Never mind</button>':'')+'</p>'+
       '<details class="sc-why"><summary>Why this, and what it changes</summary>'+
-      '<p class="sc-note">It re-entered at <b>'+rsText+'</b> on '+fmtShort(dateOf(sug.since))+
-      ' and has been stepping down at two days a rung ever since, while the log stayed where it was. '+
-      'Holding a step for one more day cannot close a gap of whole rungs — that is what this move is for, and it is the same move the first descent got when the same thing happened to it.</p>'+
-      '<p class="sc-note">Two rungs the last ladder did not have sit at the bottom on purpose: the restart exists because a quit came apart, and <b>2–3 straight to nothing</b> is the largest single drop in the plan. '+
-      'The extension budget refills, so the new ladder has its own five days of give.</p>'+
-      '<p class="sc-note">Two days a rung is offered because it is what this descent has been walking, and the log — not the app — is the thing that gets to say whether it was too fast. '+
-      'For daily use of this length the evidence leans slower: gradual reduction “over weeks”. <a class="dlink" href="guide.html#taper">Why →</a></p>'+
+      '<p class="sc-note">This descent re-entered at <b>'+rsText+'</b> on '+fmtShort(dateOf(sug.since))+
+      '. Holding a step for one more day cannot close a gap of whole rungs, and it cannot lower a ceiling that is simply too high a bar — that is what this move is for, and it can be taken as often as the ladder needs it.</p>'+
+      '<p class="sc-note">The tail runs <b>'+chain+'</b>. Below the daytime cut it steps one hit at a time — 8, 7, 6, 5, 4, 3, then the evenings — because that is the stretch where every attempt on this record has actually come apart, and the same percentage down there is a smaller and smaller number of hits to hold onto. The extension budget refills, so the new ladder has its own five days of give.</p>'+
+      '<p class="sc-note">For daily use of this length the evidence leans slower: gradual reduction “over weeks”, and slower the heavier and longer the use. <a class="dlink" href="guide.html#taper">Why →</a></p>'+
       '</details></div>';
   }
   function renderSchedCtl(){
@@ -4915,7 +5097,21 @@ try{
        those days under ceilings they were never held to. */
     var r2='';
     var r2g=restart2Suggest();
-    if(r2g)r2=restart2OfferHTML(r2g);
+    if(r2g)r2=restart2OfferHTML(r2g,false);
+    else if(sch.restarted&&!isZeroEra&&idx>=0&&idx<BASE_PHASES.length-1&&sch.rebuilt!==todayKey&&r2ManualRungs().length){
+      /* the manual door. Always present on a restarted descent that still has
+         a rung above today's — because "I can't hold this" is a thing a person
+         knows before the log does, and the automatic offer above only ever
+         speaks after the fact. */
+      var man=r2Suggest()||{cap:cap,capText:phase.capText,last:null};
+      man.rsCap=sch.rsCap;man.since=sch.restarted;
+      r2=r2Open
+        ? restart2OfferHTML(man,true)
+        : '<div class="sc-fine"><p class="sc-note"><b>Is this ceiling too low?</b> '+
+          'Today asks for <b>'+cap+'</b>. If that is not a number you can hold, the ladder can be rebuilt from one you can — '+
+          'as often as it needs to be, and without waiting for a day you went over to prove it.</p>'+
+          '<div class="sc-hand"><button data-sc="r2open">Rebuild from a higher ceiling</button></div></div>';
+    }
     else if(sch.rebuilt===todayKey){
       var r2r=landRungAt(sch.r2Cap);
       r2='<div class="sc-fine"><p class="sc-note">This descent was rebuilt today, re-entering at <b>'+
@@ -8722,15 +8918,34 @@ try{
       renderAll();
       return;
     }
+    // ceiling and door state are the same kind of transient as the pace: they
+    // move a highlight and rewrite the button, and write nothing to the record
+    else if(act==='r2cap'){r2SelCap=+b.dataset.cap||null;renderAll();return;}
+    else if(act==='r2open'){r2Open=true;r2SelCap=null;renderAll();return;}
+    else if(act==='r2close'){r2Open=false;r2SelCap=null;renderAll();return;}
     else if(act==='r2'){
       if(data.replan.restart){
-        data.replan.restart.rebuild={at:todayKey,cap:+b.dataset.cap,hold:+b.dataset.hold||2};
+        var rsO=data.replan.restart;
+        if(!rsO.rebuilds)rsO.rebuilds=rsO.rebuild?[rsO.rebuild]:[];
+        delete rsO.rebuild;                       // the list is the record now
+        rsO.rebuilds.push({at:todayKey,cap:+b.dataset.cap,hold:+b.dataset.hold||2});
         delete data.replan.lockFrom;
+        r2Open=false;r2SelCap=null;
         relader();
       }
     }
+    /* undo pops the newest re-entry only. The ones before it have logged days
+       filed against them and unwinding those would re-file days under ceilings
+       they were never held to — the same reason every other undo here is
+       same-day. */
     else if(act==='unr2'){
-      if(data.replan.restart)delete data.replan.restart.rebuild;
+      var rsU=data.replan.restart;
+      if(rsU){
+        if(!rsU.rebuilds)rsU.rebuilds=rsU.rebuild?[rsU.rebuild]:[];
+        delete rsU.rebuild;
+        rsU.rebuilds.pop();
+        if(!rsU.rebuilds.length)delete rsU.rebuilds;
+      }
       relader();
     }
     /* a standing preference, not a dated move: no anchor, no undo row, and it
