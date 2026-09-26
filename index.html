@@ -6562,6 +6562,9 @@ try{
     }
     function add(a,b,txt){rows.push({a:a,b:b,txt:txt});}
     for(var i=0;i<sch.length-1;i++){
+      // a rung a rebuild skipped has no dates at all ({skipped:true,start:null})
+      // — every other consumer of the walk passes over it, and so must the road
+      if(sch[i].skipped||!sch[i].start)continue;
       if(sch[i].end&&sch[i].end<today)continue;
       add(sch[i].start,sch[i].end,'<strong>Cap '+BASE_PHASES[i].capText+'</strong> · '+BASE_PHASES[i].rule);
     }
