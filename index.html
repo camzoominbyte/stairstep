@@ -1460,267 +1460,357 @@
 
 
   /* ==== [P] PLAN ==== */
-  /* legacy rules moved here unchanged by foundation (fonts token-swapped: Karla -> var(--f-ui), Fraunces -> var(--f-round)); owner rewrites this section */
+  /* Plan tab: staircase contour hero → today's plan → the schedule, and why
+     (ledger + moves) → the whole descent strip → every step (fold) → after
+     zero. Every card root sets no display of its own, so [hidden] still wins. */
 
-  /* ---- after zero: if-then plans, reward ladder ----
-     Card roots deliberately set no `display`, so the plain [hidden]
-     attribute still hides them. Anything inside that DOES take a display
-     gets its own [hidden] rule immediately after, later in the sheet than
-     the rule it has to beat — equal specificity, last one wins. */
+  /* ---- 1. hero: the staircase contour ---- */
+  #stairsWrap{padding:16px var(--pad) 16px;overflow:hidden}
+  .stairs .st-h{margin-bottom:4px}
+  .stairs .st-h .label{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .st-scroll{position:relative}
+  .st-scroll.wide{
+    display:flex;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;
+    margin:0 calc(var(--pad) * -1);padding:0 var(--pad);-webkit-overflow-scrolling:touch;
+    -webkit-mask:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 14px),transparent);
+            mask:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 14px),transparent);
+  }
+  .st-scroll::-webkit-scrollbar{display:none}
+  .st-svg{display:block;flex:none;overflow:visible}
+  .st-svg text{font-family:var(--f-round);font-variant-numeric:tabular-nums}
+  .st-old{stroke:var(--ink-3);stroke-width:1.2;stroke-dasharray:4 5}
+  .st-ax{font-size:10.5px;font-weight:600;fill:var(--ink-3)}
+  .st-axis{stroke:var(--line-2);stroke-width:1}
+  .st-walk{fill:none;stroke:url(#stRamp);stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
+  .st-ahead{fill:none;stroke:url(#stRamp);stroke-width:3;stroke-linecap:round;stroke-dasharray:.1 6.5}
+  .st-fill.st-in{animation:fade-in 900ms var(--e-enter) both}
+  .st-glow{stroke:var(--acc);stroke-width:13;stroke-linecap:round;stroke-opacity:.3}
+  .st-lit{stroke:var(--acc);stroke-width:5;stroke-linecap:round}
+  .st-capn{font-size:19px;font-weight:750;letter-spacing:-.02em;fill:var(--ink)}
+  .st-capn.past{fill:var(--ink-2)}
+  .st-capn.now{font-size:26px;fill:var(--acc-t)}
+  .st-capn.zero{fill:var(--under-t)}
+  .st-act{font-size:10.5px;font-weight:700;letter-spacing:.01em}
+  .st-act .un,.st-act .at{fill:var(--ink-2)}
+  .st-act .ov{fill:var(--over-t)}
+  .st-act .nl{fill:var(--ink-3)}
+  .st-tick{stroke:var(--over);stroke-width:2.2;stroke-linecap:round}
+  .st-dl{font-size:11px;font-weight:650;fill:var(--ink-2)}
+  .st-gl{font-size:10.5px;font-weight:600;fill:var(--ink-3)}
+  .st-dl.now,.st-gl.now{fill:var(--acc-t);font-weight:750}
+  .st-pill rect{fill:var(--acc)}
+  .st-pill text{font-size:10.5px;font-weight:750;fill:var(--on-acc);letter-spacing:.01em}
+  .st-halo{fill:var(--acc);opacity:.22}
+  .st-knob{fill:var(--ink);stroke:var(--acc);stroke-width:2.5}
+  .st-hit{fill:transparent;cursor:pointer;outline:none;-webkit-tap-highlight-color:transparent}
+  .st-hit:focus-visible{fill:var(--acc-bg)}
+  /* the baseline progress track: ~30 → zero, the unreached part veiled */
+  .st-base{margin-top:12px}
+  .st-track{position:relative;height:8px;border-radius:4px;background:var(--ramp)}
+  .st-veil{position:absolute;left:var(--k);right:0;top:0;bottom:0;border-radius:0 4px 4px 0;background:var(--s1);opacity:.72}
+  .st-kn{
+    position:absolute;left:var(--k);top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;
+    background:var(--ink);box-shadow:0 0 0 3px var(--acc),0 0 14px var(--acc-glow);
+  }
+  .st-bl{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:10px;font-size:11.5px;font-weight:600;color:var(--ink-3);white-space:nowrap}
+  .st-bl b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis}
 
-  .ac-h{
-    font-family:var(--f-round);font-size:17px;font-weight:600;color:var(--sand);
-    margin:22px 0 9px;padding-top:14px;border-top:1px solid var(--line);
+  /* ---- 2. the step-down fold: a flat flow of cards on the canvas ---- */
+  #stepFold.pl-flow{background:transparent;box-shadow:none;border-radius:0}
+  #stepFold.pl-flow[open]:not([style*="height"]){overflow:visible}
+  #stepFold>summary{padding:12px 4px}
+  #stepFold>summary .fold-ic{background:var(--s1);box-shadow:var(--shadow-card)}
+  #stepFold>.fold-body{padding:2px 0 0}
+  #stepSection{margin-bottom:8px}
+  #stepSection>.xopen{top:14px;right:14px}
+  #stepSection .btn.sm,#afterSection .btn.sm{position:relative}
+  #stepSection .btn.sm::before,#afterSection .btn.sm::before{content:"";position:absolute;inset:-4px 0}
+  .pl-h{
+    display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+    font-family:var(--f-round);font-size:20px;font-weight:700;letter-spacing:-.015em;color:var(--ink);
+    margin:22px 4px 10px;
   }
-  .zp-head{margin:2px 0 4px}
-  .zp-t{font-family:var(--f-round);font-size:19px;font-weight:600;color:var(--sand);margin:0 0 3px}
-  .zp-f{font-size:13px;color:var(--ink);line-height:1.55;margin:0 0 4px}
-  .zp-bar{display:flex;gap:3px;margin:10px 0 2px}
-  .zp-seg{flex:1;height:5px;border-radius:3px;background:var(--surface2)}
-  .zp-seg.on{background:var(--sage)}
-  .zp-seg.now{background:var(--accent)}
+  .pl-h[hidden]{display:none}
+  .pl-h small{font-family:var(--f-ui);font-size:13px;font-weight:500;color:var(--ink-2);letter-spacing:0;margin-left:6px}
+  .pl-h .dlink{font-family:var(--f-ui);font-size:14px;letter-spacing:0;display:inline-flex;align-items:center;gap:1px;min-height:44px;margin:-14px 0}
+  .pl-evid{border-top:0;margin:14px 4px 0;padding-top:0}
 
-  .planlist{display:flex;flex-direction:column;gap:9px}
-  .planlist[hidden]{display:none}
-  .pl-row{
-    display:flex;align-items:flex-start;gap:9px;background:var(--surface2);
-    border-radius:11px;padding:11px 12px;font-size:13px;color:var(--ink);line-height:1.5;
-  }
-  .pl-row .pl-k{flex:1;min-width:0}
-  .pl-row .pl-k b{color:var(--sand)}
-  .pl-if{color:var(--accent);font-weight:700}
-  .pl-then{color:var(--sage);font-weight:700}
-  .pl-sug{border:1px dashed var(--line);background:transparent}
-  .pl-act{
-    font:inherit;font-size:11.5px;font-weight:700;color:var(--muted);background:transparent;
-    border:1px solid var(--line);border-radius:999px;padding:5px 10px;cursor:pointer;flex:0 0 auto;
-  }
-  .pl-act.warn{color:var(--clay);border-color:rgba(158,90,62,.4)}
-  .pl-edit{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
-  .pl-edit[hidden]{display:none}
-  .pl-edit input{
-    font:inherit;font-size:13.5px;padding:8px 10px;border:1px solid var(--line);
-    border-radius:9px;background:var(--surface);color:var(--sand);flex:1 1 160px;min-width:0;
-  }
-  .lb-row{
-    display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink);
-    padding:9px 0;border-bottom:1px solid var(--hair);
-  }
-  .lb-row:last-child{border-bottom:none}
-  .lb-row .lb-k{flex:1;min-width:0}
-  .lb-row .lb-k b{color:var(--sand)}
-  .lb-v{font-family:var(--f-round);font-weight:600;font-size:16px;color:var(--sage);flex:0 0 auto}
-  .lb-s{font-weight:400;color:var(--muted);font-size:11px}
+  /* ---- 3. today's plan card ---- */
+  #todayPlan{margin-bottom:0}
+  #todayPlan .tp-h{padding-right:40px;margin-bottom:10px}
+  #todayPlan .tp-h .label{min-width:0}
+  .tp-goal{font-family:var(--f-round);font-size:18px;font-weight:650;line-height:1.3;letter-spacing:-.015em;color:var(--ink);margin:0 0 14px;text-wrap:pretty}
+  .tp-rules{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:0 0 12px}
+  .tp-rules>div{display:flex;flex-direction:column;min-width:0}
+  .tp-rules>div+div{border-left:1px solid var(--line);padding-left:14px}
+  .tp-rules .n-xl{font-size:40px;line-height:1;letter-spacing:-.03em;white-space:nowrap}
+  .tp-rules .unit{font-size:.5em;color:var(--ink-2);margin-left:1px;font-weight:650;letter-spacing:0}
+  .tp-rules>div>span:last-child{font-size:12.5px;font-weight:600;color:var(--ink-2);margin-top:6px}
+  .tp-note{font-size:13.5px;line-height:1.42;color:var(--ink-2);margin:8px 0 0;text-wrap:pretty}
+  .tp-note b{color:var(--ink);font-weight:650}
+  .tp-kv{display:flex;flex-direction:column;gap:10px;margin:14px 0 10px;padding-top:14px;border-top:1px solid var(--line)}
+  .tp-kv>div{display:grid;grid-template-columns:82px minmax(0,1fr);gap:10px;align-items:start;font-size:13.5px;color:var(--ink-2);line-height:1.5;font-variant-numeric:tabular-nums}
+  .tp-kv>div>.chip{justify-content:center}
+  .tp-kv b{color:var(--ink);font-weight:700}
+  .tp-kv s{color:var(--ink-3);text-decoration-thickness:1.5px}
+  .tp-kv span .chip{height:20px;font-size:11px;padding:0 7px;gap:4px;vertical-align:1px}
+  .tp-kv span .chip .dot{width:6px;height:6px}
+  .tp-landing{margin-top:14px;padding:14px;border-radius:var(--r-md);background:var(--adjust-bg);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--adjust) 28%,transparent)}
+  /* inner folds (ways through / how it may feel): flat rows split by hairlines */
+  #todayPlan details.tp-fold{background:transparent;box-shadow:none;border-radius:0;margin:0;border-top:1px solid var(--line);overflow:visible}
+  #todayPlan details.tp-fold:last-child{margin-bottom:-8px}
+  #todayPlan .tp-fold>summary{display:grid;grid-template-columns:30px minmax(0,1fr) auto;column-gap:11px;row-gap:0;align-items:center;padding:11px 0;min-height:44px}
+  .tf-ic{grid-column:1;grid-row:1/3;width:30px;height:30px;border-radius:9px;background:var(--s2);color:var(--ink-2);display:grid;place-items:center}
+  .tf-ic .ic{width:17px;height:17px}
+  .tf-t{grid-column:2;grid-row:1;font-size:14.5px;font-weight:650;color:var(--ink)}
+  .tf-l{grid-column:2;grid-row:2;font-size:12.5px;font-weight:500;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+  #todayPlan .tp-fold>summary::after{grid-column:3;grid-row:1/3;margin-left:0}
+  .tf-b{padding:0 0 14px}
+  .tf-b .tp-feel>.tp-day-k{display:none}
 
+  /* the day rail: 6a → 2a, windows as capsules holding the sitting's hits */
+  .tp-rail{display:block;width:100%;height:auto;overflow:visible;margin:2px 0 0}
+  .tp-rail text{font-family:var(--f-round);font-variant-numeric:tabular-nums}
+  .rl-track{stroke:var(--s3);stroke-width:6;stroke-linecap:round}
+  .rl-so{stroke:var(--acc);stroke-width:6;stroke-linecap:round;stroke-opacity:.35}
+  .rl-ax{font-size:10.5px;font-weight:600;fill:var(--ink-3)}
+  .rl-gap{font-size:10.5px;font-weight:650;fill:var(--ink-3)}
+  .rl-win{fill:var(--s2);stroke:var(--ghost);stroke-width:1.5}
+  .rl-win.done{stroke:var(--line-2)}
+  .rl-win.next{fill:var(--s1);stroke:var(--acc);stroke-dasharray:3 3}
+  .rl-dot{fill:none;stroke:var(--ink-3);stroke-width:1.2}
+  .rl-dot.on{fill:var(--ink);stroke:none}
+  .rl-lbl{font-size:11.5px;font-weight:700;fill:var(--ink)}
+  .rl-lbl.next{fill:var(--acc-t)}
+  .rl-ck{color:var(--under);fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+  .rl-off{fill:var(--ink-2)}
+  .rl-more{font-size:10px;font-weight:700;fill:var(--over-t)}
+  .rl-now{stroke:var(--ink);stroke-width:2;stroke-linecap:round}
+  .rl-nowk{fill:var(--ink);stroke:var(--acc);stroke-width:2.2}
+  .rl-nowt{font-size:10.5px;font-weight:750;fill:var(--acc-t)}
 
-  /* ---- staircase: a colour-coded descent, warm at the top → sage at zero ---- */
-  .stairs{display:flex;gap:4px;margin:16px 0 34px;align-items:flex-end}
-  .stepcol{
-    flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:8px;
-    height:184px;cursor:pointer;position:relative;
+  /* windows, do-list and the feel forecast — also rendered in the day page */
+  .wins{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px}
+  .win{display:inline-flex;align-items:center;height:26px;padding:0 11px;border-radius:13px;background:var(--acc-bg);color:var(--acc-t);font-size:12.5px;font-weight:650;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .win-note{display:block;font-size:12.5px;color:var(--ink-2);line-height:1.45;margin:6px 0 0}
+  .do-list{list-style:none;margin:2px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+  .do-list li{position:relative;padding:9px 12px 9px 34px;background:var(--s2);border-radius:var(--r-sm);font-size:13.5px;line-height:1.4;color:var(--ink)}
+  .do-list li::before{content:"";position:absolute;left:12px;top:11px;width:13px;height:13px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--acc)}
+  .tp-day-k{font-size:13px;font-weight:600;color:var(--ink-2);margin:0 0 6px}
+  .feel-intro{font-size:13.5px;color:var(--ink-2);line-height:1.45;margin:0 0 10px}
+  .feel-rows{display:flex;flex-direction:column;gap:6px}
+  .feel-row{
+    --kc:var(--ghost);position:relative;display:grid;grid-template-columns:62px minmax(0,1fr);gap:10px;
+    padding:10px 12px 10px 14px;border-radius:var(--r-sm);background:var(--s2);transition:background var(--d-base) var(--e-move);
   }
-  .stepcol:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
-  .step{
-    border-radius:11px 11px 3px 3px;
-    display:flex;justify-content:center;align-items:flex-start;padding-top:9px;
-    transition:transform .4s var(--spring),box-shadow .4s var(--spring),filter .25s;
-  }
-  .step .cap{font-family:var(--f-round);font-weight:600;font-size:21px;line-height:1;transition:color .3s}
-  .stepcol .lbl{
-    font-size:9px;letter-spacing:.07em;text-transform:uppercase;
-    color:var(--muted);text-align:center;font-weight:700;transition:color .3s;
-  }
-  .stepcol .glbl{
-    font-size:8.5px;letter-spacing:.04em;text-transform:uppercase;
-    text-align:center;font-weight:800;margin-top:-5px;white-space:nowrap;
-  }
-  .stepcol.now .glbl{color:var(--accent)}
-  .stepcol.past{opacity:.9}
-  .stepcol.now{z-index:2}
-  .stepcol.now .step{transform:translateY(-7px);box-shadow:0 14px 30px -12px rgba(59,43,20,.4)}
-  .stepcol.now .lbl{color:var(--sand)}
-  /* the "you are here" pip riding above the current step */
-  .stepcol.now::before{
-    content:"";position:absolute;top:-2px;left:50%;width:7px;height:7px;margin-left:-3.5px;
-    border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--bg);
-    animation:nowPulse 2.4s ease-in-out infinite;
-  }
-  @keyframes nowPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.65}}
-  .phase{
-    border:1px solid var(--line);background:var(--surface);border-radius:18px;
-    padding:16px 18px;margin-bottom:12px;scroll-margin-top:64px;
-    box-shadow:var(--shadow-sm);
-    transition:transform .35s var(--spring),box-shadow .35s var(--spring),border-color .35s;
-  }
-  .phase.now{border-color:var(--accent)}
-  .phase.past{opacity:.6}
-  .phase-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-  .phase-dates{font-size:12.5px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
-  .phase-cap{font-family:var(--f-round);font-weight:600;font-size:26px;color:var(--sand);white-space:nowrap}
-  .phase.now .phase-cap{color:var(--accent)}
-  .phase-cap small{font-family:var(--f-ui);font-size:12px;color:var(--muted);font-weight:400}
-  .phase-rule{font-size:13px;color:var(--sage);margin:2px 0 6px;font-weight:700}
-  .phase-held{font-size:12px;color:var(--amber);margin:0 0 6px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
-  .phase p{font-size:14.5px;color:var(--ink)}
-  .phase-days{margin:9px 0 4px;border-top:1px solid var(--hair)}
-  .pd-row{display:flex;align-items:baseline;gap:9px;padding:6px 0;border-bottom:1px solid var(--hair)}
-  .pd-date{flex:0 0 54px;font-size:10.5px;color:var(--muted);font-weight:800;letter-spacing:.05em;text-transform:uppercase}
-  .pd-wins{flex:1;font-size:13px;color:var(--sand);font-weight:700;letter-spacing:.01em}
-  .pd-gap{font-size:11px;color:var(--sage);font-weight:800;white-space:nowrap}
-  .pd-row.past{opacity:.5}
-  .pd-row.today .pd-date,.pd-row.today .pd-wins{color:var(--accent)}
-  .phase-evid{
-    font-size:12.5px;color:var(--muted);font-style:italic;line-height:1.5;
-    margin-top:9px;padding-top:9px;border-top:1px dashed var(--line);
-  }
-  .phase-evid a{color:var(--accent);text-decoration:none;font-weight:700;font-style:normal;white-space:nowrap}
-  .phase.zero{background:var(--surface);border-color:#c3cda4;border-left:3px solid var(--sage)}
-  .phase.zero .phase-cap{color:var(--sage)}
+  .feel-row::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:0 3px 3px 0;background:var(--kc)}
+  .feel-row.ghost{--kc:var(--acc)}
+  .feel-row.edge{--kc:var(--acc-2)}
+  .feel-row.dip{--kc:var(--adjust)}
+  .feel-row.night{--kc:var(--ink-3)}
+  .feel-row.live{background:var(--acc-bg);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 35%,transparent)}
+  .fr-t{font-family:var(--f-round);font-size:12px;font-weight:700;color:var(--ink-2);padding-top:1px;font-variant-numeric:tabular-nums}
+  .feel-row.live .fr-t,.feel-row.ghost .fr-t{color:var(--acc-t)}
+  .fr-b{font-size:13px;line-height:1.45;color:var(--ink-2)}
+  .fr-b b{color:var(--ink);font-weight:650}
+  .fr-fix{display:block;margin-top:4px;font-size:12.5px;font-weight:600;color:var(--ink)}
+  .feel-src{font-size:12px;color:var(--ink-2);line-height:1.45;margin:10px 0 0}
 
-  /* ---- the schedule control: why the dates are what they are, and the
-     one place they can be moved by hand ---- */
-  .schedctl{
-    background:var(--surface);border:1px solid var(--line);
-    border-left:3px solid var(--accent);border-radius:14px;
-    padding:15px 17px;margin:0 0 16px;
+  /* ---- 4. the schedule, and why ---- */
+  #schedCtl{margin-bottom:0}
+  .sc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .sc-zero{min-width:0}
+  .sc-zero .n-lg{margin-top:3px;font-size:30px;white-space:nowrap}
+  .sc-sub{font-size:13px;color:var(--ink-2);margin-top:3px;line-height:1.35}
+  .sc-sub.adj{color:var(--adjust-t);font-weight:600}
+  .sc-ext{text-align:right;flex:none}
+  .sc-ext .n-md{margin-top:6px}
+  .sc-ext small{font-size:14px;color:var(--ink-3);font-weight:600;letter-spacing:0}
+  .sc-pips{display:flex;gap:4px;justify-content:flex-end;margin-top:8px}
+  .sc-pips i{width:20px;height:8px;border-radius:4px;box-shadow:inset 0 0 0 1.5px var(--ghost)}
+  .sc-pips i.on{background:var(--adjust);box-shadow:none}
+  .sc-lockchip{margin-top:8px}
+  .sc-count{display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;margin-top:14px;font-size:13px;color:var(--ink-2);font-weight:500}
+  #schedCtl details.sc-more{background:transparent;box-shadow:none;border-radius:0;margin:14px 0 -8px;border-top:1px solid var(--line);overflow:visible}
+  #schedCtl .sc-more>summary{display:flex;align-items:center;gap:8px;padding:12px 0;min-height:44px}
+  .sc-mt{font-size:14.5px;font-weight:650;color:var(--ink);flex:none}
+  .sc-ml{font-size:12.5px;color:var(--ink-2);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;font-variant-numeric:tabular-nums}
+  .sc-body{padding:0 0 16px}
+  .sc-slack{font-size:12.5px;color:var(--ink-2);line-height:1.45;margin:0 0 4px}
+  .sc-slack b{color:var(--ink);font-weight:650}
+  .sc-empty{font-size:13px;color:var(--ink-2);line-height:1.45;margin:10px 0 0;padding:12px 14px;border-radius:var(--r-sm);background:var(--s2)}
+  .sc-lh{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink-2);margin:14px 0 4px}
+  .sc-lh span{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:550;color:var(--adjust-t)}
+  .sc-row{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+  .sc-d{font-size:12.5px;font-weight:650;color:var(--ink-2);font-variant-numeric:tabular-nums;line-height:1.2}
+  .sc-k{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;min-width:0}
+  .sc-n{font-family:var(--f-round);font-weight:700;font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums}
+  .sc-n small{font-size:12.5px;color:var(--ink-3);font-weight:600}
+  .sc-w{flex-basis:100%;font-size:12.5px;line-height:1.35;color:var(--ink-2)}
+  .sc-row.adj .sc-w{color:var(--adjust-t);font-weight:600}
+  .sc-row.pre .sc-w{color:var(--ink-3)}
+  .sc-row.pre .sc-n{color:var(--ink-2)}
+  .sc-row .sc-act{height:36px;padding:0 12px;font-size:13px;gap:5px}
+  .sc-row .sc-act .ic{width:14px;height:14px}
+  .sc-act.warn{color:var(--over-t)}
+  /* the moves: every answer on offer, each with where zero lands */
+  .sc-moves{margin-top:6px}
+  .sc-moves .sc-lh{margin-bottom:8px}
+  .sc-mv{display:grid;grid-template-columns:88px minmax(0,1fr);gap:4px 12px;align-items:start;padding:12px;border-radius:var(--r-md);background:var(--s2);margin-top:8px}
+  .sc-mv.nt{grid-template-columns:minmax(0,1fr)}
+  .sc-mv.reb,.sc-mv.on{background:var(--adjust-bg);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--adjust) 26%,transparent)}
+  .mv-th{display:block;width:88px;height:44px;overflow:visible;margin-top:3px}
+  .th-ax{stroke:var(--line-2);stroke-width:1}
+  .th-cur{fill:none;stroke:var(--ghost);stroke-width:1.5;stroke-dasharray:2.5 2.5}
+  .th-opt{fill:none;stroke:var(--acc);stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
+  .th-lock{stroke:var(--adjust);stroke-width:2;stroke-linecap:round}
+  .th-end{fill:var(--acc)}
+  .mv-tx{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .mv-tx>b{font-size:15px;font-weight:650;color:var(--ink);letter-spacing:-.01em}
+  .mv-out{font-size:13px;color:var(--ink-2);line-height:1.35;font-variant-numeric:tabular-nums}
+  .mv-out b,.mv-sub b{color:var(--ink);font-weight:700}
+  .mv-out .mono,.mv-sub .mono{font-family:var(--f-mono);font-size:11.5px;color:var(--ink);letter-spacing:-.02em}
+  .mv-sub{font-size:12px;color:var(--ink-2);line-height:1.42;margin-top:3px}
+  .mv-btns{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .mv-btns .btn{flex:0 0 auto}
+  .sc-landing{margin-top:14px;padding:14px;border-radius:var(--r-md);background:var(--adjust-bg);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--adjust) 28%,transparent)}
+  /* legacy offer markup (landOfferHTML, owned by today-context) inside Plan's containers */
+  .sc-fine{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+  .sc-landing .sc-fine,.tp-landing .sc-fine{margin:0;padding:0;border:0}
+  .sc-note,.sc-sum{font-size:12.5px;color:var(--ink-2);line-height:1.45;margin:12px 0 0}
+  .sc-fine .sc-note:first-child{margin-top:0}
+  .sc-note b,.sc-sum b{color:var(--ink);font-weight:650}
+  .sc-hand{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .sc-hand button:not(.btn){
+    position:relative;display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:8px 14px;
+    border-radius:20px;border:0;cursor:pointer;background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line-2);
+    font:600 14px/1.25 var(--f-ui);text-align:center;
   }
-  .schedctl h3{
-    font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
-    color:var(--accent);margin:0 0 9px;font-family:var(--f-ui);
-  }
-  .sc-zero{font-family:var(--f-round);font-weight:600;font-size:17px;color:var(--sand);margin:0 0 3px}
-  .sc-sum{font-size:13px;color:var(--ink);margin:0 0 10px;line-height:1.5}
-  .sc-row{
-    display:flex;align-items:baseline;gap:9px;padding:7px 0;
-    border-top:1px solid var(--hair);font-size:12.5px;color:var(--ink);
-  }
-  .sc-row .sc-k{flex:1;min-width:0}
-  .sc-row .sc-k b{color:var(--sand)}
-  .sc-row.declined .sc-k b{color:var(--clay)}
-  .sc-act{
-    flex:0 0 auto;font-family:var(--f-ui);font-weight:700;font-size:12px;
-    padding:6px 12px;border-radius:10px;border:1px solid var(--line);
-    background:var(--surface2);color:var(--accent);cursor:pointer;
-  }
-  .sc-act.warn{color:var(--clay);border-color:rgba(158,90,62,.4)}
-  .sc-hand{display:flex;gap:9px;margin-top:11px}
-  .sc-hand button{
-    flex:1;font-family:var(--f-ui);font-weight:700;font-size:13px;
-    padding:10px 0;border-radius:12px;border:1px solid var(--line);
-    background:var(--surface2);color:var(--ink);cursor:pointer;
-  }
-  .sc-hand button.pri{border-color:var(--amber);color:var(--amber)}
-  .sc-note{font-size:11.5px;color:var(--muted);margin:9px 0 0;line-height:1.5}
-  /* the half-step offer: set off from the hold controls above it, because it
-     is the other answer to the same question and shouldn't read as one more
-     button in the row */
-  .sc-fine{margin-top:13px;padding-top:12px;border-top:1px solid var(--line)}
-  .sc-fine .sc-note{margin-top:0}
-  .sc-fine .sc-note b{color:var(--sand)}
-  .phase{transition:transform .3s var(--spring),box-shadow .35s var(--spring),border-color .35s}
-  @keyframes growup{from{transform:scaleY(.35);opacity:0}to{transform:scaleY(1);opacity:1}}
-  .stairs.anim .step{transform-origin:bottom;animation:growup .55s var(--spring) both}
-  .stairs.anim .stepcol:nth-child(2) .step{animation-delay:.07s}
-  .stairs.anim .stepcol:nth-child(3) .step{animation-delay:.14s}
-  .stairs.anim .stepcol:nth-child(4) .step{animation-delay:.21s}
-  .stairs.anim .stepcol:nth-child(5) .step{animation-delay:.28s}
-  .stairs.anim .stepcol:nth-child(6) .step{animation-delay:.35s}
-  /* interactive day-by-day schedule strip */
+  .sc-hand button.pri:not(.btn){background:var(--adjust);color:var(--ink-inv);box-shadow:none}
+
+  /* ---- 5. the whole descent: day chips, parked on today ---- */
   .sched-strip{
-    display:flex;gap:8px;overflow-x:auto;padding:4px 2px 12px;margin:0 -2px 2px;
-    -webkit-overflow-scrolling:touch;scrollbar-width:none;
+    position:relative;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+    margin:0 calc(var(--gutter) * -1) 4px;padding:4px var(--gutter) 12px;scroll-snap-type:x proximity;
   }
   .sched-strip::-webkit-scrollbar{display:none}
   .sday{
-    flex:0 0 68px;border:1px solid var(--line);border-radius:14px;background:var(--surface);
-    padding:9px 4px 7px;text-align:center;cursor:pointer;box-shadow:var(--shadow-sm);
-    display:flex;flex-direction:column;gap:2px;align-items:center;
-    transition:transform .25s var(--spring),border-color .25s,box-shadow .25s;
+    flex:0 0 76px;scroll-snap-align:center;display:flex;flex-direction:column;align-items:center;gap:1px;
+    padding:11px 2px 10px;border-radius:var(--r-md);background:var(--s1);box-shadow:var(--shadow-card);
+    cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent;
   }
-  .sday:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .sd-dow{font-size:8.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:700;white-space:nowrap}
-  .sd-cap{font-family:var(--f-round);font-weight:600;font-size:21px;color:var(--sand);line-height:1.15}
-  .sd-gap{font-size:10.5px;color:var(--accent);font-weight:800;white-space:nowrap}
-  .sday.past .sd-gap{color:var(--muted)}
-  .sday.zeroday .sd-gap{color:var(--sage)}
-  .sday.past{opacity:.8}
-  .sday.past.under .sd-cap,.sday.past.clean .sd-cap{color:var(--sage)}
-  .sday.past.at .sd-cap{color:var(--amber)}
-  .sday.past.over .sd-cap,.sday.past.slip .sd-cap{color:var(--clay)}
-  .sday.today{border-color:var(--accent)}
-  .sday.today .sd-dow{color:var(--accent)}
-  .sday.zeroday .sd-cap{color:var(--sage)}
-  .sched-cap{font-size:11.5px;color:var(--muted);margin:2px 0 6px}
-  /* ---- the focal "where I'm at today" plan card ---- */
-  .tplan{
-    border:1px solid var(--line);border-left:3px solid var(--accent);
-    border-radius:16px;background:var(--surface);box-shadow:var(--shadow-sm);
-    padding:15px 17px 16px;margin:2px 0 14px;
+  .sday:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+  #schedStrip .sday.today{
+    margin:0;padding:11px 2px 10px;border:0;border-radius:var(--r-md);animation:none;background:var(--s1);
+    box-shadow:inset 0 0 0 1.5px var(--acc),0 10px 26px -14px var(--acc-glow);
   }
-  .tplan.zero{border-left-color:var(--sage)}
-  .tp-eyebrow{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700}
-  .tp-eyebrow b{color:var(--accent)}
-  .tplan.zero .tp-eyebrow b{color:var(--sage)}
-  .tp-goal{font-family:var(--f-round);font-size:21px;line-height:1.28;color:var(--sand);font-weight:500;margin:6px 0 11px;letter-spacing:-.01em}
-  .tp-struct{display:flex;align-items:center;gap:11px;padding-bottom:12px;border-bottom:1px solid var(--hair)}
-  .tp-cap{font-family:var(--f-round);font-weight:600;font-size:34px;line-height:1}
-  .tp-gap{
-    font-family:var(--f-round);font-weight:600;font-size:34px;line-height:1;
-    color:var(--accent);padding-left:13px;border-left:1px solid var(--hair);
+  .sd-dow{font-size:11px;font-weight:650;color:var(--ink-3);white-space:nowrap}
+  .sd-cap{font-family:var(--f-round);font-size:26px;font-weight:700;letter-spacing:-.02em;color:var(--ink);line-height:1.15;margin-top:2px;font-variant-numeric:tabular-nums}
+  .sd-gap{font-size:11.5px;font-weight:650;color:var(--ink-2);white-space:nowrap}
+  .sday.today .sd-dow,.sday.today .sd-gap{color:var(--acc-t)}
+  .sday.zeroday .sd-cap{color:var(--under-t)}
+  .sday.past{background:var(--s2);box-shadow:inset 0 0 0 1px var(--line)}
+  .sday.past .sd-cap{color:var(--ink-2)}
+  .sd-st{margin-top:6px;height:18px;padding:0 7px;border-radius:9px;display:inline-flex;align-items:center;font-size:10.5px;font-weight:700;white-space:nowrap;background:var(--s3);color:var(--ink-2);font-variant-numeric:tabular-nums}
+  .sd-st.under,.sd-st.clean{background:var(--under-bg);color:var(--under-t)}
+  .sd-st.at{background:var(--atcap-bg);color:var(--atcap-t)}
+  .sd-st.over,.sd-st.slip{background:var(--over-bg);color:var(--over-t)}
+  .sd-st.now{background:var(--acc-bg);color:var(--acc-t)}
+
+  /* ---- 6. every step, laid out (a card fold inside the flow) ---- */
+  #stepFold #phasesFold{background:var(--s1);box-shadow:var(--shadow-card);border-radius:var(--r-md);border-top:0;margin:4px 0 0}
+  #stepFold #phasesFold>summary{padding:14px}
+  #phasesFold>.fold-body{padding:0 14px 14px}
+  #phases{display:flex;flex-direction:column}
+  .phase{padding:14px 0;border-top:1px solid var(--line);scroll-margin-top:84px}
+  .phase:first-child{border-top:0;padding-top:4px}
+  .phase.now{background:var(--acc-bg);border-radius:var(--r-sm);padding:14px 12px;margin:0 -8px;border-top-color:transparent}
+  .phase.now+.phase{border-top-color:transparent}
+  .ph-top{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px}
+  .ph-cap{font-family:var(--f-round);font-size:26px;font-weight:700;letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.1}
+  .ph-cap small{font-family:var(--f-ui);font-size:12.5px;font-weight:600;color:var(--ink-2);letter-spacing:0}
+  .phase.past .ph-cap{color:var(--ink-2)}
+  .phase.now .ph-cap{color:var(--acc-t)}
+  .phase.zero .ph-cap{color:var(--under-t)}
+  .ph-dates{font-size:12.5px;font-weight:650;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  .ph-chips{display:inline-flex;flex-wrap:wrap;gap:6px;margin-left:auto;align-self:center}
+  .ph-note{font-size:12.5px;color:var(--adjust-t);font-weight:600;margin-top:4px}
+  .ph-rule{font-size:13.5px;font-weight:650;color:var(--ink);margin:6px 0 2px;line-height:1.4}
+  .ph-desc{font-size:13.5px;line-height:1.45;color:var(--ink-2)}
+  .phase-days{margin:10px 0 2px;display:flex;flex-direction:column;gap:1px;border-radius:var(--r-sm);overflow:hidden}
+  .pd-row{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:10px;align-items:baseline;padding:7px 10px;background:var(--s2);font-variant-numeric:tabular-nums}
+  .phase.now .pd-row{background:var(--s1)}
+  .pd-date{font-size:12px;font-weight:650;color:var(--ink-2)}
+  .pd-wins{font-family:var(--f-round);font-size:13px;font-weight:650;color:var(--ink)}
+  .pd-gap{font-size:12px;font-weight:600;color:var(--ink-2);white-space:nowrap}
+  .pd-row.past .pd-wins{color:var(--ink-2)}
+  .pd-row.on{box-shadow:inset 3px 0 0 var(--acc)}
+  .pd-row.on .pd-date,.pd-row.on .pd-wins{color:var(--acc-t)}
+  .phase-evid{font-size:12px;color:var(--ink-2);line-height:1.45;margin-top:10px}
+
+  /* ---- 7. after zero: program header, if–then plans, the reward ladder ---- */
+  #afterSection>.xopen{top:0;right:0}
+  .zp-head{margin:2px 0 4px}
+  .zp-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding-right:42px}
+  .zp-top .label b{color:var(--acc-t)}
+  .zp-t{font-family:var(--f-round);font-size:22px;font-weight:700;letter-spacing:-.02em;color:var(--ink);margin:2px 0 0}
+  .zp-top .chip{margin-top:2px}
+  .zp-f{font-size:13.5px;color:var(--ink-2);line-height:1.45;margin:8px 0 0}
+  .zp-bar{display:flex;gap:3px;margin:14px 0 0}
+  .zp-seg{flex:1;height:8px;border-radius:4px;background:var(--s3)}
+  .zp-seg.on{background:var(--acc)}
+  .zp-seg.now{background:var(--acc-bg);box-shadow:inset 0 0 0 1.5px var(--acc)}
+  .zp-ph{display:flex;gap:3px;margin-top:6px}
+  .zp-ph span{min-width:0;padding-left:5px;border-left:1.5px solid var(--ghost);font-size:10.5px;font-weight:600;color:var(--ink-3);white-space:nowrap;overflow:hidden}
+  .zp-ph span.on{color:var(--acc-t);font-weight:750;border-left-color:var(--acc)}
+  .zp-n{font-size:12px;color:var(--ink-2);margin-top:8px}
+  .ac-h{
+    display:flex;align-items:center;gap:9px;font-family:var(--f-round);font-size:17px;font-weight:700;letter-spacing:-.01em;
+    color:var(--ink);margin:20px 0 10px;padding-top:16px;border-top:1px solid var(--line);
   }
-  .tp-struct-txt{font-size:13px;color:var(--sage);font-weight:700;line-height:1.35}
-  .tp-struct-txt small{display:block;font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
-  .tplan.zero .tp-struct{color:var(--ink);font-size:13.5px;line-height:1.5;display:block}
-  /* ---- the day, laid out: session windows + do-list ---- */
-  .tp-day{padding:12px 0 2px;border-bottom:1px solid var(--hair)}
-  .tp-day-k{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:800}
-  .wins{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px}
-  .win{
-    font-size:12.5px;font-weight:800;color:var(--accent);white-space:nowrap;
-    background:rgba(165,104,31,.09);border:1px solid rgba(165,104,31,.28);
-    border-radius:99px;padding:3px 11px;
+  .ac-ic{width:28px;height:28px;border-radius:9px;background:var(--acc-bg);color:var(--acc-t);display:grid;place-items:center;flex:none}
+  .planlist{display:flex;flex-direction:column;gap:8px}
+  .planlist[hidden]{display:none}
+  .pl-row{display:flex;align-items:center;gap:10px;background:var(--s2);border-radius:var(--r-sm);padding:10px 8px 10px 12px;font-size:13.5px;line-height:1.45;color:var(--ink)}
+  .pl-row .pl-k{flex:1;min-width:0}
+  .pl-row .pl-k b{color:var(--ink);font-weight:650}
+  .pl-sug{background:transparent;box-shadow:inset 0 0 0 1.5px var(--line-2);color:var(--ink-2)}
+  .pl-if{color:var(--acc-t);font-weight:700}
+  .pl-then{color:var(--ink);font-weight:700}
+  .pl-share{font-family:var(--f-round);font-weight:700;color:var(--acc-t)}
+  .pl-act{
+    position:relative;flex:none;display:inline-flex;align-items:center;justify-content:center;gap:4px;
+    height:32px;min-width:32px;padding:0 12px;border-radius:16px;border:0;cursor:pointer;
+    background:var(--s1);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-2);font:600 13px var(--f-ui);
   }
-  html.dark .win{background:rgba(224,164,88,.12);border-color:rgba(224,164,88,.35)}
-  .win-note{display:block;font-size:12.5px;color:var(--muted);line-height:1.5;margin:6px 0 0;font-style:italic}
-  .do-list{list-style:none;margin:9px 0 10px;padding:0}
-  .do-list li{position:relative;padding:4px 0 4px 19px;font-size:13.5px;line-height:1.5;color:var(--ink)}
-  .do-list li::before{content:"";position:absolute;left:3px;top:12px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
-  /* ---- how the day may feel: a forecast of the predictable rough patches ---- */
-  .tp-feel{padding:12px 0 2px;border-bottom:1px solid var(--hair)}
-  .feel-intro{font-size:13px;color:var(--ink);line-height:1.5;margin:7px 0 10px}
-  .feel-rows{display:flex;flex-direction:column;gap:1px;border-radius:10px;overflow:hidden}
-  .feel-row{display:flex;gap:11px;padding:9px 11px;background:var(--surface);border-left:3px solid var(--hair);transition:background .3s ease}
-  .feel-row.live{background:var(--accent-soft);border-left-color:var(--accent)}
-  .fr-t{flex:0 0 62px;font-size:11px;font-weight:800;letter-spacing:.02em;color:var(--muted);padding-top:1px;font-variant-numeric:tabular-nums}
-  .feel-row.live .fr-t{color:var(--accent)}
-  .fr-b{font-size:12.5px;line-height:1.5;color:var(--ink)}
-  .fr-b b{color:var(--sand);font-weight:800}
-  .fr-fix{display:block;font-size:12px;color:var(--sage);font-weight:700;margin-top:3px}
-  .feel-row.ghost{border-left-color:var(--accent)}
-  .feel-row.edge{border-left-color:var(--amber)}
-  .feel-row.dip{border-left-color:var(--clay)}
-  .feel-row.night{border-left-color:var(--sage)}
-  .feel-row.am,.feel-row.waves{border-left-color:var(--sand)}
-  .feel-row.ghost .fr-t{color:var(--accent)}
-  .feel-src{font-size:11.5px;color:var(--muted);line-height:1.5;margin:9px 0 0;font-style:italic}
-  .tp-vs{font-size:13.5px;color:var(--ink);line-height:1.5;margin:11px 0}
-  .tp-vs b{color:var(--sand);font-weight:700}
-  .tp-vs-k{display:inline-block;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;font-weight:800;padding:1px 7px;border-radius:99px;margin-right:5px;vertical-align:1px}
-  .tp-vs-k.down{color:var(--sage);background:rgba(100,125,75,.13)}
-  .tp-vs-k.hold{color:var(--amber);background:rgba(165,104,31,.13)}
-  .tp-vs-k.up{color:var(--clay);background:rgba(184,83,53,.13)}
-  .tp-arc{margin-top:12px;padding-top:12px;border-top:1px solid var(--hair)}
-  .tp-track{position:relative;height:9px;border-radius:99px;background:var(--surface2);overflow:visible}
-  .tp-track>i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--amber),var(--sage));transition:width .6s var(--spring)}
-  .tp-track.done>i{background:var(--sage)}
-  .tp-here{position:absolute;top:50%;width:15px;height:15px;border-radius:50%;background:var(--surface);border:3px solid var(--accent);transform:translate(-50%,-50%);box-shadow:0 2px 6px -1px rgba(59,43,20,.4)}
-  .tp-arc-ends{display:flex;justify-content:space-between;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:7px}
-  .tp-arc-lbl{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:5px}
-  .tp-arc-lbl b{color:var(--sand);font-weight:700}
-  html.dark .tp-vs-k.down{background:rgba(163,184,153,.16)}
-  html.dark .tp-vs-k.hold{background:rgba(224,164,88,.16)}
-  html.dark .phase.zero{border-color:#4c5a3b}
-  @media (hover:hover){.stepcol:hover .step{filter:brightness(1.05)}}
+  .pl-act::before{content:"";position:absolute;inset:-6px}
+  .pl-act.warn{width:32px;padding:0;color:var(--ink-2)}
+  .pl-edit{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .pl-edit[hidden]{display:none}
+  .pl-edit input{
+    flex:1 1 180px;min-width:0;height:44px;padding:0 13px;border-radius:var(--r-sm);border:0;
+    background:var(--s2);box-shadow:inset 0 0 0 1px var(--line-2);color:var(--ink);font:16px var(--f-ui);
+  }
+  .pl-edit input::placeholder{color:var(--ink-3)}
+  .pl-edit input:focus{outline:2px solid var(--acc);outline-offset:0}
+  .lb-tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .lb-tile{background:var(--s2);border-radius:var(--r-md);padding:12px 13px;display:flex;flex-direction:column;gap:3px;min-width:0}
+  .lb-tile .label{font-size:12.5px}
+  .lb-tile .n-lg{font-size:26px}
+  .lb-tile .unit{font-size:13px;color:var(--ink-2);font-weight:600;letter-spacing:0}
+  .lb-f{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  .lb-rows{margin-top:6px}
+  .lb-row{display:flex;align-items:baseline;gap:10px;padding:9px 2px;border-top:1px solid var(--line);font-size:13.5px}
+  .lb-row:first-child{border-top:0}
+  .lb-row .lb-k{flex:1;min-width:0;color:var(--ink-2)}
+  .lb-v{flex:none;font-family:var(--f-round);font-weight:700;font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums}
+  .lb-row.warn .lb-v{color:var(--over-t)}
+  .lb-s{display:block;font-size:11.5px;color:var(--ink-3)}
+
+  @media (prefers-reduced-motion:reduce){
+    .st-fill.st-in{animation:none}
+    .feel-row{transition:none}
+  }
   /* ==== [/P] ==== */
 
 
@@ -2451,9 +2541,9 @@ try{
 </main>
 
 <main class="view" id="vPlan">
-<div id="stairsWrap">
+<section class="card st-card" id="stairsWrap" aria-label="The step-down">
   <div class="stairs" id="stairs" aria-label="Step-down schedule — daily hit cap, tap a step for details"></div>
-</div>
+</section>
 
 <details class="fold" id="afterFold" hidden>
   <summary><span class="fold-ic" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg></span><span class="fold-t">After zero</span><span class="fold-live" id="afterFoldLive"></span></summary>
@@ -2463,10 +2553,10 @@ try{
   <h2>After zero</h2>
   <div class="zp-head" id="zpHead"></div>
 
-  <h3 class="ac-h">If–then plans</h3>
+  <h3 class="ac-h"><span class="ac-ic" aria-hidden="true"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-life"/></svg></span>If–then plans</h3>
   <div class="planlist" id="planList"></div>
 
-  <h3 class="ac-h">The ladder</h3>
+  <h3 class="ac-h"><span class="ac-ic" aria-hidden="true"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-coin"/></svg></span>The reward ladder</h3>
   <div class="ladderbox" id="cmBox"></div>
 
   <p class="d-evid">Honest footnote: the reward ladder follows contingency-management design, which is the best-evidenced treatment for cannabis use disorder; the trials verified abstinence externally, and paying yourself on your own word is the weaker form of it. <a class="dlink" href="guide.html#after">The evidence →</a></p>
@@ -2474,19 +2564,23 @@ try{
   </div>
 </details>
 
-<details class="fold" id="stepFold">
-  <summary><span class="fold-ic" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-plan"/></svg></span><span class="fold-t">The step-down</span><span class="fold-live" id="stepFoldLive"></span></summary>
+<details class="fold pl-flow" id="stepFold">
+  <summary><span class="fold-ic" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-plan"/></svg></span><span class="fold-t">Today and the schedule</span><span class="fold-live" id="stepFoldLive"></span></summary>
   <div class="fold-body">
 <div class="section openable" id="stepSection" data-title="The step-down">
   <button class="xopen" data-target="stepSection" data-title="The step-down" aria-label="Open the step-down in detail"><svg class="ic" aria-hidden="true"><use href="#i-open"/></svg></button>
   <h2>The step-down</h2>
   <div class="tplan" id="todayPlan"></div>
-  <div class="schedctl" id="schedCtl" hidden></div>
-  <p class="sched-cap">The whole descent — tap any day for its full plan. <a class="dlink" href="guide.html#playbook">The written playbook →</a></p>
+  <div class="pl-h" id="schedHead" hidden>The schedule, and why</div>
+  <div class="schedctl card" id="schedCtl" hidden></div>
+  <div class="pl-h sched-cap"><span>The whole descent <small>tap a day for its plan</small></span><a class="dlink" href="guide.html#playbook">Playbook<svg class="ic ic-xs" aria-hidden="true"><use href="#i-chev"/></svg></a></div>
   <div class="sched-strip" id="schedStrip" aria-label="Day-by-day schedule — tap a day for details"></div>
   <div class="xtra" id="stepXtra"></div>
-  <div id="phases"></div>
-  <p class="d-evid" style="border-top:none;padding-top:0;margin-top:4px">Honest footnote: the research backs slow, stepped reduction over weeks, but no trial prescribes exact step sizes or session gaps — the caps carry the evidence-backed principle, and the daily-widening gaps are the structure that enforces it (each urge between windows is a wave the 20-minute rule already handles). That's why a hard day holds a step instead of breaking the plan — and a held day keeps its widest gap. <a class="dlink" href="guide.html#taper">The evidence →</a></p>
+  <details class="fold" id="phasesFold">
+    <summary><span class="fold-ic" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg></span><span class="fold-t">Every step, laid out</span><span class="fold-live" id="phasesFoldLive"></span></summary>
+    <div class="fold-body"><div id="phases"></div></div>
+  </details>
+  <p class="d-evid pl-evid">Honest footnote: the research backs slow, stepped reduction over weeks, but no trial prescribes exact step sizes or session gaps — the caps carry the evidence-backed principle, and the daily-widening gaps are the structure that enforces it (each urge between windows is a wave the 20-minute rule already handles). That's why a hard day holds a step instead of breaking the plan — and a held day keeps its widest gap. <a class="dlink" href="guide.html#taper">The evidence →</a></p>
 </div>
   </div>
 </details>
@@ -4464,70 +4558,227 @@ try{
   function mixPaper(rgb,amt){var p=_paper();return [_lerp(rgb[0],p[0],amt),_lerp(rgb[1],p[1],amt),_lerp(rgb[2],p[2],amt)];}
   function rgbStr(a){return 'rgb('+a[0]+','+a[1]+','+a[2]+')';}
 
-  function renderStairs(){
-    var sch=schedule(), maxCap=BASE_PHASES[0].cap;
-    var stairs=$('stairs');stairs.innerHTML='';
-    if(!booted&&motionOK){
-      stairs.classList.add('anim');
-      setTimeout(function(){stairs.classList.remove('anim');},1200);
-    }
-    sch.forEach(function(s,i){
-      if(s.skipped)return;   // never walked — the rebuild stepped past it
-      var p=BASE_PHASES[i];
-      var el=document.createElement('div');
-      var isNow=i===idx, isPast=i<idx;
-      el.className='stepcol'+(isPast?' past':'')+(isNow?' now':'');
-      var barH=Math.round(30+(p.cap/maxCap)*100);
-      var col=capRGB(p.cap/maxCap);
-      var bg,num;
-      if(isNow){bg=rgbStr(col);num=rgbStr(mixPaper(col,.86));}          // saturated fill, cream number
-      else if(isPast){bg=rgbStr(mixPaper(col,.7));num=rgbStr(mixPaper(col,.15));}
-      else{bg=rgbStr(mixPaper(col,.82));num=rgbStr(mixPaper(col,.05));} // soft tint, saturated number
-      // each step carries its gap rule — the other half of the schedule
-      var gapTxt;
-      if(p.cap<=0)gapTxt='free';
-      else if(p.single)gapTxt='evening';
-      else gapTxt=typeof p.spacingH==='number'
-        ?fmtGapH(p.spacingH)+' gap'
-        :fmtGapH(p.spacingH[0])+'→'+fmtGapH(p.spacingH[p.spacingH.length-1]);
-      var gapCol=isNow?'':(' style="color:'+rgbStr(mixPaper(col,isPast?.45:.15))+'"');
-      el.innerHTML='<div class="step" style="height:'+barH+'px;background:'+bg+'">'+
-        '<span class="cap" style="color:'+num+'">'+p.capText+'</span></div>'+
-        '<span class="lbl">'+fmtShort(s.start)+'</span>'+
-        '<span class="glbl"'+gapCol+'>'+gapTxt+'</span>';
-      el.setAttribute('role','button');el.setAttribute('tabindex','0');
-      el.setAttribute('aria-label','Jump to '+s.lbl+' details');
-      function go(){
-        var f=$('stepFold');
-        if(f&&!f.open)f.open=true; // instant, so the scroll target exists before we move
-        $('phase-'+i).scrollIntoView();
-      }
-      el.addEventListener('click',go);
-      el.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
-      stairs.appendChild(el);
-    });
+  /* ================= Plan hero: the staircase contour =================
+     One stepped path, tread per rung, drawn as a function of the schedule:
+     walked treads solid, the rest dotted, today's tread lit with a knob where
+     today sits inside it, and every walked day's logged total stamped under
+     its tread (over-cap days tick above it, in clay, with their number).
+     Widths follow each rung's real length in days, so a held rung reads
+     longer; past ~8 steps the chart scrolls inside the card, parked on today. */
+  var stDrawn=false;
+  function stWidth(){
+    var vw=document.documentElement.clientWidth||393;
+    return Math.max(260,Math.min(vw,512)-2*16-2*18);
   }
+  function stGapTxt(p){
+    if(p.cap<=0)return 'free';
+    if(p.single)return 'evening';
+    return typeof p.spacingH==='number'?fmtGapH(p.spacingH)+' gap'
+      :fmtGapH(p.spacingH[0])+'→'+fmtGapH(p.spacingH[p.spacingH.length-1]);
+  }
+  function stCenter(){
+    var sc=document.querySelector('#stairs .st-scroll');
+    if(!sc||!sc.clientWidth||sc.scrollWidth<=sc.clientWidth+1)return;
+    var hx=+sc.dataset.here||0;
+    sc.scrollLeft=Math.max(0,hx-sc.clientWidth/2);
+  }
+  function renderStairs(){
+    var box=$('stairs');if(!box)return;
+    var sch=schedule(), maxCap=BASE_PHASES[0].cap, last=sch.length-1;
+    var steps=[];
+    sch.forEach(function(s,i){
+      if(s.skipped||!s.start)return;   // never walked — the rebuild stepped past it
+      var p=BASE_PHASES[i];
+      var n=i===last?0:Math.max(1,Math.round(((s.end||s.start)-s.start)/MS_DAY)+1);
+      steps.push({i:i,s:s,p:p,n:n,u:i===last?1.5:n});
+    });
+    if(!steps.length){box.innerHTML='';return;}
+    var W=stWidth(), units=0,topCap=30;
+    steps.forEach(function(st){units+=st.u;topCap=Math.max(topCap,st.p.cap);});
+    var dayPx=Math.max(W/units,22), CW=Math.round(units*dayPx);
+    var H=200, yTop=30, base=152, k=(base-4-yTop)/topCap;
+    function yv(v){return base-4-Math.min(v,topCap+2)*k;}
+    function f1(v){return Math.round(v*10)/10;}
+    var x=0;
+    steps.forEach(function(st){st.x0=x;x+=st.u*dayPx;st.x1=x;st.y=yv(st.p.cap);st.cx=(st.x0+st.x1)/2;});
+    // where today sits: inside its rung, by day
+    var cur=null, hereX=0, zeroEra=isZeroEra;
+    steps.forEach(function(st){if(st.i===idx)cur=st;});
+    if(cur){
+      if(zeroEra)hereX=cur.cx;
+      else{
+        var off=Math.round((today-cur.s.start)/MS_DAY);
+        hereX=cur.x0+Math.min(cur.u,Math.max(0,off)+.5)*dayPx;
+      }
+    }
+    var cut=zeroEra?CW:hereX;
+    // the stepped contour: 9px corners, either direction (a rebuild climbs)
+    var d='M0 '+f1(steps[0].y);
+    steps.forEach(function(st,j){
+      var nx=steps[j+1];
+      if(!nx){d+=' L'+f1(st.x1)+' '+f1(st.y);return;}
+      var dy=nx.y-st.y;
+      if(Math.abs(dy)<.5){d+=' L'+f1(st.x1)+' '+f1(st.y);return;}
+      var sg=dy>0?1:-1, r=Math.min(9,Math.abs(dy)/2,(st.x1-st.x0)/3,(nx.x1-nx.x0)/3);
+      d+=' L'+f1(st.x1-r)+' '+f1(st.y)+' Q'+f1(st.x1)+' '+f1(st.y)+' '+f1(st.x1)+' '+f1(st.y+sg*r)+
+         ' L'+f1(st.x1)+' '+f1(nx.y-sg*r)+' Q'+f1(st.x1)+' '+f1(nx.y)+' '+f1(st.x1+r)+' '+f1(nx.y);
+    });
+    // the ramp follows the caps themselves: each tread wears its own colour
+    var stops='';
+    steps.forEach(function(st){
+      stops+='<stop offset="'+(st.cx/CW).toFixed(4)+'" stop-color="'+rgbStr(capRGB(st.p.cap/maxCap))+'"/>';
+    });
+    var draw=motionOK&&!stDrawn&&document.body.dataset.view==='plan';
+    if(draw)stDrawn=true;
+    var svg='<svg class="st-svg" width="'+CW+'" height="'+H+'" viewBox="0 0 '+CW+' '+H+'" role="img" aria-label="'+
+      steps.map(function(st){return st.p.capText;}).join(', ')+' — zero '+fmtShort(zeroDate())+'">'+
+      '<defs><linearGradient id="stRamp" gradientUnits="userSpaceOnUse" x1="0" x2="'+CW+'" y1="0" y2="0">'+stops+'</linearGradient>'+
+      '<linearGradient id="stFade" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".5"/><stop offset="1" stop-color="#fff" stop-opacity=".03"/></linearGradient>'+
+      '<mask id="stMask" maskUnits="userSpaceOnUse" x="0" y="0" width="'+CW+'" height="'+H+'"><rect x="0" y="'+yTop+'" width="'+CW+'" height="'+(base-yTop)+'" fill="url(#stFade)"/></mask>'+
+      '<clipPath id="stWalk"><rect x="-6" y="0" width="'+f1(cut+6)+'" height="'+H+'"/></clipPath>'+
+      '<clipPath id="stAhead"><rect x="'+f1(cut)+'" y="0" width="'+f1(CW-cut+6)+'" height="'+H+'"/></clipPath></defs>';
+    // where it started: the old ~30 a day, dashed, labelled on the far side from today
+    var farLeft=hereX>CW/2;
+    svg+='<line class="st-old" x1="0" x2="'+CW+'" y1="'+f1(yv(BASELINE))+'" y2="'+f1(yv(BASELINE))+'"/>'+
+      '<text class="st-ax" x="'+(farLeft?0:CW)+'" y="'+f1(yv(BASELINE)-7)+'" text-anchor="'+(farLeft?'start':'end')+'">old ~'+BASELINE+' a day</text>';
+    svg+='<path class="st-fill'+(draw?' st-in':'')+'" d="'+d+' L'+CW+' '+base+' L0 '+base+'Z" fill="url(#stRamp)" mask="url(#stMask)"/>'+
+      '<line class="st-axis" x1="0" x2="'+CW+'" y1="'+base+'" y2="'+base+'"/>';
+    svg+='<path class="st-walk'+(draw?' draw-in':'')+'" d="'+d+'"'+(draw?' pathLength="1"':'')+' clip-path="url(#stWalk)"/>';
+    if(cut<CW-1)svg+='<path class="st-ahead" d="'+d+'" clip-path="url(#stAhead)"/>';
+    // today's tread, lit
+    if(cur){
+      var r0=Math.min(9,(cur.x1-cur.x0)/3);
+      var ta=f1(cur.x0+r0+1), tb=f1(Math.max(cur.x0+r0+2,cur.x1-r0-1));
+      svg+='<line class="st-glow breathe" x1="'+ta+'" x2="'+tb+'" y1="'+f1(cur.y)+'" y2="'+f1(cur.y)+'"/>'+
+        '<line class="st-lit" x1="'+ta+'" x2="'+tb+'" y1="'+f1(cur.y)+'" y2="'+f1(cur.y)+'"/>';
+    }
+    // logged actuals on walked treads, and the date + gap rule under each step
+    var labels=[];
+    steps.forEach(function(st){
+      var isNow=st===cur, walked=zeroEra||st.i<idx, capCls=isNow?'now':st.i===last?'zero':walked?'past':'ahead';
+      svg+='<text class="st-capn '+capCls+'" x="'+f1(st.cx)+'" y="'+f1(st.y-(isNow?13:11))+'" text-anchor="middle">'+st.p.capText+'</text>';
+      if(st.i!==last&&st.n){
+        var nums=[],ticks='',dd=new Date(st.s.start);
+        for(var j=0;j<st.n;j++,dd=addDays(dd,1)){
+          if(dd>=today)break;
+          var c=countOf(dkeyOf(dd));
+          if(c===null){nums.push('<tspan class="nl">·</tspan>');continue;}
+          var ov=c>st.p.cap;
+          nums.push('<tspan class="'+(ov?'ov':c===st.p.cap?'at':'un')+'">'+c+'</tspan>');
+          if(ov){
+            var tx=st.x0+(j+.5)*dayPx;
+            ticks+='<line class="st-tick" x1="'+f1(tx-5)+'" x2="'+f1(tx+5)+'" y1="'+f1(yv(c))+'" y2="'+f1(yv(c))+'"/>';
+          }
+        }
+        if(nums.length){
+          var sy=Math.min(st.y+16,base-3);
+          svg+=ticks+'<text class="st-act" x="'+f1(st.cx)+'" y="'+f1(sy)+'" text-anchor="middle">'+nums.join(' ')+'</text>';
+        }
+      }
+      var dl=st.i===last?(zeroEra?'zero':WEEKDAYS[st.s.start.getDay()].slice(0,3)+' '+st.s.start.getDate()):fmtShort(st.s.start);
+      var gl=st.i===last?(zeroEra?'day '+Math.max(1,zeroCalDay()):'free'):stGapTxt(st.p);
+      var wEst=Math.max(dl.length,gl.length)*5.9+6;
+      labels.push({st:st,cls:capCls,dl:dl,gl:gl,a:st.cx-wEst/2,b:st.cx+wEst/2,keep:isNow});
+    });
+    // collision pass: today's label always stays, the rest only where they fit
+    var kept=labels.filter(function(l){return l.keep;});
+    labels.forEach(function(l){
+      if(l.keep)return;
+      if(l.a<-2||l.b>CW+2)return;
+      for(var q=0;q<kept.length;q++)if(!(l.b+4<kept[q].a||l.a-4>kept[q].b))return;
+      kept.push(l);
+    });
+    kept.forEach(function(l){
+      var anc='middle',lx=l.st.cx;
+      if(l.a<0){anc='start';lx=Math.max(0,l.st.x0);}else if(l.b>CW){anc='end';lx=Math.min(CW,l.st.x1);}
+      svg+='<text class="st-dl '+l.cls+'" x="'+f1(lx)+'" y="'+(base+19)+'" text-anchor="'+anc+'">'+l.dl+'</text>'+
+        '<text class="st-gl '+l.cls+'" x="'+f1(lx)+'" y="'+(base+34)+'" text-anchor="'+anc+'">'+l.gl+'</text>';
+    });
+    // you are here: a knob on the tread, and a pill above today's cap
+    if(cur){
+      var pill=zeroEra?'Day '+Math.max(0,daysFree())+' off':'Today';
+      var pw=pill.length*6.2+18, px=Math.max(pw/2,Math.min(CW-pw/2,cur.cx)), py=cur.y-(zeroEra?33:44);
+      svg+='<g class="st-pill"><rect x="'+f1(px-pw/2)+'" y="'+f1(py-11)+'" width="'+f1(pw)+'" height="18" rx="9"/>'+
+        '<text x="'+f1(px)+'" y="'+f1(py+2)+'" text-anchor="middle">'+pill+'</text></g>'+
+        '<circle class="st-halo" cx="'+f1(hereX)+'" cy="'+f1(cur.y)+'" r="11"/>'+
+        '<circle class="st-knob'+(draw?' popin':'')+'"'+(draw?' style="--dl:900ms"':'')+' cx="'+f1(hereX)+'" cy="'+f1(cur.y)+'" r="6"/>';
+    }
+    // hit areas last: tap a step, open its phase
+    steps.forEach(function(st){
+      svg+='<rect class="st-hit" data-i="'+st.i+'" x="'+f1(st.x0)+'" y="0" width="'+f1(st.x1-st.x0)+'" height="'+H+'" role="button" tabindex="0" aria-label="'+
+        esc(st.s.lbl||fmtShort(st.s.start))+' · cap '+st.p.capText+' — open its step"/>';
+    });
+    svg+='</svg>';
 
+    // header + the baseline progress track under the chart
+    var tpr=taperProgress(), pos=0, visN=steps.length;
+    steps.forEach(function(st,j){if(st===cur)pos=j+1;});
+    var head='<div class="card-h st-h"><div class="label"><b>The step-down</b> · '+
+      (zeroEra?'walked in '+tpr.totalD+' days':today<sch[0].start?'starts '+fmtShort(sch[0].start):'day '+tpr.dayN+' of '+tpr.totalD)+'</div>'+
+      (zeroEra?'<span class="chip sm clean"><span class="dot"></span>Landed</span>'
+        :'<span class="chip sm acc">Step '+Math.max(1,pos)+' of '+visN+'</span>')+'</div>';
+    var pct=zeroEra?100:Math.max(0,Math.min(100,tpr.dropBase));
+    var mid=zeroEra?'At zero · '+Math.max(0,daysFree())+' day'+(Math.max(0,daysFree())===1?'':'s')+' off'
+      :pct+'% below · zero in '+tpr.daysToZero+' day'+(tpr.daysToZero===1?'':'s');
+    var track='<div class="st-base"><div class="st-track" style="--k:'+pct+'%"><span class="st-veil"></span><span class="st-kn"></span></div>'+
+      '<div class="st-bl"><span>~'+BASELINE+' baseline</span><b>'+mid+'</b><span>Zero</span></div></div>';
+    var prevSc=box.querySelector('.st-scroll'), prevLeft=prevSc?prevSc.scrollLeft:null;
+    box.innerHTML=head+'<div class="st-scroll'+(CW>W+1?' wide':'')+'" data-here="'+Math.round(hereX)+'">'+svg+'</div>'+track;
+    var sc=box.querySelector('.st-scroll');
+    if(CW>W+1){
+      // keep a user's scroll across re-renders; park on today the first time
+      if(prevLeft!==null&&box.dataset.parked)sc.scrollLeft=prevLeft;
+      else if(sc.clientWidth){stCenter();box.dataset.parked='1';}
+    }
+  }
+  (function(){
+    var box=$('stairs');if(!box)return;
+    function go(i){
+      var f=$('stepFold'), pf=$('phasesFold');
+      if(f&&!f.open)f.open=true;   // instant, so the scroll target exists before we move
+      if(pf&&!pf.open)pf.open=true;
+      var t=$('phase-'+i);if(t)t.scrollIntoView({block:'start',behavior:motionOK?'smooth':'auto'});
+    }
+    box.addEventListener('click',function(ev){
+      var h=ev.target.closest('.st-hit');if(h)go(h.getAttribute('data-i'));
+    });
+    box.addEventListener('keydown',function(ev){
+      if(ev.key!=='Enter'&&ev.key!==' ')return;
+      var h=ev.target.closest('.st-hit');if(!h)return;
+      ev.preventDefault();go(h.getAttribute('data-i'));
+    });
+    // a hidden tab has no width: park on today once the chart can be seen
+    if('ResizeObserver' in window)new ResizeObserver(function(){
+      if(!box.dataset.parked&&box.clientWidth){stCenter();box.dataset.parked='1';}
+    }).observe(box);
+  })();
+
+  /* ---- every step, laid out: compact step cards behind a fold ---- */
   function renderPhases(){
-    var sch=schedule();
+    var sch=schedule(), last=sch.length-1;
     var wrap=$('phases');wrap.innerHTML='';
+    var n=0,held=0;
     sch.forEach(function(s,i){
       if(s.skipped)return;   // never walked — the rebuild stepped past it
+      n++;held+=(s.held||0)+(s.eased||0);
       var p=BASE_PHASES[i];
+      var st=i===last?'zero':i<idx?'past':i===idx?'now':'ahead';
       var el=document.createElement('div');
-      el.className='phase'+(i<idx?' past':'')+(i===idx?' now':'')+(i===sch.length-1?' zero':'');
+      el.className='phase '+st;
       el.id='phase-'+i;
-      var held=(s.eased?'<p class="phase-held">Eased +'+s.eased+' day'+(s.eased>1?'s':'')+' — the step before ran hard</p>':'')+
-        (s.held?'<p class="phase-held">Held +'+s.held+' day'+(s.held>1?'s':'')+'</p>'
-        :s.early?'<p class="phase-held">Finished '+s.early+' day'+(s.early>1?'s':'')+' early</p>':'');
-      var capCol=rgbStr(capRGB(p.cap/BASE_PHASES[0].cap));
+      var chips='';
+      if(i===idx)chips+='<span class="chip sm acc">'+(i===last?'Now':'Today')+'</span>';
+      if(s.eased)chips+='<span class="chip sm adjust">Eased +'+s.eased+' day'+(s.eased>1?'s':'')+'</span>';
+      if(s.held)chips+='<span class="chip sm adjust">Held +'+s.held+' day'+(s.held>1?'s':'')+'</span>';
+      else if(s.early)chips+='<span class="chip sm under">'+s.early+' day'+(s.early>1?'s':'')+' early</span>';
+      var why=s.eased?'<p class="ph-note">Eased: the step before ran hard.</p>':'';
       // each scheduled day gets its own row: date, planned windows, that day's gap
       var dayRows='';
       if(s.end){
         var dd=new Date(s.start);
         while(dd<=s.end){
           var dpl=dayPlanOf(dd,i);
-          var rowCls='pd-row'+(dd<today?' past':'')+(dkeyOf(dd)===todayKey?' today':'');
+          var rowCls='pd-row'+(dd<today?' past':'')+(dkeyOf(dd)===todayKey?' on':'');
           dayRows+='<div class="'+rowCls+'">'+
             '<span class="pd-date">'+WEEKDAYS[dd.getDay()].slice(0,3)+' '+dd.getDate()+'</span>'+
             '<span class="pd-wins">'+(dpl&&dpl.w?dpl.w.join(' · '):'—')+'</span>'+
@@ -4537,13 +4788,18 @@ try{
         if(dayRows)dayRows='<div class="phase-days">'+dayRows+'</div>';
       }
       el.innerHTML=
-        '<div class="phase-top"><span class="phase-dates">'+s.lbl+(i===idx?' · now':'')+'</span>'+
-        '<span class="phase-cap" style="color:'+capCol+'">'+p.capText+'<small> '+(p.cap>0?'hits/day':'')+'</small></span></div>'+
-        held+'<p class="phase-rule">'+p.rule+'</p><p>'+p.desc+'</p>'+
+        '<div class="ph-top"><span class="ph-cap">'+p.capText+'<small>'+(p.cap>0?' a day':' — zero')+'</small></span>'+
+        '<span class="ph-dates">'+s.lbl+'</span>'+(chips?'<span class="ph-chips">'+chips+'</span>':'')+'</div>'+
+        why+'<p class="ph-rule">'+p.rule+'</p><p class="ph-desc">'+p.desc+'</p>'+
         dayRows+
-        (p.why?'<p class="phase-evid">'+p.why+' <a href="guide.html#'+p.ref+'">sources →</a></p>':'');
+        (p.why?'<p class="phase-evid">'+p.why+' <a class="dlink" href="guide.html#'+p.ref+'">Sources →</a></p>':'');
       wrap.appendChild(el);
     });
+    var lv=$('phasesFoldLive');
+    if(lv){
+      lv.textContent=n+' steps · '+(isZeroEra?'all walked':idx<0?'starts at '+BASE_PHASES[0].capText:'on '+phase.capText)+
+        (held?' · '+held+' day'+(held>1?'s':'')+' added':'')+' · zero '+fmtShort(zeroDate());
+    }
   }
 
   /* ================= the schedule control =================
@@ -4666,61 +4922,133 @@ try{
         '<li>Leaving this untouched is also an answer: today stays a lapse on the quit\'s first stretch — recorded, survivable, and the counter climbs from tomorrow.</li>'+
       '</ul></div>';
   }
+  /* mini contour for a move: the current plan as a ghost, the move's descent in
+     the accent, both from today to the later of the two zero dates. segs are
+     [{cap,d}] (d = days, weights); each list is stretched to its stated end. */
+  function capNum(t){var m=String(t).match(/(\d+)(?:[–-](\d+))?/);return m?(m[2]?(+m[1]+ +m[2])/2:+m[1]):0;}
+  function scCurSegs(extraNow){
+    var sch=schedule(), last=sch.length-1, out=[];
+    for(var i=Math.max(0,idx);i<last;i++){
+      var s=sch[i];if(s.skipped||!s.start||!s.end)continue;
+      var a=Math.max(today,s.start), n=Math.round((s.end-a)/MS_DAY)+1+(i===idx?(extraNow||0):0);
+      if(n>0)out.push({cap:BASE_PHASES[i].cap,d:n});
+    }
+    return out;
+  }
+  function scTailSegs(lead,rungs){
+    var out=[{cap:lead,d:2}];
+    rungs.forEach(function(r){if(r.cap>0&&r.cap<lead)out.push({cap:r.cap,d:r.days||2});});
+    return out;
+  }
+  function scThumb(opt,optEnd,lock){
+    var cur=scCurSegs(0), curEnd=Math.round((zeroDate()-today)/MS_DAY);
+    var span=Math.max(1,curEnd,optEnd), W=88, H=44, top=6, base=H-6, maxC=1;
+    cur.concat(opt).forEach(function(s){maxC=Math.max(maxC,s.cap);});
+    function path(segs,end){
+      var tot=0;segs.forEach(function(s){tot+=s.d;});
+      if(!tot)return '';
+      var x=0,d='',sc=end/tot;
+      segs.forEach(function(s,j){
+        var y=(base-(base-top)*s.cap/maxC).toFixed(1), x0=(x/span*W).toFixed(1);
+        x+=s.d*sc;var x1=(x/span*W).toFixed(1);
+        d+=(j?' L':'M')+x0+' '+y+' L'+x1+' '+y;
+      });
+      return d+' L'+(x/span*W).toFixed(1)+' '+base+' L'+W+' '+base;
+    }
+    var g=path(cur,curEnd), o=path(opt,optEnd);
+    var ex=(optEnd/span*W).toFixed(1);
+    return '<svg class="mv-th" viewBox="0 0 '+W+' '+H+'" aria-hidden="true">'+
+      '<line class="th-ax" x1="0" x2="'+W+'" y1="'+base+'" y2="'+base+'"/>'+
+      (g?'<path class="th-cur" d="'+g+'"/>':'')+(o?'<path class="th-opt" d="'+o+'"/>':'')+
+      (lock?'<line class="th-lock" x1="'+ex+'" x2="'+ex+'" y1="'+(top-2)+'" y2="'+base+'"/>':'')+
+      '<circle class="th-end" cx="'+ex+'" cy="'+base+'" r="3"/></svg>';
+  }
+  function scDate(d){return WEEKDAYS[d.getDay()].slice(0,3)+' '+fmtShort(d);}
+  var scOpen=null;   // the ledger fold: null = follow the engine, else the user's choice
   function renderSchedCtl(){
     var box=$('schedCtl');if(!box)return;
-    if(idx<0){box.hidden=true;return;}
-    box.hidden=false;
+    var hd=$('schedHead');
+    if(idx<0){box.hidden=true;if(hd)hd.hidden=true;return;}
+    box.hidden=false;if(hd)hd.hidden=false;
     var sch=schedule(), causes=sch.causes||[], z=zeroDate(), bz=baseZeroDate();
     var moved=Math.round((z-bz)/MS_DAY);
-    var rows='';
+    var rows='', nAdj=0, nLive=0;
     // after zero the descent is history — its rows explain what happened but
     // are no longer live decisions, so their Undo/Apply buttons come off (an
     // edit here would rewrite a finished record). The zero anchor is frozen
     // regardless (zeroDay), so the counters wouldn't move, but the record
     // should read as settled.
     var settled=isZeroEra;
-    function row(cls,txt,act){
-      return '<div class="sc-row'+(cls?' '+cls:'')+'"><span class="sc-k">'+txt+'</span>'+((settled?'':act)||'')+'</div>';
+    function stChip(c,cp){
+      return c>cp?'<span class="chip sm over"><span class="dot"></span>Over</span>'
+        :c===cp?'<span class="chip sm atcap"><span class="dot"></span>At cap</span>'
+        :'<span class="chip sm under"><span class="dot"></span>Under</span>';
     }
+    function row(cls,date,num,chip,txt,act){
+      if(cls.indexOf('adj')>=0)nAdj++;
+      return '<div class="sc-row '+cls+'"><span class="sc-d">'+date+'</span>'+
+        '<span class="sc-k">'+(num?'<span class="sc-n">'+num+'</span>':'')+chip+'<span class="sc-w">'+txt+'</span></span>'+
+        ((settled?'':act)||'')+'</div>';
+    }
+    function undoBtn(attrs,lbl){nLive++;return '<button class="btn sm ghost sc-act" '+attrs+'>'+icon('undo','ic-sm')+(lbl||'Undo')+'</button>';}
     causes.forEach(function(h){
-      var head=fmtShort(h.d)+' · <b>'+h.c+' of '+h.cap+'</b> — ';
+      var num=h.c+' <small>of '+h.cap+'</small>', ch=stChip(h.c,h.cap), dt=fmtShort(h.d);
       /* days from before the rebuild: settled history of the descent that was
          abandoned. Stated, muted, and without buttons — undoing one would
          re-cut dates that no longer exist. */
       if(h.pre){
-        rows+=row('declined',head+(h.kind==='over'?'held its cap a day longer'
+        rows+=row('pre',dt,num,ch,(h.kind==='over'?'held its cap a day longer'
           :h.kind==='defer'?'the step-down deferred'
           :h.kind==='noslack'?'recorded; the dates stayed'
           :'hold declined')+' · before the rebuild','');
         return;
       }
-      if(h.kind==='over')rows+=row('',head+'held the '+h.cap+' cap a day longer',
-        '<button class="sc-act" data-sc="decline" data-k="'+h.key+'">Undo</button>');
-      else if(h.kind==='defer')rows+=row('',head+'the step-down deferred: the day rode the '+h.rode+' cap and the drop retried after it',
-        '<button class="sc-act" data-sc="decline" data-k="'+h.key+'">Undo</button>');
-      else if(h.kind==='noslack')rows+=row('declined',head+(h.sealed
-        ?'the ritual was done and the stash was out — this day did not move zero, and the road only goes forward'
+      if(h.kind==='over')rows+=row('adj',dt,num,ch,'held the '+h.cap+' cap a day longer',
+        undoBtn('data-sc="decline" data-k="'+h.key+'"'));
+      else if(h.kind==='defer')rows+=row('adj',dt,num,ch,'step-down deferred — rode the '+h.rode+' cap, the drop retried after it',
+        undoBtn('data-sc="decline" data-k="'+h.key+'"'));
+      else if(h.kind==='noslack')rows+=row('kept',dt,num,ch,h.sealed
+        ?'ritual done, stash out — zero stayed; the road only goes forward'
         :h.locked
-        ?'the date was locked — this day did not move it'
-        :'no slack left — this day did not move the date'),'');
-      else rows+=row('declined',head+'hold declined, dates left alone',
-        '<button class="sc-act warn" data-sc="apply" data-k="'+h.key+'">Apply it</button>');
+        ?'date locked — this day did not move it'
+        :'no slack left — the date stayed','');
+      else rows+=row('kept',dt,num,ch,'hold declined, dates left alone',
+        '<button class="btn sm ghost sc-act warn" data-sc="apply" data-k="'+h.key+'">Apply it</button>');
     });
     for(var i=0;i<BASE_PHASES.length;i++){
       if(sch[i].skipped)continue;   // never walked — nothing of it to explain
-      var m=holdsAt(i), e=sch[i].eased||0;
-      if(m>0)rows+=row('','Cap '+BASE_PHASES[i].capText+' · <b>+'+m+' day'+(m>1?'s':'')+'</b> added by hand',
-        '<button class="sc-act" data-sc="unhold" data-i="'+i+'">Undo</button>');
-      if(m<0)rows+=row('','Cap '+BASE_PHASES[i].capText+' · <b>'+(-m)+' day'+(m<-1?'s':'')+'</b> ended early',
-        '<button class="sc-act" data-sc="unhold" data-i="'+i+'">Undo</button>');
-      if(e>0)rows+=row('','Cap '+BASE_PHASES[i].capText+' · <b>+'+e+' day'+(e>1?'s':'')+' eased in</b> — the step before ran hard');
+      var m=holdsAt(i), e=sch[i].eased||0, ct='Cap '+BASE_PHASES[i].capText;
+      if(m>0)rows+=row('adj','By hand','',
+        '<span class="chip sm adjust">'+icon('hold')+'+'+m+' day'+(m>1?'s':'')+'</span>',ct+' · added by hand',
+        undoBtn('data-sc="unhold" data-i="'+i+'"'));
+      if(m<0)rows+=row('adj','By hand','',
+        '<span class="chip sm adjust">'+(-m)+' day'+(m<-1?'s':'')+' early</span>',ct+' · ended early',
+        undoBtn('data-sc="unhold" data-i="'+i+'"'));
+      if(e>0)rows+=row('adj','Eased','',
+        '<span class="chip sm adjust">+'+e+' day'+(e>1?'s':'')+'</span>',ct+' · eased in — the step before ran hard','');
     }
-    var hand='';
-    if(!isZeroEra&&idx<BASE_PHASES.length-1){
-      hand='<div class="sc-hand"><button class="pri" data-sc="hold" data-i="'+idx+'">This step needs another day</button>'+
-        (holdsAt(idx)>0?'<button data-sc="unhold" data-i="'+idx+'">Undo the extra day</button>':'')+
-        (sch.locked?'<button data-sc="unlock">Let the date move again</button>'
-                   :'<button data-sc="lock">Lock the date here</button>')+'</div>';
+
+    /* ---- the moves: every answer the engine offers right now, each with
+       where zero lands and a mini contour against the current plan ---- */
+    var moves='', live=!isZeroEra&&idx<BASE_PHASES.length-1, zOff=Math.round((z-today)/MS_DAY);
+    function move(cls,thumb,title,out,sub,btns){
+      return '<div class="sc-mv '+cls+(thumb?'':' nt')+'">'+(thumb||'')+
+        '<div class="mv-tx"><b>'+title+'</b><span class="mv-out">'+out+'</span>'+(sub?'<span class="mv-sub">'+sub+'</span>':'')+'</div>'+
+        '<div class="mv-btns">'+btns+'</div></div>';
+    }
+    if(live){
+      var hz=addDays(z,1);
+      moves+=move('hold',scThumb(scCurSegs(1),zOff+1),'Hold a day',
+        phase.capText+' one day longer · zero <b>'+scDate(hz)+'</b>','',
+        '<button class="btn sm iris" data-sc="hold" data-i="'+idx+'">'+icon('hold')+'Hold</button>'+
+        (holdsAt(idx)>0?'<button class="btn sm ghost" data-sc="unhold" data-i="'+idx+'">'+icon('undo')+'Undo the extra day</button>':''));
+      moves+=sch.locked
+        ?move('lock on',scThumb(scCurSegs(0),zOff,true),'Date locked',
+          'zero stays <b>'+scDate(z)+'</b> whatever holds','over-cap days are recorded and leave the dates alone',
+          '<button class="btn sm ghost" data-sc="unlock">'+icon('undo')+'Let it move</button>')
+        :move('lock',scThumb(scCurSegs(0),zOff,true),'Lock the date',
+          'zero stays <b>'+scDate(z)+'</b> whatever holds','',
+          '<button class="btn sm ghost" data-sc="lock">'+icon('lock')+'Lock</button>');
     }
     /* Two answers to "this step is too big": take smaller cuts (the finer
        ladder — same finish date, because two one-day steps cost what one
@@ -4728,39 +5056,37 @@ try{
        moves later, which for a long daily habit is the trade the evidence
        leans toward). Both are offered from a standard ceiling; each reverses
        while you are still on the step you switched on. */
-    var fine='';
     /* after a rebuild — descent or landing — the pace switches are moot: the
        rebuilt tail is half-steps at two days by construction, and the walked
        descent's pace survives only as history, which re-filing would falsify */
-    if(!isZeroEra&&idx<BASE_PHASES.length-1&&!sch.rebased&&!sch.landed){
+    var paceNote='';
+    if(live&&!sch.rebased&&!sch.landed){
       var fb=data.replan.fineBelow, gb=data.replan.slowBelow;
       if(gb&&cap>=gb){
-        fine='<div class="sc-fine"><p class="sc-note"><b>The gentle pace is on from here.</b> Each ceiling from '+
-          phase.capText+' down is held about a week instead of two days, so zero is later on purpose — the new date is above. '+
-          'This can go back to the standard pace while you are still on the '+phase.capText+' step.</p>'+
-          '<div class="sc-hand"><button data-sc="coarse">Back to the standard pace</button></div></div>';
+        moves+=move('on',scThumb(scCurSegs(0),zOff),'The gentle pace is on',
+          'each ceiling from '+phase.capText+' held ~a week · zero <b>'+scDate(z)+'</b>',
+          'later on purpose; can go back while you are still on the '+phase.capText+' step',
+          '<button class="btn sm ghost" data-sc="coarse">'+icon('undo')+'Standard pace</button>');
       }else if(fb&&cap>=fb){
-        fine='<div class="sc-fine"><p class="sc-note">Smaller steps are on from here: <b>'+capChain(phase.capText,fineTail(fb))+'</b>. '+
-          'This can go back while you are still on the '+phase.capText+' step — once a smaller step has been walked, '+
-          'undoing it would re-file days against a ceiling they were never held to.</p>'+
-          '<div class="sc-hand"><button data-sc="coarse">Back to full steps</button></div></div>';
+        moves+=move('on',scThumb(scCurSegs(0),zOff),'Smaller steps are on',
+          '<span class="mono">'+capChain(phase.capText,fineTail(fb))+'</span>',
+          'can go back while you are still on the '+phase.capText+' step — once a smaller step is walked, undoing it would re-file days against a ceiling they were never held to',
+          '<button class="btn sm ghost" data-sc="coarse">'+icon('undo')+'Full steps</button>');
       }else if(!fb&&!gb&&COARSE_CAPS[cap]){
-        var offers='';
         if(phase.fineClose&&fineTail(cap).length>coarseTail(cap).length){
-          offers+='<p class="sc-note"><b>Smaller cuts, same finish.</b> The rest splits into single days — <b>'+
-            capChain(phase.capText,fineTail(cap))+'</b> in place of <b>'+capChain(phase.capText,coarseTail(cap))+
-            '</b> — and zero stays '+WEEKDAYS[z.getDay()]+', '+fmtShort(z)+', because two one-day steps cost exactly what one two-day step did.</p>'+
-            '<div class="sc-hand"><button data-sc="fine">Take smaller steps</button></div>';
+          moves+=move('soft',scThumb(scTailSegs(cap,FINE_RUNGS),zOff),'Smaller steps',
+            '<span class="mono">'+capChain(phase.capText,fineTail(cap))+'</span>',
+            'zero stays <b>'+scDate(z)+'</b> — two one-day steps cost what one two-day step did (now '+capChain(phase.capText,coarseTail(cap))+')',
+            '<button class="btn sm ghost" data-sc="fine">Take smaller steps</button>');
         }
         var extra=gentleExtraBelow(cap);
         if(extra>0){
           var gz=addDays(z,extra);
-          offers+='<p class="sc-note" style="margin-top:12px"><b>More time at each, later finish.</b> Same ceilings — <b>'+
-            capChain(phase.capText,coarseTail(cap))+'</b> — but each held about a week instead of two days. '+
-            'Zero moves to '+WEEKDAYS[gz.getDay()]+', '+fmtShort(gz)+' — about +'+extra+' days. For a decade of daily use the evidence leans this way: gradual reduction “over weeks”, and slower the heavier and longer the use. <a class="dlink" href="guide.html#taper">Why →</a></p>'+
-            '<div class="sc-hand"><button data-sc="slow">Take the rest slower</button></div>';
+          moves+=move('soft',scThumb(scTailSegs(cap,GENTLE_RUNGS),zOff+extra),'Take it slower',
+            '<span class="mono">'+capChain(phase.capText,coarseTail(cap))+'</span> · ~a week each',
+            'zero moves to <b>'+scDate(gz)+'</b> (+'+extra+' days). For a decade of daily use the evidence leans this way: gradual reduction “over weeks”, slower the heavier and longer the use. <a class="dlink" href="guide.html#taper">Why →</a>',
+            '<button class="btn sm ghost" data-sc="slow">Take the rest slower</button>');
         }
-        if(offers)fine='<div class="sc-fine"><p class="sc-note" style="margin-bottom:6px"><b>Is a step too big?</b> Two ways to soften it:</p>'+offers+'</div>';
       }
     }
     /* The third answer, offered only at the moment it is true: the budget is
@@ -4775,20 +5101,18 @@ try{
       var sug=rebSuggest();
       if(sug&&sug.cap>cap){
         var nz=addDays(today,rebLen(sug.cap));
-        reb='<div class="sc-fine"><p class="sc-note"><b>The plan and the days have come apart.</b> '+
-          'The last three full days landed <b>'+sug.last.join(', ')+'</b> against a cap of '+cap+', and the slack is spent — '+
-          'the dates above are no longer describing what is happening. The third answer, after holding and softening: '+
-          'rebuild the descent from where the days are. Re-enter at <b>'+sug.capText+'</b> — a ceiling your log shows holding — '+
-          'and take the rest in half-steps, two days each: <b>'+capChain(sug.capText,fineTail(sug.cap))+'</b>. '+
-          'Zero lands '+WEEKDAYS[nz.getDay()]+', '+fmtShort(nz)+'. Later than the date above, and honestly reachable, '+
-          'which the date above is not. Every logged day keeps its record, and the extension budget refills for the new descent.</p>'+
-          '<div class="sc-hand"><button class="pri" data-sc="reb" data-cap="'+sug.cap+'">Rebuild the descent from '+sug.capText+'</button></div></div>';
+        reb=move('reb',scThumb(scTailSegs(sug.cap,FINE_RUNGS),Math.round((nz-today)/MS_DAY)),'Rebuild the descent',
+          'last 3 days <b>'+sug.last.join(', ')+'</b> vs cap '+cap+' · zero <b>'+scDate(nz)+'</b>',
+          'The plan and the days have come apart, and the slack is spent — the dates above no longer describe what is happening. '+
+          'Re-enter at <b>'+sug.capText+'</b>, a ceiling your log shows holding, then half-steps, two days each: <span class="mono">'+capChain(sug.capText,fineTail(sug.cap))+'</span>. '+
+          'Later than the date above, and honestly reachable, which the date above is not. Every logged day keeps its record, and the extension budget refills for the new descent.',
+          '<button class="btn sm iris" data-sc="reb" data-cap="'+sug.cap+'">Rebuild from '+sug.capText+'</button>');
       }
     }else if(sch.rebased===todayKey){
-      reb='<div class="sc-fine"><p class="sc-note">The descent was rebuilt today, re-entering at <b>'+sch.rebCap+'</b>. '+
-        'It can still go back — tomorrow the rebuilt steps will have logged days against them, and undoing it then '+
-        'would re-file those days against ceilings they were never held to.</p>'+
-        '<div class="sc-hand"><button data-sc="unreb">Undo — back to the old descent</button></div></div>';
+      reb=move('on',null,'Descent rebuilt today',
+        're-entering at <b>'+sch.rebCap+'</b>',
+        'It can still go back — tomorrow the rebuilt steps will have logged days against them, and undoing it then would re-file those days against ceilings they were never held to.',
+        '<button class="btn sm ghost" data-sc="unreb">'+icon('undo')+'Back to the old descent</button>');
     }
     /* the fifth move lives here too — the schedule card is where every other
        move is offered and reversed, and the zero-era Today card carries the
@@ -4796,157 +5120,270 @@ try{
     var land='';
     if(isZeroEra){
       var lsg=landSuggest();
-      if(lsg)land=landOfferHTML(lsg);
+      if(lsg)land='<div class="sc-landing">'+landOfferHTML(lsg)+'</div>';
     }else if(sch.landed===todayKey){
       var lr=landRungAt(sch.ldCap);
-      land='<div class="sc-fine"><p class="sc-note">The landing was rebuilt today, re-entering at <b>'+(lr?lr.capText:sch.ldCap)+'</b>. '+
-        'It can still go back — tomorrow the landing steps will have logged days against them, and undoing it then '+
-        'would re-file those days against ceilings they were never held to.</p>'+
-        '<div class="sc-hand"><button data-sc="unland">Undo — back to zero as it stood</button></div></div>';
+      land=move('on',null,'Landing rebuilt today',
+        're-entering at <b>'+(lr?lr.capText:sch.ldCap)+'</b>',
+        'It can still go back — tomorrow the landing steps will have logged days against them, and undoing it then would re-file those days against ceilings they were never held to.',
+        '<button class="btn sm ghost" data-sc="unland">'+icon('undo')+'Back to zero as it stood</button>');
     }
+    moves+=reb;
+
     /* Slack is shown as a depleting resource rather than reported after the
        fact, because the whole point is that it is spendable and finite. */
+    var pips='';
+    for(var q=0;q<sch.slackTotal;q++)pips+='<i'+(q<sch.slack?' class="on"':'')+'></i>';
+    var ext=sch.locked
+      ?'<div class="sc-ext"><div class="label">Extension days</div><span class="chip sm ghost sc-lockchip">'+icon('lock')+'Date locked</span></div>'
+      :'<div class="sc-ext"><div class="label">Extension days</div><div class="n-md">'+sch.slack+'<small> of '+sch.slackTotal+' left</small></div>'+
+        '<div class="sc-pips" aria-hidden="true">'+pips+'</div></div>';
     var slackLine;
-    if(sch.locked)slackLine='<span style="color:var(--sage)">Date locked</span> — over-cap days from the lock forward are recorded, and leave the dates alone.';
-    else if(sch.slack>0)slackLine='<b>'+sch.slack+' of '+sch.slackTotal+'</b> extension day'+(sch.slack===1?'':'s')+' left'+
-      (sch.landed?' on the rebuilt landing — the budget refills at a rebuild, because slack exists to stop drift and a rebuild is a dated choice, not drift'
-       :sch.rebased?' on the rebuilt descent — the budget refills at a rebuild, because slack exists to stop drift and a rebuild is a dated choice, not drift':'')+
-      '. When they are gone the schedule stops moving zero and the choice becomes yours.';
-    else slackLine='<span style="color:var(--clay)">Slack spent.</span> The schedule is no longer extending itself — an over-cap day now gets recorded and the date holds. That is the design, not a failure: the evidence for tapering is about easing withdrawal, not about improving the odds of stopping, and a date that keeps moving spends the part that does.';
-    box.innerHTML='<h3>The schedule, and why</h3>'+
-      '<p class="sc-zero">Zero: '+WEEKDAYS[z.getDay()]+', '+fmtShort(z)+
-        /* against a rebuilt descent, "later than the original plan" stops
-           meaning anything — the honest annotation is the rebuild itself */
-        (sch.landed?' <span style="color:var(--sage)">· landing rebuilt '+fmtShort(dateOf(sch.landed))+', re-entering at '+(landRungAt(sch.ldCap)?landRungAt(sch.ldCap).capText:sch.ldCap)+'</span>'
-        :sch.rebased?' <span style="color:var(--sage)">· descent rebuilt '+fmtShort(dateOf(sch.rebased))+', re-entering at '+sch.rebCap+'</span>'
-        :moved>0?' <span style="color:var(--amber)">· '+moved+' day'+(moved>1?'s':'')+' later than the original plan</span>'
-        :moved<0?' <span style="color:var(--sage)">· '+(-moved)+' day'+(moved<-1?'s':'')+' earlier than the original plan</span>'
-        :' · exactly the original plan')+'</p>'+
-      '<p class="sc-note" style="margin:0 0 10px">'+slackLine+'</p>'+
-      '<p class="sc-sum">'+(rows
-        ?'The descent is re-derived from your log every time this screen paints. Here is everything that moved it:'
-        :isZeroEra
-          ?'The descent ran exactly as drawn — every logged day landed at or under its cap.'
-          :'Nothing has moved the descent yet — every logged day landed at or under its cap, and no hold was ever offered.')+'</p>'+
-      rows+hand+reb+land+fine+
-      (isZeroEra?''
-        :'<p class="sc-note">A day only holds its step when its <em>logged total</em> goes over that day\'s cap. A rough day that still landed under the cap won\'t move anything on its own — use the button above if the step needs more room, or correct the day\'s count from its day page and the whole descent re-adjusts.</p>');
+    if(sch.locked)slackLine='<b>Date locked.</b> Over-cap days from the lock forward are recorded, and leave the dates alone.';
+    else if(sch.slack>0)slackLine=(sch.landed||sch.rebased
+        ?'The budget refilled at the rebuild — slack exists to stop drift, and a rebuild is a dated choice, not drift. '
+        :'')+'When they are gone the schedule stops moving zero and the choice becomes yours.';
+    else slackLine='<b>Slack spent.</b> An over-cap day now gets recorded and the date holds. That is the design, not a failure: tapering eases withdrawal, it does not improve the odds of stopping, and a date that keeps moving spends the part that does.';
+    var sub=sch.landed?'landing rebuilt '+fmtShort(dateOf(sch.landed))+' · re-entered at '+(landRungAt(sch.ldCap)?landRungAt(sch.ldCap).capText:sch.ldCap)
+      :sch.rebased?'descent rebuilt '+fmtShort(dateOf(sch.rebased))+' · re-entered at '+sch.rebCap
+      :moved>0?moved+' day'+(moved>1?'s':'')+' later than the original plan'
+      :moved<0?(-moved)+' day'+(moved<-1?'s':'')+' earlier than the original plan'
+      :'exactly the original plan';
+    var subCls=sch.landed||sch.rebased||moved?'adj':'';
+    var top='<div class="sc-top"><div class="sc-zero"><div class="label">'+(isZeroEra?'Zero was':'Zero date')+'</div>'+
+        '<div class="n-lg">'+scDate(z)+'</div><div class="sc-sub '+subCls+'">'+sub+'</div></div>'+ext+'</div>';
+    var nRows=(rows.match(/class="sc-row/g)||[]).length;
+    var count='<div class="sc-count"><span class="chip sm '+(nAdj?'adjust':'ghost')+'">'+nAdj+' adjustment'+(nAdj===1?'':'s')+'</span>'+
+      '<span>'+(isZeroEra?'the descent, settled':nAdj?'every one undoable':'nothing has moved the descent')+'</span></div>';
+    var ledger=rows
+      ?'<div class="sc-ledger" aria-label="Adjustments ledger"><div class="sc-lh">Re-derived from your log each paint</div>'+rows+'</div>'
+      :'<p class="sc-empty">'+(isZeroEra?'The descent ran exactly as drawn — every logged day landed at or under its cap.'
+        :'Every logged day landed at or under its cap, and no hold was ever offered. If one runs over, the engine holds that cap a day — it lands here, with Undo.')+'</p>';
+    var nMoves=(moves.match(/class="sc-mv/g)||[]).length;
+    var moveBlock=moves?'<div class="sc-moves"><div class="sc-lh">'+(sch.locked||sch.rebased||sch.landed?'Moves':'If a step is too big')+
+        ' <span>'+icon('undo','ic-xs')+'every move can be undone</span></div>'+moves+'</div>':'';
+    var foot=isZeroEra?''
+      :'<p class="sc-note">A day only holds its step when its <em>logged total</em> goes over that day\'s cap. A rough day that still landed under won\'t move anything on its own — hold it above if the step needs room, or correct the day\'s count from its day page and the whole descent re-adjusts.</p>';
+    // the fold: auto-open whenever the engine has moved something, or an offer is live
+    var auto=!!(nAdj||reb||land);
+    var open=scOpen===null?auto:scOpen;
+    var sumTxt=nRows?nRows+' row'+(nRows===1?'':'s')+(nMoves?' · '+nMoves+' move'+(nMoves===1?'':'s'):''):nMoves?nMoves+' moves available':'the ledger';
+    box.innerHTML=top+count+land+
+      '<details class="sc-more"'+(open?' open':'')+'><summary><span class="sc-mt">Ledger &amp; moves</span><span class="sc-ml">'+sumTxt+'</span></summary>'+
+      '<div class="sc-body"><p class="sc-slack">'+slackLine+'</p>'+ledger+moveBlock+foot+'</div></details>';
+    var det=box.querySelector('.sc-more');
+    det.querySelector('summary').addEventListener('click',function(){scOpen=!det.open;});
   }
 
   /* ---- the focal "where I'm at today" plan card ---- */
+  var tpFold={feel:false,dol:false};   // inner folds survive the re-render
+  function lmin(t){var m=t.getHours()*60+t.getMinutes();return m<DAY_CUTOFF_H*60?m+1440:m;}
+  function wmin(t){var m=parseWin(t);if(m==null)return null;return m<DAY_CUTOFF_H*60?m+1440:m;}
+  /* one-line data for the feel fold: "wait till 10a · hump 1p & 6p · debt 9p" */
+  function feelSum(d,di){
+    var fc=feelForecast(d,di);
+    if(!fc||!fc.slots.length)return '';
+    var am='',humps=[],dip='',ghost='',waves=false;
+    fc.slots.forEach(function(sl){
+      if(sl.kind==='am'&&sl.e!=null)am='wait till '+fmtMin(sl.e);
+      else if(sl.kind==='edge'&&sl.s!=null)humps.push(fmtMin(sl.s));
+      else if(sl.kind==='edge')waves=true;
+      else if(sl.kind==='dip'&&sl.s!=null)dip='debt '+fmtMin(sl.s);
+      else if(sl.kind==='ghost'&&sl.s!=null&&!ghost)ghost='ghost '+fmtMin(sl.s);
+    });
+    var out=[];
+    if(am)out.push(am);
+    if(humps.length)out.push('hump '+humps.slice(0,2).join(' & '));
+    else if(waves)out.push('waves, not walls');
+    if(ghost)out.push(ghost);
+    if(dip)out.push(dip);
+    if(!out.length)out.push(fc.slots.length+' patches mapped');
+    return out.slice(0,3).join(' · ');
+  }
+  function tpFoldHTML(key,ic,title,live,body){
+    return '<details class="tp-fold" data-f="'+key+'"'+(tpFold[key]?' open':'')+'><summary>'+
+      '<span class="tf-ic" aria-hidden="true">'+icon(ic)+'</span><span class="tf-t">'+title+'</span>'+
+      (live?'<span class="tf-l">'+live+'</span>':'')+'</summary><div class="tf-b">'+body+'</div></details>';
+  }
+  function rulesHTML(p,d,di,pl){
+    if(p.single){
+      var w=pl&&pl.w&&pl.w[0];
+      return '<div class="tp-rules"><div><span class="n-xl">'+p.capText+'</span><span>hits max</span></div>'+
+        '<div><span class="n-xl">1</span><span>session</span></div>'+
+        '<div><span class="n-xl">'+(w?w.replace(/([ap])$/,'<span class="unit">$1</span>'):'eve')+'</span><span>evening only</span></div></div>';
+    }
+    return '<div class="tp-rules"><div><span class="n-xl">'+p.capText+'</span><span>hits max</span></div>'+
+      '<div><span class="n-xl">'+p.sessionMax+'</span><span>a session</span></div>'+
+      '<div><span class="n-xl">'+fmtGapH(spacingHOn(d,di)).replace('h','<span class="unit">h</span>')+'</span><span>between</span></div></div>';
+  }
+  /* today's rail, 6a → 2a: the plan's windows as capsules holding the
+     session's hit dots (done ✓ with the real first-hit time, next dashed in
+     the accent), the gap between each, and the now tick */
+  function dayRailSVG(pl,p){
+    var W=325,ty=40,a0=360,a1=1560;
+    function X(m){return Math.max(0,Math.min(W,(m-a0)/(a1-a0)*W));}
+    var wins=(pl&&pl.w?pl.w:[]).map(function(t){return {t:t,m:wmin(t)};}).filter(function(w){return w.m!=null;});
+    if(!wins.length)return '';
+    wins.sort(function(a,b){return a.m-b.m;});
+    var ses=sessionsFor(todayKey).map(function(s){return {m:lmin(s[0]),first:s[0],n:s.length,w:null};});
+    // match each sitting to its nearest window (within 2½h), once
+    ses.forEach(function(s){
+      var best=null,bd=151;
+      wins.forEach(function(w){if(!w.s&&Math.abs(w.m-s.m)<bd){bd=Math.abs(w.m-s.m);best=w;}});
+      if(best){best.s=s;s.w=best;}
+    });
+    var nowM=lmin(new Date()), si=sessionInfo(), nextW=null, lastDone=-1;
+    wins.forEach(function(w,j){if(w.s)lastDone=j;});
+    for(var j=lastDone+1;j<wins.length;j++){nextW=wins[j];break;}
+    var mx=p.sessionMax||3;
+    var s='<svg class="tp-rail" viewBox="0 0 '+W+' 86" role="img" aria-label="Windows '+
+      wins.map(function(w){return w.t+(w.s?' done, '+w.s.n+' hits':w===nextW?' next':'');}).join(', ')+'">';
+    s+='<line class="rl-track" x1="3" x2="'+(W-3)+'" y1="'+ty+'" y2="'+ty+'"/>';
+    if(ses.length&&nowM>ses[0].m)s+='<line class="rl-so" x1="'+X(ses[0].m).toFixed(1)+'" x2="'+X(nowM).toFixed(1)+'" y1="'+ty+'" y2="'+ty+'"/>';
+    // ends + each planned window time, under the track
+    s+='<text class="rl-ax" x="0" y="80" text-anchor="start">6a</text><text class="rl-ax" x="'+W+'" y="80" text-anchor="end">2a</text>';
+    wins.forEach(function(w){s+='<text class="rl-ax" x="'+X(w.m).toFixed(1)+'" y="80" text-anchor="middle">'+w.t+'</text>';});
+    var nowX=X(nowM);
+    // gap labels between windows
+    for(var g=1;g<wins.length;g++){
+      var gx=(X(wins[g-1].m)+X(wins[g].m))/2;
+      if(Math.abs(gx-nowX)<24&&nowM>a0&&nowM<a1)continue;
+      s+='<text class="rl-gap" x="'+gx.toFixed(1)+'" y="'+(ty+23)+'" text-anchor="middle">'+fmtGapH((wins[g].m-wins[g-1].m)/60)+'</text>';
+    }
+    // sittings that matched no window: small neutral beads
+    ses.forEach(function(x){if(!x.w)s+='<circle class="rl-off" cx="'+X(x.m).toFixed(1)+'" cy="'+ty+'" r="4"/>';});
+    wins.forEach(function(w){
+      var cx=X(w.m), k=w.s?'done':w===nextW?'next':'plan', cw=Math.max(30,mx*8+6);
+      cx=Math.max(cw/2+1,Math.min(W-cw/2-1,cx));
+      s+='<rect class="rl-win '+k+'" x="'+(cx-cw/2).toFixed(1)+'" y="'+(ty-13)+'" width="'+cw+'" height="26" rx="13"/>';
+      var n=w.s?w.s.n:0;
+      for(var i=0;i<mx;i++){
+        s+='<circle class="rl-dot'+(i<n?' on':'')+'" cx="'+(cx-(mx-1)*4+i*8).toFixed(1)+'" cy="'+ty+'" r="2.8"/>';
+      }
+      if(n>mx)s+='<text class="rl-more" x="'+(cx+cw/2+3).toFixed(1)+'" y="'+(ty+4)+'">+'+(n-mx)+'</text>';
+      var lbl;
+      if(w.s)lbl=fmtTime(w.s.first).replace(/\s?[AP]M$/i,'');
+      else if(w===nextW){
+        var nm=si&&si.nextOpen?Math.max(w.m,lmin(si.nextOpen)):w.m;
+        lbl='~'+fmtMin(nm%1440);
+      }else lbl='';
+      if(lbl){
+        s+='<text class="rl-lbl '+k+'" x="'+(cx-(w.s?6:0)).toFixed(1)+'" y="'+(ty-20)+'" text-anchor="middle">'+lbl+'</text>';
+        if(w.s)s+='<use href="#i-check" class="rl-ck" x="'+(cx+lbl.length*3.3-3).toFixed(1)+'" y="'+(ty-31)+'" width="12" height="12"/>';
+      }
+    });
+    if(nowM>a0&&nowM<a1){
+      s+='<line class="rl-now" x1="'+nowX.toFixed(1)+'" x2="'+nowX.toFixed(1)+'" y1="'+(ty-10)+'" y2="'+(ty+10)+'"/>'+
+        '<circle class="rl-nowk" cx="'+nowX.toFixed(1)+'" cy="'+ty+'" r="5"/>'+
+        '<text class="rl-nowt" x="'+nowX.toFixed(1)+'" y="'+(ty+23)+'" text-anchor="middle">now</text>';
+    }
+    return s+'</svg>';
+  }
   function renderTodayPlan(){
     var box=$('todayPlan');if(!box)return;
+    // remember the inner folds, then rebuild (className writes → classList, so wrappers keep their classes)
+    box.querySelectorAll('details.tp-fold').forEach(function(d){tpFold[d.dataset.f]=d.open;});
     var sch=schedule(), start=sch[0].start, z=zeroDate();
+    box.classList.add('tplan','card');
     if(today<start){
-      var pl0=dayPlanOf(start,0);
-      box.innerHTML='<div class="tp-eyebrow">Starts '+WEEKDAYS[start.getDay()]+', '+fmtShort(start)+'</div>'+
-        '<div class="tp-goal">'+dayGoal(start,0)+'</div>'+
-        '<div class="tp-struct">'+dayStructure(start,0)+'</div>'+
-        (pl0?'<div class="tp-day"><div class="tp-day-k">Day one, laid out</div>'+winsHTML(pl0)+
-          (pl0.note?'<p class="win-note">'+pl0.note+'</p>':'')+doListHTML(pl0)+'</div>':'')+
-        feelHTML(start,0,false);
+      box.classList.remove('zero');
+      var pl0=dayPlanOf(start,0), p0=BASE_PHASES[0];
+      box.innerHTML='<div class="card-h tp-h"><div class="label"><b>Day one</b> · '+WEEKDAYS[start.getDay()].slice(0,3)+' '+fmtShort(start)+'</div>'+
+        '<span class="chip sm acc">Starts in '+Math.round((start-today)/MS_DAY)+'d</span></div>'+
+        '<p class="tp-goal">'+dayGoal(start,0)+'</p>'+rulesHTML(p0,start,0,pl0)+
+        (pl0?winsHTML(pl0)+(pl0.note?'<p class="tp-note">'+pl0.note+'</p>':''):'')+
+        (pl0&&pl0.do&&pl0.do.length?tpFoldHTML('dol','check','Ways through day one',pl0.do.length+' moves',doListHTML(pl0)):'')+
+        tpFoldHTML('feel','wave','How day one may feel',feelSum(start,0),feelHTML(start,0,false));
       return;
     }
     var totalD=Math.max(1,Math.round((z-start)/MS_DAY));
-    var dayN=Math.round((today-start)/MS_DAY)+1;
 
     if(isZeroEra){
-      var n=Math.max(0,daysFree()), zs=zeroStats();
+      var n=Math.max(0,daysFree()), zs=zeroStats(), tc=countOf(todayKey)||0;
       // the fifth move meets its moment here — the card the failed landing
       // is actually being read on — as well as on the schedule card
       var lsg=landSuggest();
-      box.className='tplan zero';
+      box.classList.add('zero');
       box.innerHTML=
-        '<div class="tp-eyebrow">Zero era · <b>day '+n+'</b> off</div>'+
-        '<div class="tp-goal">'+dayGoal(today,BASE_PHASES.length-1)+'</div>'+
-        '<div class="tp-struct">'+zeroTimelineNote(n,zeroCalDay())+'</div>'+
-        (lsg?landOfferHTML(lsg):'')+
-        feelHTML(today,BASE_PHASES.length-1,false)+
-        (zs&&zs.slips?'<div class="tp-vs"><span class="tp-vs-k">Banked</span> '+zs.clean+' clean days total · best run '+zs.best+' — a slip never wipes the total.</div>':'')+
-        '<div class="tp-arc"><div class="tp-track done"><i style="width:100%"></i></div>'+
-        '<div class="tp-arc-lbl">Walked <b>'+BASE_PHASES[0].capText+' → 0</b> in '+totalD+' days. The counter only climbs now.</div></div>';
+        '<div class="card-h tp-h"><div class="label"><b>Zero era</b> · day '+n+' off</div>'+
+          (tc>0?'<span class="chip sm slip"><span class="dot"></span>Slip · '+tc+'</span>'
+               :'<span class="chip sm clean"><span class="dot"></span>Clean so far</span>')+'</div>'+
+        '<p class="tp-goal">'+dayGoal(today,BASE_PHASES.length-1)+'</p>'+
+        '<p class="tp-note">'+zeroTimelineNote(n,zeroCalDay())+'</p>'+
+        (lsg?'<div class="tp-landing">'+landOfferHTML(lsg)+'</div>':'')+
+        '<div class="tp-kv">'+
+          (zs&&zs.slips?'<div><span class="chip sm clean">Banked</span><span><b>'+zs.clean+'</b> clean days total · best run <b>'+zs.best+'</b> — a slip never wipes the total</span></div>':'')+
+          '<div><span class="chip sm ghost">Walked</span><span><b>'+BASE_PHASES[0].capText+' → 0</b> in '+totalD+' days · the counter only climbs now</span></div>'+
+        '</div>'+
+        tpFoldHTML('feel','wave','How today may feel',feelSum(today,BASE_PHASES.length-1),feelHTML(today,BASE_PHASES.length-1,false));
       return;
     }
-    box.className='tplan';
-    var col=rgbStr(capRGB(cap/BASE_PHASES[0].cap));
-    var tpr=taperProgress();
-    var left=tpr.daysToZero;
-    var dropBase=Math.max(0,tpr.dropBase);
-    var journey=Math.max(0,Math.min(100,dropBase));
+    box.classList.remove('zero');
+    var pl=dayPlanOf(today,idx);
 
     // ---- comparison to yesterday: the plan delta + what you actually logged ----
-    var yd=addDays(today,-1), vs='';
+    var yd=addDays(today,-1), headChip='', ceil='';
     if(yd>=start){
       var tM=dayMetrics(todayKey), yM=dayMetrics(dkeyOf(yd));
-      var plan;
-      if(cap>yM.cap){
-        // only a rebuild can raise the ceiling — say so, or "holding" lies
-        plan='<span class="tp-vs-k hold">Rebuilt</span> — the descent re-entered at <b>'+phase.capText+'</b>, up from the '+yM.capText+' the days weren\'t holding. Under '+cap+' is the whole job now.';
-      }else if(cap<yM.cap){
-        plan='<span class="tp-vs-k down">↓ Ceiling dropped</span> from <b>'+yM.capText+'</b> yesterday — <b>'+(yM.cap-cap)+' fewer</b> today.';
-      }else{
-        if(!phase.single&&tM.reqGapH>yM.reqGapH){
-          plan='<span class="tp-vs-k hold">Same ceiling</span> as yesterday ('+cap+') — but the gap widens: <b>'+fmtGapH(yM.reqGapH)+' → '+fmtGapH(tM.reqGapH)+'</b>.';
-        }else{
-          plan='<span class="tp-vs-k hold">Holding</span> at <b>'+cap+'</b>, same as yesterday.';
-        }
-      }
       var ylog='';
       if(yM.eff!==null){
-        var yst=yM.eff>yM.cap?'over':yM.eff===yM.cap?'at the cap':'under';
-        ylog=' Yesterday you logged <b>'+yM.eff+'</b> of '+yM.capText+' — '+yst+'.';
+        var yc=yM.eff>yM.cap?'over':yM.eff===yM.cap?'atcap':'under', yw=yM.eff>yM.cap?'Over':yM.eff===yM.cap?'At cap':'Under';
+        ylog=' · yday <b>'+yM.eff+'</b>/'+yM.capText+' <span class="chip sm '+yc+'"><span class="dot"></span>'+yw+'</span>';
       }
-      vs='<div class="tp-vs">'+plan+ylog+'</div>';
+      if(cap>yM.cap){
+        // only a rebuild can raise the ceiling — say so, or "holding" lies
+        headChip='<span class="chip sm adjust">Rebuilt at '+phase.capText+'</span>';
+        ceil=yM.capText+' → <b>'+phase.capText+'</b> · re-entered where the days hold'+ylog;
+      }else if(cap<yM.cap){
+        headChip='<span class="chip sm under">'+icon('down')+(yM.cap-cap)+' fewer than yesterday</span>';
+        ceil='<s>'+yM.capText+'</s> → <b>'+phase.capText+'</b>'+ylog;
+      }else if(!phase.single&&tM.reqGapH>yM.reqGapH){
+        headChip='<span class="chip sm acc">Gap '+fmtGapH(yM.reqGapH)+' → '+fmtGapH(tM.reqGapH)+'</span>';
+        ceil='<b>'+phase.capText+'</b> held · gap '+fmtGapH(yM.reqGapH)+' → <b>'+fmtGapH(tM.reqGapH)+'</b>'+ylog;
+      }else{
+        headChip='<span class="chip sm ghost">Holding at '+phase.capText+'</span>';
+        ceil='<b>'+phase.capText+'</b> held · same as yesterday'+ylog;
+      }
+    }else{
+      headChip='<span class="chip sm acc">Day one</span>';
     }
 
     // tomorrow's move — the schedule always says what comes next
     var tm=addDays(today,1),nxt='';
     if(dkeyOf(tm)===dkeyOf(z)){
-      nxt='<span class="tp-vs-k down">Tomorrow</span> <b>Zero day.</b> Tonight the ritual clears the runway.';
+      nxt='<b>Zero day</b> · tonight the ritual clears the runway';
     }else if(tm<z){
-      var nM=dayMetrics(dkeyOf(tm));
+      var nM=dayMetrics(dkeyOf(tm)), npl=dayPlanOf(tm,nM.di), nw=npl&&npl.w?' · '+npl.w.join(' · '):'';
       if(nM.cap<cap){
-        nxt='<span class="tp-vs-k down">Tomorrow</span> the ceiling drops to <b>'+nM.capText+'</b>'+
-          (nM.single?' — one evening session only.':' · gap '+fmtGapH(nM.reqGapH)+'.');
+        nxt='<b>'+nM.capText+'</b>'+(nM.single?' · one evening session':' · gap <b>'+fmtGapH(nM.reqGapH)+'</b>'+nw);
       }else if(!nM.single&&!phase.single&&nM.reqGapH>spacingHNow()){
-        nxt='<span class="tp-vs-k hold">Tomorrow</span> same ceiling — the gap stretches to <b>'+fmtGapH(nM.reqGapH)+'</b>.';
+        nxt='same <b>'+nM.capText+'</b> · gap stretches to <b>'+fmtGapH(nM.reqGapH)+'</b>'+nw;
+      }else{
+        nxt='same <b>'+nM.capText+'</b>'+(nM.single?' · evening only':' · gap '+fmtGapH(nM.reqGapH)+nw);
       }
     }
-    if(nxt)vs+='<div class="tp-vs">'+nxt+'</div>';
+    var kv=(ceil?'<div><span class="chip sm ghost">Ceiling</span><span>'+ceil+'</span></div>':'')+
+      (nxt?'<div><span class="chip sm acc">Tomorrow</span><span>'+nxt+'</span></div>':'');
 
-    var struct=phase.single
-      ?'<span class="tp-cap" style="color:'+col+'">'+phase.capText+'</span>'+
-       '<span class="tp-struct-txt">one evening session<small>hits max</small></span>'
-      :'<span class="tp-cap" style="color:'+col+'">'+phase.capText+'</span>'+
-       '<span class="tp-struct-txt"><small>hits max</small>'+phase.sessionMax+' a session</span>'+
-       '<span class="tp-gap">'+fmtGapH(spacingHNow())+'</span>'+
-       '<span class="tp-struct-txt"><small>between</small>sessions</span>';
-
-    // the day, laid out: suggested windows + honest math + the do-list
-    var pl=dayPlanOf(today,idx), dayPlanHTML='';
-    if(pl){
-      dayPlanHTML='<div class="tp-day">'+
-        '<div class="tp-day-k">The day, laid out</div>'+
-        winsHTML(pl)+
-        (pl.note?'<p class="win-note">'+pl.note+'</p>':'')+
-        doListHTML(pl)+
-        '</div>';
-    }
+    var rail=pl?dayRailSVG(pl,phase):'';
     box.innerHTML=
-      '<div class="tp-eyebrow">Day <b>'+dayN+'</b> of '+totalD+' · Today · '+WEEKDAYS[today.getDay()]+', '+fmtShort(today)+'</div>'+
-      '<div class="tp-goal">'+dayGoal(today,idx)+'</div>'+
-      '<div class="tp-struct">'+struct+'</div>'+
-      dayPlanHTML+
-      feelHTML(today,idx,false)+
-      vs+
-      '<div class="tp-arc">'+
-        '<div class="tp-track"><i style="width:'+journey+'%"></i><span class="tp-here" style="left:'+journey+'%"></span></div>'+
-        '<div class="tp-arc-ends"><span>~'+BASELINE+' baseline</span><span>zero</span></div>'+
-        '<div class="tp-arc-lbl"><b>'+dropBase+'% below your ~'+BASELINE+' baseline</b> — down from '+BASE_PHASES[0].capText+' at the start, zero in '+left+' day'+(left===1?'':'s')+'.</div>'+
-      '</div>';
+      '<div class="card-h tp-h"><div class="label"><b>Today</b> · '+WEEKDAYS[today.getDay()].slice(0,3)+' '+fmtShort(today)+'</div>'+headChip+'</div>'+
+      '<p class="tp-goal">'+dayGoal(today,idx)+'</p>'+
+      rulesHTML(phase,today,idx,pl)+
+      (rail||(pl?winsHTML(pl):''))+
+      (pl&&pl.note?'<p class="tp-note">'+pl.note+'</p>':'')+
+      (kv?'<div class="tp-kv">'+kv+'</div>':'')+
+      (pl&&pl.do&&pl.do.length?tpFoldHTML('dol','check','Ways through today',pl.do.length+' moves for the gaps',doListHTML(pl)):'')+
+      tpFoldHTML('feel','wave','How today may feel',feelSum(today,idx),feelHTML(today,idx,false));
   }
 
   /* ---- interactive day-by-day schedule strip: every chip opens its day page ---- */
+  function sdCenter(){
+    var el=$('schedStrip');if(!el||!el.clientWidth)return false;
+    var focus=el.querySelector('.sday.today');
+    if(focus)el.scrollLeft=focus.offsetLeft-el.clientWidth/2+focus.offsetWidth/2;
+    return true;
+  }
   function renderSchedStrip(){
     var el=$('schedStrip');if(!el)return;
     var sch=schedule(),z=zeroDate();
@@ -4960,17 +5397,28 @@ try{
       if(d<today)cls+=' past '+st.cls;
       if(k===todayKey)cls+=' today';
       if(isZ)cls+=' zeroday';
-      var gap=isZ?(d<=today?st.stat:'zero'):(p.single?'evening':fmtGapH(spacingHOn(d,di))+' gap');
+      var gap=isZ?'zero':(p.single?'evening':fmtGapH(spacingHOn(d,di))+' gap');
+      var stl='';
+      if(d<today||k===todayKey){
+        var word={under:'Under',at:'At cap',over:'Over',clean:'Clean',slip:'Slip',nolog:'No log'}[st.cls]||st.stat;
+        if(k===todayKey&&!isZ)stl='<span class="sd-st now">'+(st.c||0)+' so far</span>';
+        else if(isZ)stl='<span class="sd-st '+st.cls+'">'+(st.cls==='slip'?'Slip · '+st.c:word)+'</span>';
+        else stl='<span class="sd-st '+st.cls+'">'+(st.c!==null?st.c+' · ':'')+word+'</span>';
+      }
       html+='<div class="'+cls+'" data-k="'+k+'" role="button" tabindex="0" aria-label="'+fmtShort(d)+' details">'+
         '<span class="sd-dow">'+WEEKDAYS[d.getDay()].slice(0,3)+' '+(d.getMonth()+1)+'/'+d.getDate()+'</span>'+
         '<span class="sd-cap">'+(isZ?'0':p.capText)+'</span>'+
-        '<span class="sd-gap">'+gap+'</span></div>';
+        '<span class="sd-gap">'+gap+'</span>'+stl+'</div>';
       d=addDays(d,1);
     }
     el.innerHTML=html;
-    var focus=el.querySelector('.sday.today');
-    if(focus)el.scrollLeft=focus.offsetLeft-el.clientWidth/2+focus.clientWidth/2;
+    if(sdCenter())el.dataset.parked='1';else delete el.dataset.parked;
   }
+  // parked on today even when first painted inside a closed fold or a hidden tab
+  if('ResizeObserver' in window)new ResizeObserver(function(){
+    var el=$('schedStrip');
+    if(el&&!el.dataset.parked&&sdCenter())el.dataset.parked='1';
+  }).observe($('schedStrip'));
   $('schedStrip').addEventListener('click',function(ev){
     var c=ev.target.closest('.sday');if(!c)return;
     ev.stopPropagation();
@@ -9082,9 +9530,9 @@ try{
     var t=taperProgress(), start=schedule()[0].start;
     if(today<start)el.textContent='Starts '+fmtShort(start)+' · zero '+fmtShort(zeroDate());
     else if(isZeroEra)el.textContent='Day '+Math.max(0,daysFree())+' at zero · the descent, kept';
-    else el.textContent='Day '+t.dayN+' of '+t.totalD+' · cap '+phase.capText+
+    else el.textContent='Cap '+phase.capText+
       (phase.single?' · evening only':spacingHNow()>0?' · '+fmtGapH(spacingHNow())+' gaps':'')+
-      ' · zero '+fmtShort(zeroDate());
+      ' · zero '+fmtShort(zeroDate())+' · day '+t.dayN+' of '+t.totalD;
   }
 
   /* ---- after zero: the ladder ---- */
@@ -9157,19 +9605,25 @@ try{
     // opens at zero and runs the twelve weeks — nothing here is pre-zero anymore
     if(!isZeroEra){fold.hidden=true;return;}
     fold.hidden=false;
-    var n=zeroCalDay(), zp=zeroPhaseFor(n);
-    $('afterFoldLive').textContent=zp?zp.t:'Graduated';
+    var n=zeroCalDay(), zp=zeroPhaseFor(n), cw=Math.ceil(n/7), np=(data.plans||[]).length;
+    $('afterFoldLive').textContent=(zp?zp.t+' · week '+cw+' of 12':'Graduated · day '+n)+
+      ' · '+np+' plan'+(np===1?'':'s');
     // header: which of the twelve weeks this is, and what it is for
     var head='';
     if(zp){
-      head='<p class="zp-t">'+zp.t+' · day '+n+'</p><p class="zp-f">'+zp.f+'</p><div class="zp-bar">';
-      for(var w=1;w<=12;w++){
-        var cw=Math.ceil(n/7);
-        head+='<span class="zp-seg'+(w<cw?' on':w===cw?' now':'')+'"></span>';
-      }
-      head+='</div><p class="zp-f" style="font-size:11.5px;color:var(--muted)">Week '+Math.ceil(n/7)+' of 12 — the span the relapse data actually covers.</p>';
+      head='<div class="zp-top"><div><div class="label">Week <b>'+cw+'</b> of 12 · day '+n+'</div>'+
+        '<p class="zp-t">'+zp.t+'</p></div><span class="chip sm acc">'+(84-n>0?(84-n)+' days to go':'last day')+'</span></div>'+
+        '<p class="zp-f">'+zp.f+'</p><div class="zp-bar" role="img" aria-label="Week '+cw+' of 12">';
+      for(var w=1;w<=12;w++)head+='<span class="zp-seg'+(w<cw?' on':w===cw?' now':'')+'"></span>';
+      head+='</div><div class="zp-ph">'+ZERO_PHASES.map(function(p){
+        var on=n>=p.d1&&n<=p.d2;
+        return '<span class="'+(on?'on':'')+'" style="flex:'+Math.round((p.d2-p.d1+1)/7)+'">'+p.t.replace(/^The /,'')+'</span>';
+      }).join('')+'</div>'+
+        '<p class="zp-n">Twelve weeks — the span the relapse data actually covers.</p>';
     }else{
-      head='<p class="zp-t">Graduated · day '+n+'</p><p class="zp-f">Past the twelve weeks the risk data maps. The plans and the ladder keep running — they just stop being a program.</p>';
+      head='<div class="zp-top"><div><div class="label">Day '+n+' since zero</div><p class="zp-t">Graduated</p></div>'+
+        '<span class="chip sm clean">'+icon('medal')+'12 weeks done</span></div>'+
+        '<p class="zp-f">Past the twelve weeks the risk data maps. The plans and the ladder keep running — they just stop being a program.</p>';
     }
     $('zpHead').innerHTML=head;
     renderPlanList();
@@ -9181,12 +9635,11 @@ try{
     (data.plans||[]).forEach(function(p,i){
       html+='<div class="pl-row"><span class="pl-k"><span class="pl-if">If</span> '+esc(p.cue)+
         ', <span class="pl-then">then</span> '+esc(p.then)+'</span>'+
-        '<button class="pl-act warn" data-pl="del" data-i="'+i+'">Remove</button></div>';
+        '<button class="pl-act warn" data-pl="del" data-i="'+i+'" aria-label="Remove this plan">'+icon('close','ic-sm')+'</button></div>';
     });
     var sug=planSuggestions();
     sug.forEach(function(b){
-      html+='<div class="pl-row pl-sug"><span class="pl-k"><b>'+bandLabel(b)+'</b> — '+b.share+
-        '% of everything you logged landed in this window. <span class="pl-if">If</span> it\'s '+bandLabel(b)+
+      html+='<div class="pl-row pl-sug"><span class="pl-k"><b>'+bandLabel(b)+'</b> · <span class="pl-share">'+b.share+'%</span> of everything you logged landed in this window. <span class="pl-if">If</span> it\'s '+bandLabel(b)+
         ', <span class="pl-then">then</span> …</span>'+
         '<button class="pl-act" data-pl="add" data-b="'+b.h1+'-'+b.h2+'" data-l="'+esc(bandLabel(b))+'">Write it</button></div>';
     });
@@ -9194,8 +9647,8 @@ try{
     html+='<div class="pl-edit" id="plEdit" hidden>'+
       '<input id="plCue" placeholder="If … (a time, a place, a feeling)">'+
       '<input id="plThen" placeholder="then … (one concrete thing)">'+
-      '<button class="pl-act" data-pl="save">Save</button></div>'+
-      '<div class="sc-hand"><button data-pl="new">Add a plan by hand</button></div>'+
+      '<button class="btn sm acc pl-save" data-pl="save">Save</button></div>'+
+      '<div class="sc-hand"><button class="btn sm ghost" data-pl="new">'+icon('plus')+'Add a plan by hand</button></div>'+
       '<p class="sc-note">The effect comes from the cue being specific. "If I feel like it" is not a cue; "if it\'s 4pm and I\'ve just closed the laptop" is.</p>';
     box.innerHTML=html;
   }
@@ -9207,17 +9660,18 @@ try{
       return;
     }
     var rows='';
-    function r(k,v){return '<div class="lb-row"><span class="lb-k">'+k+'</span><span class="lb-v">'+v+'</span></div>';}
-    rows+=r('Current run · <b>'+L.displayRun+' clean day'+(L.displayRun===1?'':'s')+'</b>',L.todayClean?money(L.pending)+' pending':'—');
-    rows+=r('Tomorrow, if it stays clean',money(L.next));
-    rows+=r('Earned since zero <span class="lb-s">(settled days)</span>',money(L.earned));
+    function r(k,v,cls){return '<div class="lb-row'+(cls?' '+cls:'')+'"><span class="lb-k">'+k+'</span><span class="lb-v">'+v+'</span></div>';}
+    var tiles='<div class="lb-tiles"><div class="lb-tile"><span class="label">Current run</span><span class="n-lg">'+L.displayRun+'<span class="unit"> day'+(L.displayRun===1?'':'s')+'</span></span>'+
+        '<span class="lb-f">'+(L.todayClean?money(L.pending)+' pending today':'—')+'</span></div>'+
+      '<div class="lb-tile"><span class="label">Banked, unclaimed</span><span class="n-lg">'+money(L.owed)+'</span>'+
+        '<span class="lb-f">tomorrow pays '+money(L.next)+'</span></div></div>';
+    rows+=r('Earned since zero <span class="lb-s">settled days</span>',money(L.earned));
     rows+=r('Claimed',money(L.claimed));
-    rows+=r('<b>Banked, unclaimed</b>',money(L.owed));
-    if(L.unaccounted)rows+=r('Days not accounted for <span class="lb-s">(app not opened — unpaid)</span>',String(L.unaccounted));
+    if(L.unaccounted)rows+=r('Days not accounted for <span class="lb-s">app not opened — unpaid</span>',String(L.unaccounted),'warn');
     if(L.resets)rows+=r('Resets so far',String(L.resets));
-    box.innerHTML=rows+
-      '<div class="sc-hand">'+(L.owed>0?'<button class="pri" data-cm="claim">Claim '+money(L.owed)+'</button>':'')+
-      '<button data-cm="who">'+(data.cm.who?'Verifier: '+esc(data.cm.who):'Name a verifier')+'</button></div>'+
+    box.innerHTML=tiles+'<div class="lb-rows">'+rows+'</div>'+
+      '<div class="sc-hand">'+(L.owed>0?'<button class="btn sm acc pri" data-cm="claim">'+icon('coin')+'Claim '+money(L.owed)+'</button>':'')+
+      '<button class="btn sm ghost" data-cm="who">'+(data.cm.who?'Verifier: '+esc(data.cm.who):'Name a verifier')+'</button></div>'+
       '<p class="sc-note">Escalating reinforcement with a reset on lapse is the schedule the contingency-management trials used, and it is the best-evidenced treatment for cannabis use disorder. One difference matters and is worth saying plainly: those trials verified abstinence with urine screens. A ladder you pay yourself on your own word is the weak form. Naming someone who holds the money and asks makes it closer to the thing that was actually tested.</p>';
   }
 
