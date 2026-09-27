@@ -4808,6 +4808,14 @@ try{
     setTimeout(done,1400);
     return true;
   }
+  /* a stroke that has drawn itself in is drawn for good: drop the class once
+     its animation ends. Left on, it replays every time its view comes back
+     from display:none — a CSS animation restarts on re-display — so a tab
+     round-trip would redraw the dial and the contours from nothing. */
+  document.addEventListener('animationend',function(e){
+    var t=e.target;
+    if(e.animationName==='drawIn'&&t&&t.classList&&t.classList.contains('draw-in'))t.classList.remove('draw-in');
+  },true);
   // stagger the top-level cards of a view in, once per session per view
   var VIEW_EL={today:'vToday',journey:'vJourney',plan:'vPlan',more:'vMore'};
   function staggerView(v){

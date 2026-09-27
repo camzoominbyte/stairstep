@@ -1,6 +1,6 @@
 /* Taper to Zero — offline cache.
    Bump CACHE on any deploy so installed phones pick up the new version. */
-var CACHE = 'ttz-v8.3.0';
+var CACHE = 'ttz-v9.0.0';
 var SHELL = './index.html';
 var ASSETS = [
   './',
@@ -9,7 +9,6 @@ var ASSETS = [
   './manifest.webmanifest',
   './fonts/fraunces.woff2',
   './fonts/fraunces-italic.woff2',
-  './fonts/karla.woff2',
   './icons/icon-180.png',
   './icons/icon-192.png',
   './icons/icon-512.png'

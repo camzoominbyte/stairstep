@@ -4,13 +4,13 @@ A small personal PWA for tracking a 10-day cannabis taper (Jul 12–22, 2026), t
 
 ## How it works
 
-- **Single page, no build step.** All app logic lives in `index.html`; `sw.js` + `manifest.webmanifest` make it an installable, offline-capable PWA. Fonts and icons are self-hosted.
+- **Single page, no build step.** All app logic lives in `index.html`; `sw.js` + `manifest.webmanifest` make it an installable, offline-capable PWA. Type is the system's own (SF Pro / SF Pro Rounded via `ui-rounded`, SF Mono for clock stamps) plus a self-hosted Fraunces for the wordmark; icons are one inline SVG sprite.
 - **Data stays on-device.** Everything is stored in `localStorage` under the `ttz2` key — nothing leaves the phone. A backup can be copied/imported from the "Backup & data" section in the app.
 - **Days end at 4am**, so a 1am session counts toward the evening it belongs to.
 
 ## Features
 
-- Daily hit tally against a stepping-down cap, visualized as a colour-coded descent (warm amber at a high cap → sage at zero) that the phase cards and hero number share
+- Daily hit tally against a stepping-down cap. Today leads with a **24-hour day dial**: every hit ticked at its real clock time, yesterday as a ghost ring inside it, the day's longest gap as the brightest arc (labelled with how it compares to yesterday's), the running gap, and the next window drawn where it will land. Below it, the count as pips grouped by sitting (the next sitting's allowance outlined), then hold-to-log
 - Per-hit timestamps drive the session rules ("max 3 hits/session · 3h between") — the today card shows when the next session opens
 - Timestamps are on the surface, not buried: every day timeline stamps each sitting with its clock time, and a "Yesterday" card on the Today screen spells out the prior day's sittings and the gaps between them
 - The longest gap is the headline stat — lit across the day's timeline, badged in the gap list, and compared against the previous logged day's longest everywhere a day appears (the Yesterday card also tracks the stretch running right now against yesterday's best)
@@ -25,10 +25,16 @@ A small personal PWA for tracking a 10-day cannabis taper (Jul 12–22, 2026), t
 - Flexible in both directions: a day already lived at the next cap can end its step a day early, pulling zero closer
 - "The story" capstone card in the zero era — the whole taper in numbers, shareable
 - Optional money-saved tracking (set a rough cost per hit in the trend detail)
-- Every chart is tap-to-expand (⤢) into a full-screen, fully labeled version — hour histogram, day punchcard, pace, avoided, day-vs-cap, nightly check-ins, and session gaps; swipe sideways (or tap the dots) to page between them, and lines draw themselves in
-- Rotate the phone for the cockpit: a full-bleed six-tile live dashboard (today, taper score ring, next-window countdown, urge timer, the week, zero day) — every tile taps through to its detail page
+- Every chart is tap-to-expand into a full-screen, fully labeled version — hour histogram, day punchcard, pace, avoided, day-vs-cap, nightly check-ins, and session gaps; swipe sideways (or tap the dots) to page between them, and lines draw themselves in
+- Rotate the phone for the cockpit: a full-bleed six-tile live dashboard (a glance copy of the day dial, next-window countdown, taper score, urge timer, the week, zero day) — every tile taps through to its detail page
 - Tap any history row to correct its count
 - Copy/import JSON backup, share-sheet backup export, and a backup step in the zero-eve ritual — and every destructive restore can be undone, since the copy it replaced is stashed and now has a button to bring it back
+
+## Design
+
+The "Afterglow" design (Sep 2026): a luminous, dark-first health-app look with a separately tuned light theme. Colour is data, never decoration — the accent is **ember** through the taper and **jade** once zero is reached (it marks time: the gap, the hold control, today); **honey** means *at cap* and nothing else; **clay** means over cap or a slip; **iris** marks anything the schedule engine moved (always with an undo). A status colour never appears without its word. The ambient glow behind the page cools from ember toward jade as the descent progresses. Motion is spring-based and gated so it plays on first sight or real change, never on every re-render; exactly one element breathes per screen; `prefers-reduced-motion` keeps every value visible and keeps the hold-to-log fill (it is the friction, not decoration).
+
+The stylesheet is sectioned by surface (`[F]` foundation, `[TH]` Today hero, `[TC]` Today context, `[J]` Journey, `[P]` Plan, `[M]` More + cockpit, `[O]` overlays, `[C]` charts); legacy token names (`--sage`, `--amber`, `--clay`, `--accent`…) are aliases onto the new tokens because the render code references them inline.
 
 ## Deploying
 
