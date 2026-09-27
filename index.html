@@ -675,6 +675,9 @@
   .thd-trk{fill:none;stroke:var(--dial-track);stroke-width:15}
   .thd-long{fill:none;stroke:url(#thAg);stroke-width:15;stroke-linecap:round}
   .thd-glow{fill:none;stroke:var(--acc);stroke-width:15;stroke-linecap:round;opacity:.42;filter:url(#thSoft)}
+  /* the cockpit's copy (dashDialSVG) carries its own def ids */
+  .dd-dial .thd-long{stroke:url(#ddAg)}
+  .dd-dial .thd-glow{filter:url(#ddSoft)}
   html.dark .thd-glow{opacity:.5}
   .thd-gap{fill:none;stroke:var(--acc);stroke-width:3;stroke-linecap:round;opacity:.45}
   .thd-run{fill:none;stroke:var(--acc);stroke-width:15;stroke-linecap:round}
@@ -741,7 +744,7 @@
   .gap-bell:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
   /* ---- count row ---- */
-  .th-count{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:6px}
+  .th-count{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:6px 10px;margin-top:6px}
   .th-count[hidden]{display:none}
   .th-countL{min-width:0;flex:none}
   #todayEyebrow{display:none;margin:0 0 2px}
@@ -753,7 +756,7 @@
   }
   #tallyCount.pop{animation:pulsePop .45s var(--snap)}
   #capLabel{font-family:var(--f-round);font-size:15.5px;font-weight:600;color:var(--ink-2);letter-spacing:-.01em}
-  .th-countR{display:flex;flex-direction:column;align-items:flex-end;gap:6px;padding-bottom:2px;min-width:0}
+  .th-countR{display:flex;flex-direction:column;align-items:flex-end;gap:6px;padding-bottom:2px;min-width:0;margin-left:auto}
   #thStatus[hidden],.th-vs[hidden]{display:none}
   .th-vs{font-size:13px;gap:4px;white-space:nowrap}
   .th-vs .tri{width:9px;height:9px}
@@ -908,11 +911,20 @@
   .th-medal b{color:var(--ink);font-weight:650}
   #todayCard.free .action-row{margin-top:14px}
 
+  @media (max-width:374px){
+    .hold-log{gap:9px;padding-right:12px}
+    .hold-label{white-space:normal;font-size:15.5px;line-height:1.1}
+    .hold-sub{display:none}
+    .tally-btns .minus{flex-basis:54px}
+    #btnEarlier>span{display:none}
+    #btnEarlier{padding:0 14px}
+  }
+
   /* ---- note lines ---- */
   .th-foot{display:flex;flex-direction:column;gap:6px;margin-top:12px}
   .th-foot:not(:has(>p:not([hidden]):not(:empty))){display:none}
   .th-foot p{margin:0}
-  .today-sched{font-size:12.5px;line-height:1.4;color:var(--ink-2);font-weight:550}
+  .today-sched{font-size:12.5px;line-height:1.4;color:var(--ink-2);font-weight:550;text-wrap:pretty}
   .today-sched[hidden]{display:none}
   .bar-note{font-size:12.5px;line-height:1.45;color:var(--ink-2)}
   .bar-note:empty{display:none}
@@ -1490,7 +1502,7 @@
   .st-capn.past{fill:var(--ink-2)}
   .st-capn.now{font-size:26px;fill:var(--acc-t)}
   .st-capn.zero{fill:var(--under-t)}
-  .st-act{font-size:10.5px;font-weight:700;letter-spacing:.01em}
+  .st-act{font-size:10.5px;font-weight:700;letter-spacing:.01em;word-spacing:2.5px}
   .st-act .un,.st-act .at{fill:var(--ink-2)}
   .st-act .ov{fill:var(--over-t)}
   .st-act .nl{fill:var(--ink-3)}
@@ -1531,7 +1543,10 @@
     margin:22px 4px 10px;
   }
   .pl-h[hidden]{display:none}
-  .pl-h small{font-family:var(--f-ui);font-size:13px;font-weight:500;color:var(--ink-2);letter-spacing:0;margin-left:6px}
+  /* today's plan head: the date stays one line; the vs-yesterday chip wraps under it when room runs out */
+  .tp-h{flex-wrap:wrap;row-gap:6px;padding-right:40px}
+  .tp-h .label{white-space:nowrap}
+  .pl-h small{display:block;font-family:var(--f-ui);font-size:13px;font-weight:500;color:var(--ink-2);letter-spacing:0;margin:2px 0 0}
   .pl-h .dlink{font-family:var(--f-ui);font-size:14px;letter-spacing:0;display:inline-flex;align-items:center;gap:1px;min-height:44px;margin:-14px 0}
   .pl-evid{border-top:0;margin:14px 4px 0;padding-top:0}
 
@@ -5702,8 +5717,9 @@ try{
         ' <span>'+icon('undo','ic-xs')+'every move can be undone</span></div>'+moves+'</div>':'';
     var foot=isZeroEra?''
       :'<p class="sc-note">A day only holds its step when its <em>logged total</em> goes over that day\'s cap. A rough day that still landed under won\'t move anything on its own — hold it above if the step needs room, or correct the day\'s count from its day page and the whole descent re-adjusts.</p>';
-    // the fold: auto-open whenever the engine has moved something, or an offer is live
-    var auto=!!(nAdj||reb||land);
+    // the fold: auto-open whenever the engine has moved something, or an offer is live —
+    // but after zero the moves are history, so only a live offer opens it by itself
+    var auto=!!((nAdj&&!isZeroEra)||reb||land);
     var open=scOpen===null?auto:scOpen;
     var sumTxt=nRows?nRows+' row'+(nRows===1?'':'s')+(nMoves?' · '+nMoves+' move'+(nMoves===1?'':'s'):''):nMoves?nMoves+' moves available':'the ledger';
     box.innerHTML=top+count+land+
@@ -6257,6 +6273,20 @@ try{
   }
   // the now hand steps once a minute — never a continuous tween
   function thDialTick(){if(Math.floor(Date.now()/60000)!==thDialMin)thDrawDial();}
+  /* the landscape cockpit's glance copy of the dial (renderDash drops it into
+     #dhDial). Same drawing, its own def ids: #dash precedes #vToday in the DOM
+     and is display:none in portrait, so a shared id would resolve into the
+     hidden copy and blank the hero's gradient. No labels at 150px, and no
+     breathe — the cockpit is read at a glance, not watched. */
+  function dashDialSVG(){
+    var host=$('thDial');if(!host)return '';
+    var inner=isZeroEra?cleanDialSVG():dialSVG();
+    if(!inner)return '';
+    inner=inner.replace(/\bth(Ag|Soft|Halo)\b/g,'dd$1')
+      .replace(/<text\b[\s\S]*?<\/text>/g,'')
+      .replace(/\s(?:breathe|draw-in)(?=[\s"])/g,'');
+    return '<svg class="dd-dial" viewBox="'+(host.getAttribute('viewBox')||'0 0 296 296')+'" aria-hidden="true">'+inner+'</svg>';
+  }
   /* pips: one per allowed hit, grouped by sitting (a wider gap between
      sittings); the next sitting's allowance outlined in the accent; hits
      past the cap appended in clay after the cap run — never a ring. */
@@ -7274,10 +7304,12 @@ try{
         svg+='<text x="'+mid.toFixed(1)+'" y="24" font-size="8.5" font-weight="700" fill="var(--acc-t)" text-anchor="middle">'+lbl+'</text>';
       }
     }
-    // a dot per hit
+    // a dot per hit — neutral on a taper day, clay on a zero-era slip day
+    // (the day's status chip carries the word; the hue only agrees with it)
+    var dotFill=m.cls==='slip'?'var(--over)':'var(--ink-2)';
     m.sessions.forEach(function(sess){
       sess.forEach(function(hd){
-        svg+='<circle cx="'+xAt(hd.getTime()).toFixed(1)+'" cy="'+AX+'" r="4" fill="var(--ink-2)" fill-opacity=".85"/>';
+        svg+='<circle cx="'+xAt(hd.getTime()).toFixed(1)+'" cy="'+AX+'" r="4" fill="'+dotFill+'" fill-opacity=".85"/>';
       });
     });
     // then the stamps, in the rows laid out above
@@ -8230,7 +8262,9 @@ try{
       if(phase.single){
         wrap.classList.add('open');
         $('ghNote').innerHTML='<b>One evening session</b><br>tonight, only';
-        $('ghRule').textContent='Longer wait, softer landing';
+        // the dial already draws the long wait — a fourth line here runs the
+        // centre readout into the arc labels at the bottom of the ring
+        $('ghRule').textContent='';
         return;
       }
       var si=sessionInfo();
@@ -10528,7 +10562,7 @@ try{
         tile(s.us?s.us.total:0,'Urges','outlasted')+
         tile(s.zs?s.zs.clean:0,'At zero','clean days','var(--under-t)')+
         tile(s.zs?s.zs.best:0,'Best run','days in a row')+
-        tile(s.t.under+'<span class="unit">/'+s.t.logged+'</span>','Under cap','taper days')+
+        tile(s.t.under+'<span class="unit">/'+s.t.logged+'</span>','Under cap','days logged')+
       '</div>'+
       (s.ga?'<p class="st-note">'+(s.ga.adherence!==null?'<b>'+s.ga.adherence+'%</b> of the session gaps that had a rule met it, averaging ':'Session gaps averaged ')+
         '<b>'+fmtDur(s.ga.avg*3600000)+'</b> apart'+(s.ga.widening?' — widening the whole way, exactly as designed':'')+'.</p>':'')+
@@ -11300,7 +11334,19 @@ try{
     // logging itself keeps its hold friction on purpose
     $('tabLog').addEventListener('click',function(){
       setView('today');
-      window.scrollTo({top:0,behavior:motionOK?'smooth':'auto'});
+      // the page top on a tall phone; on a short one (SE, mini) the hold
+      // control sits below the fold there, so bring the control itself clear
+      // of the floating tab bar instead. Measured a beat later: the tab-switch
+      // view transition swaps the views asynchronously.
+      setTimeout(function(){
+        var hb=$('holdLog'),tb=$('tabbar'),top=0;
+        if(hb&&hb.offsetParent){
+          var room=window.innerHeight-(tb?tb.getBoundingClientRect().height+28:110);
+          var y=hb.getBoundingClientRect().bottom+window.scrollY;
+          if(y>room)top=Math.max(0,Math.round(y-room+12));
+        }
+        window.scrollTo({top:top,behavior:motionOK?'smooth':'auto'});
+      },40);
       var b=$('holdLog');
       if(b&&!$('heroCard').hidden){
         b.classList.remove('nudge');void b.offsetWidth;
