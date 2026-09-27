@@ -159,7 +159,11 @@
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html{scroll-behavior:smooth;scroll-padding-top:72px;-webkit-text-size-adjust:100%}
+  /* one scroll direction: anything wide (a two-descent staircase, the day strip, a chart)
+     scrolls inside its own box and can never drag the page sideways */
+  html{overflow-x:hidden}
   body{
+    overflow-x:hidden;
     background:var(--bg);
     color:var(--ink);
     font-family:var(--f-ui);
@@ -649,6 +653,9 @@
   .th-score{gap:5px;background:var(--s2);color:var(--ink-2);box-shadow:inset 0 0 0 1px var(--line)}
   .th-score b{font-family:var(--f-round);font-weight:700;color:var(--ink);font-size:13.5px;letter-spacing:-.01em}
   .th-score .th-dot{color:var(--ink-3)}
+  /* a long verdict ("Nothing yet — nothing logged today") shrinks the chip, never the row */
+  .th-score{max-width:100%;min-width:0}
+  .th-score #heroGrade{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .th-score.good #heroGrade{color:var(--under-t)}
   .th-score[hidden],.th-phase[hidden]{display:none}
   #todayCard .streak-chip{margin:0;height:26px}
@@ -943,6 +950,20 @@
     .hold-log.holding{transform:none}
     .hk-core,.hk-check{transition:none}
   }
+
+  /* ---- the clock, to the second (merged from main) ---- */
+  .th-sec{margin:-1px 0 1px;font:600 11.5px/1 var(--f-round);color:var(--ink-3);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+  .th-sec[hidden]{display:none}
+  .th-exact{display:block;font:650 14px/1.2 var(--f-round);color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.005em}
+  .th-exact:empty{display:none}
+  .th-cs2{display:block;margin-top:2px;font-size:12px;line-height:1.3;color:var(--ink-2)}
+  /* what the clean clock is buying, counted from the same instant */
+  .th-gains{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:8px;margin-top:12px}
+  .th-gains[hidden]{display:none}
+  .gh-gain{padding:10px 12px;border-radius:var(--r-md);background:var(--s2);box-shadow:inset 0 0 0 1px var(--line)}
+  .gh-gain b{display:block;font:700 20px/1.1 var(--f-round);color:var(--ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .gh-gain span{display:block;margin-top:3px;font-size:12px;font-weight:550;color:var(--ink-2)}
+
   /* ==== [/TH] ==== */
 
 
@@ -1252,6 +1273,11 @@
   .tc-nudge-t{flex:1;min-width:0;font-size:13px;line-height:1.35;color:var(--ink-2)}
   .tc-nudge-t b{color:var(--ink);font-weight:650}
   .tc-nudge .btn{flex:none;height:44px;border-radius:22px}
+
+  /* the sixth, seventh and eighth moves lead Today like the fifth: the card is the frame */
+  .tc-move .sc-fine{margin:0;padding:0;border:0}
+  .tc-move .sc-note{font-size:13.5px;line-height:1.5}
+
   /* ==== [/TC] ==== */
 
 
@@ -1826,6 +1852,116 @@
     .st-fill.st-in{animation:none}
     .feel-row{transition:none}
   }
+
+  /* ---- the Plan tab as panes (merged from main): a sticky segmented control,
+     four panes, a pulsing dot when a move is actually on offer ---- */
+  .pseg{
+    position:sticky;top:calc(env(safe-area-inset-top) + 60px);z-index:30;
+    display:flex;gap:3px;padding:4px;margin:2px 0 8px;border-radius:999px;
+    background:var(--glass);-webkit-backdrop-filter:blur(20px) saturate(1.6);backdrop-filter:blur(20px) saturate(1.6);
+    box-shadow:var(--glass-hi),0 0 0 1px var(--glass-line),var(--shadow-float);
+    overflow-x:auto;scrollbar-width:none;
+  }
+  .pseg::-webkit-scrollbar{display:none}
+  .pseg-b{
+    flex:1 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    min-height:38px;padding:0 12px;border:0;border-radius:999px;background:transparent;cursor:pointer;
+    font:650 13.5px/1 var(--f-ui);color:var(--ink-2);white-space:nowrap;
+    transition:background var(--d-fast),color var(--d-fast),box-shadow var(--d-fast);
+  }
+  .pseg-b[hidden]{display:none}
+  .pseg-b[aria-selected="true"]{background:var(--s1);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.14),0 0 0 1px var(--line)}
+  .pseg-b:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+  .pseg-dot{width:7px;height:7px;border-radius:50%;background:var(--adjust);flex:none;animation:psegPulse 2.4s ease-in-out infinite}
+  .pseg-dot[hidden]{display:none}
+  @keyframes psegPulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .pseg-live{font-size:13px;font-weight:550;color:var(--ink-2);margin:0 6px 12px;font-variant-numeric:tabular-nums}
+  .pseg-live:empty{display:none}
+  .pseg-empty{
+    margin:4px 0 0;padding:22px 18px;border-radius:var(--r-lg);background:var(--s1);box-shadow:var(--shadow-card);
+    font-size:14px;line-height:1.5;color:var(--ink-2);
+  }
+  .pseg-empty[hidden]{display:none}
+  .ppane[hidden]{display:none}
+  .ppane{animation:paneIn .28s var(--e-enter) both}
+  @keyframes paneIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .pl-today,.pl-ladder{position:relative;padding:0;background:none;box-shadow:none;border:0}
+  #todaySection>.xopen{position:absolute;top:14px;right:14px;z-index:2}
+  #todaySection .tp-h{padding-right:44px}
+
+  /* ---- every rung, one disclosure: the step you are on opens itself ---- */
+  details.phase{border-radius:0}
+  details.phase>summary{
+    list-style:none;cursor:pointer;display:grid;grid-template-columns:1fr auto;align-items:start;column-gap:12px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  details.phase>summary::-webkit-details-marker{display:none}
+  details.phase>summary::after{content:none}
+  .ph-sum .ph-top{grid-column:1}
+  .ph-sum .ph-rule{grid-column:1;display:block;margin:4px 0 0;font-size:13px;font-weight:600;color:var(--ink-2)}
+  details.phase.now>summary .ph-rule{color:var(--acc-t)}
+  .ph-chev{grid-column:2;grid-row:1 / span 2;align-self:center;width:18px;height:18px;color:var(--ink-3);transition:transform var(--d-base) var(--settle)}
+  details.phase[open]>summary .ph-chev{transform:rotate(180deg)}
+  .ph-body{padding-top:6px}
+  .ph-body>p:first-child{margin-top:6px}
+  details.phase.zero{background:var(--under-bg);border-radius:var(--r-sm);padding:14px 12px;margin:6px -8px 0;border-top-color:transparent}
+
+  /* ---- offers that lead the schedule card (sixth, seventh, eighth moves) ---- */
+  .sc-lead{display:flex;flex-direction:column;gap:10px;margin:14px 0 4px}
+  .sc-lead>.sc-fine,.sc-lead>.sc-landing{
+    margin:0;padding:14px;border:0;border-radius:var(--r-md);
+    background:var(--adjust-bg);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--adjust) 30%,transparent);
+  }
+  .sc-lead>.sc-moves{margin:0}
+  .sc-drift{margin:10px 0 0;padding:10px 12px;border-radius:var(--r-sm);background:var(--adjust-bg);color:var(--ink)}
+  .sc-slack{font-size:12.5px;line-height:1.45;color:var(--ink-2);margin:12px 0 0}
+
+  /* the seventh move: every ceiling either ladder has, each with where zero lands */
+  .rs-picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;margin:12px 0 4px}
+  .rs-pick{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:58px;padding:8px 6px;
+    border:0;border-radius:var(--r-md);background:var(--s2);box-shadow:inset 0 0 0 1px var(--line-2);cursor:pointer;
+    font-family:var(--f-ui);color:var(--ink-2);transition:transform var(--d-press) var(--snap);
+  }
+  .rs-pick:active{transform:scale(.96)}
+  .rs-pick b{font:700 20px/1 var(--f-round);color:var(--ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .rs-pick span{font-size:11.5px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums;text-transform:none;letter-spacing:0}
+  .rs-pick.on{background:var(--adjust-bg);box-shadow:inset 0 0 0 1.5px var(--adjust)}
+  .rs-pick.on b{color:var(--adjust-t)}
+  .rs-pick:focus-visible,.r2-opt:focus-visible,.gap-pick:focus-visible,.r2-go:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+  /* the eighth move: a pace is a whole ladder, so each option is a row */
+  .r2-opts{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+  .r2-opt{
+    display:block;width:100%;text-align:left;padding:12px 14px;border:0;border-radius:var(--r-md);cursor:pointer;
+    background:var(--s2);box-shadow:inset 0 0 0 1px var(--line-2);font-family:var(--f-ui);color:var(--ink);
+  }
+  .r2-opt-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .r2-opt-n{font-size:15px;font-weight:650}
+  .r2-opt-z{font-size:12.5px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .r2-opt-l{display:block;margin-top:6px;font:500 12px/1.35 var(--f-mono);color:var(--ink);overflow-wrap:anywhere}
+  .r2-opt-w{display:block;margin-top:5px;font-size:12px;line-height:1.45;color:var(--ink-2)}
+  .r2-opt.on{background:var(--adjust-bg);box-shadow:inset 0 0 0 1.5px var(--adjust)}
+  .r2-opt.on .r2-opt-n,.r2-opt.on .r2-opt-z{color:var(--adjust-t)}
+  .r2-go{
+    display:block;width:100%;min-height:48px;margin-top:12px;border:0;border-radius:24px;cursor:pointer;
+    background:var(--adjust);color:var(--ink-inv);font:650 15px/1.2 var(--f-ui);padding:12px 16px;
+  }
+  .r2-undo{font-size:12.5px;color:var(--ink-2);margin:10px 0 0;line-height:1.45}
+  .sc-why{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+  .sc-why>summary{list-style:none;cursor:pointer;font-size:13px;font-weight:650;color:var(--adjust-t);min-height:32px;display:flex;align-items:center}
+  .sc-why>summary::-webkit-details-marker{display:none}
+
+  /* the hours-between-sittings ceiling */
+  .gap-picks{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .gap-pick{
+    min-height:36px;padding:0 13px;border:0;border-radius:999px;cursor:pointer;
+    background:var(--s2);box-shadow:inset 0 0 0 1px var(--line-2);
+    font:650 13px/1 var(--f-ui);color:var(--ink-2);font-variant-numeric:tabular-nums;
+  }
+  .gap-pick.on{background:var(--adjust-bg);color:var(--adjust-t);box-shadow:inset 0 0 0 1.5px var(--adjust)}
+  .sc-mv.gapctl .mv-tx{width:100%}
+
   /* ==== [/P] ==== */
 
 
@@ -2726,6 +2862,7 @@
      are skipped in JS (motionOK=false → html.no-vt). The hold-to-log fill
      is NOT touched — it is the friction mechanic. */
   @media (prefers-reduced-motion: reduce){
+    .ppane,.pseg-dot{animation:none!important}
     html{scroll-behavior:auto}
     .reveal{opacity:1!important;transform:none!important;transition:none!important}
     /* killing the animation leaves a draw-in stranded at its start frame,
@@ -2897,6 +3034,37 @@ try{
   <div id="landCardBody"></div>
 </div>
 
+<!-- the seventh, sixth and eighth moves lead Today for the same reason the fifth
+     does: every card below them is written for a descent that is still
+     describing the days, and each exists for the morning that stopped being
+     true. The same offers live on the Plan tab's Change plan pane. -->
+<div class="card tc-land tc-move" id="restartCard" hidden>
+  <div class="tc-land-h">
+    <span class="tc-land-ic"><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg></span>
+    <h3>The seventh move</h3>
+    <span class="chip sm adjust">Start again</span>
+  </div>
+  <div id="restartCardBody"></div>
+</div>
+
+<div class="card tc-land tc-move" id="finishCard" hidden>
+  <div class="tc-land-h">
+    <span class="tc-land-ic"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span>
+    <h3>The sixth move</h3>
+    <span class="chip sm adjust">Finish early</span>
+  </div>
+  <div id="finishCardBody"></div>
+</div>
+
+<div class="card tc-land tc-move" id="rebuildCard" hidden>
+  <div class="tc-land-h">
+    <span class="tc-land-ic"><svg class="ic" aria-hidden="true"><use href="#i-plan"/></svg></span>
+    <h3>The eighth move</h3>
+    <span class="chip sm adjust">Rebuild</span>
+  </div>
+  <div id="rebuildCardBody"></div>
+</div>
+
 <div class="card ritual" id="ritualCard" hidden>
   <div class="card-h tc-h">
     <p class="label"><b id="ritEyebrow">The night-before ritual</b></p>
@@ -2918,7 +3086,7 @@ try{
 <div class="today openable" id="todayCard" data-title="Today">
   <button class="xopen" data-target="todayCard" data-title="Today" aria-label="Open today in detail"><svg class="ic" aria-hidden="true"><use href="#i-open"/></svg></button>
   <div class="th-head">
-    <span class="chip th-score" id="thScore"><span class="th-sk">Score</span><b id="heroScore">–</b><span class="th-dot" aria-hidden="true">·</span><span id="heroGrade"></span></span>
+    <span class="chip th-score" id="thScore"><span class="th-sk" id="heroSlbl">Score</span><b id="heroScore">–</b><span class="th-dot" aria-hidden="true">·</span><span id="heroGrade"></span></span>
     <span class="chip acc th-phase" id="thPhase" hidden></span>
     <span class="streak-chip" id="streakChip" hidden></span>
   </div>
@@ -2927,7 +3095,8 @@ try{
     <svg class="th-dial" id="thDial" viewBox="0 0 296 296" role="img" aria-label="Today’s 24-hour dial"></svg>
     <div class="gap-hero th-center" id="gapHero" hidden>
       <span class="th-k"><span id="ghLbl">Since</span> <span id="stLast">–</span></span>
-      <span class="th-big" id="ghSince" role="status">–</span>
+      <span class="th-big" id="ghSince">–</span>
+      <span class="th-sec" id="ghSub" aria-hidden="true" hidden></span>
       <span class="th-nx" id="ghNote"></span>
       <span class="th-rule" id="ghRule"></span>
     </div>
@@ -2949,6 +3118,8 @@ try{
     </div>
   </div>
   <div class="th-medal" id="thMedal" hidden></div>
+  <!-- what the clean clock is buying, counted from the same instant (zero era) -->
+  <div class="th-gains" id="ghGains" hidden></div>
   <div class="th-pips" id="thPips" role="img" aria-label=""></div>
   <div class="bar th-bar" aria-hidden="true"><div id="barFill"></div></div>
   <div class="th-meta" id="statRow">
@@ -3064,13 +3235,47 @@ try{
 </main>
 
 <main class="view" id="vPlan">
-<section class="card st-card" id="stairsWrap" aria-label="The step-down">
-  <div class="stairs" id="stairs" aria-label="Step-down schedule — daily hit cap, tap a step for details"></div>
-</section>
+<!-- Four jobs live on this tab and they are not the same job: what am I doing
+     today, what does the whole descent look like, what can I change, and what
+     happens after zero. Each gets a pane, and the segmented control says out
+     loud that the other three exist (a pulsing dot on Change plan when a move
+     is actually on offer). -->
+<nav class="pseg" id="planSeg" role="tablist" aria-label="Plan sections">
+  <button class="pseg-b" data-pane="today" role="tab" aria-selected="false">Today</button>
+  <button class="pseg-b" data-pane="ladder" role="tab" aria-selected="false">Ladder</button>
+  <button class="pseg-b" data-pane="adjust" role="tab" aria-selected="false">Change plan<i class="pseg-dot" id="planSegDot" hidden></i></button>
+  <button class="pseg-b" data-pane="after" role="tab" aria-selected="false" hidden>After zero</button>
+</nav>
+<p class="pseg-live" id="planSegLive"></p>
 
-<details class="fold" id="afterFold" hidden>
-  <summary><span class="fold-ic" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg></span><span class="fold-t">After zero</span><span class="fold-live" id="afterFoldLive"></span></summary>
-  <div class="fold-body">
+<div class="ppane" data-pane="today" hidden>
+<div class="section openable pl-today" id="todaySection" data-title="Today's step">
+  <button class="xopen" data-target="todaySection" data-title="Today's step" aria-label="Open today's step in detail"><svg class="ic" aria-hidden="true"><use href="#i-open"/></svg></button>
+  <div class="tplan" id="todayPlan"></div>
+  <div class="xtra" id="stepXtra"></div>
+</div>
+</div>
+
+<div class="ppane" data-pane="ladder" hidden>
+<div class="section pl-ladder" id="stepSection" data-title="The ladder">
+  <section class="card st-card" id="stairsWrap" aria-label="The step-down">
+    <div class="stairs" id="stairs" aria-label="Step-down schedule — daily hit cap, tap a step for details"></div>
+  </section>
+  <div class="pl-h sched-cap"><span>The whole descent <small>tap a day for its plan</small></span><a class="dlink" href="guide.html#playbook">Playbook<svg class="ic ic-xs" aria-hidden="true"><use href="#i-chev"/></svg></a></div>
+  <div class="sched-strip" id="schedStrip" aria-label="Day-by-day schedule — tap a day for details"></div>
+  <div class="pl-h"><span>Every step <small id="phasesFoldLive"></small></span></div>
+  <div id="phases"></div>
+  <p class="d-evid pl-evid">Honest footnote: the research backs slow, stepped reduction over weeks, but no trial prescribes exact step sizes or session gaps — the caps carry the evidence-backed principle, and the daily-widening gaps are the structure that enforces it (each urge between windows is a wave the 20-minute rule already handles). That's why a hard day holds a step instead of breaking the plan — and a held day keeps its widest gap. <a class="dlink" href="guide.html#taper">The evidence →</a></p>
+</div>
+</div>
+
+<div class="ppane" data-pane="adjust" hidden>
+  <div class="pl-h" id="schedHead" hidden>The schedule, and why</div>
+  <div class="schedctl card" id="schedCtl" hidden></div>
+  <p class="pseg-empty" id="planAdjustEmpty" hidden></p>
+</div>
+
+<div class="ppane" data-pane="after" hidden>
 <div class="section openable" id="afterSection" data-title="After zero">
   <button class="xopen" data-target="afterSection" data-title="After zero" aria-label="Open the after-zero plan in detail"><svg class="ic" aria-hidden="true"><use href="#i-open"/></svg></button>
   <h2>After zero</h2>
@@ -3084,29 +3289,7 @@ try{
 
   <p class="d-evid">Honest footnote: the reward ladder follows contingency-management design, which is the best-evidenced treatment for cannabis use disorder; the trials verified abstinence externally, and paying yourself on your own word is the weaker form of it. <a class="dlink" href="guide.html#after">The evidence →</a></p>
 </div>
-  </div>
-</details>
-
-<details class="fold pl-flow" id="stepFold">
-  <summary><span class="fold-ic" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-plan"/></svg></span><span class="fold-t">Today and the schedule</span><span class="fold-live" id="stepFoldLive"></span></summary>
-  <div class="fold-body">
-<div class="section openable" id="stepSection" data-title="The step-down">
-  <button class="xopen" data-target="stepSection" data-title="The step-down" aria-label="Open the step-down in detail"><svg class="ic" aria-hidden="true"><use href="#i-open"/></svg></button>
-  <h2>The step-down</h2>
-  <div class="tplan" id="todayPlan"></div>
-  <div class="pl-h" id="schedHead" hidden>The schedule, and why</div>
-  <div class="schedctl card" id="schedCtl" hidden></div>
-  <div class="pl-h sched-cap"><span>The whole descent <small>tap a day for its plan</small></span><a class="dlink" href="guide.html#playbook">Playbook<svg class="ic ic-xs" aria-hidden="true"><use href="#i-chev"/></svg></a></div>
-  <div class="sched-strip" id="schedStrip" aria-label="Day-by-day schedule — tap a day for details"></div>
-  <div class="xtra" id="stepXtra"></div>
-  <details class="fold" id="phasesFold">
-    <summary><span class="fold-ic" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg></span><span class="fold-t">Every step, laid out</span><span class="fold-live" id="phasesFoldLive"></span></summary>
-    <div class="fold-body"><div id="phases"></div></div>
-  </details>
-  <p class="d-evid pl-evid">Honest footnote: the research backs slow, stepped reduction over weeks, but no trial prescribes exact step sizes or session gaps — the caps carry the evidence-backed principle, and the daily-widening gaps are the structure that enforces it (each urge between windows is a wave the 20-minute rule already handles). That's why a hard day holds a step instead of breaking the plan — and a held day keeps its widest gap. <a class="dlink" href="guide.html#taper">The evidence →</a></p>
 </div>
-  </div>
-</details>
 </main>
 
 <main class="view" id="vMore">
@@ -3219,7 +3402,7 @@ try{
 </div>
 </main>
 
-<p class="footer">The cap only goes down. The gaps only widen.</p>
+<p class="footer" id="footerLine">The cap only goes down. The gaps only widen.</p>
 
 <nav class="tabbar" id="tabbar" aria-label="App sections">
   <span class="tab-ind" aria-hidden="true"></span>
@@ -3624,6 +3807,71 @@ try{
      why:"Cues drive use as much as chemistry — running the evening ritual nearly empty rehearses the exact hours zero has to hold, with the smallest dose still aboard.",
      ref:"manage"}
   ];
+  /* ================= the low rungs =================
+     The fine ladder thins out exactly where it is hardest. Below the daytime
+     cut it reads 8 → 5 → 2–3: a 37% drop, then a 40% drop, in the stretch
+     where every attempt on this record has actually come apart — the first
+     descent ran 8–11 against a cap of 3, the quit that followed held three
+     days, and the second descent stalled again at the bottom. Higher up a
+     missing rung costs a hard afternoon; down here it is the difference
+     between a step and a cliff, because the same percentage is a smaller and
+     smaller absolute number of hits to hold onto.
+     So three rungs fill it in: 7, 6 and 4. With them the tail walks
+     8 → 7 → 6 → 5 → 4 → 3 → 2 → 1 → 0 and no step below the daytime cut asks
+     for more than a single hit at a time.
+     They belong to the rebuilt tail only. A first descent that is walking its
+     ladder fine does not need nine rungs to get from 8 to zero, and lengthening
+     everyone's bottom to solve a bottom that broke would be treating the plan
+     as the patient. */
+  var LOW_RUNGS = [
+    {days:1, cap:7, capText:"7", sessionMax:3, spacingH:8,
+     rule:"2 sessions · 8h apart · one hit lighter",
+     desc:"The same two sittings as 8, one hit lighter. Nothing about the day's shape changes — only the count inside it.",
+     goals:["7 across the same two sittings. The shape is yesterday's; the number is one smaller."],
+     plans:[
+       {w:['12p','8p'],
+        note:'The same two windows as 8. Four at midday and three in the evening, or three and four — the day is unchanged, the count is one lighter.',
+        do:['Change nothing about when you sit. The only difference today is one hit.',
+            'Decide before the first window which sitting gives up the hit, so the evening is not the one negotiating.',
+            'A step this small is meant to be boring. Boring is the whole point of it.']}],
+     why:"Lab trials show THC suppresses withdrawal dose-dependently — the smaller the drop, the smaller the gap your receptors are asked to cover.",
+     ref:"taper"},
+    {days:1, cap:6, capText:"6", sessionMax:3, spacingH:8,
+     rule:"2 sessions · 8h apart · 3 and 3",
+     desc:"Six, split evenly: three at midday, three in the evening. The first day the two sittings are the same size.",
+     goals:["6 — three at midday, three in the evening. Even, countable, and the last day before the sittings start shrinking."],
+     plans:[
+       {w:['12p','8p'],
+        note:'Three and three. Both windows are full at the session ceiling, which means the cap and the sitting rule now agree exactly.',
+        do:['Count them out in advance: three, then three. Nothing is left to decide in the moment.',
+            'This is the last rung where a sitting is still full. From here they get smaller.',
+            'If one of the two feels load-bearing and the other does not, note which — that is the one that goes last.']}],
+     why:"Cues drive use as much as chemistry — holding the sittings steady while the dose falls is what rehearses the ritual without it.",
+     ref:"manage"},
+    {days:1, cap:4, capText:"4", sessionMax:2, spacingH:9,
+     rule:"2 sessions · 9h apart · 2 and 2",
+     desc:"Two and two, nine hours apart. The sitting itself is shrinking now, not just the day.",
+     goals:["4 — two at midday, two in the evening. The sitting is what is getting smaller from here."],
+     plans:[
+       {w:['12p','9p'],
+        note:'Two windows of two. The session ceiling drops with the cap now — a sitting is two hits and closed, however long you sit.',
+        do:['Two, then two. The session ceiling is two from here, so a third in one sitting is over the rule even under the cap.',
+            'Keep the evening window where it has always been. The hour is the ritual; the dose is what is leaving it.',
+            'Hold a fixed wake time — sleep settles last, and a steady wake is what settles it.']}],
+     why:"Sleep disturbance outlasts every other withdrawal symptom, and a fixed wake time is the piece of CBT-I that carries the effect.",
+     ref:"withdrawal"}
+  ];
+  /* every capped rung a rebuilt tail can walk, steepest first */
+  function descentPool(){
+    return FINE_RUNGS.concat(LOW_RUNGS,LANDING_RUNGS)
+      .filter(function(q){return q.cap>0;})
+      .sort(function(a,b){return b.cap-a.cap;});
+  }
+  function r2RungAt(c){
+    var pool=descentPool();
+    for(var i=0;i<pool.length;i++)if(pool[i].cap===c)return pool[i];
+    return COARSE_RUNGS[0].cap===c?COARSE_RUNGS[0]:null;
+  }
   var COARSE_CAPS={};
   COARSE_RUNGS.forEach(function(p){COARSE_CAPS[p.cap]=true;});
   /* The active ladder. Rungs at or above the switch point stay coarse (they
@@ -3682,6 +3930,144 @@ try{
     q.desc="Re-entry. The ladder comes back to meet the days where they have actually been landing — a ceiling the log shows you can hold, then the rest of the descent in half-steps, two days each.";
     q.goals=["The descent restarts from here. Land under "+q.capText+" — the log says you can — and let two days at each step make this boring again."];
     return q;
+  }
+  /* ================= the seventh move: start again =================
+     Every move before this one adjusts a descent that is still running. This
+     one exists for after: the taper reached zero, zero did not hold, and the
+     person is using again and wants the structure back. The app had no answer
+     for that at all — the zero era was a one-way door. Its undos expire the
+     day they are offered, the fifth move is for a landing that never took
+     rather than a quit that came apart weeks later, and every other move
+     requires a capped rung to still be ahead of you. So the honest reading of
+     a relapse was: nothing here works for you now.
+     The relapse literature is the argument for building it rather than
+     against. Roughly a quarter are using again inside a month and near half by
+     three months; a return is the common case, not the failure case, and an
+     app that quietly has no path back is designed for the quarter it does not
+     happen to. Nothing is erased — every logged day, the whole first descent
+     and the clean run it reached all stay exactly as recorded, and the new
+     descent is appended after them. */
+  function rsClone(p){
+    var q={},k;for(k in p)q[k]=p[k];
+    q.days=2;q.rs=true;delete q.rb;delete q.ld;
+    return q;
+  }
+  function rsEntry(c){
+    var src=rungAtCap(c);if(!src)return null;
+    var q=rsClone(src);
+    q.desc="Starting again, from where the days actually are. The same ladder, re-entered at a ceiling your own log says you are holding — and every step below it half the size, two days each.";
+    q.goals=["Back on the ladder at "+q.capText+". The first descent is not undone by this one; it is the reason this one starts lower than the last did."];
+    /* The day's windows come from the rung and are NOT rewritten here. This
+       first shipped overriding them with a single evening sitting, copied from
+       the landing entry — where one sitting is the whole point, because those
+       rungs are evening-only by construction. At a re-entry ceiling of 12 it
+       said "one window, 8:30p" directly beneath "12 hits max · 3 a session ·
+       6h between sessions", which is four sittings' worth of hits in one
+       window and three rules contradicted at a glance. The rung already knows
+       how its day is laid out; the restart only changes why you are on it,
+       which is what desc and goals are for. Same shape as rebEntry. */
+    return q;
+  }
+  /* The interlude: the stretch the first quit actually held, given a rung of
+     its own so the walk has somewhere to file those days. It is a zero rung
+     (cap 0) like the one it replaces, so every "is this a day at zero" test
+     keeps answering yes for the days inside it; the walk overrides its length
+     to end at the restart eve. */
+  function rsInterlude(z){
+    var q={},k;for(k in z)q[k]=z[k];
+    q.days=null;q.zi=true;
+    q.goals=["Zero, held. This stretch is closed now, and it counts — the ladder below starts from what came after it."];
+    return q;
+  }
+  // calendar length of a descent restarted from cap c — mirrors buildLadder
+  function rsLen(c){
+    var n=1;
+    for(var i=0;i<FINE_RUNGS.length;i++)if(FINE_RUNGS[i].cap>0&&FINE_RUNGS[i].cap<c)n++;
+    return n*2;
+  }
+  /* ================= the eighth move: rebuild the second descent =================
+     Every corrective in this app was written once and spent once. The pace
+     switches and the rebase are gated on a descent that has never been
+     rebuilt; the landing and the finish live in the zero era; the restart
+     refuses to fire while a restart already exists. Walk the whole arc —
+     taper, rebuild, landing, finish, quit, relapse, start again — and the
+     second descent inherits none of them. It gets one shape, fixed at the
+     moment of re-entry: half-steps at two days a rung, decided on the worst
+     day of the relapse, and then nothing can touch it again. The engine will
+     still march the ceiling down underneath days that are not moving, the
+     slack will still drain in a week, and the only button left says "+1 day".
+     That is the state this move exists for.
+     It is the rebase, re-armed for the descent the restart created — same
+     argument, same shape, one descent later. The restart already refills the
+     slack budget on exactly this reasoning ("slack exists to stop drift, and
+     a dated choice is the opposite of drift"); a second descent that has come
+     apart deserves the same dated choice the first one got.
+     Two things it does that the rebase does not:
+     - The PACE is chosen, not assumed. Two days a rung is what the restart
+       just tried; if the log shows the days outran it, offering it again as
+       the only option is the same prescription that failed. Three and four
+       are offered beside it, with the date each one lands zero on, because
+       the trade is days-per-rung against the calendar and the person should
+       see both halves of it.
+     - The LANDING rungs come with it. A restart exists because a quit came
+       apart, and the ladder's bottom step — 2–3 straight to nothing — is the
+       largest relative drop in the whole plan. Rebuilding the descent that
+       followed a failed quit while leaving that cliff in place rebuilds
+       everything except the part that broke. */
+  var R2_PACES=[
+    {hold:2,name:'Two days a rung',
+     note:'The pace the restart was walking. Fastest to zero, and the one the log has already been tested against.'},
+    {hold:3,name:'Three days a rung',
+     note:'A day of margin at every ceiling — enough for one rough day inside a step without the step itself failing.'},
+    {hold:4,name:'Four days a rung',
+     note:'Close to the gentle pace. Each ceiling gets most of a week to become ordinary before the next cut.'}
+  ];
+  function r2Pace(h){
+    for(var i=0;i<R2_PACES.length;i++)if(R2_PACES[i].hold===h)return R2_PACES[i];
+    return R2_PACES[0];
+  }
+  /* A rebuilt-restart rung keeps rs set as well as r2: every guard in the walk
+     that exempts the restarted descent from the first descent's anchors
+     (`!p.rs`) has to keep exempting these, and holdKey reads r2 first so a
+     hold left on the restart rung of the same cap can't bleed into the new
+     one. Same single-entry constraint as every other rebuilt rung — the fine
+     and landing originals were written to promise nothing about tomorrow, so
+     they survive being given more than one day. */
+  function r2Clone(p,hold,gen){
+    var q={},k;for(k in p)q[k]=p[k];
+    q.days=Math.max(1,hold||2);q.rs=true;q.r2=true;q.r2i=gen||0;
+    delete q.rb;delete q.ld;
+    return q;
+  }
+  function r2Entry(c,hold,gen){
+    var src=r2RungAt(c);if(!src)return null;
+    var q=r2Clone(src,hold,gen);
+    q.desc="The second descent, rebuilt. The restart re-entered where the days were on its first night; this re-enters where they have actually been landing since — and gives every step below it more room than the last ladder did.";
+    q.goals=["Back at "+q.capText+", on a ladder paced for the days in your log rather than the day you restarted on. Land under it and the schedule is describing something real again."];
+    return q;
+  }
+  // the caps a rebuilt second descent walks below its entry, in descent order
+  function r2Tail(c){return tailCaps(descentPool(),c);}
+  // calendar length of a second descent rebuilt from cap c — mirrors buildLadder
+  function r2Len(c,hold){
+    var n=1,pool=descentPool();
+    for(var i=0;i<pool.length;i++)if(pool[i].cap<c)n++;
+    return n*Math.max(1,hold||2);
+  }
+  /* Every rebuild the restarted descent has taken, oldest first. Stored as a
+     LIST rather than the single object this shipped with, and that is the whole
+     point of the change: a rebuild written into one slot can only ever happen
+     once, so the move built to answer "the ladder has stopped describing my
+     days" answered it exactly one time and then became another spent move —
+     which is the failure it exists to fix, arriving one level up.
+     Each entry is its own dated re-entry that supersedes the tail before it.
+     Nothing is re-filed: every rung already walked keeps its dates and its
+     logged days, and only the stretch after the newest anchor is new. */
+  function rebuildsOf(d){
+    var rs=d&&d.replan&&d.replan.restart;
+    if(!rs)return [];
+    if(rs.rebuilds&&rs.rebuilds.length)return rs.rebuilds;
+    return rs.rebuild?[rs.rebuild]:[];   // the single-slot shape, read forward
   }
   /* ================= the rebuilt landing =================
      The rebase answers a descent that has come apart; this answers the one
@@ -3778,14 +4164,47 @@ try{
        same object the whole app compares against. */
     var ld=d&&d.replan&&d.replan.landing;
     var lEntry=ld?landEntry(ld.cap):null;
-    if(!lEntry)return out;
+    if(!lEntry)return withRestart(out,d);
     var out2=out.slice(0,out.length-1);
     out2.push(lEntry);
     var pool=FINE_RUNGS.concat(LANDING_RUNGS);
     for(i=0;i<pool.length;i++)
       if(pool[i].cap>0&&pool[i].cap<ld.cap)out2.push(ldClone(pool[i]));
     out2.push(out[out.length-1]);
-    return out2;
+    return withRestart(out2,d);
+  }
+  /* The restart tail. The zero rung the first descent reached stops being the
+     end of the ladder and becomes the interlude — the days that quit actually
+     held — and a second descent is appended after it, ending in a zero rung of
+     its own. The ladder still finishes at exactly one open-ended zero, which is
+     what the rest of the app walks toward. */
+  function withRestart(arr,d){
+    var rs=d&&d.replan&&d.replan.restart;
+    if(!rs)return arr;
+    var entry=rs?rsEntry(rs.cap):null;
+    if(!entry)return arr;
+    var zero=arr[arr.length-1];
+    var out=arr.slice(0,arr.length-1);
+    out.push(rsInterlude(zero));
+    out.push(entry);
+    for(var i=0;i<FINE_RUNGS.length;i++)
+      if(FINE_RUNGS[i].cap>0&&FINE_RUNGS[i].cap<rs.cap)out.push(rsClone(FINE_RUNGS[i]));
+    /* the eighth move rides on the restarted descent the way the landing rides
+       on the rebased one: every restart rung stays in the ladder so its logged
+       days keep the ceiling they were lived under (the walk hands dates to the
+       ones the rebuild stepped past, and no days), then the re-entry and its
+       tail, then the same zero object the rest of the app compares against. */
+    var rbs=rebuildsOf(d), g, r2, r2e, pool=descentPool();
+    for(g=0;g<rbs.length;g++){
+      r2=rbs[g];
+      r2e=r2Entry(r2.cap,r2.hold,g);
+      if(!r2e)continue;
+      out.push(r2e);
+      for(i=0;i<pool.length;i++)
+        if(pool[i].cap<r2.cap)out.push(r2Clone(pool[i],r2.hold,g));
+    }
+    out.push(zero);
+    return out;
   }
   // calendar length of a descent rebuilt from cap c — mirrors buildLadder
   function rebLen(c){
@@ -3824,6 +4243,23 @@ try{
      matters: five days is roughly half the original plan's length, enough to
      absorb a genuinely bad patch and not enough for zero to walk away. */
   var SLACK_TOTAL=5;
+  /* The ~30/day starting point every "avoided" and money figure is measured
+     against. Declared up here with the other constants because normData reads
+     it to derive a cost per hit, and normData runs long before the rendering
+     half of this file — left further down, the migration divided by undefined. */
+  var BASELINE=30;
+  /* ================= the gap ceiling =================
+     The widening between-sitting gap is the taper's enforcement mechanism —
+     the cap says how much, the gap says the day cannot be one long sitting.
+     But a gap is only structure if it is followed, and a rung can ask for more
+     hours than a person's day has shape for: someone awake twenty hours with
+     six sittings in them is not going to hold 9h, and a rule broken daily
+     stops being a rule and starts being evidence that the plan is fiction.
+     So the gap gets a ceiling the person sets. It only ever NARROWS what the
+     ladder asks — a rung whose own gap is already under the ceiling keeps it,
+     because this exists to make the structure reachable, not to loosen a step
+     that was already fitting. */
+  var GAP_CHOICES=[3,4,5,6];
   var MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var WEEKDAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   var MS_DAY=86400000;
@@ -3964,6 +4400,19 @@ try{
     // only against positive evidence it happened — otherwise a relapse the
     // user stops logging reads as an unbroken clean streak and pays for it.
     d.cm.seen=d.cm.seen||{};
+    /* money settings. spendPerWeek is what the user actually typed;
+       costPerHit is the derived unit every money surface multiplies by. A
+       stored weekly figure always wins, so a hand-edited backup can't leave
+       the two disagreeing about what a day is worth. */
+    if(d.spendPerWeek!==undefined){
+      var spw=Number(d.spendPerWeek);
+      if(isFinite(spw)&&spw>0){d.spendPerWeek=spw;d.costPerHit=spw/7/BASELINE;}
+      else{delete d.spendPerWeek;}
+    }
+    if(d.costPerHit!==undefined){
+      var cph=Number(d.costPerHit);
+      if(isFinite(cph)&&cph>0)d.costPerHit=cph;else{delete d.costPerHit;delete d.spendPerWeek;}
+    }
     d.replan=d.replan||{};   // {lockFrom:'YYYY-MM-DD'} — the date stops moving from here
     /* replan.rebase {at:'YYYY-MM-DD',cap:N}: from `at`, the descent is rebuilt
        out of cap N in half-steps of two days each. Malformed → dropped whole:
@@ -3990,6 +4439,85 @@ try{
            lz.at>dkeyOf(TAPER_START)&&
            typeof lz.cap==='number'&&!!landRungAt(lz.cap)&&
            !(d.replan.rebase&&lz.at<=d.replan.rebase.at)))delete d.replan.landing;
+    }
+    /* replan.finish {at:'YYYY-MM-DD',on:'YYYY-MM-DD'}: zero lands on `at`, and
+       every capped rung from there is one the person walked past. No cap to
+       validate — this anchor adds no rungs, it ends them — but it must postdate
+       both rebuild anchors for the same reason a landing must postdate a
+       rebase: the walk hands each anchor the days after it, and two anchors
+       claiming the same days is a corrupt save, not a schedule.
+       `on` is the day the move was TAKEN, and it is the only anchor here that
+       needs one: a rebuild is always anchored on the day it is chosen, while
+       this one back-dates to the day after the last hit. The undo window has
+       to key on the choice, not on the date it landed. A missing or malformed
+       `on` drops just that field — the record survives without its undo, which
+       is the safe direction to fail in. */
+    if(d.replan.finish!==undefined){
+      var fz=d.replan.finish;
+      if(!(fz&&typeof fz==='object'&&!(fz instanceof Array)&&
+           typeof fz.at==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(fz.at)&&
+           fz.at>dkeyOf(TAPER_START)&&
+           !(d.replan.rebase&&fz.at<=d.replan.rebase.at)&&
+           !(d.replan.landing&&fz.at<=d.replan.landing.at)))delete d.replan.finish;
+      else if(typeof fz.on!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(fz.on))delete fz.on;
+    }
+    /* replan.restart {at:'YYYY-MM-DD',cap:N}: from `at`, the first quit's zero
+       era is closed and a second descent begins at cap N. It must postdate
+       every other anchor — all of them describe the first descent, which this
+       one comes after — and its cap must exist on a ladder, or buildLadder and
+       the walk would disagree about where the new descent starts. */
+    if(d.replan.restart!==undefined){
+      var rz=d.replan.restart;
+      if(!(rz&&typeof rz==='object'&&!(rz instanceof Array)&&
+           typeof rz.at==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(rz.at)&&
+           rz.at>dkeyOf(TAPER_START)&&
+           typeof rz.cap==='number'&&!!rungAtCap(rz.cap)&&
+           !(d.replan.rebase&&rz.at<=d.replan.rebase.at)&&
+           !(d.replan.landing&&rz.at<=d.replan.landing.at)&&
+           !(d.replan.finish&&rz.at<=d.replan.finish.at)))delete d.replan.restart;
+    }
+    /* replan.restart.rebuild {at:'YYYY-MM-DD',cap:N,hold:D}: from `at`, the
+       restarted descent is rebuilt — re-entry at cap N, then the fine and
+       landing rungs below it, D days each. Nested under the restart it
+       rebuilds rather than sitting beside it, so that dropping or replacing a
+       restart takes its rebuild with it and can never leave an orphan anchor
+       pointing into a descent that no longer exists.
+       It must postdate its own restart (it is chosen while that descent is
+       being walked), its cap must exist on a ladder that can supply the rung,
+       and `hold` must be one of the offered paces — an unrecognised number
+       would hand buildLadder a rung length the offer never showed anyone. */
+    /* gapMaxH: the ceiling on between-sitting hours, in whole hours off the
+       offered list. Anything else is a hand-edited or corrupted save, and an
+       unrecognised number would put a gap on screen that no control can undo. */
+    if(d.gapMaxH!==undefined&&
+       !(typeof d.gapMaxH==='number'&&GAP_CHOICES.indexOf(d.gapMaxH)>=0))delete d.gapMaxH;
+    if(d.replan.restart){
+      var rsN=d.replan.restart;
+      // the single-slot shape folds into the list; both are read on the way in
+      if(rsN.rebuild!==undefined&&!rsN.rebuilds){rsN.rebuilds=[rsN.rebuild];}
+      delete rsN.rebuild;
+      if(rsN.rebuilds!==undefined){
+        if(!(rsN.rebuilds instanceof Array))delete rsN.rebuilds;
+        else{
+          /* Each entry must postdate the restart AND the entry before it: the
+             walk hands every anchor the days after it, so two anchors out of
+             order would have the later tail claiming days the earlier one is
+             still walking. Anything malformed truncates the list THERE rather
+             than dropping it whole — the re-entries before a bad one describe
+             days that were really lived under them. */
+          var okList=[],prevAt=rsN.at;
+          for(var qi=0;qi<rsN.rebuilds.length;qi++){
+            var qz=rsN.rebuilds[qi];
+            if(!(qz&&typeof qz==='object'&&!(qz instanceof Array)&&
+                 typeof qz.at==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(qz.at)&&
+                 qz.at>prevAt&&
+                 typeof qz.cap==='number'&&!!r2RungAt(qz.cap)&&
+                 typeof qz.hold==='number'&&r2Pace(qz.hold).hold===qz.hold))break;
+            okList.push(qz);prevAt=qz.at;
+          }
+          if(okList.length)rsN.rebuilds=okList;else delete rsN.rebuilds;
+        }
+      }
     }
     /* legacy holds: before the schedule self-adjusted, the banner's hold
        button wrote holdPrompts[day]='held' AND bumped data.holds — and since
@@ -4051,7 +4579,22 @@ try{
      rungs at the same ceiling — one walked, one rebuilt — and a hold left on
      the walked one must not hand the new one a phantom extra day. Landing
      rungs ('l') key apart from both for the same reason. */
-  function holdKey(i){var p=BASE_PHASES[i];return p?(p.ld?'l':p.rb?'r':'c')+p.cap:null;}
+  /* "Is this rung a day at zero?" — asked by index everywhere, because while
+     the ladder ended at exactly one zero rung, "the last rung" and "at zero"
+     were the same question. A restart puts a second descent after the first
+     quit, and then the zero the first taper actually reached sits in the
+     MIDDLE of the ladder. Ask what the rung IS, not where it sits. */
+  function isZeroRungAt(di){var p=di>=0?BASE_PHASES[di]:null;return !!p&&p.cap===0;}
+  // r2 is read before rs: a rebuilt-restart rung carries both flags, and a
+  // hold left on the restart rung of the same cap must not follow it into the
+  // rebuild — the same separation 'l' and 'r' already keep from 'c'
+  function holdKey(i){
+    var p=BASE_PHASES[i];
+    if(!p)return null;
+    // generation 0 keeps the '2'+cap shape earlier saves already wrote
+    var pre=p.r2?(p.r2i>0?'2'+p.r2i+'_':'2'):p.rs?'s':p.ld?'l':p.rb?'r':'c';
+    return pre+p.cap;
+  }
   function holdsAt(i){var k=holdKey(i);return (k&&data.holds[k])||0;}
   function setHoldsAt(i,v){
     var k=holdKey(i);if(!k)return;
@@ -4141,6 +4684,38 @@ try{
     for(ri=0;ri<BASE_PHASES.length;ri++)if(BASE_PHASES[ri].ld){
       ldKey=data.replan.landing.at;ldDate=dateOf(ldKey);break;
     }
+    /* The finish anchor. Read straight off data, not off the ladder like the
+       other two — it adds no rung to disagree about. It is the only anchor
+       that shortens the descent: every capped rung from here on is one the
+       person stopped needing before the calendar got to it, so the walk hands
+       them no days and zero starts on this date. */
+    var fnKey=(data.replan&&data.replan.finish)?data.replan.finish.at:null;
+    var fnDate=fnKey?dateOf(fnKey):null;
+    var fnOn=(data.replan&&data.replan.finish&&data.replan.finish.on)||null;
+    /* the restart anchor: where the first quit's zero era is closed off and a
+       second descent begins. Like the finish it adds no ambiguity to the walk
+       — it is a date, and everything from it belongs to the new descent. */
+    var rsKey=(data.replan&&data.replan.restart)?data.replan.restart.at:null;
+    var rsDate=rsKey?dateOf(rsKey):null;
+    var rsCapVal=null, rsEntered=false;
+    /* the second descent's own rebuild anchor, read off the ladder like the
+       first two so the walk can never disagree with buildLadder about whether
+       a rebuilt tail exists. It is always the newest anchor on the calendar:
+       it can only be taken while a restart is already running. */
+    /* One anchor per rebuild generation. A rung belonging to generation g runs
+       until generation g+1's anchor and no further — restart rungs are
+       generation -1 and stop at the first rebuild. That is the same rule the
+       rebase and landing crossings already use, applied down a list instead of
+       to a single date. */
+    var rbList=rebuildsOf(data);
+    var r2Dates=rbList.map(function(r){return dateOf(r.at);});
+    var r2Entered=rbList.map(function(){return false;});
+    var r2Key=rbList.length?rbList[rbList.length-1].at:null;
+    var r2Date=r2Dates.length?r2Dates[0]:null;      // where the rebuilt tail begins
+    var r2CapVal=null,r2Hold=rbList.length?(rbList[rbList.length-1].hold||2):null;
+    // the anchor that ends a rung of generation g (-1 = the restart's own rungs)
+    function nextAnchor(g){var n=(g==null?-1:g)+1;return n<r2Dates.length?r2Dates[n]:null;}
+    function genOf(p){return p.r2?(p.r2i||0):-1;}
     function relbl(start,end){
       if(!end)return fmtShort(start)+' →';
       if(start.getMonth()===end.getMonth())return fmtShort(start)+'–'+end.getDate();
@@ -4200,7 +4775,46 @@ try{
       /* a rung the walk never reached — skipped by a rebuild (descent or
          landing). It stays in the ladder so every other rung keeps its index,
          but it gets no dates and no days. */
-      if(p.days&&!p.ld&&((rbDate&&!p.rb&&cur>=rbDate)||(ldDate&&cur>=ldDate))){
+      if(p.days&&!p.ld&&!p.rs&&((rbDate&&!p.rb&&cur>=rbDate)||(ldDate&&cur>=ldDate))){
+        out.push({start:null,end:null,lbl:'',skipped:true,held:0,early:0,eased:0});
+        continue;
+      }
+      /* crossing into the restarted descent: the budget refills and the strain
+         carried out of the first taper is dropped. A quit that ran weeks ago
+         has nothing to say about how steep today's steps are, and a restart is
+         the most explicit dated choice in the app — the opposite of the drift
+         the finite budget exists to refuse. */
+      if(p.rs&&rsDate&&!rsEntered){rsEntered=true;slack=SLACK_TOTAL;carry=0;}
+      /* crossing into the rebuilt second descent: the same shape as the rebase
+         and landing crossings, for the same reasons. The last walked restart
+         rung rides its cap to the rebuild's eve, the anchor lands, and the
+         budget refills — a rebuild is a dated choice, and the strain of a
+         ladder that was outrunning the days has nothing to say about steps
+         that were just rebuilt to be slower. */
+      var pg=genOf(p), pAnchor=nextAnchor(pg);
+      if(p.r2&&r2Dates[pg]&&!r2Entered[pg]){
+        r2Entered[pg]=true;r2CapVal=p.cap;
+        var ad=r2Dates[pg];
+        if(cur<ad){
+          var pr=out[out.length-1];
+          if(pr&&pr.end){pr.end=addDays(ad,-1);pr.lbl=relbl(pr.start,pr.end);}
+          cur=new Date(ad);
+        }
+        slack=SLACK_TOTAL;carry=0;
+      }
+      /* a rung a later rebuild stepped past. Same treatment the rebase and
+         landing give the rungs they skip: it stays in the ladder so every
+         other rung keeps its index, and it gets no dates and no days. */
+      if(p.days&&p.rs&&pAnchor&&cur>=pAnchor){
+        out.push({start:null,end:null,lbl:'',skipped:true,held:0,early:0,eased:0});
+        continue;
+      }
+      /* the same skip, from the other end of the plan. A rebuild steps PAST
+         rungs on its way to a new tail; the finish stops needing them at all.
+         This one covers landing rungs too — the early finish is exactly the
+         case where the rebuilt landing's own steps are the ones left unwalked,
+         and the guard above deliberately exempts them. */
+      if(p.days&&fnDate&&!p.rs&&cur>=fnDate){
         out.push({start:null,end:null,lbl:'',skipped:true,held:0,early:0,eased:0});
         continue;
       }
@@ -4220,8 +4834,15 @@ try{
         // a walked rung halts at the next anchor's eve: everything from an
         // anchor forward is that rebuild's business, charges and all. A base
         // rung stops at the rebase; a rebased rung stops at the landing.
-        var stop=(rbDate&&!p.rb&&!p.ld)?rbDate:null;
-        if(ldDate&&!p.ld&&(!stop||ldDate<stop))stop=ldDate;
+        var stop=(rbDate&&!p.rb&&!p.ld&&!p.rs)?rbDate:null;
+        if(ldDate&&!p.ld&&!p.rs&&(!stop||ldDate<stop))stop=ldDate;
+        // and every rung halts at the finish, whichever descent it belongs to:
+        // from that date the days are zero days, and a capped rung must not
+        // charge, defer or hold against one
+        if(fnDate&&!p.rs&&(!stop||fnDate<stop))stop=fnDate;
+        // and every restarted rung halts at the next rebuild's anchor: from
+        // that date the days belong to the newer tail, charges and all
+        if(p.rs&&pAnchor&&(!stop||pAnchor<stop))stop=pAnchor;
         while(done<dur+auto){
           if(stop&&d>=stop)break;
           if(d<=lim){
@@ -4267,6 +4888,17 @@ try{
         // capped rung's strain already holds itself.
         carry=Math.floor(auto/2);
       }
+      /* The interlude is a zero rung with an end: the stretch the first quit
+         held, closed off on the day the second descent starts. Its length is
+         not in the ladder (it is however long that quit lasted), so the walk
+         sets it here — the one rung whose duration only the calendar knows. */
+      if(p.cap===0&&p.zi&&rsDate){
+        end=addDays(rsDate,-1);
+        if(end<start)end=new Date(start);
+        cur=addDays(end,1);
+      }
+      // the re-entry rung of a restarted descent starts ON the anchor
+      if(p.rs&&rsCapVal===null){rsCapVal=p.cap;}
       var lbl=relbl(start,end);
       // net them out: an auto-hold cancelled by an early step-down is a
       // phase that ran its base length — report it as neither
@@ -4276,7 +4908,7 @@ try{
     /* causes from before the newest anchor are settled history of a descent
        that was rebuilt past them — flagged so the receipts can say so and
        keep their buttons off */
-    var preKey=ldKey||rbKey;
+    var preKey=r2Key||ldKey||rbKey;
     if(preKey)causes.forEach(function(c){if(c.key<preKey)c.pre=true;});
     out.causes=causes;
     out.slack=slack;                    // extension days still available
@@ -4287,6 +4919,13 @@ try{
     out.rebCap=rebCapVal;               // its re-entry ceiling
     out.landed=ldKey;                   // 'YYYY-MM-DD' when a rebuilt landing is live
     out.ldCap=ldCapVal;                 // its re-entry ceiling
+    out.finished=fnKey;                 // 'YYYY-MM-DD' where an early finish landed zero
+    out.finishedOn=fnOn;                // and the day that choice was made
+    out.restarted=rsKey;                // 'YYYY-MM-DD' when a second descent is live
+    out.rsCap=rsCapVal;                 // its re-entry ceiling
+    out.rebuilt=r2Key;                  // 'YYYY-MM-DD' when that descent has been rebuilt
+    out.r2Cap=r2CapVal;                 // its re-entry ceiling
+    out.r2Hold=r2Hold;                  // and the days-per-rung it was rebuilt at
     return out;
   }
   function phaseIndexFor(day){
@@ -4354,7 +4993,7 @@ try{
     today=new Date(ln.getFullYear(),ln.getMonth(),ln.getDate());
     todayKey=dkeyOf(today);
     idx=phaseIndexFor(today);
-    isZeroEra=(idx===BASE_PHASES.length-1);
+    isZeroEra=isZeroRungAt(idx);
     phase=idx>=0?BASE_PHASES[idx]:BASE_PHASES[0];
     cap=idx>=0?phase.cap:BASE_PHASES[0].cap;
   }
@@ -4365,7 +5004,8 @@ try{
   // Spacing can step up daily within a phase ([day1, day2] arrays). Held
   // days run past the array and clamp to the last (widest) value, so a
   // hold never loosens the structure.
-  function spacingHOn(d,di){
+  // what the ladder itself asks for, before any ceiling
+  function spacingRawOn(d,di){
     if(di<0)di=0;
     var sp=BASE_PHASES[di].spacingH;
     if(!sp)return 0;
@@ -4373,6 +5013,14 @@ try{
     var off=Math.round((d-schedule()[di].start)/MS_DAY);
     return sp[Math.max(0,Math.min(sp.length-1,off))];
   }
+  // the ceiling, or 0 when none is set
+  function gapMax(){
+    var m=(typeof data!=='undefined'&&data)?data.gapMaxH:0;
+    return (typeof m==='number'&&m>0)?m:0;
+  }
+  // narrows only — a rung already inside the ceiling keeps its own gap
+  function gapCap(v){var m=gapMax();return (m&&v>m)?m:v;}
+  function spacingHOn(d,di){return gapCap(spacingRawOn(d,di));}
   function spacingHNow(){return idx>=BASE_PHASES.length-1?0:spacingHOn(today,idx);}
   // which day within its phase a date falls on (0-based), and that day's goal
   function dayInPhase(d,di){
@@ -4436,11 +5084,83 @@ try{
   }
   // the structured plan for a given day: session windows, honest math, do-list.
   // Held days clamp to the phase's last (widest) day, same as goals.
+  /* ---- window arithmetic, for a day whose gap has been narrowed ---- */
+  function winMin(t){                       // '8:30p' -> minutes past midnight
+    var m=/^(\d{1,2})(?::(\d{2}))?([ap])$/.exec(t);
+    if(!m)return null;
+    var h=(+m[1])%12;
+    if(m[3]==='p')h+=12;
+    return h*60+(m[2]?+m[2]:0);
+  }
+  function winStr(mins){
+    mins=((Math.round(mins)%1440)+1440)%1440;
+    var h=Math.floor(mins/60), mm=mins%60, ap=h>=12?'p':'a', hh=h%12;
+    if(!hh)hh=12;
+    return hh+(mm?':'+(mm<10?'0':'')+mm:'')+ap;
+  }
+  /* Re-space a rung's day inside the span it already used: same first window,
+     same last window, as many sittings between them as the narrower gap allows.
+     Keeping the SPAN is the point. Simply stepping the new gap forward from the
+     first window would pull the last one hours earlier and leave the whole
+     evening unplanned — and for a day that runs past midnight the evening is
+     exactly where a plan is worth having. The count is still bounded by what
+     the cap can fill, so a narrowed gap never writes sittings the ceiling
+     cannot pay for. */
+  /* Does a line of advice assert the rung's own gap length in words or
+     figures? Two of them do ("Six hours is long enough…", "Nine hours between
+     sittings…"), and under a narrowed ceiling they are the schedule
+     contradicting itself in the same card — a rule reading 4h above a bullet
+     insisting on six. Cheaper and more honest to drop the line than to leave
+     it arguing with the number directly over it. */
+  var HOUR_WORDS={2:'two',3:'three',4:'four',5:'five',6:'six',7:'seven',
+                  8:'eight',9:'nine',10:'ten',11:'eleven',12:'twelve'};
+  function namesHours(line,h){
+    var w=HOUR_WORDS[h];
+    return new RegExp('\\b('+(w?w+'|':'')+h+')[\\s\u2011-]?hour','i').test(line);
+  }
+  function regapPlan(pl,p,rawH,gapH){
+    if(!pl||!pl.w||pl.w.length<2||p.single||!gapH||!(gapH<rawH))return pl;
+    var a=winMin(pl.w[0]), b=winMin(pl.w[pl.w.length-1]);
+    if(a===null||b===null)return pl;
+    var span=b-a;
+    if(span<=0)span+=1440;
+    var n=Math.max(pl.w.length,Math.floor(span/(gapH*60))+1);
+    var maxN=Math.max(1,Math.ceil(p.cap/p.sessionMax));
+    if(n>maxN)n=maxN;
+    if(n<2)return pl;
+    var w=[],i;
+    for(i=0;i<n;i++)w.push(winStr(a+span*i/(n-1)));
+    /* A narrower ceiling does not always change the day: at a low cap the
+       sitting count is what binds, and the same two windows come back out.
+       Hand the original plan back untouched when that happens — its note is
+       written prose, and replacing it with generated arithmetic that says the
+       same thing is a downgrade. */
+    if(w.join()===pl.w.join())return pl;
+    var per=Math.min(p.sessionMax,Math.ceil(p.cap/n)), room=per*n;
+    var q={},k;
+    for(k in pl)q[k]=pl[k];
+    q.w=w;
+    if(pl.do&&pl.do.length){
+      var kept=pl.do.filter(function(t){return !namesHours(t,rawH);});
+      if(kept.length!==pl.do.length)
+        kept.push(fmtGapH(gapH)+' between sittings is your number, not this rung\'s '+fmtGapH(rawH)+
+          '. It is short enough that the 20-minute rule is what carries the wait — set the timer instead of watching the clock.');
+      q.do=kept;
+    }
+    q.note=n+' window'+(n===1?'':'s')+' at '+fmtGapH(gapH)+' — your setting, narrower than the '+
+      fmtGapH(rawH)+' this rung asks for. At '+per+' a sitting that is '+room+
+      ' of room against a cap of '+p.capText+
+      (room>p.cap?', so the cap is what ends the day, not the clock.'
+       :room===p.cap?' — exactly the cap, so every window has to run short of nothing.'
+       :'.');
+    return q;
+  }
   function dayPlanOf(d,di){
     if(di<0)di=0;
     var p=BASE_PHASES[di];
     if(!p.plans||!p.plans.length)return null;
-    return p.plans[phaseDayIdx(d,di,p.plans.length)];
+    var pl=p.plans[phaseDayIdx(d,di,p.plans.length)];
+    return regapPlan(pl,p,spacingRawOn(d,di),spacingHOn(d,di));
   }
   function winsHTML(pl){
     if(!pl||!pl.w||!pl.w.length)return '';
@@ -5040,12 +5760,71 @@ try{
      onset 24–48h, peak days 2–6, fading over 2–3 weeks, sleep last.
      Past the adjustment window the marker days carry the story — each one
      a contingency-management stop: clean time pays for something real. */
+  /* How long the lapse reassurance stays on screen, in days of the new run.
+     One week, matching ckSlipWatch's window — the stretch the evidence calls
+     riskiest after a lapse, and the only stretch that line is written for. */
+  var SLIP_ECHO_D=7;
   var MARKERS=[
     [30,'One month. The loops that ran ten years are running on you now.'],
     [60,'Two months — the habit isn’t holding its breath anymore, and neither are you.'],
     [90,'Ninety days — the marker treatment programs graduate on.'],
     [180,'Half a year clean.'],
     [365,'One year. The story card was written for this day.']];
+  /* ================= the acute window, timed from the last dose =================
+     Every number in the withdrawal literature is anchored to the last DOSE:
+     onset 24–48h after cessation, symptoms peaking across days 2–6, most of it
+     resolved inside two to three weeks, and sleep and dreams the last to
+     settle. (Connor et al., Addiction 2022 — the same review the taper's pace
+     comes from.)
+     This app read those windows off the day counter instead, which is a
+     CALENDAR count: "day 1" is the whole of the first logical day whether the
+     last hit landed at 12:05am or 11:55pm. So a last hit at 11pm on zero eve
+     got told "symptoms start about now" one hour in, and a log like this one —
+     last hit 5pm, zero dated the following day — ran the timeline half a day
+     ahead of the body it was describing. An early finish widens the same gap,
+     because zero is deliberately back-dated to a whole day.
+     Hours since the last hit is the honest clock, and it is the one the
+     research is written in. The day counter still owns the milestones (day 30,
+     60, 90 are counted in days, and mean days), so both live here, each
+     answering the question it is actually the right unit for. */
+  var ACUTE=[
+    {to:24,  k:'Quiet',    sub:'before onset',
+     n:'Withdrawal usually starts <strong>24–48h</strong> after the last dose, so this stretch is mostly habit rather than chemistry — which is not the same as easy.'},
+    {to:48,  k:'Onset',    sub:'the 24–48h window',
+     n:'The window where symptoms usually begin. You arrive tapered, so expect the blunted version of it.'},
+    {to:144, k:'Peak',     sub:'days 2–6',
+     n:'<strong>Days 2–6</strong> is the crest, timed from your last hit. It does not get worse than this, and it passes.'},
+    {to:336, k:'Fading',   sub:'days 7–14',
+     n:'The peak is behind you and the grade flattens across weeks 2–3. Sleep and vivid dreams settle last.'},
+    {to:504, k:'Settling', sub:'weeks 2–3',
+     n:'The climb back to baseline. Odd sleep can run past a month — that is recovery finishing, not relapse starting.'},
+    {to:1/0, k:'Settled',  sub:'past the acute window',
+     n:'Past the acute window the research tracks. What is left is habit, and habit lives in particular hours of particular days.'}
+  ];
+  /* null when nothing is logged — there is no last dose to time from, and the
+     day counter is then the only honest clock we have. */
+  function acuteWindow(){
+    var last=lastHitEver();
+    if(!last)return null;
+    var h=(Date.now()-last.getTime())/3600000;
+    if(h<0)h=0;                                  // a forward-dated import
+    /* The clock and the phase are two different questions, and a lapse is
+       where they come apart. Time since the last hit stays exactly that — it
+       is the run, and the ring says so. But the acute WINDOW is receptor
+       adaptation, and one hit on day five does not restart it: the physiology
+       has been adjusting since the quit began. So once a slip has broken the
+       run, the phase is measured from the zero boundary instead, which is the
+       same rule the timeline copy already keeps ("a lapse costs a run, never
+       the physiology"). Without this the hero announced a fresh days-2–6 peak
+       directly above a card explaining that withdrawal was not restarting. */
+    var ph=h;
+    if(isZeroEra&&zeroCalDay()>Math.max(0,daysFree()))
+      ph=Math.max(h,(Date.now()-zeroDay().getTime())/3600000);
+    for(var i=0;i<ACUTE.length;i++)if(ph<ACUTE[i].to)
+      return {h:h,ms:h*3600000,phase:ACUTE[i].k,sub:ACUTE[i].sub,note:ACUTE[i].n,
+              full:Math.floor(h/24),last:last,i:i};
+    return null;
+  }
   function zeroTimelineNote(n,cd){
     // cd = calendar days since zero, passed only by today's call sites.
     // A slip resets n (the run) but not the physiology — once the
@@ -5058,22 +5837,69 @@ try{
        starting over. It fires on ANY reset now: cd>n means the calendar has
        run ahead of the run, which only happens after a slip. Reads the real
        calendar day so the physiology stays anchored to zero, not to the run. */
-    if(cd&&cd>n)return 'Day '+cd+' since zero · day '+n+' of a new run — withdrawal isn’t restarting, that adjustment closed '+(cd>29?'weeks ago':(cd-1)+' day'+(cd-1===1?'':'s')+' ago')+'. A lapse costs a run, never the physiology, and a first lapse predicts nothing — it’s the pattern that matters. The counter climbs again from here.';
-    if(n<=2)return 'Days 1–2 · if symptoms come, they start about now — and you arrive tapered, so expect the blunted version. Waves, not walls.';
-    if(n<=6)return 'Day '+n+' · the days-2–6 peak window — already shaved down by the step-down you did. This is as hard as it gets, and it passes.';
-    if(n<=13)return 'Day '+n+' · past the peak window. Withdrawal fades over 2–3 weeks — the grade flattens from here.';
-    if(n<=21)return 'Day '+n+' · weeks 2–3, the climb back to baseline. Odd sleep and vivid dreams settle last — that’s recovery, not relapse risk.';
-    if(n<=29)return 'Past the three-week mark — the receptor adjustment the research tracks is largely done. Mood still consistently low from here deserves a professional look; sleep alone gets until week four — it settles last. First marker ahead: day 30.';
+    var slipped=!!(cd&&cd>n);
+    /* ...but it belongs to the days right AFTER the lapse, not to the rest of
+       the person's life. As an unconditional early return it owned everything
+       that followed: cd stays ahead of n for good once a run has been broken,
+       so one slip on day three replaced the entire post-zero narrative
+       permanently — no marker countdown at day 30, 90 or 365, no maintenance
+       framing, just the same lapse reassurance every morning forever, while
+       the person who never slipped got the whole ladder. The line itself says
+       a first lapse predicts nothing; the code was making it predict
+       everything. It echoes for the first week of the new run — the same
+       window the check-in tightens for — and then the ordinary timeline
+       resumes. */
+    if(slipped&&n<=SLIP_ECHO_D)
+      return 'Day '+cd+' since zero · day '+n+' of a new run — withdrawal isn’t restarting, that adjustment closed '+(cd>29?'weeks ago':(cd-1)+' day'+(cd-1===1?'':'s')+' ago')+'. A lapse costs a run, never the physiology, and a first lapse predicts nothing — it’s the pattern that matters. The counter climbs again from here.';
+    /* Past the echo, both clocks keep running and each keeps its own job: the
+       physiology follows the calendar since zero, which no lapse restarted,
+       and the milestones follow the run, because "30 days clean" can only mean
+       thirty consecutive ones. Naming the run in the lead is what stops the
+       two from being read as the same number. */
+    var lead=slipped?'Day '+n+' of this run':'Day '+n;
+    /* The acute rows read the clock the research is written in — hours since
+       the last dose — and only fall back to the day count when nothing is
+       logged to time from. The lapse guard above still runs first: after a
+       slip the hours reset but the receptors do not, and being dragged back to
+       "peak" by one hit is exactly the thing that copy exists to refuse. */
+    // after a lapse the hours run from the lapse, not from the quit — the one
+    // clock these rows must never be given
+    var aw=slipped?null:acuteWindow();
+    if(aw&&n<=21){
+      var hh=Math.floor(aw.h);
+      // plain text only: one of this function's two call sites writes it into
+      // textContent, where markup would show up as markup
+      if(aw.i===0)return 'Hour '+hh+' · the first day is usually the quiet one — cannabis withdrawal typically starts 24–48h after the last dose, so what you feel now is mostly the habit, not the chemistry. It is still the stretch where the reaching happens.';
+      if(aw.i===1)return 'Hour '+hh+' · the 24–48h onset window, where symptoms usually begin — and you arrive tapered, so expect the blunted version. Waves, not walls.';
+      if(aw.i===2)return 'Hour '+hh+' · the days-2–6 peak, measured from your last hit rather than the date — already shaved down by the step-down you did. This is as hard as it gets, and it passes.';
+      /* whole days ELAPSED, phrased as a duration — "day 6" beside a counter
+         reading "day 7 off" looks like a contradiction, when in fact six full
+         days done and being inside the seventh are the same fact in two units */
+      if(aw.i===3)return aw.full+' full days since the last dose · past the peak. Withdrawal fades across 2–3 weeks — the grade flattens from here.';
+      return aw.full+' full days since the last dose · weeks 2–3, the climb back to baseline. Odd sleep and vivid dreams settle last, and can run past a month — that’s recovery, not relapse risk.';
+    }
+    /* the withdrawal rows only ever describe an unbroken stretch — after a
+       lapse the receptors are on the calendar's clock, which the row below
+       states outright rather than dressing the run up as physiology */
+    if(!slipped){
+      if(n<=2)return 'Days 1–2 · if symptoms come, they start about now — and you arrive tapered, so expect the blunted version. Waves, not walls.';
+      if(n<=6)return 'Day '+n+' · the days-2–6 peak window — already shaved down by the step-down you did. This is as hard as it gets, and it passes.';
+      if(n<=13)return 'Day '+n+' · past the peak window. Withdrawal fades over 2–3 weeks — the grade flattens from here.';
+      if(n<=21)return 'Day '+n+' · weeks 2–3, the climb back to baseline. Odd sleep and vivid dreams settle last — that’s recovery, not relapse risk.';
+    }else if(cd<=21){
+      return lead+' · '+cd+' days since zero, and the adjustment is still tracking that date — the lapse cost the run, not the progress underneath it. Odd sleep and vivid dreams settle last.';
+    }
+    if(n<=29)return lead+' · past the three-week mark'+(slipped?' since zero':'')+' — the receptor adjustment the research tracks is largely done. Mood still consistently low from here deserves a professional look; sleep alone gets until week four — it settles last. First marker ahead: day 30.';
     for(var i=0;i<MARKERS.length;i++){
-      if(n===MARKERS[i][0])return 'Day '+n+' · a marker day. '+MARKERS[i][1]+' If a reward was planned for this one, today it gets claimed.';
+      if(n===MARKERS[i][0])return lead+' · a marker day. '+MARKERS[i][1]+' If a reward was planned for this one, today it gets claimed.';
       if(n<MARKERS[i][0]){
         var t=taperProgress();
         var out=MARKERS[i][0]-n;
-        return 'Day '+n+' · maintenance now, not withdrawal. Next marker: day '+MARKERS[i][0]+', '+
+        return lead+' · maintenance now, not withdrawal. Next marker: day '+MARKERS[i][0]+', '+
           (out===1?'tomorrow':out+' days out')+' — worth deciding now what it earns'+(t.money?' (~$'+t.money+' already banked)':'')+'.';
       }
     }
-    return 'Day '+n+' · past every marker on the map. The counter only climbs.';
+    return lead+' · past every marker on the map. The counter only climbs.';
   }
 
   /* the header's data line: compact facts, not a sentence.
@@ -5084,12 +5910,14 @@ try{
     if(isZeroEra){
       var n=daysFree();
       var zs=zeroStats();
-      var head=n>0?'Day <strong>'+n+'</strong> off':'Run restarts <strong>tomorrow</strong>';
-      var zc=zeroCalDay();
+      // exact first, ordinal second — "Day 2 off" above a clock reading 41h
+      // reads as the app rounding a day and three quarters up to two
+      var x=zeroExact(), slipToday=(countOf(todayKey)||0)>0;
+      var head=slipToday?'Run restarts <strong>tomorrow</strong>'
+        :x?'<strong>'+x+'</strong> since the last hit · day '+Math.max(0,n)
+        :'Day <strong>'+Math.max(0,n)+'</strong>';
       $('countdown').innerHTML=head+
-        (zs&&zs.slips?(zs.clean>0?' · '+zs.clean+' clean · best run '+zs.best:'')+
-          ' · '+(zc===1?'zero day':'day '+zc+' since zero')
-          :' · zero was '+wd(z));
+        (zs&&zs.slips?' · '+zs.clean+' clean · best run '+zs.best:' · zero was '+wd(z));
     }else{
       var tp=taperProgress(), left=tp.daysToZero, start=schedule()[0].start;
       var where=today<start?'starts '+wd(start):'Day '+tp.dayN+' of '+tp.totalD;
@@ -5131,11 +5959,22 @@ try{
     var vw=document.documentElement.clientWidth||393;
     return Math.max(260,Math.min(vw,512)-2*16-2*18);
   }
+  /* Both horizontal strips — the contour and the day strip — live on the
+     ladder pane, which is display:none until shown; a hidden element measures
+     every offset as zero. setPlanPane calls this once the pane is laid out. */
+  function centreStrips(){
+    var st=$('stairs'), sd=$('schedStrip');
+    if(st&&st.clientWidth&&st.querySelector('.st-scroll.wide')&&typeof stCenter==='function'){stCenter();st.dataset.parked='1';}
+    if(sd&&sd.clientWidth&&typeof sdCenter==='function'){if(sdCenter())sd.dataset.parked='1';}
+  }
   function stGapTxt(p){
     if(p.cap<=0)return 'free';
     if(p.single)return 'evening';
-    return typeof p.spacingH==='number'?fmtGapH(p.spacingH)+' gap'
-      :fmtGapH(p.spacingH[0])+'→'+fmtGapH(p.spacingH[p.spacingH.length-1]);
+    // through the ceiling: a step labelled 8h under a rule reading 4h is the
+    // schedule disagreeing with itself on one screen
+    var g0=gapCap(typeof p.spacingH==='number'?p.spacingH:p.spacingH[0]);
+    var g1=gapCap(typeof p.spacingH==='number'?p.spacingH:p.spacingH[p.spacingH.length-1]);
+    return g0===g1?fmtGapH(g0)+' gap':fmtGapH(g0)+'→'+fmtGapH(g1);
   }
   function stCenter(){
     var sc=document.querySelector('#stairs .st-scroll');
@@ -5295,10 +6134,12 @@ try{
   (function(){
     var box=$('stairs');if(!box)return;
     function go(i){
-      var f=$('stepFold'), pf=$('phasesFold');
-      if(f&&!f.open)f.open=true;   // instant, so the scroll target exists before we move
-      if(pf&&!pf.open)pf.open=true;
-      var t=$('phase-'+i);if(t)t.scrollIntoView({block:'start',behavior:motionOK?'smooth':'auto'});
+      setPlanPane('ladder');
+      var t=$('phase-'+i);
+      if(!t)return;
+      t.open=true;   // a jump to a rung that stays shut has landed on nothing
+      // inline:'nearest' or this scrolls the horizontal ancestors too
+      t.scrollIntoView({block:'start',inline:'nearest',behavior:motionOK?'smooth':'auto'});
     }
     box.addEventListener('click',function(ev){
       var h=ev.target.closest('.st-hit');if(h)go(h.getAttribute('data-i'));
@@ -5323,15 +6164,22 @@ try{
       if(s.skipped)return;   // never walked — the rebuild stepped past it
       n++;held+=(s.held||0)+(s.eased||0);
       var p=BASE_PHASES[i];
-      var st=i===last?'zero':i<idx?'past':i===idx?'now':'ahead';
-      var el=document.createElement('div');
+      /* One rung, one disclosure. Expanded, twenty-odd of these were a wall you
+         could only read by scrolling through it, when what the list is for is
+         finding a rung. The summary carries what you scan by (ceiling, dates,
+         rule); everything else waits for a tap. The step you are on opens
+         itself. Zero-ness is the rung's cap, not its position: a restart puts
+         a zero interlude in the middle of the ladder. */
+      var st=p.cap<=0?'zero':i<idx?'past':i===idx?'now':'ahead';
+      var el=document.createElement('details');
       el.className='phase '+st;
       el.id='phase-'+i;
+      if(i===idx)el.open=true;
       var chips='';
-      if(i===idx)chips+='<span class="chip sm acc">'+(i===last?'Now':'Today')+'</span>';
+      if(i===idx)chips+='<span class="chip sm acc">'+(p.cap<=0?'Now':'Today')+'</span>';
       if(s.eased)chips+='<span class="chip sm adjust">Eased +'+s.eased+' day'+(s.eased>1?'s':'')+'</span>';
       if(s.held)chips+='<span class="chip sm adjust">Held +'+s.held+' day'+(s.held>1?'s':'')+'</span>';
-      else if(s.early)chips+='<span class="chip sm under">'+s.early+' day'+(s.early>1?'s':'')+' early</span>';
+      else if(s.early)chips+='<span class="chip sm under">Finished '+s.early+' day'+(s.early>1?'s':'')+' early</span>';
       var why=s.eased?'<p class="ph-note">Eased: the step before ran hard.</p>':'';
       // each scheduled day gets its own row: date, planned windows, that day's gap
       var dayRows='';
@@ -5349,11 +6197,13 @@ try{
         if(dayRows)dayRows='<div class="phase-days">'+dayRows+'</div>';
       }
       el.innerHTML=
-        '<div class="ph-top"><span class="ph-cap">'+p.capText+'<small>'+(p.cap>0?' a day':' — zero')+'</small></span>'+
-        '<span class="ph-dates">'+s.lbl+'</span>'+(chips?'<span class="ph-chips">'+chips+'</span>':'')+'</div>'+
-        why+'<p class="ph-rule">'+p.rule+'</p><p class="ph-desc">'+p.desc+'</p>'+
+        '<summary class="ph-sum"><span class="ph-top"><span class="ph-cap">'+p.capText+'<small>'+(p.cap>0?' a day':' — zero')+'</small></span>'+
+        '<span class="ph-dates">'+s.lbl+'</span>'+(chips?'<span class="ph-chips">'+chips+'</span>':'')+'</span>'+
+        '<span class="ph-rule">'+p.rule+'</span>'+icon('expand','ph-chev')+'</summary>'+
+        '<div class="ph-body">'+why+'<p class="ph-desc">'+p.desc+'</p>'+
         dayRows+
-        (p.why?'<p class="phase-evid">'+p.why+' <a class="dlink" href="guide.html#'+p.ref+'">Sources →</a></p>':'');
+        (p.why?'<p class="phase-evid">'+p.why+' <a class="dlink" href="guide.html#'+p.ref+'">Sources →</a></p>':'')+
+        '</div>';
       wrap.appendChild(el);
     });
     var lv=$('phasesFoldLive');
@@ -5415,6 +6265,15 @@ try{
   function landSuggest(){
     if(!isZeroEra)return null;
     if(data.replan.landing)return null;
+    /* not after an early finish. The fifth move is for a zero the calendar
+       imposed before the person was ready; an early finish is a zero they
+       chose ahead of it, with days of evidence behind it. A slip on that is a
+       lapse on a quit that had already started — the counter's business, the
+       territory the lapse copy already covers — and rebuilding a taper under
+       it would trade a working quit for more dosing days. It also keeps the
+       two tails from claiming the same days: one anchor ends the descent, the
+       other extends it, and they cannot both own the calendar from here. */
+    if(data.replan.finish)return null;
     if(data.ritual&&data.ritual.completedAt)return null;
     if(zeroCalDay()>7)return null;
     var z=zeroDay();
@@ -5483,6 +6342,318 @@ try{
         '<li>Leaving this untouched is also an answer: today stays a lapse on the quit\'s first stretch — recorded, survivable, and the counter climbs from tomorrow.</li>'+
       '</ul></div>';
   }
+  /* ================= the sixth move: finished early =================
+     Every other move in this app answers a descent that is behind its plan.
+     This one answers the opposite, and until it existed the app had no way to
+     hear it: the person stopped before the schedule did. The log goes quiet,
+     the caps keep coming, and the Today card goes on prescribing an evening
+     sitting to someone who has already had their last one — the plan stating
+     a fact instead of reading one, which is the failure this whole card
+     exists to prevent.
+     The date it lands on is not a choice. Withdrawal is timed from the last
+     dose, so the day after the last logged hit IS day one whatever the
+     calendar says; leaving zero three days out doesn't postpone anything, it
+     just mis-dates the counter, the twelve-week arc and every marker hung off
+     them. The move renames the day to the true one.
+     The one-day valve on the morning banner is the small version of this and
+     could never reach here: it takes a single day off the current rung, it
+     needs yesterday's count logged to fire at all, and no number of taps can
+     shorten a rung below one day — so a person two whole days past their last
+     hit has no path down. */
+  function finishSuggest(){
+    if(isZeroEra)return null;                         // there is nothing left to end
+    if(data.replan.finish)return null;                // taken; the schedule card owns the undo
+    if(idx<0||idx>=BASE_PHASES.length-1)return null;
+    if((countOf(todayKey)||0)>0)return null;          // today has a hit in it — not finished
+    var last=lastUseDay();
+    if(!last)return null;                             // nothing logged: no last dose to date this from
+    var first=addDays(last,1);
+    /* A day still in progress has not held — the same rule the morning banner
+       keeps ("exclude today so the banner never promises a day not yet held").
+       The evening is the hard part and it hasn't happened yet, so the earliest
+       honest zero day is one that has finished. */
+    if(dkeyOf(first)>=todayKey)return null;
+    var z=zeroDate();
+    if(first>=z)return null;                          // would move zero later, or not at all
+    var sch=schedule(), steps=[], i;
+    for(i=idx;i<BASE_PHASES.length-1;i++){
+      if(!sch[i].start||sch[i].skipped)continue;
+      if(sch[i].end&&sch[i].end<first)continue;       // a rung already fully walked
+      steps.push(BASE_PHASES[i].capText);
+    }
+    return {at:dkeyOf(first),first:first,
+            clear:Math.round((today-first)/MS_DAY),   // COMPLETE days at zero behind today
+            pulled:Math.round((z-first)/MS_DAY),      // how far the date comes in
+            lastHit:lastHitEver(),lastDay:last,steps:steps,z:z};
+  }
+  function finishOfferHTML(sug){
+    var f=sug.first, lh=sug.lastHit;
+    return '<div class="sc-fine"><p class="sc-note"><b>You got there before the schedule did.</b> '+
+      'The last hit on the record is '+(lh?fmtTime(lh)+' on ':'')+fmtShort(sug.lastDay)+'. Since then the log holds <b>'+
+      sug.clear+' complete day'+(sug.clear===1?'':'s')+' with nothing in '+(sug.clear===1?'it':'them')+'</b>, and today is at zero too — '+
+      'while the schedule still has '+(sug.steps.length?'<b>'+sug.steps.join(' → ')+'</b> to hand out':'capped days to hand out')+
+      ' and zero sitting on '+fmtShort(sug.z)+'. That is the plan describing a taper you have already finished walking.</p>'+
+      /* .sc-fine zeroes the top margin on its notes so the first one sits flush
+         under the rule; a second paragraph has to put it back */
+      '<p class="sc-note" style="margin-top:10px">So the sixth move, and the only one here that pulls the date toward you: <b>finish early</b>. '+
+      'Zero moves to <b>'+WEEKDAYS[f.getDay()]+', '+fmtShort(f)+'</b> — the day after your last hit, '+sug.pulled+' day'+(sug.pulled===1?'':'s')+
+      ' in from '+fmtShort(sug.z)+' — and the steps still on the calendar close unwalked, because they were dosing days and you have stopped needing them. '+
+      'Nothing about the withdrawal changes: that clock started at the last hit either way. What changes is that the counter, the twelve weeks and every marker after them start counting from the day your body actually did.</p>'+
+      '<div class="sc-hand"><button class="pri" data-sc="finish" data-k="'+sug.at+'">Finish early — zero '+fmtShort(f)+'</button></div>'+
+      '<p class="sc-note">Read the dates before you tap: this counts days the log left <em>empty</em> as days at zero. If anything belongs on one of them, log it from its day page first and this will re-read the record. Reversible today — after that the boundary is stamped and the road goes forward.</p></div>';
+  }
+  /* The restart's offer. Deliberately NOT gated on a heuristic deciding
+     whether your relapse counts: the last thing this app should do to someone
+     already using again is make them argue with a threshold. It is available
+     the whole time a quit is running, from the schedule card — quiet when
+     things are fine, there when they are not — and it leads the Today screen
+     only once the log itself shows a pattern rather than a single night,
+     because a first lapse is the counter's business and the copy has said so
+     from the beginning.
+     Re-entry is read the same way every other rebuild reads it: the median of
+     the last three logged days, snapped up to a ceiling the ladder has. The
+     plan meets the days. */
+  function restartSuggest(){
+    if(!isZeroEra)return null;
+    if(data.replan.restart)return null;
+    /* Only the CURRENT run of using days: walk back from yesterday and stop at
+       the first clean one. Reaching further crosses the stretch the quit
+       actually held and starts picking up days from the taper before it, which
+       is how a re-entry ceiling came out BELOW what the log shows happening
+       now — three clean days in the middle, and a median of "2, 15, 5" reads
+       5 while yesterday was 15. A ceiling the day is already over by lunchtime
+       is not the plan meeting the days, it is the plan setting them up. */
+    var run=[],d=addDays(today,-1),tries=0;
+    while(tries<21){
+      var c=countOf(dkeyOf(d));
+      if(c===null||c===0)break;
+      run.push(c);d=addDays(d,-1);tries++;
+    }
+    var tc=countOf(todayKey)||0;
+    if(!run.length&&tc<=0)return null;
+    /* Complete days set the ceiling; today can only raise it. A day still
+       being lived has no business arguing the ceiling DOWN — it is not
+       finished — but it must not be born over its own ceiling either, which is
+       the same floor the rebuilt landing's re-entry keeps. */
+    var med=run.length>=3?run.slice(0,3).sort(function(a,b){return a-b;})[1]
+           :run.length?Math.max.apply(null,run):0;
+    var need=Math.max(med,tc,1);
+    var pool=FINE_RUNGS.concat(COARSE_RUNGS).filter(function(q){return q.cap>0;})
+      .sort(function(a,b){return a.cap-b.cap;});
+    var rung=null;
+    for(var i=0;i<pool.length;i++)if(pool[i].cap>=need){rung=pool[i];break;}
+    if(!rung)rung=COARSE_RUNGS[0];
+    // a return is days, not a night: today counts toward the pattern, but on
+    // its own it is still the lapse the counter already handles
+    var using=run.length+(tc>0?1:0);
+    return {cap:rung.cap,capText:rung.capText,med:med,run:run.slice(0,3).reverse(),
+            todayC:tc,days:using,pattern:using>=2,
+            newZero:addDays(today,rsLen(rung.cap)),
+            banked:(zeroStats()||{}).clean||0};
+  }
+  /* Every ceiling the ladder can start from, at or above what today already
+     holds. The log picks a recommendation; it does not get to pick FOR you.
+     A re-entry ceiling is the one number in this move that decides how the
+     next fortnight feels, and the person choosing it knows things the record
+     does not — whether this was a week or a night, whether they want to walk
+     back down gently or cut hard. The floor is today's own count, because a
+     rung the day has already passed is a day born over its own cap. */
+  function restartRungs(floor){
+    var seen={},out=[],pool=FINE_RUNGS.concat(COARSE_RUNGS),i,q;
+    for(i=0;i<pool.length;i++){
+      q=pool[i];
+      if(q.cap<=0||q.cap<floor||seen[q.cap])continue;
+      seen[q.cap]=1;
+      out.push({cap:q.cap,capText:q.capText,zero:addDays(today,rsLen(q.cap))});
+    }
+    out.sort(function(a,b){return a.cap-b.cap;});
+    return out;
+  }
+  function restartOfferHTML(sug){
+    var nz=sug.newZero;
+    return '<div class="sc-fine"><p class="sc-note"><b>Using again, and the ladder is behind you.</b> '+
+      (sug.run.length?'The last '+(sug.run.length===1?'full day':sug.run.length+' full days')+' of it came in at <b>'+sug.run.join(', ')+
+        '</b>'+(sug.todayC?', and today is at <b>'+sug.todayC+'</b> already':'')
+       :'Today is at <b>'+sug.todayC+'</b>')+
+      ', against a plan that has nothing left to hand out — the descent finished, and what is on the other side of it is not a schedule, it is a counter. '+
+      'That is the one thing this app could not do for you until now: a return had no move, only a smaller number.</p>'+
+      '<p class="sc-note" style="margin-top:10px">So the seventh move: <b>start again</b>, from where the days actually are. '+
+      'Re-enter at a ceiling you can actually hold and take the rest in half-steps, two days each — from <b>'+sug.capText+
+      '</b>, the one your log reads, that is <b>'+capChain(sug.capText,fineTail(sug.cap))+'</b>, with zero on <b>'+
+      WEEKDAYS[nz.getDay()]+', '+fmtShort(nz)+'</b>. The extension budget refills either way. '+
+      'Nothing is erased and nothing is overwritten: the first descent, every day of it, and the '+sug.banked+' clean day'+(sug.banked===1?'':'s')+
+      ' it reached all stay exactly as logged. The new ladder starts below where the last one did <em>because</em> of them.</p>'+
+      '<p class="sc-note" style="margin-top:11px"><b>Pick the ceiling you actually want.</b> '+
+        sug.capText+' is what the log reads, not a verdict — every rung the ladder has is here, and each one shows where zero lands if you start there. '+
+        'Lower is a harder first week and a nearer zero; higher is a gentler re-entry and a later one. Below '+
+        (sug.todayC>0?'today\'s '+sug.todayC:'one')+' is not offered, because that is a day already over its own cap.</p>'+
+      '<div class="rs-picks">'+restartRungs(Math.max(sug.todayC,1)).map(function(r){
+        return '<button class="rs-pick'+(r.cap===sug.cap?' on':'')+'" data-sc="restart" data-cap="'+r.cap+'">'+
+          '<b>'+r.capText+'</b><span>zero '+fmtShort(r.zero)+'</span></button>';
+      }).join('')+'</div>'+
+      '<p class="sc-note">A return inside the first months is the common case, not the failure case — near half of quits see one, which is exactly why this move exists instead of an empty screen. If today was one night rather than a change of direction, leave this alone: the counter already handles a lapse, and it restarts on its own tomorrow.</p></div>';
+  }
+  /* The eighth move's offer. Every guard is the third answer's guard, one
+     descent later — this IS the rebase, re-armed for the descent a restart
+     created, and it is offered on exactly the evidence the rebase is offered
+     on:
+     a second descent, still running (before zero the counter is not the
+       subject yet, and at zero the restart is the move that applies);
+     never twice (a descent that can be rebuilt forever is zero receding one
+       mercy at a time — the ratchet the finite budget exists to refuse);
+     not while the date is locked (the lock is the explicit choice to stop
+       moving the date, and this move moves it);
+     the budget spent (while the schedule is still absorbing days it is still
+       describing them, and a hold is the cheaper answer);
+     and the log landing a whole rung above today's ceiling — the one
+       condition none of the smaller answers can fix. */
+  /* Where a rebuilt tail re-enters: the smallest rung clearing the median of
+     the last three fully-logged days. Same rule as the rebase's, over the
+     fuller pool — with 7, 6 and 4 in it the ceiling it lands on can be one the
+     coarse ladder could not express, which is the point of having them. */
+  /* SEVEN logged days, not three. The three-day window is right for the
+     restart, where the last three days ARE the situation — a relapse is
+     current events. It is wrong here, and wrong in the expensive direction.
+     A descent mid-walk has weeks of evidence about what this person can
+     actually hold, and three days catches whichever end of it happened last:
+     a log reading 7, 7, 7, 7, 13, 12, 15 is someone who held seven for most of
+     a week and then had three bad days when the ceiling dropped below it, and
+     the three-day median calls that 13 and prescribes a re-entry at 14 —
+     throwing away the best evidence in the record because it is four days old.
+     The seven-day median reads the same log as 7, which is the number that was
+     demonstrated. It only diverges from the short window when there is a mix,
+     and a mix means the lower number was proven; when a person has genuinely
+     escalated, every day in the window is high and both windows agree.
+     Still floored by today's own count, for the reason the restart's picker
+     is: a rung the day has already passed is a day born over its own cap. */
+  function r2Suggest(){
+    var vals=[], d=addDays(today,-1), tries=0, startD=schedule()[0].start;
+    while(vals.length<7&&tries<21&&d>=startD){
+      var c=countOf(dkeyOf(d));
+      if(c!==null)vals.push(c);
+      d=addDays(d,-1);tries++;
+    }
+    if(vals.length<3)return null;
+    var sorted=vals.slice().sort(function(a,b){return a-b;});
+    var med=sorted[Math.floor(sorted.length/2)];
+    var need=Math.max(med,countOf(todayKey)||0);
+    var pool=descentPool().slice().reverse();       // shallowest first
+    var out={med:med,days:vals.length,last:vals.slice(0,3).reverse(),held:sorted[0]};
+    for(var i=0;i<pool.length;i++)if(pool[i].cap>=need){
+      out.cap=pool[i].cap;out.capText=pool[i].capText;return out;
+    }
+    out.cap=COARSE_RUNGS[0].cap;out.capText=COARSE_RUNGS[0].capText;
+    return out;
+  }
+  function restart2Suggest(){
+    if(isZeroEra)return null;
+    var sch=schedule();
+    if(!sch.restarted)return null;
+    /* Not once-only any more, and that is the fix. The guard here used to be
+       `sch.rebuilt`, copied from the moves above it on the reasoning that a
+       descent rebuildable forever is zero receding one mercy at a time. That
+       reasoning holds for moves that BUY TIME and it does not hold for this
+       one, which buys a reachable ceiling: the re-entry is read off the log
+       and can never be argued upward, and the evidence gate below — budget
+       spent, days landing a whole rung above the cap — is not a thing a person
+       can want their way into. Spending it once and then having no answer the
+       second time the ladder outran the days was the exact failure this move
+       was written for, arriving one level up.
+       What the budget still bounds is the drift; what stays bounded here is
+       the day: one re-entry per day, so a rung gets a night before it is
+       judged. */
+    if(sch.rebuilt===todayKey)return null;
+    if(sch.locked||sch.slack>0)return null;
+    var sug=r2Suggest();
+    if(!sug||sug.cap<=cap)return null;
+    // how the restarted descent has actually gone: logged days since the
+    // re-entry, and how many of them landed over the ceiling they were given
+    var over=0,total=0,d=dateOf(sch.restarted);
+    while(dkeyOf(d)<todayKey){
+      var c=countOf(dkeyOf(d));
+      if(c!==null){
+        total++;
+        var pi=phaseIndexFor(d);
+        if(pi>=0&&BASE_PHASES[pi].cap>0&&c>BASE_PHASES[pi].cap)over++;
+      }
+      d=addDays(d,1);
+    }
+    return {cap:sug.cap,capText:sug.capText,med:sug.med,last:sug.last,days:sug.days,
+            rsCap:sch.rsCap,since:sch.restarted,over:over,total:total};
+  }
+  /* The transient pick. Not stored in data — nothing has been chosen until the
+     commit button is pressed, and a half-made choice has no business surviving
+     a reload. Defaults to three: two days a rung is the pace this descent has
+     been walking, so it is the one option the log has already argued against. */
+  var r2Sel=3;
+  /* The ceiling to re-enter at. Null follows the recommendation; a tap pins
+     one. Transient like the pace — nothing is chosen until the commit. */
+  var r2SelCap=null;
+  /* Manual mode. The automatic offer fires on evidence: budget spent, days
+     landing a whole rung above the cap. That is the right trigger for a plan
+     that has already broken, and it is the wrong one — the only one — for a
+     person who can see the next step coming and knows they cannot hold it.
+     Complying and miserable produces no evidence at all, so the app had
+     nothing to say to "this is not realistic" until it had already stopped
+     being true. This is that sentence, given a button. */
+  var r2Open=false;
+  // ceilings a person can re-enter at by hand: above today's, and no higher
+  // than the descent already started from — this move rebuilds a ladder, it
+  // does not undo the decision to be on one
+  function r2ManualRungs(sugCap){
+    var sch=schedule(), top=Math.max(sch.rsCap||0,sugCap||0,COARSE_RUNGS[0].cap===undefined?0:0), out=[];
+    if(!top)top=COARSE_RUNGS[0].cap;
+    descentPool().forEach(function(q){
+      if(q.cap>cap&&q.cap<=top)out.push(q);
+    });
+    return out.sort(function(a,b){return a.cap-b.cap;});
+  }
+  function restart2OfferHTML(sug,manual){
+    var rsRung=rungAtCap(sug.rsCap), rsText=rsRung?rsRung.capText:sug.rsCap;
+    var entryCap=(r2SelCap&&r2RungAt(r2SelCap))?r2SelCap:sug.cap;
+    var entryRung=r2RungAt(entryCap)||{capText:String(entryCap)};
+    var chain=capChain(entryRung.capText,r2Tail(entryCap));
+    var sel=r2Pace(r2Sel).hold, selZ=addDays(today,r2Len(entryCap,sel));
+    var picks=r2ManualRungs(sug.cap);
+    var lede=manual
+      ? '<p class="sc-note" style="font-size:13px;color:var(--ink)"><b>Pick a ceiling you can actually hold.</b> '+
+        'Today\'s is <b>'+cap+'</b>'+(sug.last?', and your last three full days were <b>'+sug.last.join(', ')+'</b>':'')+'. '+
+        'You do not have to blow a ceiling to be allowed to say it is too low — a step you can see you cannot take is worth changing before it is a day you failed rather than a number you fixed.</p>'
+      : '<p class="sc-note" style="font-size:13px;color:var(--ink)"><b>This schedule has stopped describing your days.</b> '+
+        'Your last three full days: <b>'+sug.last.join(', ')+'</b>'+
+        (sug.days>3?' (median of the last '+sug.days+': <b>'+sug.med+'</b>)':'')+'. Today\'s cap: <b>'+cap+'</b>. '+
+        (sug.total?sug.over+' of the '+sug.total+' days since you restarted landed over their ceiling, and the':'The')+
+        ' extension days are spent — so the ceiling will keep dropping and nothing will stop it.</p>';
+    var capRow=picks.length
+      ? '<p class="sc-note" style="font-size:13px;color:var(--ink);margin-top:9px"><b>Re-enter at</b>'+
+        (manual?'':' — <b>'+sug.capText+'</b> is what your log reads, and you can take a different one')+':</p>'+
+        '<div class="gap-picks">'+picks.map(function(q){
+          return '<button class="gap-pick'+(q.cap===entryCap?' on':'')+'" data-sc="r2cap" data-cap="'+q.cap+'">'+q.capText+'</button>';
+        }).join('')+'</div>'
+      : '<p class="sc-note" style="font-size:13px;color:var(--ink);margin-top:9px">Re-entering at <b>'+entryRung.capText+'</b>.</p>';
+    return '<div class="sc-fine">'+lede+capRow+
+      '<p class="sc-note" style="font-size:13px;color:var(--ink);margin-top:11px">'+
+      'Every day you have already logged keeps the ceiling it was lived under. Pick the pace:</p>'+
+      '<div class="r2-opts">'+R2_PACES.map(function(p){
+        var z=addDays(today,r2Len(entryCap,p.hold));
+        var len=r2Len(entryCap,p.hold);
+        return '<button class="r2-opt'+(p.hold===sel?' on':'')+'" data-sc="r2pick" data-hold="'+p.hold+'">'+
+          '<span class="r2-opt-h"><span class="r2-opt-n">'+p.name+'</span>'+
+          '<span class="r2-opt-z">'+len+' days · zero '+fmtShort(z)+'</span></span>'+
+          '<span class="r2-opt-l">'+chain+'</span>'+
+          '<span class="r2-opt-w">'+p.note+'</span></button>';
+      }).join('')+'</div>'+
+      '<button class="r2-go" data-sc="r2" data-cap="'+entryCap+'" data-hold="'+sel+'">'+
+        'Start this schedule — zero '+WEEKDAYS[selZ.getDay()]+', '+fmtShort(selZ)+'</button>'+
+      '<p class="r2-undo">Nothing is erased, and you can undo it for the rest of today.'+
+      (manual?' <button class="sc-act" data-sc="r2close">Never mind</button>':'')+'</p>'+
+      '<details class="sc-why"><summary>Why this, and what it changes</summary>'+
+      '<p class="sc-note">This descent re-entered at <b>'+rsText+'</b> on '+fmtShort(dateOf(sug.since))+
+      '. Holding a step for one more day cannot close a gap of whole rungs, and it cannot lower a ceiling that is simply too high a bar — that is what this move is for, and it can be taken as often as the ladder needs it.</p>'+
+      '<p class="sc-note">The tail runs <b>'+chain+'</b>. Below the daytime cut it steps one hit at a time — 8, 7, 6, 5, 4, 3, then the evenings — because that is the stretch where every attempt on this record has actually come apart, and the same percentage down there is a smaller and smaller number of hits to hold onto. The extension budget refills, so the new ladder has its own five days of give.</p>'+
+      '<p class="sc-note">For daily use of this length the evidence leans slower: gradual reduction “over weeks”, and slower the heavier and longer the use. <a class="dlink" href="guide.html#taper">Why →</a></p>'+
+      '</details></div>';
+  }
   /* mini contour for a move: the current plan as a ghost, the move's descent in
      the accent, both from today to the later of the two zero dates. segs are
      [{cap,d}] (d = days, weights); each list is stretched to its stated end. */
@@ -5531,7 +6702,13 @@ try{
     var hd=$('schedHead');
     if(idx<0){box.hidden=true;if(hd)hd.hidden=true;return;}
     box.hidden=false;if(hd)hd.hidden=false;
-    var sch=schedule(), causes=sch.causes||[], z=zeroDate(), bz=baseZeroDate();
+    /* In the zero era the boundary the whole app counts from is the STAMPED
+       one (zeroDay), not the live derivation — correcting a taper day later
+       must not leave this card announcing one date while the header counts
+       from another. Show what is counted from; say so when they differ. */
+    var sch=schedule(), causes=sch.causes||[], liveZ=zeroDate(), bz=baseZeroDate();
+    var z=isZeroEra?zeroDay():liveZ;
+    var drift=isZeroEra&&dkeyOf(liveZ)!==dkeyOf(z);
     var moved=Math.round((z-bz)/MS_DAY);
     var rows='', nAdj=0, nLive=0;
     // after zero the descent is history — its rows explain what happened but
@@ -5591,13 +6768,13 @@ try{
 
     /* ---- the moves: every answer the engine offers right now, each with
        where zero lands and a mini contour against the current plan ---- */
-    var moves='', live=!isZeroEra&&idx<BASE_PHASES.length-1, zOff=Math.round((z-today)/MS_DAY);
+    var moves='', canMove=!isZeroEra&&idx<BASE_PHASES.length-1, zOff=Math.round((z-today)/MS_DAY);
     function move(cls,thumb,title,out,sub,btns){
       return '<div class="sc-mv '+cls+(thumb?'':' nt')+'">'+(thumb||'')+
         '<div class="mv-tx"><b>'+title+'</b><span class="mv-out">'+out+'</span>'+(sub?'<span class="mv-sub">'+sub+'</span>':'')+'</div>'+
         '<div class="mv-btns">'+btns+'</div></div>';
     }
-    if(live){
+    if(canMove){
       var hz=addDays(z,1);
       moves+=move('hold',scThumb(scCurSegs(1),zOff+1),'Hold a day',
         phase.capText+' one day longer · zero <b>'+scDate(hz)+'</b>','',
@@ -5621,7 +6798,7 @@ try{
        rebuilt tail is half-steps at two days by construction, and the walked
        descent's pace survives only as history, which re-filing would falsify */
     var paceNote='';
-    if(live&&!sch.rebased&&!sch.landed){
+    if(canMove&&!sch.rebased&&!sch.landed){
       var fb=data.replan.fineBelow, gb=data.replan.slowBelow;
       if(gb&&cap>=gb){
         moves+=move('on',scThumb(scCurSegs(0),zOff),'The gentle pace is on',
@@ -5657,10 +6834,28 @@ try{
        of them can close a gap of whole levels that has already opened. Shown
        as the arithmetic, like every card here: what the days actually were,
        where re-entry lands, what zero becomes. */
-    var reb='';
+    /* The gap ceiling — a hand on the schedule rather than a move that
+       rebuilds it, and a standing preference rather than a dated one-off, so
+       it carries no undo of its own: pick another value, or put it back. */
+    if(!isZeroEra&&idx>=0&&idx<BASE_PHASES.length-1&&!phase.single&&spacingRawOn(today,idx)>0){
+      var rawNow=spacingRawOn(today,idx), curMax=gapMax(), effNow=spacingHOn(today,idx);
+      moves+='<div class="sc-mv gapctl nt"><div class="mv-tx"><b>Hours between sittings</b>'+
+        '<span class="mv-out">this step asks <b>'+fmtGapH(rawNow)+'</b>'+
+        (curMax&&effNow<rawNow?' · narrowed to <b>'+fmtGapH(effNow)+'</b> by your ceiling':curMax?' · already inside your '+fmtGapH(curMax)+' ceiling':'')+'</span>'+
+        '<span class="mv-sub">The widening gap is what the taper enforces — the cap says how much, the gap says the day can\'t be one long sitting. If it asks more hours than your day has shape for, set a ceiling: it only ever narrows.</span>'+
+        '<div class="gap-picks">'+
+          '<button class="gap-pick'+(!curMax?' on':'')+'" data-sc="gapmax" data-h="0">As planned</button>'+
+          GAP_CHOICES.map(function(h){
+            return '<button class="gap-pick'+(curMax===h?' on':'')+'" data-sc="gapmax" data-h="'+h+'">'+fmtGapH(h)+'</button>';
+          }).join('')+'</div>'+
+        (curMax?'<span class="mv-sub">The day\'s windows re-space inside the hours this step already used, and every step below narrows the same way.</span>':'')+
+        '</div></div>';
+    }
+    var reb='', rebLive=false, landLive=false;
     if(!isZeroEra&&!sch.rebased&&!sch.landed&&!sch.locked&&sch.slack<=0){
       var sug=rebSuggest();
       if(sug&&sug.cap>cap){
+        rebLive=true;
         var nz=addDays(today,rebLen(sug.cap));
         reb=move('reb',scThumb(scTailSegs(sug.cap,FINE_RUNGS),Math.round((nz-today)/MS_DAY)),'Rebuild the descent',
           'last 3 days <b>'+sug.last.join(', ')+'</b> vs cap '+cap+' · zero <b>'+scDate(nz)+'</b>',
@@ -5675,13 +6870,66 @@ try{
         'It can still go back — tomorrow the rebuilt steps will have logged days against them, and undoing it then would re-file those days against ceilings they were never held to.',
         '<button class="btn sm ghost" data-sc="unreb">'+icon('undo')+'Back to the old descent</button>');
     }
+    /* the eighth move sits with the rest, offered and reversed in the same
+       place. Its undo is same-day like every other rebuild: by tomorrow the
+       rebuilt rungs have logged days against them, and unwinding would re-file
+       those days under ceilings they were never held to. */
+    var r2='';
+    var r2g=restart2Suggest();
+    if(r2g)r2=restart2OfferHTML(r2g,false);
+    else if(sch.restarted&&!isZeroEra&&idx>=0&&idx<BASE_PHASES.length-1&&sch.rebuilt!==todayKey&&r2ManualRungs().length){
+      /* the manual door. Always present on a restarted descent that still has
+         a rung above today's — because "I can't hold this" is a thing a person
+         knows before the log does, and the automatic offer above only ever
+         speaks after the fact. */
+      var man=r2Suggest()||{cap:cap,capText:phase.capText,last:null};
+      man.rsCap=sch.rsCap;man.since=sch.restarted;
+      r2=r2Open
+        ? restart2OfferHTML(man,true)
+        : '<div class="sc-fine"><p class="sc-note"><b>Is this ceiling too low?</b> '+
+          'Today asks for <b>'+cap+'</b>. If that is not a number you can hold, the ladder can be rebuilt from one you can — '+
+          'as often as it needs to be, and without waiting for a day you went over to prove it.</p>'+
+          '<div class="sc-hand"><button data-sc="r2open">Rebuild from a higher ceiling</button></div></div>';
+    }
+    else if(sch.rebuilt===todayKey){
+      var r2r=landRungAt(sch.r2Cap);
+      r2='<div class="sc-fine"><p class="sc-note">This descent was rebuilt today, re-entering at <b>'+
+        (r2r?r2r.capText:sch.r2Cap)+'</b> at <b>'+sch.r2Hold+' days a rung</b>. '+
+        'It can still go back to the restarted ladder as it stood — tomorrow the rebuilt steps will have logged days against them.</p>'+
+        '<div class="sc-hand"><button data-sc="unr2">Undo — back to the ladder as it stood</button></div></div>';
+    }
+    /* the sixth move, offered and reversed in the same place as the rest.
+       Its undo stays available only on the day it was TAKEN — which is not the
+       date it landed on, so it keys off finishedOn. By tomorrow the zero anchor
+       is stamped and the counter has been paying against it. */
+    /* the seventh move sits with the rest. Its undo is same-day like the
+       others; after that the second descent has logged days against it, and
+       unwinding would re-file them under ceilings they were never held to. */
+    var rst='';
+    var rsg=restartSuggest();
+    if(rsg)rst=restartOfferHTML(rsg);
+    else if(sch.restarted===todayKey){
+      rst='<div class="sc-fine"><p class="sc-note">The ladder was restarted today, re-entering at <b>'+
+        (rungAtCap(sch.rsCap)?rungAtCap(sch.rsCap).capText:sch.rsCap)+'</b>. '+
+        'It can still go back to the zero era as it stood — tomorrow the new steps will have logged days against them.</p>'+
+        '<div class="sc-hand"><button data-sc="unrestart">Undo — back to the counter</button></div></div>';
+    }
+    var fin='';
+    var fsg=finishSuggest();
+    if(fsg)fin=finishOfferHTML(fsg);
+    else if(sch.finishedOn===todayKey){
+      fin='<div class="sc-fine"><p class="sc-note">The descent was closed out today — zero moved back to <b>'+
+        fmtShort(dateOf(sch.finished))+'</b>, the day after the last hit on the record. '+
+        'It can still go back to the schedule as it stood; tomorrow the counter will have been paying against this boundary.</p>'+
+        '<div class="sc-hand"><button data-sc="unfinish">Undo — back to the schedule as it stood</button></div></div>';
+    }
     /* the fifth move lives here too — the schedule card is where every other
        move is offered and reversed, and the zero-era Today card carries the
        same offer where the moment actually finds you */
     var land='';
     if(isZeroEra){
       var lsg=landSuggest();
-      if(lsg)land='<div class="sc-landing">'+landOfferHTML(lsg)+'</div>';
+      if(lsg){land='<div class="sc-landing">'+landOfferHTML(lsg)+'</div>';landLive=true;}
     }else if(sch.landed===todayKey){
       var lr=landRungAt(sch.ldCap);
       land=move('on',null,'Landing rebuilt today',
@@ -5689,7 +6937,6 @@ try{
         'It can still go back — tomorrow the landing steps will have logged days against them, and undoing it then would re-file those days against ceilings they were never held to.',
         '<button class="btn sm ghost" data-sc="unland">'+icon('undo')+'Back to zero as it stood</button>');
     }
-    moves+=reb;
 
     /* Slack is shown as a depleting resource rather than reported after the
        fact, because the whole point is that it is spendable and finite. */
@@ -5701,16 +6948,22 @@ try{
         '<div class="sc-pips" aria-hidden="true">'+pips+'</div></div>';
     var slackLine;
     if(sch.locked)slackLine='<b>Date locked.</b> Over-cap days from the lock forward are recorded, and leave the dates alone.';
-    else if(sch.slack>0)slackLine=(sch.landed||sch.rebased
-        ?'The budget refilled at the rebuild — slack exists to stop drift, and a rebuild is a dated choice, not drift. '
+    else if(sch.slack>0)slackLine=(sch.rebuilt||sch.restarted||sch.landed||sch.rebased
+        ?'The budget refilled at the '+(sch.restarted&&!sch.rebuilt?'restart':'rebuild')+' — slack exists to stop drift, and a dated choice is the opposite of drift. '
         :'')+'When they are gone the schedule stops moving zero and the choice becomes yours.';
     else slackLine='<b>Slack spent.</b> An over-cap day now gets recorded and the date holds. That is the design, not a failure: tapering eases withdrawal, it does not improve the odds of stopping, and a date that keeps moving spends the part that does.';
-    var sub=sch.landed?'landing rebuilt '+fmtShort(dateOf(sch.landed))+' · re-entered at '+(landRungAt(sch.ldCap)?landRungAt(sch.ldCap).capText:sch.ldCap)
+    var sub=sch.rebuilt?'rebuilt '+fmtShort(dateOf(sch.rebuilt))+' · re-entered at '+(landRungAt(sch.r2Cap)?landRungAt(sch.r2Cap).capText:sch.r2Cap)+', '+sch.r2Hold+' days a step'
+      :sch.restarted?'restarted '+fmtShort(dateOf(sch.restarted))+' · re-entered at '+(rungAtCap(sch.rsCap)?rungAtCap(sch.rsCap).capText:sch.rsCap)
+      :sch.finished?'finished early '+fmtShort(dateOf(sch.finished))+' · the day after the last hit'
+      :sch.landed?'landing rebuilt '+fmtShort(dateOf(sch.landed))+' · re-entered at '+(landRungAt(sch.ldCap)?landRungAt(sch.ldCap).capText:sch.ldCap)
       :sch.rebased?'descent rebuilt '+fmtShort(dateOf(sch.rebased))+' · re-entered at '+sch.rebCap
       :moved>0?moved+' day'+(moved>1?'s':'')+' later than the original plan'
       :moved<0?(-moved)+' day'+(moved<-1?'s':'')+' earlier than the original plan'
       :'exactly the original plan';
-    var subCls=sch.landed||sch.rebased||moved?'adj':'';
+    if(isZeroEra)sub+=' · stamped, and everything counts from here';
+    var subCls=sch.rebuilt||sch.restarted||sch.finished||sch.landed||sch.rebased||moved?'adj':'';
+    var driftNote=drift?'<p class="sc-note sc-drift">Correcting a taper day since then re-derives the descent to <b>'+fmtShort(liveZ)+
+      '</b>, but the boundary above is the one already stamped and paid against, so it stands — the counters would otherwise jump every time an old day was edited. The record below still reflects the correction.</p>':'';
     var top='<div class="sc-top"><div class="sc-zero"><div class="label">'+(isZeroEra?'Zero was':'Zero date')+'</div>'+
         '<div class="n-lg">'+scDate(z)+'</div><div class="sc-sub '+subCls+'">'+sub+'</div></div>'+ext+'</div>';
     var nRows=(rows.match(/class="sc-row/g)||[]).length;
@@ -5721,18 +6974,27 @@ try{
       :'<p class="sc-empty">'+(isZeroEra?'The descent ran exactly as drawn — every logged day landed at or under its cap.'
         :'Every logged day landed at or under its cap, and no hold was ever offered. If one runs over, the engine holds that cap a day — it lands here, with Undo.')+'</p>';
     var nMoves=(moves.match(/class="sc-mv/g)||[]).length;
-    var moveBlock=moves?'<div class="sc-moves"><div class="sc-lh">'+(sch.locked||sch.rebased||sch.landed?'Moves':'If a step is too big')+
+    var moveBlock=moves?'<div class="sc-moves"><div class="sc-lh">'+(sch.locked||sch.rebased||sch.landed||sch.restarted?'Moves':'If a step is too big')+
         ' <span>'+icon('undo','ic-xs')+'every move can be undone</span></div>'+moves+'</div>':'';
     var foot=isZeroEra?''
       :'<p class="sc-note">A day only holds its step when its <em>logged total</em> goes over that day\'s cap. A rough day that still landed under won\'t move anything on its own — hold it above if the step needs room, or correct the day\'s count from its day page and the whole descent re-adjusts.</p>';
-    // the fold: auto-open whenever the engine has moved something, or an offer is live —
-    // but after zero the moves are history, so only a live offer opens it by itself
-    var auto=!!((nAdj&&!isZeroEra)||reb||land);
+    /* Order of business: a pending choice outranks settled history, so the
+       live offers lead the card, the moves follow, and the record folds in
+       behind them. The record opens by itself only when it is short and
+       nothing is waiting to be decided. */
+    var lead=rst+fin+r2+reb+land;
+    /* What the Plan tab's dot is for. Only a live OFFER counts — the same
+       strings also carry the same-day undo of a move already taken, and a
+       receipt is not something to decide. */
+    planDecision=!!(r2g||rsg||fsg||rebLive||landLive);
+    var auto=!lead&&!isZeroEra&&nRows>0&&nRows<=4;
     var open=scOpen===null?auto:scOpen;
-    var sumTxt=nRows?nRows+' row'+(nRows===1?'':'s')+(nMoves?' · '+nMoves+' move'+(nMoves===1?'':'s'):''):nMoves?nMoves+' moves available':'the ledger';
-    box.innerHTML=top+count+land+
-      '<details class="sc-more"'+(open?' open':'')+'><summary><span class="sc-mt">Ledger &amp; moves</span><span class="sc-ml">'+sumTxt+'</span></summary>'+
-      '<div class="sc-body"><p class="sc-slack">'+slackLine+'</p>'+ledger+moveBlock+foot+'</div></details>';
+    var sumTxt=nRows?nRows+' day'+(nRows===1?'':'s')+' moved the descent':'nothing moved it';
+    box.innerHTML=top+driftNote+count+
+      (lead?'<div class="sc-lead">'+lead+'</div>':'')+
+      '<p class="sc-slack">'+slackLine+'</p>'+moveBlock+
+      '<details class="sc-more"'+(open?' open':'')+'><summary><span class="sc-mt">The record</span><span class="sc-ml">'+sumTxt+'</span></summary>'+
+      '<div class="sc-body">'+ledger+foot+'</div></details>';
     var det=box.querySelector('.sc-more');
     det.querySelector('summary').addEventListener('click',function(){scOpen=!det.open;});
   }
@@ -5953,7 +7215,7 @@ try{
     var html='',d=new Date(sch[0].start);
     while(d<=last){
       var k=dkeyOf(d),di=phaseIndexFor(d),p=BASE_PHASES[di<0?0:di];
-      var isZ=di===BASE_PHASES.length-1;
+      var isZ=isZeroRungAt(di);
       var st=dayStatus(d);
       var cls='sday';
       if(d<today)cls+=' past '+st.cls;
@@ -6018,6 +7280,8 @@ try{
   // "10:04" — the dial's own hour labels say whether it's a or p
   function thClk(t){var d=new Date(t);return (d.getHours()%12||12)+':'+pad(d.getMinutes());}
   function thClkS(t){var d=new Date(t);return thClk(t)+(d.getHours()<12?'a':'p');}
+  // the exact elapsed since the last hit, to the second ("27d 22h 14m 05s")
+  function thExactText(){var aw=acuteWindow();if(!aw)return '';var sp=splitClean(aw.ms);return sp.big+(sp.small?' '+sp.small:'');}
   function thDurHTML(ms){
     var m=Math.max(0,Math.floor(ms/60000)),h=Math.floor(m/60);
     return h?h+'<span class="u">h</span>'+pad(m%60)+'<span class="u">m</span>':m+'<span class="u">m</span>';
@@ -6334,16 +7598,32 @@ try{
       var lo=landSuggest();
       $('landCard').hidden=!lo;
       if(lo)$('landCardBody').innerHTML=landOfferHTML(lo);
-      $('todayEyebrow').textContent='Days off';
+      $('finishCard').hidden=true;   // its whole condition is a taper still running
+      $('rebuildCard').hidden=true;  // likewise — it rebuilds a descent still being walked
+      /* the seventh move leads Today only on a pattern — a single night is the
+         counter's business, and the cards below already say so kindly */
+      var rso=restartSuggest();
+      $('restartCard').hidden=!(rso&&rso.pattern);
+      if(rso&&rso.pattern)$('restartCardBody').innerHTML=restartOfferHTML(rso);
+      // "Day", not "Days off" — the ordinal being lived; the exact elapsed
+      // beside it says how far into it you are
+      $('todayEyebrow').textContent='Day';
       var nFree=Math.max(0,daysFree());
       setNum('tallyCount',nFree,true);
       $('tallyCount').style.color='';
       var zs0=zeroStats();
-      $('capLabel').textContent=(zs0&&zs0.slips)?'this run · '+zs0.clean+' clean in total':'and climbing';
+      $('capLabel').textContent=zeroCapLabel();
       // the program's week, as a chip in the header row
-      var zcd=Math.max(1,zeroCalDay()), zp=zeroPhaseFor(zcd), ph=$('thPhase');
+      var zcd=Math.max(1,zeroCalDay()), zp=zeroPhaseFor(zcd), ph=$('thPhase'), aw0=acuteWindow();
       ph.hidden=false;
-      ph.innerHTML=icon('spark','ic-xs')+(zp?esc(zp.t)+' · week '+Math.min(12,Math.ceil(zcd/7))+' of 12':'12 weeks done · day '+zcd);
+      /* inside the acute window the phase that matters is the body's, timed
+         from the last dose (acuteWindow keeps a lapse from restarting it);
+         past it — and on a day with a hit, which is not a withdrawal day —
+         the program's week */
+      ph.innerHTML=(aw0&&aw0.i<ACUTE.length-1&&!count)
+        ?icon('wave','ic-xs')+'Withdrawal · '+esc(aw0.phase)+' · '+esc(aw0.sub)
+        :icon('spark','ic-xs')+(zp?esc(zp.t)+' · week '+Math.min(12,Math.ceil(zcd/7))+' of 12':'12 weeks done · day '+zcd);
+      var gg=$('ghGains');
       var med=$('thMedal');med.hidden=false;
       if(count>0){
         $('thCK').textContent='Clean days banked';
@@ -6353,11 +7633,17 @@ try{
         $('barFill').style.width='100%';$('barFill').style.background='var(--clay)';
         $('barNote').textContent='Slip logged. Data, not doom — every clean day stays banked ('+(zs0?zs0.clean:0)+' so far). Tomorrow the run restarts; the total never resets.';
         $('btnSlip').textContent='Logged '+count+' today — tap to add another';
+        if(gg)gg.hidden=true;
         $('btnSlipUndo').hidden=false;
       }else{
-        $('thCK').textContent=nFree===1?'Day this run':'Days this run';
+        $('thCK').textContent='Day';
         setNum('thCN',nFree,!booted);
-        $('thCS').innerHTML=(zs0&&zs0.slips)?'<b>'+zs0.clean+'</b> clean total':'zero was <b>'+fmtShort(zeroDay())+'</b>';
+        /* the day number stays the headline — markers, the ladder and the
+           twelve weeks count calendar days — but never alone: the exact
+           elapsed rides directly under it, ticking (renderGap's 1Hz clock) */
+        $('thCS').innerHTML='<span class="th-exact" id="thExact">'+thExactText()+'</span>'+
+          '<span class="th-cs2">'+((zs0&&zs0.slips)?'<b>'+zs0.clean+'</b> clean in total':'clean since <b>'+fmtShort(zeroDay())+'</b>')+'</span>';
+        if(gg){var awg=acuteWindow();gg.hidden=!awg;if(awg)gg.innerHTML=gainsHTML(cleanGains(awg.ms));}
         // the medallion line: where this run stands, and the next marker
         var best=zs0?zs0.best:nFree, nm=null;
         for(var mi=0;mi<MARKERS.length;mi++){if(MARKERS[mi][0]>nFree){nm=MARKERS[mi][0];break;}}
@@ -6379,6 +7665,18 @@ try{
     }
     card.classList.remove('free');
     $('landCard').hidden=true;
+    /* the sixth move, surfaced above a hero still counting down to a date the
+       log has already passed; the eighth, where the gap between the plan and
+       the days is actually being lived — not only on the tab you have to go
+       looking on */
+    $('restartCard').hidden=true;
+    var fo=finishSuggest();
+    $('finishCard').hidden=!fo;
+    if(fo)$('finishCardBody').innerHTML=finishOfferHTML(fo);
+    var r2o=restart2Suggest();
+    $('rebuildCard').hidden=!r2o;
+    if(r2o)$('rebuildCardBody').innerHTML=restart2OfferHTML(r2o);
+    var ggt=$('ghGains');if(ggt)ggt.hidden=true;
     $('thPhase').hidden=true;
     $('thMedal').hidden=true;
     $('thClean').hidden=true;
@@ -7693,7 +8991,7 @@ try{
     if(yDate<schedule()[0].start)return;
     var yKey=dkeyOf(yDate);
     var yIdx=phaseIndexFor(yDate);
-    if(yIdx<0||yIdx===BASE_PHASES.length-1)return;
+    if(yIdx<0||isZeroRungAt(yIdx))return;
     var yCount=countOf(yKey);
     if(yCount===null||yCount<=BASE_PHASES[yIdx].cap)return;
     if(data.holdPrompts[yKey])return;
@@ -7740,7 +9038,7 @@ try{
     if(data.dayCheers[yKey])return;
     var yIdx=phaseIndexFor(yDate);
     if(yIdx<0)return;
-    var isZ=yIdx===BASE_PHASES.length-1;
+    var isZ=isZeroRungAt(yIdx);
     var c=countOf(yKey);
     var title,body,dropOK=false,quiet=false,deferred=false,ic='check',okTxt='Onward';
     if(isZ){
@@ -7852,7 +9150,17 @@ try{
     var z=zeroDate();
     var onEve=todayKey===dkeyOf(addDays(z,-1));
     var onZ=todayKey===dkeyOf(z);
-    if(!(onEve||onZ)){card.hidden=true;return;}
+    /* An early finish back-dates zero, so both of those can be false on the
+       first morning of a quit that has already begun — and the one card whose
+       job is to get the stash out of the house would never render at all. The
+       ritual is about the room, not the date: while a finish is live and the
+       list has never been completed, it stays open. It is also the reason the
+       finish can't simply be treated as "zero happened, move on" — the whole
+       point of the eve is that it is done before the first unmedicated night,
+       and finishing early skips the calendar slot it used to live in. */
+    var owed=isZeroEra&&!!data.replan.finish&&!(data.ritual&&data.ritual.completedAt);
+    if(!(onEve||onZ||owed)){card.hidden=true;return;}
+    if(owed)onZ=true;    // zero is already here; the copy should say so
     card.hidden=false;
     $('ritEyebrow').textContent=onZ?'The zero-day ritual':'The night-before ritual';
     var r=data.ritual;
@@ -7888,7 +9196,9 @@ try{
     card.classList.remove('done');
     chip.className='chip sm ghost';
     chip.textContent=nDone+' of '+RITUAL_ITEMS.length;
-    $('ritLede').innerHTML=(onZ
+    $('ritLede').innerHTML=(owed
+      ?'Zero is already behind you — which means this list never got its night. It is the one piece the early finish skipped, and the only one that is about the room rather than the date: whatever is still in the house is still a loaded cue. '
+      :onZ
       ?'Zero day. Before anything else, finish stripping the environment — home shouldn’t be a loaded cue during the peak window. '
       :'Tomorrow the counter flips to days off. Tonight, strip the environment — cues drive use as much as chemistry. ')+
       '<a class="dlink" href="guide.html#relapse">The research →</a>';
@@ -8231,20 +9541,65 @@ try{
   }
   /* The old r=60 gap ring (GH_CIRC/setGhRing) is gone: the running gap is
      drawn on the day dial now, so the centre only carries the readout. */
+  /* One place writes the ring's clock, so the two lines can never disagree
+     about which instant they are showing. Writes only on change: at 1Hz an
+     unconditional textContent set is a layout thrash a second, forever. */
+  function setClock(sp){
+    var a=$('ghSince'), b=$('ghSub');
+    if(a&&a.textContent!==sp.big)a.textContent=sp.big;
+    if(!b)return;
+    if(sp.small){
+      if(b.textContent!==sp.small)b.textContent=sp.small;
+      if(b.hidden)b.hidden=false;
+    }else if(!b.hidden)b.hidden=true;
+  }
+  var zLastMin=-1;   // last minute the once-a-minute zero-era surfaces painted
+
   function renderGap(){
     if(gapTick){clearInterval(gapTick);gapTick=null;}
     if(winTimer){clearTimeout(winTimer);winTimer=null;}
     var wrap=$('gapHero'),bell=$('gapBell');
-    if(isZeroEra||idx<0){wrap.hidden=true;$('gapNote').hidden=true;bell.style.display='none';return;}
+    if(idx<0){wrap.hidden=true;$('gapNote').hidden=true;bell.style.display='none';return;}
+    if(isZeroEra){
+      /* After zero the dial's centre is the clean-time readout (renderToday).
+         What ticks here, once a second, is the exact elapsed since the last
+         hit — the number this whole era is about — and what that clock is
+         buying. Writes only on change; the header repaints on the minute. */
+      wrap.hidden=true;$('gapNote').hidden=true;bell.style.display='none';
+      var lastG='';
+      var zTick=function(){
+        safe(thDialTick);
+        var ex=$('thExact'), gg=$('ghGains'), aw=acuteWindow();
+        if(!aw||(countOf(todayKey)||0)>0){if(gg&&!gg.hidden)gg.hidden=true;return;}
+        var t=thExactText();
+        if(ex&&ex.textContent!==t)ex.textContent=t;
+        if(gg){
+          var gh=gainsHTML(cleanGains(aw.ms));
+          if(gh!==lastG){lastG=gh;gg.innerHTML=gh;}
+          if(gg.hidden)gg.hidden=false;
+        }
+        var mn=Math.floor(aw.ms/60000);
+        if(mn!==zLastMin){zLastMin=mn;safe(renderCountdown);}
+      };
+      zTick();
+      gapTick=setInterval(zTick,1000);
+      return;
+    }
     wrap.hidden=false;
     var count=countOf(todayKey)||0;
     var gapH=phase.single?0:spacingHNow();
     var reqMs=gapH*3600000;
     var last=lastHitEver();
     var openTs=(last&&reqMs>0)?last.getTime()+reqMs:0;
+    /* The taper clock ticks every second too — the stretch since the last hit
+       IS the taper, and a number moving in twenty-second jumps reads as
+       stalled. Only the clock runs at 1Hz: the sticky bar's window and
+       yesterday's live rail re-read day metrics, so they keep the twenty-
+       second cadence. Writes are guarded on change. */
+    var beat=0, lastDH='';
     function tick(){
-      renderGlassWin();
-      safe(ydLiveTick);
+      if(beat%20===0){renderGlassWin();safe(ydLiveTick);}
+      beat++;
       safe(thDialTick);
       wrap.classList.remove('open','done','fresh');
       $('ghRule').textContent=phase.single?'Evening session only':'Gap rule '+fmtGapH(gapH);
@@ -8252,7 +9607,8 @@ try{
         wrap.classList.add('fresh');
         $('ghLbl').textContent='Nothing logged yet';
         $('stLast').hidden=true;
-        $('ghSince').textContent='Ready';
+        $('ghSince').textContent='Ready';lastDH='';
+        $('ghSub').hidden=true;
         $('ghNote').innerHTML='The clock starts<br>at the first hit';
         $('ghRule').textContent=phase.single?'One evening session only':'Max '+phase.sessionMax+' a sitting · '+fmtGapH(gapH)+' gaps';
         return;
@@ -8260,7 +9616,11 @@ try{
       $('ghLbl').textContent='Since';
       $('stLast').hidden=false;
       var since=Date.now()-last.getTime();
-      $('ghSince').innerHTML=thDurHTML(since);
+      var dh=thDurHTML(since);
+      if(dh!==lastDH){lastDH=dh;$('ghSince').innerHTML=dh;}
+      // seconds ride on their own line under the big units
+      var gs=$('ghSub'), sec=pad(Math.floor(since/1000)%60)+'s';
+      if(gs){if(gs.textContent!==sec)gs.textContent=sec;if(gs.hidden)gs.hidden=false;}
       if(count>=cap){
         wrap.classList.add('open','done');
         $('ghNote').innerHTML=count>cap?'<b>Over the cap</b><br>the day is done':'<b>At the cap</b><br>done for today';
@@ -8290,12 +9650,15 @@ try{
       }else{
         wrap.classList.add('open');
         $('ghNote').innerHTML=gapOpenMsg(Math.floor(-diff/60000));
+        // the note already says the window is open; the rule line would be a
+        // fifth line in the centre, and it runs into the ring's arc labels
+        $('ghRule').textContent='';
         // fire the "try to wait" alert once per window, when it first opens
         if(alertWindowOnce(openTs))windowAlert();
       }
     }
     tick();
-    gapTick=setInterval(tick,20000);
+    gapTick=setInterval(tick,1000);
     // precise foreground alert at the moment the window opens
     var untilOpen=openTs-Date.now();
     if(count<cap&&untilOpen>0&&untilOpen<24*3600000){
@@ -8482,7 +9845,7 @@ try{
     });
     var step=n<=8?1:n<=14?2:3,dots='';
     days.forEach(function(day,i){
-      var x0=padL+colW*i,cx=x0+colW/2,isZ=day.di===BASE_PHASES.length-1,isT=day.k===todayKey;
+      var x0=padL+colW*i,cx=x0+colW/2,isZ=isZeroRungAt(day.di),isT=day.k===todayKey;
       if(isT)svg+='<rect x="'+(x0+1).toFixed(1)+'" y="'+(padT-4)+'" width="'+Math.max(2,colW-2).toFixed(1)+'" height="'+(plotH+8)+'" rx="6" fill="var(--acc-bg)"/>';
       var col=isZ?'var(--over)':'var(--r-ember)';
       sessionsFor(day.k).forEach(function(run){
@@ -8509,7 +9872,6 @@ try{
     ((ye&&ye.hits)||[]).forEach(function(iso){if(new Date(iso).getTime()<=yCut)yCount++;});
     return {y:yCount,t:countOf(todayKey)||0};
   }
-  var BASELINE=30; // the ~30/day starting point the copy references
   /* dayTotals()/progressStats() lived here — absorbed into taperProgress() */
   /* Oura-style daily score: weighted contributors, all from logged data */
   function scoreToday(){
@@ -8541,8 +9903,22 @@ try{
     var pv=paceVsYesterday();
     var paceS=!pv?80:pv.t<pv.y?100:pv.t===pv.y?75:Math.max(40,75-10*(pv.t-pv.y));
     var total2=Math.round(capS*0.4+spaceS*0.25+sessS*0.2+paceS*0.15);
+    /* A day with nothing logged scores ~97 and used to be labelled "Locked
+       in" — a verdict on a day that has not happened. Every component reads
+       full marks from an empty record (nothing over cap, no session too big,
+       no gap too short), so the number is at its highest when it knows least,
+       and a 9am check-in got congratulated before the first window even
+       opened. The score still runs — it is a live compliance reading and that
+       is fine — but until the record has something in it the label says so
+       rather than passing judgement. */
+    var unread=!tM.sessions.length;
     return {total:total2,
-      label:total2>=85?'Locked in':total2>=70?'On track':total2>=55?'Holding':'Rough day — data, not doom',
+      /* em-dash split on purpose: the cockpit ring prints label.split(' — ')[0]
+         into a 140-wide SVG, where anything past ~10 characters runs off the
+         edge, so the short half leads and the explanation rides behind it —
+         the same shape 'Rough day — data, not doom' already uses. */
+      label:unread?'Nothing yet — nothing logged today'
+        :total2>=85?'Locked in':total2>=70?'On track':total2>=55?'Holding':'Rough day — data, not doom',
       parts:[
         {name:'Cap margin',score:capS},
         {name:'Session gaps',score:spaceS},
@@ -8725,7 +10101,7 @@ try{
     while(d<=today){
       var c=countOf(dkeyOf(d));
       if(c!==null)cum+=Math.max(0,BASELINE-c);
-      else if(phaseIndexFor(d)===BASE_PHASES.length-1)cum+=BASELINE; // clean zero day
+      else if(isZeroRungAt(phaseIndexFor(d)))cum+=BASELINE; // clean zero day
       pts.push(cum);
       d=addDays(d,1);
     }
@@ -9010,7 +10386,7 @@ try{
     while(d<=today){
       var c=countOf(dkeyOf(d));
       if(c!==null)cum+=Math.max(0,BASELINE-c);
-      else if(phaseIndexFor(d)===BASE_PHASES.length-1)cum+=BASELINE;
+      else if(isZeroRungAt(phaseIndexFor(d)))cum+=BASELINE;
       pts.push({d:new Date(d),v:cum});
       d=addDays(d,1);
     }
@@ -9052,7 +10428,7 @@ try{
         '<span class="cv-big-l">hits not smoked</span>'+(money!==null?'<span class="chip sm under">≈ $'+money.toLocaleString()+' kept</span>':'')+'</div>'+
       roChart(svg,'Slide along the line — it only ever rises.')+
       '<p class="chart-note">Every hit under the ~'+BASELINE+'/day baseline, stacking up since day one.'+
-      (money!==null?' At your cost per hit that’s <strong>≈ $'+money.toLocaleString()+'</strong> not spent.':'')+'</p>');
+      (money!==null?' At '+(data.spendPerWeek?'about $'+data.spendPerWeek+' a week':'your rate')+' that’s <strong>≈ $'+money.toLocaleString()+'</strong> not spent.':'')+'</p>');
   }
 
   function bigTrendHTML(){
@@ -9671,7 +11047,7 @@ try{
      Both rc()-cached, so they clear on every save and every render pass. */
   function dayMetrics(key){return rc('dm:'+key,function(){
     var d=dateOf(key), di=phaseIndexFor(d);
-    var isZ=di===BASE_PHASES.length-1;
+    var isZ=isZeroRungAt(di);
     var m={
       key:key, date:d, di:di, isZ:isZ,
       isToday:key===todayKey, future:d>today,
@@ -10131,6 +11507,53 @@ try{
     var m=Math.max(0,Math.floor(ms/60000)),h=Math.floor(m/60);
     return h?h+'h '+pad(m%60)+'m':m+'m';
   }
+  /* The clean clock, split so the ring can show all of it. The leading pair of
+     units is the number you read at a glance; the tail is what ticks.
+     Days lead as soon as there is one, and that is the point rather than a
+     formatting preference: "41h 09m" beside a counter reading DAY 2 is what
+     made the app look like it was rounding 1¾ days up to two. "1d 17h" cannot
+     be misread that way — it says exactly how far past one day you are. */
+  function splitClean(ms){
+    if(!(ms>0))ms=0;
+    var s=Math.floor(ms/1000), m=Math.floor(s/60), h=Math.floor(m/60), d=Math.floor(h/24);
+    if(h<1)  return {big:m+'m '+pad(s%60)+'s', small:'',                     plain:m+'m'};
+    if(d<1)  return {big:h+'h '+pad(m%60)+'m', small:pad(s%60)+'s',          plain:h+'h '+pad(m%60)+'m'};
+    return     {big:d+'d '+(h%24)+'h',        small:pad(m%60)+'m '+pad(s%60)+'s',
+                plain:d+'d '+(h%24)+'h '+pad(m%60)+'m'};
+  }
+  function fmtClean(ms){return splitClean(ms).plain;}
+  /* What the clock is buying, counted continuously from the same instant so it
+     moves with it instead of stepping once a midnight. Against the ~30/day
+     baseline the rest of the app measures everything against. */
+  function cleanGains(ms){
+    var notTaken=Math.floor(Math.max(0,ms)/86400000*BASELINE);
+    return {notTaken:notTaken,
+            money:(data.costPerHit&&notTaken>0)?Math.round(notTaken*data.costPerHit):null,
+            urges:(data.urges||[]).length};
+  }
+  /* "DAYS OFF · 2" beside a ring reading 41h was the app rounding 1¾ days up
+     and calling it two. The day number itself is right and has to stay — the
+     markers, the ladder and the twelve-week arc are all counted in calendar
+     days and mean calendar days — so what changes is that it stops standing
+     alone: the ordinal says which day you are in, and the exact elapsed sits
+     next to it saying how much of it is actually behind you. */
+  function zeroExact(){var aw=acuteWindow();return aw?splitClean(aw.ms).plain:null;}
+  function zeroCapLabel(){
+    var zs=zeroStats();
+    if((countOf(todayKey)||0)>0)return 'run restarts tomorrow · '+(zs?zs.clean:0)+' banked';
+    var x=zeroExact();
+    if(!x)return 'and climbing';
+    return x+' clean'+(zs&&zs.slips?' · '+zs.clean+' banked in total':'');
+  }
+  /* Both figures are counted from the last hit — this run — so they say so:
+     the ladder card below reports money saved since the start, and two bare
+     "saved" numbers on one screen would read as a contradiction. Urges keep
+     their own chip right under the dial, so the tile isn't repeated here. */
+  function gainsHTML(g){
+    var t='<div class="gh-gain"><b>'+g.notTaken.toLocaleString()+'</b><span>not taken this run</span></div>';
+    if(g.money!==null)t+='<div class="gh-gain"><b>$'+g.money.toLocaleString()+'</b><span>saved this run</span></div>';
+    return t;
+  }
   /* The stretch running right now, once it has outgrown every closed gap of
      the day — one place decides it, so no two surfaces can disagree about
      what today's longest is. .wins is false while a closed gap still leads. */
@@ -10325,8 +11748,8 @@ try{
         {v:tp.streak,l:'day streak held'}
       ]);
       html2+=(tp.money!==null)
-        ?'<p class="chart-note">≈ <strong style="color:var(--under-t)">$'+tp.money.toLocaleString()+'</strong> not spent vs the ~'+BASELINE+'/day baseline · <button class="linklike" id="costSet">edit cost</button></p>'
-        :'<p class="chart-note"><button class="linklike" id="costSet">Track money saved →</button></p>';
+        ?'<p class="chart-note">≈ <strong style="color:var(--under-t)">$'+tp.money.toLocaleString()+'</strong> not spent vs the ~'+BASELINE+'/day baseline'+(data.spendPerWeek?', at about $'+data.spendPerWeek+' a week':'')+' · <button class="linklike" id="costSet">edit weekly spend</button></p>'
+        :'<p class="chart-note"><button class="linklike" id="costSet">Track money saved — what did a normal week cost? →</button></p>';
       var av=avoidedChartSVG();
       if(av){
         html2+=xh('What you didn’t smoke','vs ~'+BASELINE+' a day')+zoomable('avoided',av)+
@@ -10588,7 +12011,7 @@ try{
 
   /* live one-line summary on the step-down fold header */
   function renderFoldSums(){
-    var el=$('stepFoldLive');if(!el)return;
+    var el=$('planSegLive');if(!el)return;
     var t=taperProgress(), start=schedule()[0].start;
     if(today<start)el.textContent='Starts '+fmtShort(start)+' · zero '+fmtShort(zeroDate());
     else if(isZeroEra)el.textContent='Day '+Math.max(0,daysFree())+' at zero · the descent, kept';
@@ -10663,13 +12086,16 @@ try{
 
   /* ---- after zero: the whole program, on the Plan tab ---- */
   function renderAfter(){
-    var fold=$('afterFold');if(!fold)return;
-    // opens at zero and runs the twelve weeks — nothing here is pre-zero anymore
-    if(!isZeroEra){fold.hidden=true;return;}
-    fold.hidden=false;
+    /* the After-zero pane and its segment appear together: a segment that
+       leads to an empty pane is a worse lie than no segment at all */
+    var seg=planSegBtn('after');if(!seg)return;
+    if(!isZeroEra){
+      seg.hidden=true;
+      if(planPane==='after')setPlanPane('today');
+      return;
+    }
+    seg.hidden=false;
     var n=zeroCalDay(), zp=zeroPhaseFor(n), cw=Math.ceil(n/7), np=(data.plans||[]).length;
-    $('afterFoldLive').textContent=(zp?zp.t+' · week '+cw+' of 12':'Graduated · day '+n)+
-      ' · '+np+' plan'+(np===1?'':'s');
     // header: which of the twelve weeks this is, and what it is for
     var head='';
     if(zp){
@@ -10729,11 +12155,18 @@ try{
         '<span class="lb-f">tomorrow pays '+money(L.next)+'</span></div></div>';
     rows+=r('Earned since zero <span class="lb-s">settled days</span>',money(L.earned));
     rows+=r('Claimed',money(L.claimed));
-    if(L.unaccounted)rows+=r('Days not accounted for <span class="lb-s">app not opened — unpaid</span>',String(L.unaccounted),'warn');
+    rows+=r('<b>Banked, unclaimed</b>',money(L.owed));
+    /* An unopened day does not just go unpaid — it BREAKS the run, which is
+       why this card can read "1 day running" beside a header saying 95 days
+       off. The rule is defensible (the voucher trials counted a missed screen
+       as a positive), but a number that contradicts the one above it without
+       explanation is a number people stop trusting, so it is stated here. */
+    if(L.unaccounted)rows+=r('Days not accounted for <span class="lb-s">app not opened — unpaid, and each one restarts the run</span>',String(L.unaccounted),'warn');
     if(L.resets)rows+=r('Resets so far',String(L.resets));
     box.innerHTML=tiles+'<div class="lb-rows">'+rows+'</div>'+
       '<div class="sc-hand">'+(L.owed>0?'<button class="btn sm acc pri" data-cm="claim">'+icon('coin')+'Claim '+money(L.owed)+'</button>':'')+
       '<button class="btn sm ghost" data-cm="who">'+(data.cm.who?'Verifier: '+esc(data.cm.who):'Name a verifier')+'</button></div>'+
+      (L.unaccounted?'<p class="sc-note"><b>Why the run here can trail the days-off counter.</b> This ladder pays only days it witnessed — a day the app never opened is not evidence of anything, so it goes unpaid <em>and</em> restarts the level, the same way a missed urine screen counted as a positive in the trials this is modelled on. The days-off counter above is a different measure and keeps every one of them. Opening the app is what witnesses a day; a nightly check-in does it too.</p>':'')+
       '<p class="sc-note">Escalating reinforcement with a reset on lapse is the schedule the contingency-management trials used, and it is the best-evidenced treatment for cannabis use disorder. One difference matters and is worth saying plainly: those trials verified abstinence with urine screens. A ladder you pay yourself on your own word is the weak form. Naming someone who holds the money and asks makes it closer to the thing that was actually tested.</p>';
   }
 
@@ -10747,7 +12180,7 @@ try{
      renderToday,renderYday,renderTrend,renderDayHead,renderJourney,renderHistory,renderHoldBanner,renderDayHeld,
      renderRitual,renderCheckin,renderLadder,renderAfter,
      renderBackupNudge,renderStory,renderUrge,renderGap,renderGlass,renderDash,renderFoldSums,
-     renderUndoRestore].forEach(safe);
+     renderUndoRestore,renderPlanSeg,renderFooterLine].forEach(safe);
     RENDER_HOOKS.forEach(safe);
     if(!$('detailOverlay').hidden)safe(renderXtras);
     // a day edited through a chart's tap-to-open must repaint the chart under it
@@ -10928,6 +12361,95 @@ try{
     /* undo restores the zero era; the anchor restamps itself on the next
        zero-era paint, to the same date the schedule still derives */
     else if(act==='unland'){delete data.replan.landing;relader();}
+    /* the finish: zero lands on the day after the last logged hit, and the
+       capped rungs from there close unwalked. Two pieces of housekeeping the
+       back-date makes necessary.
+       The frozen zero comes off so markSeenToday can restamp the boundary to
+       the earlier date — the same reason the landing clears it.
+       And the days between the new zero and today get witnessed. markSeenToday
+       only runs in the zero era, so days back-dated INTO it were never marked
+       — cmObserved would read every one of them as unaccounted and break the
+       run, on days the person has just testified to by name and date. The
+       tap is the witness, which is the same standing a nightly check-in has.
+       Only completed days: today gets its own mark from markSeenToday, on the
+       ordinary terms, once the evening has actually happened. */
+    else if(act==='finish'){
+      var fk=b.dataset.k;
+      var fd=dateOf(fk);
+      while(dkeyOf(fd)<todayKey){data.cm.seen[dkeyOf(fd)]=1;fd=addDays(fd,1);}
+      data.replan.finish={at:fk,on:todayKey};
+      delete data.zeroAt;
+      delete data.replan.lockFrom;   // it froze dates this move has just moved
+      relader();
+    }
+    /* undo puts the remaining rungs back. The witness marks stay: they record
+       that the app knew about those days, which stayed true, and cmObserved
+       only ever reads days at or after the zero anchor. */
+    else if(act==='unfinish'){delete data.replan.finish;delete data.zeroAt;relader();}
+    /* the restart: close the first quit's zero era today and re-enter the
+       ladder. The frozen zero comes off so markSeenToday can stamp the NEW
+       boundary when the second descent reaches it — left in place it would
+       still be pointing at the first quit, and every counter after the new
+       zero would measure from a date months behind it. The lock comes off for
+       the same reason it does at a rebuild: it froze dates this move replaces. */
+    else if(act==='restart'){
+      data.replan.restart={at:todayKey,on:todayKey,cap:+b.dataset.cap};
+      delete data.zeroAt;
+      delete data.replan.lockFrom;
+      relader();
+    }
+    else if(act==='unrestart'){delete data.replan.restart;delete data.zeroAt;relader();}
+    /* the eighth move: anchor today inside the running restart, re-enter at
+       the offered cap, and hold every rung below it for the chosen number of
+       days. Nested under the restart it rebuilds, so a later restart carries
+       its own rebuild away with it rather than inheriting this one. The lock
+       comes off for the same reason it does at every other rebuild — it froze
+       dates this move has just replaced, and the card can re-lock. */
+    /* selecting a pace changes nothing on the record — it moves a highlight and
+       rewrites the commit button's date. Repaint and leave without saving: a
+       pick that wrote to storage would mark the backup stale for a decision
+       that has not been made yet. */
+    else if(act==='r2pick'){
+      r2Sel=+b.dataset.hold||3;
+      renderAll();
+      return;
+    }
+    // ceiling and door state are the same kind of transient as the pace: they
+    // move a highlight and rewrite the button, and write nothing to the record
+    else if(act==='r2cap'){r2SelCap=+b.dataset.cap||null;renderAll();return;}
+    else if(act==='r2open'){r2Open=true;r2SelCap=null;renderAll();return;}
+    else if(act==='r2close'){r2Open=false;r2SelCap=null;renderAll();return;}
+    else if(act==='r2'){
+      if(data.replan.restart){
+        var rsO=data.replan.restart;
+        if(!rsO.rebuilds)rsO.rebuilds=rsO.rebuild?[rsO.rebuild]:[];
+        delete rsO.rebuild;                       // the list is the record now
+        rsO.rebuilds.push({at:todayKey,cap:+b.dataset.cap,hold:+b.dataset.hold||2});
+        delete data.replan.lockFrom;
+        r2Open=false;r2SelCap=null;
+        relader();
+      }
+    }
+    /* undo pops the newest re-entry only. The ones before it have logged days
+       filed against them and unwinding those would re-file days under ceilings
+       they were never held to — the same reason every other undo here is
+       same-day. */
+    else if(act==='unr2'){
+      var rsU=data.replan.restart;
+      if(rsU){
+        if(!rsU.rebuilds)rsU.rebuilds=rsU.rebuild?[rsU.rebuild]:[];
+        delete rsU.rebuild;
+        rsU.rebuilds.pop();
+        if(!rsU.rebuilds.length)delete rsU.rebuilds;
+      }
+      relader();
+    }
+    /* a standing preference, not a dated move: no anchor, no undo row, and it
+       re-derives every surface that reads a gap on the next paint */
+    else if(act==='gapmax'){
+      var gh=+b.dataset.h||0;
+      if(gh)data.gapMaxH=gh;else delete data.gapMaxH;
+    }
     else if(act==='hold')setHoldsAt(i,holdsAt(i)+1);
     else if(act==='unhold'){
       var m=holdsAt(i);
@@ -10938,6 +12460,9 @@ try{
   $('schedCtl').addEventListener('click',handleSchedAct);
   $('todayPlan').addEventListener('click',handleSchedAct);
   $('landCard').addEventListener('click',handleSchedAct);
+  $('finishCard').addEventListener('click',handleSchedAct);
+  $('restartCard').addEventListener('click',handleSchedAct);
+  $('rebuildCard').addEventListener('click',handleSchedAct);
   $('btnEarlier').addEventListener('click',function(){
     var r=$('earlierRow');
     r.hidden=!r.hidden;
@@ -11044,12 +12569,18 @@ try{
   /* money saved: opt-in, needs one rough number */
   document.addEventListener('click',function(ev){
     if(!ev.target.closest('#costSet'))return;
-    var cur=data.costPerHit||'';
-    var v=prompt('About how much does one hit cost, in dollars? Rough is fine — e.g. 0.50. Leave blank to stop tracking.',cur);
+    /* Ask in the unit people actually know. Nobody can price a single hit —
+       the honest answer to that question is a shrug and a guess — but everyone
+       knows roughly what a week costs them. Divide here instead, against
+       BASELINE, which is the same number every money surface multiplies back
+       by: a fully clean day is then worth exactly one seventh of the weekly
+       figure, so the arithmetic closes instead of drifting. */
+    var cur=data.spendPerWeek||(data.costPerHit?Math.round(data.costPerHit*BASELINE*7):'');
+    var v=prompt('About how much did a normal week cost you, in dollars? Rough is fine — e.g. 120. Leave blank to stop tracking.',cur);
     if(v===null)return;
     var n=parseFloat(v);
-    if(String(v).trim()===''){delete data.costPerHit;}
-    else if(n>0){data.costPerHit=n;}
+    if(String(v).trim()===''){delete data.costPerHit;delete data.spendPerWeek;}
+    else if(n>0){data.spendPerWeek=n;data.costPerHit=n/7/BASELINE;}
     else return;
     save();renderAll();
     if(!$('detailOverlay').hidden)renderXtras();
@@ -11244,6 +12775,71 @@ try{
     setDataMsg('Snapshot from '+snap.t+' restored. (The data it replaced was stashed.)','ok');
   });
 
+  /* ================= the Plan tab's panes =================
+     Four jobs, four panes, one control that names them. The pane is remembered
+     between visits, except when a decision is live — see setView. */
+  var PANE_KEY='ttz-plan-pane';
+  var PANES=['today','ladder','adjust','after'];
+  var planPane='today';
+  var planDecision=false;   // set by renderSchedCtl: is a move actually on offer
+  function planSegBtn(n){return document.querySelector('.pseg-b[data-pane="'+n+'"]');}
+  function setPlanPane(n){
+    if(PANES.indexOf(n)<0)n='today';
+    var b=planSegBtn(n);
+    if(!b||b.hidden)n='today';           // never land on a segment that isn't there
+    planPane=n;
+    document.querySelectorAll('.ppane').forEach(function(p){
+      p.hidden=p.dataset.pane!==n;
+    });
+    document.querySelectorAll('.pseg-b').forEach(function(t){
+      t.setAttribute('aria-selected',t.dataset.pane===n?'true':'false');
+    });
+    try{localStorage.setItem(PANE_KEY,n);}catch(e){}
+    // the chosen segment scrolls itself into view when the control overflows
+    var cur=planSegBtn(n);
+    if(cur&&cur.scrollIntoView)try{cur.scrollIntoView({block:'nearest',inline:'nearest'});}catch(e){}
+    /* Both horizontal strips live on the ladder pane, and a hidden pane has no
+       width — every offset measures zero and they park at the far left, which
+       for a two-descent ladder means opening on a taper that finished weeks
+       ago. Re-centre the moment the pane is actually laid out. */
+    if(n==='ladder'&&typeof centreStrips==='function')requestAnimationFrame(centreStrips);
+  }
+  (function(){
+    var saved=null;
+    try{saved=localStorage.getItem(PANE_KEY);}catch(e){}
+    planPane=PANES.indexOf(saved)>=0?saved:'today';
+    setPlanPane(planPane);
+  })();
+  document.getElementById('planSeg').addEventListener('click',function(ev){
+    var b=ev.target.closest('.pseg-b');
+    if(!b)return;
+    setPlanPane(b.dataset.pane);
+    if(navigator.vibrate)navigator.vibrate(3);
+  });
+  /* The dot, and the empty state. Between them they answer the two questions a
+     person has about this pane without opening it: is there anything here, and
+     if not, why not. */
+  /* The motto asserts the two things the ladder guarantees. A gap ceiling
+     makes the second half untrue — the gaps widen up to a line the person
+     drew — and a footer insisting otherwise is the app arguing with a setting
+     it offers. The first half never stops being true. */
+  function renderFooterLine(){
+    var el=$('footerLine');if(!el)return;
+    var m=gapMax();
+    el.textContent=m?'The cap only goes down. The gaps widen to '+fmtGapH(m)+' and hold.'
+                     :'The cap only goes down. The gaps only widen.';
+  }
+  function renderPlanSeg(){
+    var dot=$('planSegDot');
+    if(dot)dot.hidden=!planDecision;
+    var empty=$('planAdjustEmpty'), ctl=$('schedCtl');
+    if(empty){
+      var bare=!ctl||ctl.hidden;
+      empty.hidden=!bare;
+      if(bare)empty.textContent='Nothing to change yet — the descent hasn\'t started. The schedule, its record, and every way to adjust it live here once it has.';
+    }
+  }
+
   /* ---- glass bar ---- */
   function renderGlass(){
     var gt=$('gbToday'),gz=$('gbZero');
@@ -11305,7 +12901,9 @@ try{
         if($('viewTitle'))$('viewTitle').textContent=TITLES[v]||'';
         moveInd(!first);
         // a tab tap is intent to look — unfold the section it leads to
-        if(v==='plan'&&$('stepFold'))$('stepFold').open=true;
+        // a tab tap is intent to look: on Plan, land on the pane that has a
+        // decision waiting rather than wherever you were last
+        if(v==='plan')setPlanPane(planDecision?'adjust':planPane);
         if(v==='more'&&$('sysFold'))$('sysFold').open=true;
         if(!first)window.scrollTo({top:0,behavior:'instant'});
       }
@@ -11334,6 +12932,8 @@ try{
         staggerView(v);
         if(navigator.vibrate)navigator.vibrate(4);
       }
+      // now that the view has a width, put the strips on today
+      if(v==='plan')setTimeout(function(){try{centreStrips();}catch(e){}},0);
     }
     document.querySelectorAll('.tab').forEach(function(t){
       t.addEventListener('click',function(){setView(t.dataset.view);});
