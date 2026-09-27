@@ -820,11 +820,11 @@
   .tc-b-kick{font-size:12.5px!important;font-weight:650;color:var(--adjust-t)!important;margin-bottom:2px}
   .tc-banner h4{font-family:var(--f-round);font-size:17px;font-weight:700;letter-spacing:-.015em;color:var(--ink);margin:4px 0 3px;line-height:1.2}
   .tc-moved{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-  .tc-banner .btn-row{flex-wrap:wrap;margin-top:12px}
-  .tc-banner .btn-row>.btn{flex:1 1 auto;height:44px;border-radius:22px}
+  .tc-banner .btn-row{flex-wrap:wrap;justify-content:flex-start;margin-top:12px}
+  .tc-banner .btn-row>.btn{flex:0 0 auto;height:44px;border-radius:22px;padding:0 18px;gap:6px}
   .tc-banner .btn-row>.btn[hidden]{display:none}
   .tc-banner .btn .ic{width:16px;height:16px}
-  .tc-banner .btn.tc-solid{flex:0 0 auto;min-width:96px;background:var(--adjust);color:var(--ink-inv)}
+  .tc-banner .btn.tc-solid{min-width:84px;background:var(--adjust);color:var(--ink-inv)}
   #heldBanner.celebrate #heldOk{background:var(--acc-bg);color:var(--acc-t);box-shadow:none}
   /* the medallion: a crafted mark, not an icon in a dot — two rings and a glyph */
   .tc-medal{position:relative;flex:none;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;
@@ -862,7 +862,14 @@
   .lo-st.z{color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ghost);background:transparent}
   .lo-ar{color:var(--adjust-t);display:inline-grid;place-items:center}
   .lo-each{margin-left:auto;font-size:12.5px;font-weight:600;color:var(--adjust-t)}
-  .lo-p{font-size:13.5px;line-height:1.5;margin:12px 0 0}
+  .lo-p{font-size:13.5px;line-height:1.5;margin:0;padding:0 2px 4px}
+  .lo-why{margin:10px 0 0}
+  .lo-why>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;cursor:pointer;
+    font-size:13.5px;font-weight:650;color:var(--adjust-t)}
+  .lo-why>summary::-webkit-details-marker{display:none}
+  .lo-why-ch{transform:rotate(90deg);transition:transform var(--d-fast) var(--e-move)}
+  .lo-why[open] .lo-why-ch{transform:rotate(-90deg)}
+  .lo-why>summary:focus-visible{outline:2px solid var(--adjust);outline-offset:2px;border-radius:8px}
   .btn.lo-go{width:100%;height:50px;border-radius:25px;margin-top:14px;font-weight:650;background:var(--adjust);color:var(--ink-inv);box-shadow:0 10px 22px -14px color-mix(in srgb,var(--adjust) 70%,transparent)}
   .lo-fine{list-style:none;margin:12px 0 0;padding:10px 0 0;border-top:1px solid var(--line);display:grid;gap:6px}
   .lo-fine li{position:relative;padding-left:14px;font-size:12.5px;line-height:1.45;color:var(--ink-2)}
@@ -1001,6 +1008,7 @@
   .yz2{margin-top:10px}
   .yz-t{min-width:0;background:var(--s2);border-radius:var(--r-md);padding:13px 14px 13px;display:flex;flex-direction:column;align-items:flex-start}
   .yz-t.now{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--acc) 55%,transparent);background:linear-gradient(160deg,var(--acc-bg),transparent 70%),var(--s2)}
+  .yz-t.now.sl{box-shadow:inset 0 0 0 1.5px var(--line-2);background:var(--s2)}
   .yz-d{font-size:12.5px;font-weight:650;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
   .yz-ck{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;margin:9px 0 8px}
   .yz-ck .ic{width:19px;height:19px;stroke-width:2.4}
@@ -1022,6 +1030,8 @@
   .yg-c{aspect-ratio:1;border-radius:5px;display:grid;place-items:center;font-style:normal;
     font-family:var(--f-round);font-size:10.5px;font-weight:750;line-height:1;color:var(--ink-inv);font-variant-numeric:tabular-nums}
   .yg-c.c{background:var(--clean)}
+  html.dark .yg-c.c,html.dark .yg-leg i.c{background:color-mix(in srgb,var(--clean) 72%,var(--s1))}
+  html.dark .cm-bars i.bk{opacity:.72}
   .yg-c.s{background:var(--slip)}
   .yg-c.f{background:var(--s3)}
   .yg-c.t{box-shadow:0 0 0 2px var(--s1),0 0 0 3.5px var(--ink)}
@@ -1978,7 +1988,7 @@ try{
     <p id="holdText"></p>
     <div class="btn-row">
       <button class="btn sm iris tc-solid" id="btnHold">Got it</button>
-      <button class="btn sm ghost" id="btnKeep"><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg>Undo · keep the dates</button>
+      <button class="btn sm ghost" id="btnKeep"><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg>Undo · keep dates</button>
     </div>
   </div>
 </div>
@@ -4360,12 +4370,13 @@ try{
         '<div class="lo-f"><span class="lo-k">Zero lands '+WEEKDAYS[nz.getDay()]+'</span><span class="lo-v">'+fmtShort(nz)+'</span></div>'+
       '</div>'+
       '<div class="lo-chain" aria-label="'+esc(capChain(sug.capText,tail))+', two days each">'+steps+'<span class="lo-each">2 days each</span></div>'+
-      '<p class="lo-p">Read it plainly: the descent held — '+
+      '<details class="lo-why"><summary><span>Read it plainly · why split the last stair</span>'+icon('chev','ic-sm lo-why-ch')+'</summary>'+
+      '<p class="lo-p">The descent held — '+
         (sug.last.length?'the last three full days landed <b>'+sug.last.join(', ')+'</b>':'the sitting was holding')+
         ' — and what broke was the final step, the only one in the plan that asks for everything at once. '+
         'So the fifth move, kept for exactly this boundary: <b>rebuild the landing</b>. Split the last stair instead of jumping it — '+
         're-enter tonight at <b>'+sug.capText+'</b>, then <b>'+capChain(sug.capText,tail)+'</b>, two days each. '+
-        'Today re-reads as '+sug.todayC+' under a ceiling that exists instead of over one that doesn\'t, and no day on the way down asks for anything the log hasn\'t already watched you do.</p>'+
+        'Today re-reads as '+sug.todayC+' under a ceiling that exists instead of over one that doesn\'t, and no day on the way down asks for anything the log hasn\'t already watched you do.</p></details>'+
       '<button class="btn iris lo-go" data-sc="land" data-cap="'+sug.cap+'">Rebuild the landing · zero '+fmtShort(nz)+'</button>'+
       '<ul class="lo-fine">'+
         '<li>A softer landing eases the withdrawal — it does not raise the odds, which get made after zero either way.</li>'+
@@ -5092,7 +5103,7 @@ try{
     return t.length?(t.length>4?t.slice(0,4).join(', ')+' …':t.join(', ')):'';
   }
   function ydZTile(mm,isT){
-    var h='<div class="yz-t'+(isT?' now':'')+'"><span class="yz-d">'+ydWk(mm.date)+' · '+fmtShort(mm.date)+(isT?' · today':'')+'</span>';
+    var h='<div class="yz-t'+(isT?' now':'')+(isT&&mm.eff>0?' sl':'')+'"><span class="yz-d">'+ydWk(mm.date)+' · '+fmtShort(mm.date)+(isT?' · today':'')+'</span>';
     if(mm.isZ&&!(mm.eff>0)){
       var into=Math.max(0,Date.now()-new Date(today.getFullYear(),today.getMonth(),today.getDate(),DAY_CUTOFF_H).getTime());
       h+='<span class="yz-ck c">'+icon('check')+'</span><span class="yz-v">'+(isT?'Clean so far':'Clean')+'</span>'+
@@ -5167,7 +5178,7 @@ try{
     card.classList.toggle('zero',isZeroEra);
     // the openers: the aria-labels read the same text the buttons show
     $('ydWhen').textContent='Yesterday';
-    $('ydCount').textContent=m.isZ?(m.eff>0?m.eff+' · slip':'clean'):((m.eff||0)+' of '+m.cap);
+    $('ydCount').textContent=m.isZ?(m.eff>0?m.eff+' · slip':'clean'):((m.eff||0)+' of '+(m.capText||m.cap));
     $('ydOpen').setAttribute('aria-label','Yesterday, '+fmtShort(yd)+', '+$('ydCount').textContent+' — open in full');
     $('tdWhen').textContent='Today';
     $('tdCount').textContent=tm.isZ?(tm.eff>0?tm.eff+' · slip':'clean so far'):((tm.eff||0)+' so far');
@@ -8020,7 +8031,10 @@ try{
     card.hidden=false;
     var chip=$('cmChip');
     chip.hidden=!L.displayRun;
-    chip.textContent=L.displayRun+' day'+(L.displayRun===1?'':'s')+' running';
+    // a slip today ends the run: the chip says so in ink, not in the accent
+    chip.className='chip sm '+(L.todayClean?'acc':'ghost');
+    chip.textContent=L.todayClean?L.displayRun+' day'+(L.displayRun===1?'':'s')+' running'
+      :L.displayRun+'-day run · ended today';
     // today is in progress, so its value is pending, not earned — it banks
     // tomorrow if the day holds. Naming it "earned today" is what let a
     // morning claim precede an evening slip.
