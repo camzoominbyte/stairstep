@@ -1588,117 +1588,224 @@
 
 
   /* ==== [C] CHARTS ==== */
-  /* legacy rules moved here unchanged by foundation (fonts token-swapped: Karla -> var(--f-ui), Fraunces -> var(--f-round)); owner rewrites this section */
-  /* the road ahead — running schedule */
-  .road{margin-top:6px}
-  .road-item{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--hair);font-size:13.5px;color:var(--ink);line-height:1.5}
-  .road-item:first-child{border-top:none}
-  .road-date{flex:0 0 76px;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding-top:3px}
-  .road-txt{flex:1}
-  .road-txt strong{color:var(--sand)}
-  .road-item.cur .road-date{color:var(--accent)}
-  .road-item.cur .road-txt strong{color:var(--accent)}
-  .hstat{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
-  .hstat.under{color:var(--sage)}
-  .hstat.at{color:var(--amber)}
-  .hstat.over{color:var(--clay)}
-  .hstat.slip{color:var(--clay)}
-  .hstat.nolog{color:var(--faint)}
-  .hstat.clean{color:var(--sage)}
-  /* ---- verdict-colored deltas: color is the judgment, the arrow is the math ---- */
-  .dv{font-size:12px;font-weight:700;letter-spacing:.02em;font-variant-numeric:tabular-nums}
-  .dv.good{color:var(--sage)}
-  .dv.bad{color:var(--clay)}
-  .dv.flat{color:var(--muted);font-weight:600}
-  .dv.pill{display:inline-block;padding:2px 10px;border-radius:99px}
-  .dv.pill.good{background:rgba(100,125,75,.13)}
-  .dv.pill.bad{background:rgba(184,83,53,.13)}
-  .dv.pill.flat{background:var(--surface2)}
-  .xtra-h{
-    font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
-    font-weight:700;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--line);
-  }
-  /* paired comparison bars — the day before rides faint on top,
-     this day below wearing the verdict color */
-  .pair{padding:8px 0 9px;border-top:1px solid var(--hair)}
-  .pair:first-of-type{border-top:none}
-  .pair-hd{display:flex;align-items:baseline;gap:8px}
-  .pair-hd .pk{flex:1;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
-  .pair-bars{margin-top:6px;display:grid;grid-template-columns:1fr 76px;gap:4px 9px;align-items:center}
-  .pbar{height:7px;border-radius:99px;background:var(--surface2);position:relative}
-  .pbar i{position:absolute;top:0;bottom:0;left:0;border-radius:99px;background:var(--faint);min-width:3px}
-  .pbar.cur{height:10px}
-  .pbar.cur i{background:var(--sand);opacity:.75}
-  .pbar.cur.good i{background:var(--sage);opacity:1}
-  .pbar.cur.bad i{background:var(--clay);opacity:1}
-  .pval{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
-  .pval.cur{font-size:12px;font-weight:700;color:var(--sand)}
-  .pair-key{display:flex;gap:14px;font-size:10.5px;color:var(--muted);font-weight:700;margin:0 0 5px}
-  .pair-key i{display:inline-block;width:15px;height:6px;border-radius:99px;margin-right:5px;vertical-align:1px}
-  .pair-key .pk-a{background:var(--faint)}
-  .pair-key .pk-b{background:var(--sand);opacity:.75}
-  /* scrub-to-read charts: a live readout rides above the plot */
-  .ro-strip{
-    min-height:21px;font-size:12.5px;color:var(--muted);margin:2px 0 6px;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;
-  }
-  .ro-strip strong{color:var(--sand)}
-  /* direct child only — an svg inside .cz-scroll must keep native pan-x */
-  .rochart>svg{touch-action:pan-y}
-  .rohit{cursor:pointer}
-  .rohit.on{fill:var(--accent);fill-opacity:.09}
-  /* compact session rows — dots instead of sentences */
-  .sessrow{display:flex;align-items:center;gap:9px;padding:7px 11px;border:1px solid var(--hair);border-radius:11px;background:var(--surface);margin:6px 0 0}
-  .sessrow .sr-t{font-size:12.5px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;flex:0 0 auto}
-  .sessrow .sr-dots{flex:1;display:flex;flex-wrap:wrap;gap:3px;justify-content:flex-end}
-  .sessrow .sr-dots i{width:7px;height:7px;border-radius:50%;background:var(--amber);opacity:.85}
-  .sessrow .sr-c{font-family:var(--f-round);font-weight:600;font-size:14px;color:var(--sand);flex:0 0 auto}
-  /* day-status chip calendar */
-  .chipcal{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 6px}
-  /* scoped under .chipcal: bare .chip is now the F chip primitive */
-  .chipcal .chip{
-    width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;
-    font-size:12.5px;font-weight:700;border:1px solid transparent;padding:0;
-  }
-  .chip-under{background:#eef2e2;color:var(--sage)}
-  .chip-at{background:#f9edd8;color:var(--amber)}
-  .chip-over{background:#f7e3da;color:var(--clay)}
-  .chip-clean{background:var(--sage);color:#fffdf8}
-  .chip-slip{background:var(--clay);color:#fffdf8}
-  .chip-nolog{background:none;border:1px dashed var(--line);color:var(--faint)}
-  .chip-today{outline:2px solid var(--accent);outline-offset:1px}
-  html.dark .dv.pill.good{background:rgba(163,184,153,.16)}
-  html.dark .dv.pill.bad{background:rgba(217,119,87,.18)}
-  /* taper score contributors */
-  .contrib{margin:12px 0 2px}
-  .contrib-row{display:flex;align-items:center;gap:10px;padding:4px 0}
-  .contrib-row .cn{flex:0 0 100px;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
-  .contrib-row .cb{flex:1;height:6px;border-radius:99px;background:var(--surface2);overflow:hidden}
-  .contrib-row .cb i{display:block;height:100%;border-radius:99px;transition:width .5s var(--spring)}
-  .contrib-row .cv{flex:0 0 30px;text-align:right;font-size:12.5px;font-weight:700;color:var(--sand)}
-  /* taper progress track */
-  .taper-track{height:10px;border-radius:99px;background:var(--surface2);overflow:hidden;margin:8px 0 6px}
-  .taper-track>div{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--sage),var(--accent));transition:width .6s var(--spring)}
-  .chart-note{font-size:12.5px;color:var(--muted);margin:4px 0 0}
-  .chart-note strong{color:var(--sand)}
-  .legend-dot{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:baseline;margin-right:3px}
-  /* ---- tap-to-expand charts ---- */
-  .zoomable{position:relative;cursor:zoom-in;border-radius:10px;-webkit-tap-highlight-color:transparent}
-  .zoomable .zoom-ico{
-    position:absolute;top:-2px;right:0;
-    font-size:12px;color:var(--faint);pointer-events:none;
-  }
-  .zoomable:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  html.dark .zoomable .zoom-ico{background:#2e2920}
+  /* The Afterglow chart language: rounded tabular chart text, status colour
+     only beside a word, the accent for time / today / the peak, the ramp for
+     cap lines, one or two faint guides and an annotated point. */
 
-  .cz-body svg{animation:fadeUp .5s var(--spring) both}
-  .cz-body .draw{stroke-dasharray:1;stroke-dashoffset:1;animation:drawIn 1.1s cubic-bezier(.4,0,.2,1) .18s forwards}
-  .cz-body .grow{transform-box:fill-box;transform-origin:center bottom;animation:growUp .5s var(--spring) both}
-  .cz-body circle{animation:fadeUp .45s var(--spring) .3s both}
-  html.dark .chip-under{background:#2c331f}
-  html.dark .chip-at{background:#3d321e}
-  html.dark .chip-over{background:#40281e}
-  html.dark .chip-clean,html.dark .chip-slip{color:#1d1a14}
+  /* ---- section headers inside a detail page ---- */
+  .xtra-h,.xtra .xtra-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+    margin:26px 0 10px;padding:0;border:0;text-transform:none;letter-spacing:0;font-size:17px;color:var(--ink)}
+  /* a chart that expands keeps the header row's right end for its button */
+  .xtra-h:has(+.zoomable),.xtra-h:has(+.cv-ck>.zoomable){padding-right:38px}
+  .xtra>.xtra-h:first-child,.xtra-h:first-child{margin-top:4px}
+  .xtra-h>span:first-child{font-family:var(--f-round);font-size:17px;font-weight:700;letter-spacing:-.012em;color:var(--ink);line-height:1.2}
+  .xtra-h .xh-sub{font-family:var(--f-round);font-size:12.5px;font-weight:600;color:var(--ink-2);
+    font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .chart-note{font-size:13px;line-height:1.42;color:var(--ink-2);margin:8px 0 0}
+  .chart-note strong{color:var(--ink);font-weight:650}
+  .chart-note.cv-empty{background:var(--s2);border-radius:var(--r-sm);padding:12px 14px;margin-top:10px}
+  .legend-dot{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:1px;margin-right:4px}
+
+  /* ---- figures: afterglow tiles (label, number, one foot line) ---- */
+  .figs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 4px}
+  .figs.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .figs.odd>.fig:last-child{grid-column:1/-1}
+  .fig{background:var(--s2);border-radius:var(--r-md);padding:12px 13px 11px;min-width:0;
+    display:flex;flex-direction:column;gap:5px}
+  .fig .fl{font-size:12.5px;font-weight:600;color:var(--ink-2);line-height:1.25}
+  .fig .fv{font-family:var(--f-round);font-size:26px;font-weight:700;letter-spacing:-.025em;line-height:1.05;
+    color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fig .fv.mid{font-size:20px;letter-spacing:-.015em}
+  .fig .fv small{font-size:.58em;font-weight:650;letter-spacing:0;color:var(--ink-2);margin-left:1px}
+  .fig .fs{font-size:12.5px;color:var(--ink-2);line-height:1.3}
+  .figs.three .fig .fv{font-size:24px}
+
+  /* ---- legends: every coloured mark gets a word ---- */
+  .cv-legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:10px 0 2px;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+  .cv-legend .lg{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .cv-legend .lg b{font-family:var(--f-round);font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+  .cv-legend i{display:inline-block;flex:none}
+  .cv-legend .lg-dot{width:8px;height:8px;border-radius:50%}
+  .cv-legend .lg-sq{width:10px;height:10px;border-radius:3px}
+  .cv-legend .lg-line{width:16px;height:3px;border-radius:2px}
+  .cv-legend .lg-dash{width:16px;height:0;border-top:2px dashed var(--ink-2)}
+  .cv-legend .lg-ramp{width:18px;height:4px;border-radius:2px;background:var(--ramp)}
+  .cv-legend .lg-ring{width:9px;height:9px;border-radius:50%;border:1.75px solid}
+  .cv-legend .lg-pill{width:9px;height:15px;border-radius:5px;opacity:.35}
+  .cv-legend .lg-cc{width:12px;height:12px;border-radius:4px;box-shadow:inset 0 0 0 1.5px currentColor}
+
+  /* ---- a big number heading a block (urges, avoided) ---- */
+  .cv-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:2px 0 6px}
+  .cv-big{font-family:var(--f-round);font-size:42px;font-weight:700;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+  .cv-big-l{font-size:13.5px;font-weight:600;color:var(--ink-2)}
+  .cv-head .dv,.cv-head .chip{margin-left:auto;align-self:center}
+
+  /* ---- "open the big chart" row ---- */
+  .cv-link{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;margin:10px 0 0;padding:0 12px 0 10px;
+    border:0;border-radius:var(--r-sm);background:var(--s2);color:var(--ink);font:inherit;font-size:14.5px;font-weight:600;
+    text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .cv-link>.ic:first-child{width:28px;height:28px;padding:6px;border-radius:9px;background:var(--acc-bg);color:var(--acc-t)}
+  .cv-link span{flex:1;min-width:0}
+  .cv-link>.ic:last-child{color:var(--ink-3)}
+  .cv-link:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+  /* ---- score / adjustment ring beside its words ---- */
+  .cv-score{display:grid;grid-template-columns:128px 1fr;gap:16px;align-items:center;margin:4px 0 6px}
+  .cv-score .cv-ring{width:128px;height:128px;margin:0!important}
+  .cv-score-t{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+  .cv-score-t p{font-size:13.5px;line-height:1.42;color:var(--ink-2);margin:0}
+  .cv-ring text{font-variant-numeric:tabular-nums}
+
+  /* ---- score contributors ---- */
+  .contrib{margin:12px 0 2px;display:flex;flex-direction:column;gap:2px}
+  .contrib-row{display:grid;grid-template-columns:minmax(0,132px) 1fr 30px;align-items:center;gap:12px;min-height:30px}
+  .contrib-row .cn{font-size:13px;font-weight:600;color:var(--ink-2);text-transform:none;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .contrib-row .cb{height:8px;border-radius:4px;background:var(--s3);overflow:hidden}
+  .contrib-row .cb i{display:block;height:100%;border-radius:4px;min-width:4px}
+  .contrib-row .cv{text-align:right;font-family:var(--f-round);font-size:14px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+
+  /* ---- paired comparison bars (the afterglow longest-gap card) ---- */
+  .pair{padding:10px 0 11px;border-top:1px solid var(--line)}
+  .pair:first-of-type{border-top:none}
+  .pair-hd{display:flex;align-items:center;gap:8px;min-height:22px}
+  .pair-hd .pk{flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--ink-2);text-transform:none;letter-spacing:0}
+  .pair-bars{margin-top:8px;display:grid;grid-template-columns:1fr 86px;gap:7px 10px;align-items:center}
+  .pbar{height:8px;border-radius:4px;background:var(--s3);position:relative}
+  .pbar i{position:absolute;top:0;bottom:0;left:0;border-radius:4px;background:var(--ghost);min-width:4px}
+  .pbar.cur{height:10px;border-radius:5px}
+  .pbar.cur i{background:var(--ink-2);border-radius:5px}
+  .pbar.cur.good i{background:var(--under)}
+  .pbar.cur.bad i{background:var(--over)}
+  .pbar .pmark{position:absolute;top:-3px;bottom:-3px;width:2px;margin-left:-1px;border-radius:1px;background:var(--ink);opacity:.55}
+  .pval{font-family:var(--f-round);font-size:12.5px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right;overflow:hidden;text-overflow:ellipsis}
+  .pval.cur{font-size:13px;font-weight:700;color:var(--ink)}
+  .pair-key{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--ink-2);font-weight:600;margin:0 0 6px}
+  .pair-key i{display:inline-block;width:16px;height:6px;border-radius:3px;margin-right:6px;vertical-align:1px}
+  .pair-key .pk-a{background:var(--ghost)}
+  .pair-key .pk-b{background:var(--ink-2)}
+
+  /* ---- deltas and day status: chips that carry their word ---- */
+  .dv{display:inline-flex;align-items:center;gap:3px;font-family:var(--f-round);font-size:12.5px;font-weight:650;
+    letter-spacing:-.005em;font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1.2}
+  .dv .tri{width:9px;height:9px}
+  .dv.good{color:var(--under-t)}
+  .dv.bad{color:var(--over-t)}
+  .dv.flat{color:var(--ink-2);font-weight:600}
+  .pair-hd .dv,.cv-head .dv,.dv.pill{height:22px;padding:0 8px;border-radius:var(--r-pill);display:inline-flex}
+  .pair-hd .dv.good,.cv-head .dv.good,.dv.pill.good{background:var(--under-bg)}
+  .pair-hd .dv.bad,.cv-head .dv.bad,.dv.pill.bad{background:var(--over-bg)}
+  .pair-hd .dv.flat,.cv-head .dv.flat,.dv.pill.flat{background:transparent;box-shadow:inset 0 0 0 1px var(--line-2)}
+  .hstat{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:var(--r-pill);
+    font-size:11.5px;font-weight:650;letter-spacing:0;text-transform:none;white-space:nowrap;background:var(--s2);color:var(--ink-2)}
+  .hstat::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+  .hstat.under,.hstat.clean{background:var(--under-bg);color:var(--under-t)}
+  .hstat.at{background:var(--atcap-bg);color:var(--atcap-t)}
+  .hstat.over,.hstat.slip{background:var(--over-bg);color:var(--over-t)}
+  .hstat.nolog{background:transparent;box-shadow:inset 0 0 0 1px var(--line-2);color:var(--ink-3)}
+  .hstat.nolog::before{background:transparent;box-shadow:inset 0 0 0 1.5px currentColor}
+
+  /* ---- scrub-to-read: the readout floats as a chip over the plot ---- */
+  .rochart{position:relative}
+  .ro-strip{display:block;width:fit-content;max-width:100%;min-height:30px;margin:0 0 10px;padding:6px 13px;
+    border-radius:var(--r-pill);background:var(--s1);box-shadow:0 0 0 1px var(--line),var(--shadow-float);
+    font-family:var(--f-round);font-size:13px;font-weight:600;line-height:18px;color:var(--ink-3);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+  .ro-strip strong{color:var(--ink);font-weight:700}
+  .ro-strip span{color:var(--ink-3)!important}
+  html.dark .ro-strip{background:var(--s2)}
+  /* direct child only — an svg inside .cz-scroll must keep native pan-x */
+  .rochart>svg,.rochart .cv-ckrow svg{touch-action:pan-y}
+  .rohit{cursor:pointer}
+  .rohit.on{fill:var(--acc);fill-opacity:.1}
+
+  /* ---- wide charts: a pinned y-axis beside the horizontal scroller ---- */
+  .cv-wide{display:grid;grid-template-columns:34px minmax(0,1fr);align-items:start}
+  .cv-wide .cv-yax{display:block;position:relative;z-index:1}
+  .cv-wide .cz-scroll{margin:0 -4px 0 -34px;padding:0 4px 0 0;scrollbar-width:none;
+    /* reversed flow: the scroller rests on its newest (right) end even when it
+       was filled while the overlay was still hidden */
+    display:flex;flex-direction:row-reverse}
+  .cv-wide .cz-scroll::-webkit-scrollbar{display:none}
+  .cv-wide .cz-scroll svg{display:block;max-width:none;flex:none}
+
+  /* ---- tap-to-expand charts ---- */
+  .zoomable{position:relative;cursor:zoom-in;border-radius:var(--r-sm);-webkit-tap-highlight-color:transparent}
+  .zoomable>svg{display:block}
+  .zoomable .zoom-ico{position:absolute;top:-38px;right:0;width:30px;height:30px;border-radius:50%;
+    display:grid;place-items:center;background:var(--s2);color:var(--ink-2);pointer-events:none;box-shadow:0 0 0 1px var(--line)}
+  .zoomable .zoom-ico .ic{width:13px;height:13px}
+  .zoomable:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+
+  /* ---- check-ins: three non-status hues (a rough night is not a status) ---- */
+  .cv-ck{--ck-sleep:#2F6FD6;--ck-mood:#B0469F;--ck-crave:#0B8295}
+  html.dark .cv-ck{--ck-sleep:#7FB0FF;--ck-mood:#F08BD8;--ck-crave:#4FD0E3}
+  .cv-ckrow{background:var(--s2);border-radius:var(--r-md);padding:12px 12px 4px;margin:0 0 8px}
+  .cv-ckh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 2px 2px}
+  .cv-ckn{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:650;color:var(--ink)}
+  .cv-ckn i{width:9px;height:9px;border-radius:50%;flex:none}
+  .cv-ckn em,.cv-ckv em{font-style:normal;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+  .cv-ckv{font-family:var(--f-round);font-size:21px;font-weight:700;letter-spacing:-.015em;font-variant-numeric:tabular-nums}
+  .cv-ckv small{font-size:.6em;color:var(--ink-3);margin-left:1px}
+  .cv-ckv em{margin-left:7px;font-family:var(--f-ui)}
+
+  /* ---- today's sessions: compact rows, dots instead of sentences ---- */
+  .sessrow{display:flex;align-items:center;gap:10px;min-height:40px;padding:8px 12px;border:0;border-radius:var(--r-sm);background:var(--s2);margin:6px 0 0}
+  .sessrow .sr-t{font-family:var(--f-mono);font-size:12.5px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;flex:0 0 auto}
+  .sessrow .sr-dots{flex:1;display:flex;flex-wrap:wrap;gap:3px;justify-content:flex-end}
+  .sessrow .sr-dots i{width:7px;height:7px;border-radius:50%;background:var(--acc)}
+  .sessrow .sr-c{font-family:var(--f-round);font-weight:700;font-size:15px;color:var(--ink);flex:0 0 auto;font-variant-numeric:tabular-nums}
+
+  /* ---- the record as a calendar ---- */
+  .chipcal{margin:6px 0 4px}
+  .chipcal .cc-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+  .chipcal .cc-wd{text-align:center;font-family:var(--f-round);font-size:11px;font-weight:600;color:var(--ink-3);padding-bottom:1px}
+  .chipcal .cc-m{grid-column:1/-1;font-family:var(--f-round);font-size:13px;font-weight:700;color:var(--ink);margin:8px 2px 1px}
+  .chipcal .chip{width:auto;height:auto;aspect-ratio:1/1;max-height:46px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+    font-family:var(--f-round);font-size:13px;font-weight:650;font-variant-numeric:tabular-nums;border:0;padding:0;cursor:pointer;
+    -webkit-tap-highlight-color:transparent}
+  .chipcal .chip:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+  .chip-under{background:var(--under-bg);color:var(--under-t)}
+  .chip-at{background:var(--atcap-bg);color:var(--atcap-t)}
+  .chip-over{background:var(--over-bg);color:var(--over-t)}
+  .chip-clean{background:var(--under-t);color:#fff}
+  .chip-slip{background:var(--over-t);color:#fff}
+  .chip-nolog{background:transparent;box-shadow:inset 0 0 0 1.5px var(--line-2);color:var(--ink-3)}
+  html.dark .chip-clean{background:var(--under);color:var(--ink-inv)}
+  html.dark .chip-slip{background:var(--over);color:var(--ink-inv)}
+  .chipcal .chip-today{box-shadow:0 0 0 2px var(--s1),0 0 0 4px var(--acc)}
+  .chipcal .chip-nolog.chip-today{box-shadow:inset 0 0 0 1.5px var(--line-2),0 0 0 2px var(--s1),0 0 0 4px var(--acc)}
+  .chipcal .cv-legend{margin-top:12px}
+
+  /* ---- the road: baseline progress track + the running schedule ---- */
+  .taper-track{position:relative;height:8px;border-radius:4px;background:var(--ramp);margin:16px 9px 8px;overflow:visible}
+  .taper-track>div{display:none}
+  .taper-track::after{content:"";position:absolute;top:0;bottom:0;left:var(--pct,0%);right:0;border-radius:0 4px 4px 0;background:var(--s3);opacity:.9}
+  .taper-track>i{position:absolute;top:50%;left:var(--pct,0%);z-index:1;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;
+    background:var(--ink);box-shadow:0 0 0 3px var(--acc-bg),0 0 0 1.5px var(--acc) inset}
+  .tt-ends{display:flex;justify-content:space-between;font-family:var(--f-round);font-size:12px;font-weight:600;color:var(--ink-3);margin:0 0 4px}
+  .road{margin-top:4px}
+  .road-item{display:grid;grid-template-columns:86px 1fr;gap:12px;padding:11px 0;border-top:1px solid var(--line);font-size:14px;color:var(--ink-2);line-height:1.45}
+  .road-item:first-child{border-top:none}
+  .road-date{font-family:var(--f-round);font-size:12.5px;font-weight:650;letter-spacing:0;text-transform:none;color:var(--ink-2);padding-top:2px;font-variant-numeric:tabular-nums}
+  .road-txt{min-width:0}
+  .road-txt strong{color:var(--ink);font-weight:650}
+  .road-item.cur{background:var(--acc-bg);border-radius:var(--r-sm);border-top-color:transparent;padding:11px 10px;margin:0 -10px}
+  .road-item.cur+.road-item{border-top-color:transparent}
+  .road-item.cur .road-date{color:var(--acc-t);font-weight:700}
+  .road-item.cur .road-txt strong{color:var(--acc-t)}
+
+  /* ---- entrance motion: gated. .cv-anim is added only on a chart's first
+     paint (per detail page per session / per chart-theatre opening), so the
+     30s tick and every hit re-render land still. ---- */
+  @keyframes cv-draw{to{stroke-dashoffset:0}}
+  @media (prefers-reduced-motion:no-preference){
+    .cv-anim .draw{stroke-dasharray:1;stroke-dashoffset:1;animation:cv-draw 1.1s var(--e-enter) .12s forwards}
+    .cv-anim .grow{transform-box:fill-box;transform-origin:50% 100%;animation:grow-y .62s var(--settle) both;animation-delay:var(--dl,0ms)}
+    .cv-anim .pop{animation:fade-in .42s var(--e-enter) .5s both}
+    .cv-anim .ring-arc{animation:cv-ring .9s var(--settle) .1s both}
+    .cv-anim .pbar i,.cv-anim .contrib-row .cb i{transform-origin:left;animation:grow-x .6s var(--settle) .1s both}
+  }
+  @keyframes cv-ring{from{stroke-dasharray:0 100}}
   /* ==== [/C] ==== */
 
 
@@ -5466,10 +5573,14 @@ try{
       svg+='<line x1="'+padL+'" y1="'+Y(g).toFixed(1)+'" x2="'+(W-padR)+'" y2="'+Y(g).toFixed(1)+'" stroke="var(--line)" stroke-width="1"'+(g===3?' stroke-dasharray="2 4"':'')+'/>'+
         txt(padL-7,Y(g)+3.5,10.5,'var(--ink-3)','end',g);
     });
-    CK_SER.forEach(function(mc){
-      var pts=s.map(function(x,i){return X(i).toFixed(1)+','+Y(x[mc[0]]).toFixed(1);}).join(' ');
-      if(n>1)svg+='<polyline class="draw" pathLength="1" points="'+pts+'" fill="none" stroke="'+mc[2]+'" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>';
-      svg+='<circle cx="'+X(n-1).toFixed(1)+'" cy="'+Y(s[n-1][mc[0]]).toFixed(1)+'" r="3.8" fill="'+mc[2]+'" stroke="var(--s1)" stroke-width="1.6"/>';
+    // readings are whole numbers, so the three lines often share a value:
+    // a small lane offset per series lets a shared stretch read as three
+    // parallel strands instead of one line overdrawn
+    CK_SER.forEach(function(mc,si){
+      var off=(si-1)*2.6;
+      var pts=s.map(function(x,i){return X(i).toFixed(1)+','+(Y(x[mc[0]])+off).toFixed(1);}).join(' ');
+      if(n>1)svg+='<polyline class="draw" pathLength="1" points="'+pts+'" fill="none" stroke="'+mc[2]+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+      svg+='<circle cx="'+X(n-1).toFixed(1)+'" cy="'+(Y(s[n-1][mc[0]])+off).toFixed(1)+'" r="3.6" fill="'+mc[2]+'" stroke="var(--s1)" stroke-width="1.6"/>';
     });
     svg+=txt(padL,H-6,10.5,'var(--ink-3)',null,fmtShort(dateOf(s[0].k)))+
       txt(W-padR,H-6,10.5,'var(--ink-3)','end',fmtShort(dateOf(s[n-1].k)));
@@ -5491,7 +5602,7 @@ try{
         // is the win, sleep and mood climbing are. A dip stays neutral ink —
         // a rough night is not a status.
         var good=l3===p?null:(m.bad?l3<p:l3>p);
-        figs.push({v:l3+'<small>/5</small>',l:m.t+' · last 3',s:word+(l3!==p?' · was '+p:''),
+        figs.push({v:l3+'<small>/5</small>',l:m.t,s:'last 3 · '+word+(l3!==p?' · was '+p:''),
           c:good?'var(--sage)':null});
       });
     }else{
@@ -5937,7 +6048,7 @@ try{
     days.forEach(function(day,i){
       var x0=padL+colW*i,cx=x0+colW/2,isZ=day.di===BASE_PHASES.length-1,isT=day.k===todayKey;
       if(isT)svg+='<rect x="'+(x0+1).toFixed(1)+'" y="'+(padT-4)+'" width="'+Math.max(2,colW-2).toFixed(1)+'" height="'+(plotH+8)+'" rx="6" fill="var(--acc-bg)"/>';
-      var col=isZ?'var(--over)':'var(--acc)';
+      var col=isZ?'var(--over)':'var(--r-ember)';
       sessionsFor(day.k).forEach(function(run){
         var y1=Y(lh(run[0])),y2=Y(lh(run[run.length-1]));
         if(y2-y1>1)svg+='<rect x="'+(cx-r-1).toFixed(1)+'" y="'+(y1-r-1).toFixed(1)+'" width="'+(2*r+2).toFixed(1)+'" height="'+(y2-y1+2*r+2).toFixed(1)+'" rx="'+(r+1).toFixed(1)+'" fill="'+col+'" fill-opacity=".18"/>';
@@ -6004,10 +6115,13 @@ try{
       ]};
   }
   function scoreColor(v){return v>=70?'var(--sage)':v>=55?'var(--amber)':'var(--clay)';}
+  /* the four parts of the score as short labelled bars; the number beside
+     each bar carries the value, the fill carries the verdict */
   function contribHTML(parts){
     return '<div class="contrib">'+parts.map(function(p){
+      var c=p.score>=70?'var(--under)':p.score>=55?'var(--atcap)':'var(--over)';
       return '<div class="contrib-row"><span class="cn">'+p.name+'</span>'+
-        '<span class="cb"><i style="width:'+p.score+'%;background:'+scoreColor(p.score)+'"></i></span>'+
+        '<span class="cb"><i style="width:'+p.score+'%;background:'+c+'"></i></span>'+
         '<span class="cv">'+p.score+'</span></div>';
     }).join('')+'</div>';
   }
@@ -6087,7 +6201,10 @@ try{
   var _cvSeen={};
   function cvFirst(key){if(!motionOK||_cvSeen[key])return false;_cvSeen[key]=1;return true;}
   function czWrap(key,html){
-    var b=$('czBody'),fresh=motionOK&&!(b&&b.querySelector('[data-czc="'+key+'"]'));
+    // fresh = first paint of this chart since the theatre opened (a page
+    // turn, or an opening); the 30s live re-render of the same page is not
+    var b=$('czBody'),ov=$('czOverlay'),
+      fresh=motionOK&&(!ov||ov.hidden||!(b&&b.querySelector('[data-czc="'+key+'"]')));
     return '<div class="cv-cz'+(fresh?' cv-anim':'')+'" data-czc="'+key+'">'+html+'</div>';
   }
   // wide charts scroll; their y-axis is pinned beside the scroller
@@ -6148,7 +6265,7 @@ try{
     }
     var nx=X(nowX),ny=Y(tTot);
     svg+='<circle cx="'+nx.toFixed(1)+'" cy="'+ny.toFixed(1)+'" r="4.5" fill="var(--acc)" stroke="var(--s1)" stroke-width="2"/>'+
-      txt(Math.max(padL+30,Math.min(W-40,nx)),ny-10,10.5,'var(--acc-t)','middle','Today '+tTot,true);
+      (nx>W-70?txt(nx-9,ny+4,10.5,'var(--acc-t)','end','Today '+tTot,true):txt(nx+9,ny+4,10.5,'var(--acc-t)',null,'Today '+tTot,true));
     return svg+'</svg>';
   }
   /* progress ring — only where more is better (the taper score, the 21-day
@@ -6252,14 +6369,14 @@ try{
     hist.forEach(function(v){if(v>max)max=v;});
     var best=0,bi=-1;
     for(var i=0;i<23;i++){var s2=hist[i]+hist[i+1];if(s2>best){best=s2;bi=i;}}
-    var W=360,H=250,padL=6,padR=6,padT=34,padB=24,bw=(W-padL-padR)/24,gid=cvId('bh');
+    var W=360,H=262,padL=6,padR=6,padT=46,padB=24,bw=(W-padL-padR)/24,gid=cvId('bh');
     function Y(v){return padT+(1-v/max)*(H-padT-padB);}
     var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Hits by hour of day, detailed">'+
       '<defs>'+vGrad(gid,'var(--acc-2)','var(--acc)')+'</defs>';
     if(bi>=0){
       svg+='<rect x="'+(padL+bi*bw).toFixed(1)+'" y="'+(padT-6)+'" width="'+(bw*2).toFixed(1)+'" height="'+(H-padT-padB+6)+'" fill="var(--acc-bg)" rx="8"/>';
       var cx=Math.max(78,Math.min(W-78,padL+(bi+1)*bw));
-      svg+=txt(cx,padT-14,11.5,'var(--acc-t)','middle','Peak '+fmtHourLbl(bi)+'–'+fmtHourLbl(bi+2)+' · '+Math.round(best/tot*100)+'% of hits',true);
+      svg+=txt(cx,15,11.5,'var(--acc-t)','middle','Peak '+fmtHourLbl(bi)+'–'+fmtHourLbl(bi+2)+' · '+Math.round(best/tot*100)+'% of hits',true);
     }
     svg+='<line x1="'+padL+'" y1="'+(H-padB+.5)+'" x2="'+(W-padR)+'" y2="'+(H-padB+.5)+'" stroke="var(--line-2)" stroke-width="1"/>';
     var mi=hist.indexOf(max);
@@ -6304,7 +6421,7 @@ try{
       d=addDays(d,1);
     }
     if(!days.length)return '<p class="chart-note">Nothing logged yet.</p>';
-    var colW=34,padL=38,padR=10,padT=42,padB=26,plotH=380;
+    var colW=Math.max(34,Math.min(60,Math.floor(300/days.length))),padL=38,padR=10,padT=42,padB=26,plotH=380;
     var W=padL+padR+colW*days.length,H=padT+plotH+padB;
     function Y(lh){return padT+(lh/24)*plotH;}
     function lh(t){return ((t.getHours()-DAY_CUTOFF_H+24)%24)+t.getMinutes()/60;}
@@ -6315,12 +6432,13 @@ try{
       if(mj)svg+='<line x1="'+padL+'" y1="'+gy.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+gy.toFixed(1)+'" stroke="var(--line)" stroke-width="1"/>';
       ax.push([gy,fmtHourLbl(g%24),mj?'var(--ink-2)':'var(--ink-3)',mj]);
     }
-    var anySlip=false,dots='';
+    var anySlip=false,dots='',seenCls={};
     days.forEach(function(day,i){
       var x0=padL+colW*i,cx=x0+colW/2,isT=day.k===todayKey;
       if(isT)svg+='<rect x="'+(x0+2)+'" y="'+(padT-38)+'" width="'+(colW-4)+'" height="'+(plotH+38+22)+'" rx="10" fill="var(--acc-bg)"/>';
       var slip=day.s.cls==='slip';if(slip&&day.sess.length)anySlip=true;
-      var col=slip?'var(--over)':'var(--acc)';
+      seenCls[day.s.cls]=1;
+      var col=slip?'var(--over)':'var(--r-ember)';
       day.sess.forEach(function(run){
         var y1=Y(lh(run[0])),y2=Y(lh(run[run.length-1]));
         svg+='<rect class="grow" style="--dl:'+Math.min(i*18,900)+'ms" x="'+(cx-5.5).toFixed(1)+'" y="'+(y1-5.5).toFixed(1)+'" width="11" height="'+((y2-y1)+11).toFixed(1)+'" rx="5.5" fill="'+col+'" fill-opacity=".18"/>';
@@ -6345,8 +6463,11 @@ try{
     });
     svg+='</svg>';
     return czWrap('punch',wideChart(svg,pinAxis(H,ax),'Slide across the days to read them — tap one to open it.')+
-      cvLegend([['dot','var(--acc)','Hit'],['pill','var(--acc)','Sitting'],anySlip?['dot','var(--over)','Slip after zero']:null,
-        ['dot','var(--under)','Under'],['dot','var(--atcap)','At cap'],['dot','var(--over)','Over']])+
+      cvLegend([['dot','var(--r-ember)','Hit'],['pill','var(--r-ember)','Sitting'],anySlip?['dot','var(--over)','Slip after zero']:null])+
+      cvLegend([
+        (seenCls.under||seenCls.clean)?['sq','var(--under)',seenCls.under&&seenCls.clean?'Under · clean':seenCls.under?'Under':'Clean']:null,
+        seenCls.at?['sq','var(--atcap)','At cap']:null,
+        (seenCls.over||seenCls.slip)?['sq','var(--over)',seenCls.over&&seenCls.slip?'Over · slip':seenCls.over?'Over':'Slip']:null])+
       '<p class="chart-note">Each column is a day, 4am → 4am; the number on top is that day’s count, coloured by how it landed. Swipe sideways for older days.</p>');
   }
 
@@ -6414,6 +6535,8 @@ try{
       tPts.forEach(function(p,i){
         var hx=X(p.x);
         if(!tTimes[i]||hx-lastLX<36)return;
+        // the now tag owns the space around the pen's tip
+        if(Math.abs(hx-X(nowX))<80&&Math.abs(Y(p.y)-Y(tTot))<24)return;
         if(i===tPts.length-1&&X(nowX)-hx<64)return; // the now label owns that corner
         lastLX=hx;
         svg+=txt(hx-5,Y(p.y)-6,10,'var(--acc-t)','end',fmtClk(tTimes[i]),true);
@@ -6506,7 +6629,7 @@ try{
     var maxV=1;
     days.forEach(function(x){maxV=Math.max(maxV,x.s.c||0,x.s.cap||0);});
     maxV*=1.08;
-    var colW=34,padL=38,padR=10,padT=30,padB=26,plotH=220;
+    var colW=Math.max(34,Math.min(60,Math.floor(300/days.length))),padL=38,padR=10,padT=30,padB=26,plotH=220;
     var W=padL+padR+colW*days.length,H=padT+plotH+padB;
     function Y(v){return padT+(1-v/maxV)*plotH;}
     var rg=cvId('btr');
@@ -6534,7 +6657,7 @@ try{
       if(c!==null&&c>0){
         var by=Y(c);
         marks+='<path class="grow" style="--dl:'+Math.min(i*20,900)+'ms" d="'+rbar(bx+3,by,bw2-6,Math.max(2,Y(0)-by),5)+'" fill="'+col+'"/>'+
-          txt(cx,by-5,11,tc,'middle',c,true);
+          txt(cx,(day.s.cap>0&&Math.abs(by-cy)<16?Math.min(by,cy)-6:by-5),11,tc,'middle',c,true);
       }else if(day.s.cls==='clean'){
         marks+='<circle cx="'+cx.toFixed(1)+'" cy="'+(Y(0)-10).toFixed(1)+'" r="8" fill="var(--under-bg)"/>'+
           '<path d="M'+(cx-3.6).toFixed(1)+' '+(Y(0)-10).toFixed(1)+' l2.6 2.6 l4.8 -5" fill="none" stroke="var(--under-t)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>';
@@ -7574,7 +7697,7 @@ try{
       rx.innerHTML=xh('At a glance')+chipCalHTML()+
         '<p class="chart-note">Tap any day to open it.</p>'+
         (pc?xh('Every day, side by side',_pcWin)+zoomable('punch',pc)+
-            cvLegend([['dot','var(--acc)','Hit'],['pill','var(--acc)','Sitting'],/var\(--over\)/.test(pc)?['dot','var(--over)','Slip after zero']:null])+
+            cvLegend([['dot','var(--r-ember)','Hit'],['pill','var(--r-ember)','Sitting'],/var\(--over\)/.test(pc)?['dot','var(--over)','Slip after zero']:null])+
             '<p class="chart-note">Columns are days, top to bottom is 4am → 4am. Fewer dots, drifting later — that’s the shift.</p>':'')+
         sessionRhythmHTML()+
         (ins.length?xh('What stands out')+figsHTML(ins):'');
