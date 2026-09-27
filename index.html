@@ -1867,73 +1867,84 @@ try{
   <p class="gap-note" id="ritExtend" hidden></p>
 </div>
 
-<div class="hero-card" id="heroCard">
-  <div class="gap-hero" id="gapHero" hidden>
-    <div class="gh-main">
-      <div class="ring-wrap">
-        <svg class="gap-ring" viewBox="0 0 140 140" aria-hidden="true">
-          <circle class="ring-track" cx="70" cy="70" r="60"/>
-          <circle class="ring-fill" id="ghRing" cx="70" cy="70" r="60" transform="rotate(-90 70 70)"/>
-        </svg>
-        <div class="ring-inner">
-          <span class="gh-time" id="ghSince" role="status">–</span>
-          <span class="gh-lbl" id="ghLbl">since last hit</span>
-        </div>
-      </div>
-      <div class="hero-right">
-        <span class="hero-slbl">Taper score</span>
-        <div class="hero-srow">
-          <span class="hero-score" id="heroScore">–</span>
-          <span class="hero-grade" id="heroGrade"></span>
-        </div>
-        <span class="gh-rule" id="ghRule"></span>
-      </div>
-      <button class="gap-bell" id="gapBell" type="button" aria-label="Remind me to wait when the window opens"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-bell-off"/></svg></button>
+<!-- TODAY HERO (TH): ONE card. Header chips → the 24h day dial (#heroCard;
+     the zero era swaps in the clean-time dial) → count + status + pips grouped
+     by sitting with their raw times (#statRow) → hold-to-log + −1 (#tallyBtns)
+     → urge timer + Earlier (slip controls in the zero era) → short note lines.
+     #heroCard lives inside #todayCard so openDetail's move carries the whole
+     hero; plusOne()/sparks() measure against #todayCard, which never clips. -->
+<div class="today openable" id="todayCard" data-title="Today">
+  <button class="xopen" data-target="todayCard" data-title="Today" aria-label="Open today in detail"><svg class="ic" aria-hidden="true"><use href="#i-open"/></svg></button>
+  <div class="th-head">
+    <span class="chip th-score" id="thScore"><span class="th-sk">Score</span><b id="heroScore">–</b><span class="th-dot" aria-hidden="true">·</span><span id="heroGrade"></span></span>
+    <span class="chip acc th-phase" id="thPhase" hidden></span>
+    <span class="streak-chip" id="streakChip" hidden></span>
+    <button class="gap-bell" id="gapBell" type="button" aria-label="Remind me to wait when the window opens"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-bell-off"/></svg></button>
+  </div>
+  <div class="hero-card" id="heroCard">
+    <div class="th-bloom breathe" aria-hidden="true"></div>
+    <svg class="th-dial" id="thDial" viewBox="0 0 296 296" role="img" aria-label="Today’s 24-hour dial"></svg>
+    <div class="gap-hero th-center" id="gapHero" hidden>
+      <span class="th-k" id="ghLbl">Since last hit</span>
+      <span class="th-big" id="ghSince" role="status">–</span>
+      <span class="th-at" id="thAt">at <span id="stLast">–</span></span>
+      <span class="th-nx" id="ghNote"></span>
+      <span class="th-rule" id="ghRule"></span>
     </div>
-    <p class="gh-note" id="ghNote"></p>
+    <div class="th-center th-cc" id="thClean" hidden>
+      <span class="th-k" id="thCK">Days this run</span>
+      <span class="th-big" id="thCN">0</span>
+      <span class="th-nx" id="thCS"></span>
+    </div>
+  </div>
+  <div class="th-count" id="thCount">
+    <div class="th-countL">
+      <p class="eyebrow" id="todayEyebrow">Hits today</p>
+      <div class="today-cap-row"><span class="big" id="tallyCount">0</span><span class="of" id="capLabel"></span></div>
+    </div>
+    <div class="th-countR">
+      <span class="chip" id="thStatus" hidden></span>
+      <span class="delta flat th-vs" id="thVs"><span class="th-vsi" id="thVsIc"></span><span id="stVs">–</span><span class="th-vsl" id="thVsL">vs yesterday by now</span></span>
+    </div>
+  </div>
+  <div class="th-medal" id="thMedal" hidden></div>
+  <div class="th-pips" id="thPips" role="img" aria-label=""></div>
+  <div class="bar th-bar" aria-hidden="true"><div id="barFill"></div></div>
+  <div class="th-cap" id="statRow">
+    <span class="th-sits" id="thSits"></span>
+    <span class="th-left" id="thLeft"><span class="th-plan"><span id="stSessionLbl">next</span> <b id="stSession">–</b></span><span class="th-lv"><b id="stLeft">–</b> <span id="thLeftL">left</span></span></span>
   </div>
   <div class="tally-btns" id="tallyBtns">
     <button class="minus" id="btnMinus" aria-label="Remove one hit">−1</button>
     <button class="hold-log" id="holdLog" aria-label="Press and hold to log a hit, or press Enter">
-      <svg class="hold-ring" aria-hidden="true"><rect id="holdRingRect" rx="14"/></svg>
-      <span class="hold-label" id="holdLabel">Hold to log a hit</span>
+      <span class="hold-knob" aria-hidden="true">
+        <svg class="hold-ring" viewBox="0 0 44 44" aria-hidden="true"><circle class="hk-track" cx="22" cy="22" r="18"/><circle class="hk-prog" id="holdRingRect" cx="22" cy="22" r="18" pathLength="100" transform="rotate(-90 22 22)"/><circle class="hk-core" cx="22" cy="22" r="6"/></svg>
+        <svg class="ic hk-check" aria-hidden="true"><use href="#i-check"/></svg>
+      </span>
+      <span class="hold-tx"><span class="hold-label" id="holdLabel">Hold to log a hit</span><span class="hold-sub">A tap never logs</span></span>
+      <span class="hold-key" aria-hidden="true">0.7s</span>
     </button>
   </div>
-</div>
-<p class="gap-note" id="gapNote" hidden>Heads-up: the reminder only rings while the app is open — nothing runs in the background, because nothing leaves this device.</p>
-
-<div class="today openable" id="todayCard" data-title="Today">
-  <button class="xopen" data-target="todayCard" data-title="Today" aria-label="Open today in detail"><svg class="ic" aria-hidden="true"><use href="#i-open"/></svg></button>
-  <div class="card-head">
-    <p class="eyebrow" id="todayEyebrow">Today</p>
-    <span class="streak-chip" id="streakChip" hidden></span>
-  </div>
-  <div class="today-cap-row">
-    <span class="big" id="tallyCount">0</span>
-    <span class="of" id="capLabel"></span>
-  </div>
-  <p class="today-sched" id="todaySched" hidden></p>
-  <div class="bar"><div id="barFill"></div></div>
-  <div class="stat-row" id="statRow">
-    <div class="stat"><span class="sv" id="stLeft">–</span><span class="sl">left today</span></div>
-    <div class="stat"><span class="sv" id="stVs">–</span><span class="sl">vs yesterday now</span></div>
-    <div class="stat"><span class="sv" id="stSession">–</span><span class="sl" id="stSessionLbl">this session</span></div>
-    <div class="stat"><span class="sv time" id="stLast">–</span><span class="sl">last hit</span></div>
-  </div>
-  <p class="bar-note" id="barNote"></p>
   <div class="action-row">
     <button class="delay-chip" id="urgeChip">Urge? Start the 20-minute timer.</button>
-    <button class="time-link" id="btnEarlier" aria-label="Add hits from earlier at a chosen time">+ Earlier</button>
+    <button class="time-link" id="btnEarlier" aria-label="Add hits from earlier at a chosen time"><svg class="ic" aria-hidden="true"><use href="#i-earlier"/></svg><span>Earlier</span></button>
+  </div>
+  <div class="th-sliprow">
     <button class="slip-btn" id="btnSlip">Slipped? Log it honestly</button>
     <button class="slip-btn slip-undo" id="btnSlipUndo" hidden aria-label="Remove the last slip logged today">−1</button>
   </div>
   <div class="earlier-row" id="earlierRow" hidden>
     <input type="time" id="earlierTime" aria-label="Time the hit happened">
-    <button id="btnAddEarlier">+ Add hit at this time</button>
+    <button id="btnAddEarlier">Add hit at this time</button>
   </div>
   <p id="earlierMsg" hidden></p>
-  <p class="gap-note" id="whyLine" hidden></p>
-  <p class="gap-note" id="helpNote" hidden>Need more than the timer? <a class="dlink" href="guide.html#resources">Helplines &amp; communities →</a> — reaching for them early is the strong move.</p>
+  <div class="th-foot">
+    <p class="today-sched" id="todaySched" hidden></p>
+    <p class="gap-note" id="gapNote" hidden>The reminder only rings while the app is open — nothing runs in the background, because nothing leaves this device.</p>
+    <p class="bar-note" id="barNote"></p>
+    <p class="gap-note th-why" id="whyLine" hidden></p>
+    <p class="gap-note th-help" id="helpNote" hidden><svg class="ic ic-sm" aria-hidden="true"><use href="#i-life"/></svg><span>Need more than the timer? <a class="dlink" href="guide.html#resources">Helplines &amp; communities</a> — reaching early is the strong move.</span></p>
+  </div>
   <div class="xtra" id="todayXtra"></div>
 </div>
 
