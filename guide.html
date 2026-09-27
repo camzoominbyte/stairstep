@@ -130,7 +130,8 @@
     opacity:0;transform:translateY(4px);transition:opacity var(--d-base) var(--e-move),transform var(--d-base) var(--e-move);
   }
   .g-bar.stuck .g-title{opacity:1;transform:none}
-  .g-prog{width:38px;height:38px;display:grid;place-items:center}
+  .g-prog{width:38px;height:38px;display:grid;place-items:center;opacity:0;transition:opacity var(--d-base) var(--e-move)}
+  .g-bar.stuck .g-prog{opacity:1}
   .g-prog svg{width:26px;height:26px;transform:rotate(-90deg)}
   .g-prog .t{fill:none;stroke:var(--s3);stroke-width:3}
   .g-prog .v{fill:none;stroke:var(--acc);stroke-width:3;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100}

@@ -1586,6 +1586,10 @@
   .dt-pips i.under{background:var(--under);box-shadow:0 0 12px -3px var(--under)}
   .dt-pips i.atcap{background:var(--atcap);box-shadow:0 0 12px -3px var(--atcap)}
   .dt-pips i.over{background:var(--over);box-shadow:none}
+  .dt-pips{flex-wrap:wrap}
+  .dt-pcap{flex:0 0 100%;font-size:11.5px;font-weight:600;color:var(--ink-2);margin-bottom:3px}
+  html[data-era="zero"] .dt-pips i.under{box-shadow:none;opacity:.8}
+  html[data-era="zero"] .dt-pips i.now{opacity:1;box-shadow:0 0 12px -3px var(--under)}
   .dt-tape{display:block;width:100%;margin:auto 0 0;padding-top:10px}
   .dt-tape[hidden]{display:none}
   .dt-tape svg{display:block;width:100%;height:auto;max-height:24vh}
@@ -1625,11 +1629,15 @@
   .dt-parts b{font-family:var(--f-round);font-weight:700;color:var(--ink);margin-right:5px;font-variant-numeric:tabular-nums}
   /* urge: tally when idle; a 20-minute countdown ring (fill is good) when running */
   .dt-urow{display:flex;align-items:center;justify-content:space-between;gap:10px}
-  .dt-uring{width:clamp(38px,13vh,54px);height:auto;flex:none;opacity:0;transition:opacity var(--d-base) var(--e-move)}
+  .dt-uring{width:clamp(44px,15vh,60px);height:auto;flex:none}
+  .dt-uring .go{color:var(--acc-t);fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;transition:opacity var(--d-base) var(--e-move)}
+  #dtUrge.running .dt-uring .go{opacity:0}
   .dt-uring .trk{fill:none;stroke:var(--s3);stroke-width:4.5}
   .dt-uring .val{fill:none;stroke:var(--acc);stroke-width:4.5;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;transition:stroke-dashoffset 1s linear}
-  #dtUrge.running .dt-uring{opacity:1}
-  #dtUrge.running .dt-mid{color:var(--acc-t)}
+  #dtUrge.running .dt-mid{color:var(--acc-t);font-size:clamp(24px,8vh,32px)}
+  #dtUrge:not(.running) .dt-uring .val{opacity:0}
+  #dtUrge.running .dt-uring{width:clamp(34px,11vh,44px)}
+  .dt-urow .dt-mid{min-width:0}
   .dt-u-run{display:none}
   #dtUrge.running .dt-u-run{display:inline}
   #dtUrge.running .dt-u-idle{display:none}
@@ -1643,8 +1651,13 @@
   .dt-legend .atcap i{background:var(--atcap)}
   .dt-legend .over i{background:var(--over)}
   #dtZero .dt-mid{margin-top:auto}
+  #dtZero .dt-track{margin-top:4px}
+  /* the descent ramp is the track; the fill is the part not yet walked */
+  #dtZero .dt-track{display:flex;background:linear-gradient(90deg,#FFA24C 0%,#F2C94C 40%,#B5DE6A 72%,#4FDDA0 100%)}
+  #dtZero .dt-track i{margin-left:auto;border-radius:0 3px 3px 0;background:var(--s3);box-shadow:-2px 0 0 var(--s1)}
+  .dt-note{-webkit-line-clamp:2}
   @media (prefers-reduced-motion:reduce){
-    .dt-track i,.dt-uring .val,.dt-uring{transition:none}
+    .dt-track i,.dt-uring .val,.dt-uring .go{transition:none}
   }
   /* ==== [/M] ==== */
 
@@ -2060,7 +2073,7 @@ try{
     <span class="dt-top"><span class="dt-eyebrow"><svg class="ic" aria-hidden="true"><use href="#i-wave"/></svg><span class="dt-u-idle">Urges outlasted</span><span class="dt-u-run">Urge timer</span></span></span>
     <span class="dt-urow">
       <span class="dt-mid" id="dhUrge">0</span>
-      <svg class="dt-uring" viewBox="0 0 44 44" aria-hidden="true"><circle class="trk" cx="22" cy="22" r="18"/><circle class="val" id="dhUrgeRing" cx="22" cy="22" r="18" pathLength="100" transform="rotate(-90 22 22)"/></svg>
+      <svg class="dt-uring" viewBox="0 0 44 44" aria-hidden="true"><circle class="trk" cx="22" cy="22" r="18"/><circle class="val" id="dhUrgeRing" cx="22" cy="22" r="18" pathLength="100" transform="rotate(-90 22 22)"/><use class="go" href="#i-timer" x="13" y="13" width="18" height="18"/></svg>
     </span>
     <span class="dt-sub" id="dhUrgeSub">Tap to start the 20-minute timer</span>
   </button>
@@ -2072,6 +2085,7 @@ try{
   <button class="dtile" id="dtZero" aria-label="Open the step-down in detail">
     <span class="dt-top"><span class="dt-eyebrow"><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg><span id="dhZeroLbl">Zero day</span></span></span>
     <span class="dt-mid" id="dhZero">–</span>
+    <span class="dt-track" aria-hidden="true"><i id="dhZeroBar"></i></span>
     <span class="dt-sub" id="dhZeroSub"></span>
   </button>
 </div>
@@ -2403,7 +2417,7 @@ try{
       <label class="mo-list-cap" for="dataBox">Backup text</label>
       <textarea id="dataBox" rows="4" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Your backup appears here — or paste one and tap Import."></textarea>
       <p id="dataMsg" role="status" aria-live="polite"></p>
-      <p class="mo-list-cap">Restore <span>· replaces what’s on this phone, and stashes it first</span></p>
+      <p class="mo-list-cap">Restore <span>· the current data is stashed first</span></p>
       <div class="data-btns mo-list">
         <button class="mo-act" id="btnImport"><span class="mo-ic" aria-hidden="true"><svg class="ic" viewBox="0 0 24 24"><rect x="5" y="4.5" width="14" height="16" rx="2.5"/><path d="M9.2 4.5v-.7a.8.8 0 0 1 .8-.8h4a.8.8 0 0 1 .8.8v.7M12 9v6.6M9 12.8l3 3 3-3"/></svg></span><span class="mo-act-tx"><b>Import pasted backup</b><small>From the box above</small></span></button>
         <button class="mo-act" id="btnSnap"><span class="mo-ic" aria-hidden="true"><svg class="ic"><use href="#i-earlier"/></svg></span><span class="mo-act-tx"><b>Restore today’s auto-snapshot</b><small>Taken at the first open of the day</small></span></button>
@@ -7423,7 +7437,16 @@ try{
       $('dhEyebrow').textContent='Days this run';
       $('dhChip').innerHTML=c>0?chip('slip','Slip today'):chip('clean','Clean today');
       $('dhBig').innerHTML=n+'<small> day'+(n===1?'':'s')+'</small>';
-      $('dhBar').innerHTML='';
+      // the last two weeks since zero, a cell a day: clean filled, slip in
+      // the over hue with its own label in the caption (never color alone)
+      var zc='',zsl=0,zd0=zeroDay(),zdd=addDays(today,-13);
+      if(zdd<zd0)zdd=new Date(zd0);
+      for(;zdd<=today;zdd=addDays(zdd,1)){
+        var zst=dayStatus(zdd),isT=dkeyOf(zdd)===todayKey,sl=zst.cls==='slip'||zst.c>0;
+        if(sl)zsl++;
+        zc+='<i class="'+(sl?'over':(isT&&!c)?'under now':'under')+'"></i>';
+      }
+      $('dhBar').innerHTML='<span class="dt-pcap">Last '+Math.min(14,zeroCalDay())+' days · '+(zsl?zsl+' slip'+(zsl>1?'s':''):'all clean')+'</span>'+zc;
       $('dhStats').innerHTML=ds(zsH?zsH.clean:0,'clean total')+ds(zsH?zsH.best:0,'best run')+ds(data.urges.length,'urges beat');
       $('dhNote').textContent=c>0?'Slip logged — the clean total stays banked.':zeroTimelineNote(n,zeroCalDay());
     }else{
@@ -7485,7 +7508,7 @@ try{
           var cm=Math.max(0,Math.floor((Date.now()-lh)/60000)),cd=Math.floor(cm/1440),ch=Math.floor(cm%1440/60);
           $('dhWinLbl').textContent='Clean stretch';
           $('dhWin').innerHTML=cd?cd+'<small>d</small> '+ch+'<small>h</small>':ch+'<small>h</small> '+(cm%60)+'<small>m</small>';
-          $('dhWinSub').textContent='since '+WEEKDAYS[lh.getDay()].slice(0,3)+' '+fmtShort(lh)+', '+fmtTime(lh)+' · no windows to wait on';
+          $('dhWinSub').textContent='since '+WEEKDAYS[lh.getDay()].slice(0,3)+' '+fmtShort(lh)+', '+fmtTime(lh);
         }else{
           $('dhWinLbl').textContent=isZeroEra?'Windows':'Window';
           $('dhWin').textContent=isZeroEra?'None':'open';
@@ -7522,12 +7545,15 @@ try{
       var zs=zeroStats();
       $('dhZeroLbl').textContent='The record';
       $('dhZero').innerHTML=(zs?zs.clean:0)+'<small> clean</small>';
-      $('dhZeroSub').textContent=zs&&zs.best>1?'best run '+zs.best+' days — it only climbs':'the counter only climbs';
+      var zcd=Math.max(1,zeroCalDay()),zcl=zs?zs.clean:0;
+      $('dhZeroSub').textContent=zcl+' of '+zcd+' day'+(zcd===1?'':'s')+' clean'+(zs&&zs.best>1?' · best run '+zs.best:'');
+      if($('dhZeroBar'))$('dhZeroBar').style.width=(100-Math.max(2,Math.min(100,zcl/zcd*100))).toFixed(1)+'%';
     }else{
       var z=zeroDate(),left2=Math.round((z-today)/MS_DAY);
       $('dhZeroLbl').textContent='Zero day';
       $('dhZero').innerHTML=left2>0?left2+'<small> day'+(left2===1?'':'s')+'</small>':'Today';
-      $('dhZeroSub').textContent=WEEKDAYS[z.getDay()].slice(0,3)+' '+fmtShort(z)+(left2>0?' · '+(left2===1?'tomorrow':left2+' days out'):'');
+      $('dhZeroSub').textContent=WEEKDAYS[z.getDay()].slice(0,3)+' '+fmtShort(z)+' · '+ps.pctToZero+'% there';
+      if($('dhZeroBar'))$('dhZeroBar').style.width=(100-Math.max(2,Math.min(100,ps.pctToZero))).toFixed(1)+'%';
     }
   }
   function fmtDur(ms){
