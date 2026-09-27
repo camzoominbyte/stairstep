@@ -965,85 +965,212 @@
 
 
   /* ==== [J] JOURNEY ==== */
-  /* legacy rules moved here unchanged by foundation (fonts token-swapped: Karla -> var(--f-ui), Fraunces -> var(--f-round)); owner rewrites this section */
-  /* ---- story card (zero-era capstone) ---- */
-  .story{
-    background:var(--surface);
-    border:1px solid var(--line);border-left:3px solid var(--sage);border-radius:14px;
-    padding:18px;margin-bottom:26px;
-  }
-  .story h3{font-family:var(--f-round);font-weight:600;font-size:21px;color:var(--sage);margin:2px 0 6px}
-  /* ---- history ---- */
-  .history{
-    background:var(--surface);border:1px solid var(--line);
-    border-radius:20px;padding:18px 20px;margin-bottom:34px;
-    box-shadow:var(--shadow-sm);
-  }
-  .history h3{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:2px}
-  .history-hint{font-size:11.5px;color:var(--faint);margin-bottom:10px}
-  /* each day is a small visual card: date, count, chips, and the dot timeline */
-  .hrow{
-    display:block;padding:11px 13px 10px;margin-top:9px;font-size:14px;cursor:pointer;
-    background:var(--surface2);border:1px solid var(--line);border-radius:14px;
-  }
-  .hrow:first-of-type{margin-top:0}
-  .hrow.hnow{border-color:var(--accent)}
-  .hrow.nolog{background:none;border-style:dashed;padding:7px 13px}
-  .hrow-main{display:flex;align-items:baseline;gap:9px}
-  .hdate{color:var(--sand);flex:0 0 auto;font-size:13px;font-weight:700}
-  .hdate small{color:var(--muted);font-weight:400;font-size:12px}
-  .hcount{font-family:var(--f-round);font-weight:600;font-size:19px;color:var(--sand);margin-left:auto}
-  .hline{margin-top:7px}
-  .hline svg{display:block}
-  .hchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px;align-items:center}
-  .hchip{
-    font-size:11px;font-weight:700;color:var(--muted);
-    background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:2px 9px;
-  }
-  .hempty{color:var(--muted);font-size:14px}
-  .hcount .hcap{color:var(--muted);font-size:12px;font-weight:400;font-family:var(--f-ui)}
-  /* the day-by-day card: line 2 always visible, main page capped at 3 rows */
-  /* the tiles carry the day-by-day on the main view; the row list lives in
-     the expanded page (with its second detail line) and in day pages */
-  #dayCard:not(.expanded) #historyRows .hrow{display:none}
-  #dayCard:not(.expanded) .hrow.hpast{display:none}
-  #dayCard.expanded .hall{display:none}
-  .hall{margin-top:10px}
-  /* the comparison header at the top of Day by day */
-  .dd-sum{padding:2px 0 10px;border-bottom:1px solid var(--hair);margin-bottom:8px}
-  .dd-now{font-size:14px;color:var(--ink)}
-  .dd-now .dv{font-family:var(--f-round);font-size:15px;font-weight:600}
-  .dd-sub{font-size:12.5px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums}
-  /* ---- the journey deck: one card per day, each read against the day before ---- */
-  /* day tiles: a flickable strip, one glance per day */
-  .jdeck{
-    display:flex;gap:8px;overflow-x:auto;padding:10px 2px 12px;margin:0 -2px;
-    scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none;
-  }
+  /* Journey: headline (by this hour) → descent contour → longest-gap trend →
+     day by day rows → the story. Everything scoped to #vJourney ids or jn-/
+     jh-/jr-/gt-/md-/st- prefixes; #dayCard also renders inside the detail
+     overlay (.expanded), so nothing here depends on #vJourney ancestry. */
+
+  /* ---- shared card head, chart text, legend ---- */
+  .jn-h{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:6px}
+  .jn-ht{min-width:0}
+  .jn-sub{font-size:13px;color:var(--ink-2);margin-top:3px;line-height:1.35;font-variant-numeric:tabular-nums}
+  .jn-sub b{color:var(--ink);font-weight:650}
+  .jn-h .chip{flex:none;margin-top:1px}
+  .jn-svg{display:block;width:100%;height:auto;overflow:visible;margin-top:10px}
+  .jn-svg text{font-family:var(--f-round);font-variant-numeric:tabular-nums}
+  .jn-ax{font-size:10.5px;font-weight:600;fill:var(--ink-3)}
+  .jn-ax-today{fill:var(--acc-t);font-weight:750}
+  .jn-ax-zero{fill:var(--under-t);font-weight:750}
+  .jn-vl{font-size:11px;font-weight:700;fill:var(--ink);paint-order:stroke;stroke:var(--s1);stroke-width:3px;stroke-linejoin:round}
+  .jn-vl.jn-in{fill:var(--ink-inv);stroke:none;font-size:10.5px}
+  .jn-cl{font-size:10.5px;font-weight:700;fill:var(--ink-2);paint-order:stroke;stroke:var(--s1);stroke-width:3px;stroke-linejoin:round}
+  .jn-t-under{fill:var(--under-t);color:var(--under-t)}
+  .jn-t-at{fill:var(--atcap-t);color:var(--atcap-t)}
+  .jn-t-over{fill:var(--over-t);color:var(--over-t)}
+  .jn-floor{stroke:var(--line-2);stroke-width:1}
+  .jn-key{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:12px;font-size:12px;font-weight:550;color:var(--ink-2)}
+  .jn-key span{display:inline-flex;align-items:center;white-space:nowrap}
+  .jn-key i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;flex:none}
+  .jn-key .jk-ramp{background:linear-gradient(90deg,var(--r-ember),var(--r-honey),var(--r-citrine),var(--r-jade))}
+  .jn-key .jk-clean{height:6px;border-radius:3px;background:var(--clean)}
+  .jn-key .jk-room{background:transparent;box-shadow:none;border:1.3px dashed var(--acc)}
+  .jn-key .jk-line{height:3px;border-radius:2px;background:var(--acc)}
+  .jn-key .jk-dash{height:0;border-radius:0;border-top:2px dashed var(--ghost)}
+  .jn-key .jk-dot{height:0;border-radius:0;border-top:2px dotted var(--ink-3)}
+  .jn-key .jk-rule{height:2px;border-radius:1px;background:var(--ink-2)}
+
+  /* ---- headline: vs yesterday by this hour ---- */
+  .dd-sum{min-height:1px}
+  .jh-row{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:4px}
+  .jh-num{font-size:60px;color:var(--ink);display:inline-flex;align-items:baseline;white-space:nowrap}
+  .jh-num .unit{font-size:.42em;margin-left:3px;color:inherit}
+  .jh-num .tri{width:24px;height:24px;margin-right:4px;align-self:center;margin-top:6px}
+  .jh-good{color:var(--under-t)}
+  .jh-up{color:var(--over-t)}
+  .jh-side{display:flex;flex-direction:column;align-items:flex-end;text-align:right;padding-bottom:8px;flex:none}
+  .jh-side .n-md{font-size:22px;color:var(--ink)}
+  .jh-side .n-md .unit{font-size:.62em}
+  .jh-side small{font-size:12.5px;line-height:1.25;color:var(--ink-2);font-weight:550;margin-top:2px}
+  .jh-facts{font-size:13.5px;color:var(--ink-2);font-weight:550;margin-top:6px;line-height:1.35;font-variant-numeric:tabular-nums}
+  .jh-facts b{color:var(--ink);font-weight:650}
+  .jh-foot{margin-top:12px;display:flex;flex-wrap:wrap;gap:6px}
+  .jh-chart{margin-top:14px}
+  .jh-grid{stroke:var(--line);stroke-width:1}
+  .jh-cap{stroke:var(--ink-3);stroke-width:1.3;stroke-dasharray:1.5 4;stroke-linecap:round}
+  .jh-yday{fill:none;stroke:var(--ghost);stroke-width:1.7;stroke-dasharray:4 3.5}
+  .jh-today{fill:none;stroke:var(--acc);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+  .jh-now{stroke:var(--acc);stroke-width:1.2;stroke-opacity:.55;stroke-dasharray:2 3}
+  .jh-ydot{fill:var(--s1);stroke:var(--ghost);stroke-width:1.8}
+  .jh-tdot{fill:var(--acc);stroke:var(--s1);stroke-width:2.2}
+  .jh-yl{fill:var(--ink-2);font-weight:650;paint-order:stroke;stroke:var(--s1);stroke-width:3px}
+  .jh-tl{fill:var(--acc-t)}
+
+  /* ---- the descent contour ---- */
+  .jn-descent .jn-svg{margin-top:12px}
+  .jn-base{stroke:var(--ink-3);stroke-width:1.4;stroke-dasharray:4 5}
+  .jn-room{fill:none;stroke:var(--acc);stroke-width:1.3;stroke-dasharray:3 3;opacity:.85}
+  .jn-clean{fill:var(--clean);opacity:.9}
+  .jn-yday{stroke:var(--ink-2);stroke-width:1.6;stroke-dasharray:3 2.5}
+  .jn-ydl{fill:var(--ink-2);paint-order:stroke;stroke:var(--s1);stroke-width:3px}
+  .jn-halo{fill:var(--acc);opacity:.26}
+  .jn-now{fill:var(--s1);stroke:var(--acc);stroke-width:2.4}
+
+  /* ---- the longest-gap trend ---- */
+  .jn-gaps[hidden]{display:none}
+  .gt-h{align-items:flex-end}
+  .gt-num{margin-top:4px;white-space:nowrap}
+  .gt-num .unit{font-size:.5em;margin-left:1px}
+  .gt-when{font-family:var(--f-ui);font-size:14px;font-weight:600;color:var(--ink-2);letter-spacing:0;margin-left:8px}
+  .gt-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-align:right;padding-bottom:4px;flex:none}
+  .gt-side small{font-size:12.5px;color:var(--ink-2);font-weight:600;font-variant-numeric:tabular-nums}
+  .gt-grid{stroke:var(--line);stroke-width:1}
+  .gt-bar.gt-past,.gt-bar.gt-none{fill:var(--s3);stroke:var(--ghost);stroke-width:1}
+  .gt-bar.gt-best{fill:var(--under)}
+  .gt-bar.gt-today{fill:var(--acc)}
+  .gt-beat{fill:none;stroke:var(--acc);stroke-width:1.3;stroke-dasharray:3 3}
+  .gt-v{font-size:11px}
+  .gt-v-best{fill:var(--under-t)}
+  .gt-v-today{fill:var(--acc-t)}
+  .gt-rule{stroke:var(--ink-2);stroke-width:2;stroke-linecap:round}
+
+  /* ---- day by day ---- */
+  .jn-days{padding-top:16px;padding-bottom:8px}
+  .jn-days-h{font-family:var(--f-round);font-size:20px;font-weight:700;letter-spacing:-.015em;color:var(--ink);
+    margin:0 44px 6px 0;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .history-hint{font-family:var(--f-ui);font-size:13px;font-weight:550;letter-spacing:0;color:var(--ink-2)}
+  #dayCard.expanded .jn-days-h{display:none}
+  #dayCard.expanded{padding-top:6px}
+  #journey[hidden]{display:none}
+  .hempty{color:var(--ink-2);font-size:14px;line-height:1.4;padding:6px 0 12px}
+  .hrow.jr{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:start;
+    padding:14px 0;border-top:1px solid var(--line);cursor:pointer;-webkit-tap-highlight-color:transparent;
+    border-radius:0;transition:opacity var(--d-fast) var(--e-move)}
+  #historyRows>.hrow.jr:first-child{border-top:0;padding-top:8px}
+  .hrow.jr:active{opacity:.6}
+  .hrow.jr:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:12px}
+  .jr-dt{display:flex;flex-direction:column;align-items:center;justify-content:center;width:44px;height:50px;border-radius:14px;
+    background:var(--s2);color:var(--ink)}
+  .jr-dt small{font-size:11px;font-weight:650;color:var(--ink-2);line-height:1.1}
+  .jr-dt b{font-family:var(--f-round);font-size:20px;font-weight:700;line-height:1.05;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .hrow.jr.is-today .jr-dt{background:var(--acc-bg);color:var(--acc-t);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--acc) 55%,transparent)}
+  .hrow.jr.is-today .jr-dt small{color:var(--acc-t)}
+  .jr-mid{min-width:0}
+  .jr-top{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;line-height:1.1}
+  .jr-n{font-family:var(--f-round);font-size:22px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ink)}
+  .jr-of{font-size:13px;font-weight:600;color:var(--ink-3)}
+  .jr-pips{display:flex;gap:2px;margin:7px 0 6px}
+  .jr-pips i{flex:1;min-width:2px;max-width:14px;height:6px;border-radius:2px;background:var(--s3)}
+  .jr-pips i.u{background:var(--under)}
+  .jr-pips i.a{background:var(--atcap)}
+  .jr-pips i.o{background:var(--over)}
+  .jr-pips b{flex:none;width:3px}
+  .jr-times{font-family:var(--f-round);font-size:12.5px;font-weight:600;line-height:1.55;color:var(--ink-3);font-variant-numeric:tabular-nums}
+  .jr-times b{color:var(--ink);font-weight:650;white-space:nowrap}
+  .jr-times b i{font-style:normal;color:var(--ink-3);font-weight:600;margin-left:1px}
+  .jr-times span{white-space:nowrap}
+  .jr-times .jr-sep{color:var(--ink-3)}
+  .jr-times .jr-next{color:var(--acc-t)}
+  .jr-long{display:flex;align-items:baseline;flex-wrap:wrap;gap:0 6px;margin-top:4px;font-size:12.5px;font-weight:550;color:var(--ink-2)}
+  .jr-long b{font-family:var(--f-round);color:var(--ink);font-weight:650;font-variant-numeric:tabular-nums}
+  .jr-long .delta{font-size:12.5px}
+  .jr-soft{font-size:12.5px;font-weight:550;color:var(--ink-3)}
+  .jr-line{margin-top:5px}
+  .jr-rt{display:flex;flex-direction:column;align-items:flex-end;gap:5px;padding-top:1px;text-align:right}
+  .jr-rt .delta,.jr-rt .dv{font-size:15px}
+  .jr-rt small{font-size:11.5px;line-height:1.2;color:var(--ink-3);font-weight:600}
+  .hrow.jr.jr-nolog{padding:10px 0}
+  .hrow.jr.jr-nolog .jr-dt{height:40px;background:transparent;box-shadow:inset 0 0 0 1.5px var(--line-2)}
+  .hrow.jr.jr-nolog .jr-top{padding-top:11px}
+  .hrow.jr.jr-z .jr-dt{background:var(--clean-bg);color:var(--clean-t)}
+  .hrow.jr.jr-z .jr-dt small{color:var(--clean-t)}
+  .hrow.jr.jr-z.is-today .jr-dt{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--acc) 55%,transparent)}
+  .jr-zero{display:flex;align-items:center;gap:10px;padding:10px 0 12px;border-top:1px solid var(--line)}
+  .jr-zero span{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:var(--r-pill);
+    background:var(--clean-bg);color:var(--clean-t);font-size:12.5px;font-weight:650;white-space:nowrap}
+  .jr-zero small{flex:1;font-size:12.5px;color:var(--ink-2);font-weight:550;display:flex;align-items:center;gap:10px;min-width:0}
+  .jr-zero small::after{content:"";flex:1;height:0;border-top:1.5px dashed var(--clean);opacity:.6}
+  .hall{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;width:100%;min-height:48px;
+    margin:2px 0 6px;padding:0 4px 0 0;border:0;border-top:1px solid var(--line);background:none;cursor:pointer;
+    font-family:var(--f-ui);font-size:15px;font-weight:650;color:var(--acc-t);text-align:left}
+  .hall .jr-soft{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hall .ic{color:var(--ink-3)}
+  .hall:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:12px}
+  /* the parked deck (kept for its delegation contract) */
+  .jdeck{display:flex;gap:8px;overflow-x:auto;padding:6px 0 10px;scrollbar-width:none}
   .jdeck::-webkit-scrollbar{display:none}
-  .jday{
-    flex:0 0 88px;scroll-snap-align:end;box-sizing:border-box;
-    border:1px solid var(--line);border-radius:14px;background:var(--surface);
-    box-shadow:var(--shadow-sm);padding:10px 8px 9px;cursor:pointer;
-    display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;
-    transition:border-color .25s,transform .25s var(--spring);
-  }
-  .jday:active{transform:scale(.94)}
-  .jday:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .jday.today{border-color:var(--accent)}
-  .jday.future{border-style:dashed;background:none;box-shadow:none}
-  .jt-dow{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800;white-space:nowrap}
-  .jday.today .jt-dow{color:var(--accent)}
-  .jt-big{font-family:var(--f-round);font-weight:600;font-size:27px;line-height:1;color:var(--sand)}
-  .jt-big small{font-family:var(--f-ui);font-size:11px;color:var(--muted);font-weight:700}
-  .jt-bar{width:100%;height:4px;border-radius:99px;background:var(--surface2);overflow:hidden}
-  .jt-bar i{display:block;height:100%;border-radius:99px}
-  .jt-chip{min-height:16px;display:flex;align-items:center;justify-content:center}
-  .jt-chip .hstat{font-size:9.5px}
-  .history{position:relative}
-  @media (hover:hover){.hrow:hover{border-color:var(--faint)}}
-  @media (hover:hover){
-    html.dark .hrow:hover{border-color:var(--faint)}
+  .jday{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:52px;padding:8px 6px;
+    border-radius:14px;background:var(--s2);cursor:pointer}
+  .jday.is-today{background:var(--acc-bg);color:var(--acc-t)}
+  .jday.future{background:transparent;box-shadow:inset 0 0 0 1.5px var(--line-2)}
+  .jt-dow{font-size:11px;font-weight:650;color:var(--ink-2)}
+  .jt-big{font-family:var(--f-round);font-size:20px;font-weight:700}
+  @media (hover:hover){.hrow.jr:hover .jr-dt{box-shadow:inset 0 0 0 1.5px var(--line-2)}}
+
+  /* ---- the story: milestones, and at zero the capstone ---- */
+  .jn-story[hidden]{display:none}
+  #btnShareStory[hidden]{display:none}
+  .st-h{margin-bottom:12px}
+  .st-t{font-family:var(--f-round);font-size:20px;font-weight:700;letter-spacing:-.015em;color:var(--ink);margin-top:2px}
+  .st-sub{font-size:13px;color:var(--ink-2);line-height:1.4;margin-top:4px;font-variant-numeric:tabular-nums}
+  .st-sub b{color:var(--ink);font-weight:650}
+  .md-defs{position:absolute;width:0;height:0;overflow:hidden}
+  .md-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:4px;margin:10px -4px 2px}
+  .md{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0}
+  .md svg{width:54px;height:54px;display:block;overflow:visible}
+  .md b{font-size:12.5px;font-weight:650;color:var(--ink);margin-top:6px;white-space:nowrap}
+  .md span{font-size:11.5px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .md.locked b{color:var(--ink-2)}
+  .md.locked span{color:var(--ink-3)}
+  .md-shadow{opacity:.22}
+  .md-ember{fill:var(--r-ember)} .md-honey{fill:var(--r-honey)} .md-citrine{fill:var(--r-citrine)}
+  .md-jade{fill:var(--r-jade)} .md-zero{fill:var(--r-jade)}
+  .md-ring{fill:none;stroke:#fff;stroke-opacity:.4;stroke-width:1}
+  .md-contour{fill:none;stroke:#fff;stroke-opacity:.2;stroke-width:1.1;stroke-linejoin:round}
+  .md-shine{fill:none;stroke:#fff;stroke-opacity:.55;stroke-width:2;stroke-linecap:round}
+  .md-t{font-family:var(--f-round);font-weight:800;letter-spacing:-.02em;fill:#fff}
+  .md-lock{fill:var(--s2);stroke:var(--ghost);stroke-width:1.4;stroke-dasharray:3 3}
+  .md-lock-c{fill:none;stroke:var(--ink-3);stroke-width:1.2;opacity:.35;stroke-linejoin:round}
+  .md-lock-t{font-family:var(--f-round);font-weight:700;fill:var(--ink-2)}
+  html.dark .md-t{fill:#0A0C11}
+  html.dark .md-ring,html.dark .md-contour{stroke:#0A0C11}
+  .st-tiles{margin-top:16px;gap:8px}
+  .st-tiles .tile{padding:12px 12px 11px}
+  .st-tiles .n-lg{font-size:24px}
+  .st-tiles .n-lg .unit{font-size:.6em;color:var(--ink-3)}
+  .st-tiles .foot{font-size:12px;margin-top:3px}
+  .st-note{font-size:13px;color:var(--ink-2);line-height:1.45;margin-top:12px}
+  .st-note b{color:var(--ink);font-weight:650}
+  .st-share{width:100%;margin-top:14px;gap:8px}
+  .jn-story #storyMsg:empty{display:none}
+
+  /* ---- the once-a-session draw-in (JS adds .jn-intro while it runs) ---- */
+  #vJourney.jn-intro .jn-bar,#vJourney.jn-intro .gt-bar{transform-box:fill-box;transform-origin:50% 100%;
+    animation:grow-y 700ms var(--settle) both;animation-delay:var(--dl,0ms)}
+  #vJourney.jn-intro .jn-cap{stroke-dasharray:1;stroke-dashoffset:1;animation:drawIn 1100ms var(--e-enter) 120ms forwards}
+  #vJourney.jn-intro .jn-fill{animation:fade-in 900ms var(--e-enter) 250ms both}
+  @media (prefers-reduced-motion: reduce){
+    #vJourney.jn-intro .jn-bar,#vJourney.jn-intro .gt-bar,#vJourney.jn-intro .jn-fill{animation:none}
+    #vJourney.jn-intro .jn-cap{animation:none;stroke-dashoffset:0}
   }
   /* ==== [/J] ==== */
 
@@ -1985,29 +2112,32 @@ try{
 </main>
 
 <main class="view" id="vJourney">
-<div class="history openable" id="dayCard" data-title="Day by day">
-  <button class="xopen" data-target="dayCard" data-title="Day by day" aria-label="Open day by day in detail"><svg class="ic" aria-hidden="true"><use href="#i-open"/></svg></button>
-  <h3>Day by day</h3>
+<section class="card jn-card jn-head" id="jHead" aria-label="Today against yesterday, hour by hour">
   <div class="dd-sum" id="ddSum"></div>
-  <div id="journey" hidden>
-    <div class="jdeck" id="jdeck" role="group" aria-label="The journey, day by day — flick through the tiles, tap one for the full day"></div>
-  </div>
-  <p class="history-hint">Tap any day to open it · the dashed line is the old ~30 a day.</p>
+</section>
+
+<section class="card jn-card jn-descent" id="jDescent" aria-label="The descent, every day against its cap">
   <div id="trendChart"></div>
+</section>
+
+<section class="card jn-card jn-gaps" id="gapTrend" aria-label="Longest gap, day by day" hidden></section>
+
+<div class="history openable card jn-days" id="dayCard" data-title="Day by day">
+  <button class="xopen" data-target="dayCard" data-title="Day by day" aria-label="Open day by day in detail"><svg class="ic" aria-hidden="true"><use href="#i-open"/></svg></button>
+  <h3 class="jn-days-h">Day by day <span class="history-hint">vs the day before</span></h3>
+  <div id="journey" hidden>
+    <div class="jdeck" id="jdeck" role="group" aria-label="The journey, day by day — tap a day for the full day"></div>
+  </div>
   <div id="historyRows"><p class="hempty">Your days will stack up here as you go.</p></div>
   <div class="xtra" id="trendXtra"></div>
   <div class="xtra" id="recordXtra"></div>
 </div>
 
-<div class="story" id="storyCard" hidden>
-  <p class="eyebrow" style="color:var(--sage)">The story</p>
-  <h3>From ~30 a day to zero</h3>
+<section class="story card jn-story" id="storyCard" aria-label="The story, start to zero" hidden>
   <div id="storyBody"></div>
-  <div class="data-btns" style="margin-top:12px">
-    <button id="btnShareStory">Share the story</button>
-  </div>
+  <button class="btn acc st-share" id="btnShareStory"><svg class="ic" aria-hidden="true"><use href="#i-share"/></svg>Share the story</button>
   <p class="gap-note" id="storyMsg"></p>
-</div>
+</section>
 </main>
 
 <main class="view" id="vPlan">
@@ -4782,59 +4912,193 @@ try{
   $('ydOpen').addEventListener('click',function(){openDayPage(ydayKey());});
   $('tdOpen').addEventListener('click',function(){openDayPage(todayKey);});
 
-  /* the descent, big picture: every day drawn against the old ~30/day line,
-     so the whole story reads in one glance — tall bars then, slivers now */
+  /* ================= Journey (owner J) =================
+     Small shared pieces for the Journey tab's cards. Status always ships with
+     its word; colour is only ever a second channel. */
+  var JN_STAT={under:['under','Under cap'],at:['atcap','At cap'],over:['over','Over cap'],
+    clean:['clean','Clean'],slip:['slip','Slip'],nolog:['ghost','No log']};
+  function jnChip(m,sm,word){
+    var s=JN_STAT[m.cls]||JN_STAT.nolog;
+    return '<span class="chip'+(sm?' sm':'')+' '+s[0]+'">'+(s[0]==='ghost'?'':'<span class="dot"></span>')+(word||s[1])+'</span>';
+  }
+  var JN_BAR={under:'var(--under)',at:'var(--atcap)',over:'var(--over)',slip:'var(--over)',clean:'var(--under)'};
+  var JN_TXT={under:'var(--under-t)',at:'var(--atcap-t)',over:'var(--over-t)',slip:'var(--over-t)',clean:'var(--under-t)'};
+  function jnWk(d){return WEEKDAYS[d.getDay()].slice(0,3);}
+  // 4am of a logical day, in ms — every Journey clock is anchored there
+  function jnDay4(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate(),DAY_CUTOFF_H).getTime();}
+  // "13h 20m" when there's room, "13h20" when there isn't
+  function jnDurTight(ms){
+    var m=Math.max(0,Math.floor(ms/60000)),h=Math.floor(m/60);
+    return h?h+'h'+pad(m%60):m+'m';
+  }
+  function jnT(x,y,cls,s,anchor,extra){
+    return '<text x="'+(+x).toFixed(1)+'" y="'+(+y).toFixed(1)+'" class="'+cls+'"'+
+      (anchor?' text-anchor="'+anchor+'"':'')+(extra||'')+'>'+s+'</text>';
+  }
+  /* The first time the Journey tab is actually on screen this session, its
+     charts draw in (bars grow, the cap line traces). The class lives on the
+     persistent view node and comes off once the motion is done, so the
+     re-renders renderAll and the 30s tick do afterwards stay still. */
+  var jnIntroDone=false;
+  function jnIntro(){
+    if(jnIntroDone||!motionOK||document.body.dataset.view!=='journey')return;
+    jnIntroDone=true;
+    var v=$('vJourney');if(!v)return;
+    v.classList.add('jn-intro');
+    setTimeout(function(){v.classList.remove('jn-intro');},1700);
+  }
+  if(typeof MutationObserver==='function')
+    new MutationObserver(function(){safe(jnIntro);}).observe(document.body,{attributes:true,attributeFilter:['data-view']});
+  RENDER_HOOKS.push(jnIntro);
+
+  /* the descent contour: every day from day one to zero (or today, if later)
+     as a status bar under the stepped cap, the old ~30/day line on top. It
+     fits the whole record in one width — at 77+ days the bars thin to
+     slivers and the axis switches to week ticks, so the shape still reads
+     as one glance. Tap any day to open it (hit rects stay last). */
   function renderTrend(){
     var el=$('trendChart');
-    var sch=schedule(), z=zeroDate(), start=sch[0].start;
-    if(today<start){el.innerHTML='<p class="hempty">The chart starts with day one.</p>';return;}
+    var sch=schedule(), z=zeroDate(), start=sch[0].start, tp=taperProgress();
+    if(today<start){el.innerHTML='<p class="hempty">The chart starts with day one, '+fmtShort(start)+'.</p>';return;}
     var endD=today>z?today:z;
-    var n=Math.round((endD-start)/MS_DAY)+1;
-    var vals=[], maxV=BASELINE;
-    var d=new Date(start);
+    var days=[], maxV=BASELINE, d=new Date(start);
     while(d<=endD){
-      var m=dayMetrics(dkeyOf(d));
-      vals.push(m);
-      if(m.eff!==null&&m.eff>maxV)maxV=m.eff;
+      var dm=dayMetrics(dkeyOf(d));
+      days.push(dm);
+      if(dm.eff!==null&&dm.eff>maxV)maxV=dm.eff;
+      if(dm.cap>maxV)maxV=dm.cap;
       d=addDays(d,1);
     }
-    var W=340,H=205,padT=26,padB=18,scaleH=H-padT-padB;
-    var slotW=W/n, barW=Math.min(26,slotW*0.66);
-    function yv(v){return padT+scaleH*(1-v/maxV);}
-    function hv(v){return scaleH*(v/maxV);}
-    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="The descent — every day against the old '+BASELINE+'-a-day baseline; tap a day to open it">';
-    // where you started: the line the whole descent hangs from
-    svg+='<line x1="0" y1="'+yv(BASELINE).toFixed(1)+'" x2="'+W+'" y2="'+yv(BASELINE).toFixed(1)+'" stroke="var(--faint)" stroke-width="1.5" stroke-dasharray="6 5"/>'+
-      txt(2,yv(BASELINE)-8,10,'var(--muted)',null,'where you started · ~'+BASELINE+' a day',true);
-    var labelEvery=n>16?3:2;
-    var firstLogged=-1;
-    vals.forEach(function(m,i){if(firstLogged<0&&m.eff!==null&&m.eff>0)firstLogged=i;});
-    vals.forEach(function(m,i){
-      var cx=slotW*i+slotW/2, x=cx-barW/2;
-      if(m.cap>0){
-        svg+='<rect x="'+x.toFixed(1)+'" y="'+yv(m.cap).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+hv(m.cap).toFixed(1)+'" rx="4" fill="var(--surface2)" pointer-events="none"'+(m.isToday?' stroke="var(--accent)" stroke-opacity=".6"':'')+'/>';
-      }else{
-        svg+='<rect x="'+x.toFixed(1)+'" y="'+(padT+scaleH-2)+'" width="'+barW.toFixed(1)+'" height="2" rx="1" fill="var(--surface2)" pointer-events="none"/>';
-      }
-      if(m.eff!==null&&m.eff>0){
-        var col=(m.isZ||m.eff>m.cap)?'var(--clay)':m.eff===m.cap?'var(--amber)':'var(--sage)';
-        svg+='<rect x="'+x.toFixed(1)+'" y="'+yv(m.eff).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+Math.max(2.5,hv(m.eff)).toFixed(1)+'" rx="4" fill="'+col+'" fill-opacity=".9" pointer-events="none"/>';
-        // the endpoints wear their numbers — the story in two figures
-        if(i===firstLogged||m.isToday)svg+=txt(cx,yv(m.eff)-5,11,col,'middle',m.eff,true);
-      }else if(m.isZ&&!m.future){
-        svg+='<circle cx="'+cx.toFixed(1)+'" cy="'+(padT+scaleH-4)+'" r="3.5" fill="var(--sage)" pointer-events="none"/>';
-      }
-      if(m.isZ&&dkeyOf(m.date)===dkeyOf(z))
-        svg+=txt(cx,padT+scaleH-10,11,'var(--sage)','middle','0',true);
-      if(i%labelEvery===0)
-        svg+=txt(cx,H-3,9.5,m.isToday?'var(--accent)':'var(--muted)','middle',(m.date.getMonth()+1)+'/'+m.date.getDate());
+    var n=days.length, W=325, H=216, top=30, base=190;
+    var sw=W/n, wide=sw>=18;
+    function yv(v){return base-(v/maxV)*(base-top);}
+    var zKey=dkeyOf(z), zi=-1, ti=-1;
+    days.forEach(function(m,i){if(m.key===zKey)zi=i;if(m.isToday)ti=i;});
+    var zeroX=zi>=0?zi*sw:W;
+    var pv=(!isZeroEra&&ti>=0)?paceVsYesterday():null;
+    var svg='<svg class="jn-svg jn-descent" viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="The descent: '+
+      n+' days from '+fmtShort(start)+', every day against its cap and the old '+BASELINE+'-a-day line. Tap a day to open it.">';
+    svg+='<defs>'+
+      '<linearGradient id="jnRamp" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="'+Math.max(40,zeroX).toFixed(1)+'" y2="0">'+
+        '<stop offset="0" stop-color="var(--r-ember)"/><stop offset=".4" stop-color="var(--r-honey)"/>'+
+        '<stop offset=".72" stop-color="var(--r-citrine)"/><stop offset="1" stop-color="var(--r-jade)"/></linearGradient>'+
+      '<linearGradient id="jnFade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".42"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>'+
+      '<mask id="jnFm" maskUnits="userSpaceOnUse" x="0" y="'+top+'" width="'+W+'" height="'+(base-top)+'"><rect x="0" y="'+top+'" width="'+W+'" height="'+(base-top)+'" fill="url(#jnFade)"/></mask>'+
+      '</defs>';
+    // the floor, and where the whole descent hangs from
+    svg+='<line x1="0" y1="'+base+'" x2="'+W+'" y2="'+base+'" class="jn-floor"/>';
+    var yb=yv(BASELINE).toFixed(1);
+    svg+='<line x1="0" y1="'+yb+'" x2="'+W+'" y2="'+yb+'" class="jn-base"/>'+
+      jnT(0,yv(BASELINE)-7,'jn-ax','where you started · ~'+BASELINE+' a day');
+    // the stepped cap, soft corners, ramp stroke over a fading ramp fill
+    var r=Math.min(6,sw*0.45), p='M0 '+yv(days[0].cap).toFixed(1);
+    days.forEach(function(m,i){
+      var y=yv(m.cap), x1=(i+1)*sw, nx=days[i+1];
+      if(!nx||nx.cap===m.cap){p+=' L'+x1.toFixed(1)+' '+y.toFixed(1);return;}
+      var y2=yv(nx.cap), dy=y2-y, rr=Math.min(r,Math.abs(dy)/2), sg=dy>0?1:-1;
+      p+=' L'+(x1-rr).toFixed(1)+' '+y.toFixed(1)+' Q'+x1.toFixed(1)+' '+y.toFixed(1)+' '+x1.toFixed(1)+' '+(y+sg*rr).toFixed(1)+
+        ' L'+x1.toFixed(1)+' '+(y2-sg*rr).toFixed(1)+' Q'+x1.toFixed(1)+' '+y2.toFixed(1)+' '+(x1+rr).toFixed(1)+' '+y2.toFixed(1);
     });
-    // full-height invisible hit zones on top make every day easy to tap
-    vals.forEach(function(m,i){
-      svg+='<rect x="'+(slotW*i).toFixed(1)+'" y="0" width="'+slotW.toFixed(1)+'" height="'+H+'" fill="transparent" data-k="'+m.key+'" style="cursor:pointer"/>';
+    svg+='<path d="'+p+' L'+W+' '+base+' L0 '+base+' Z" fill="url(#jnRamp)" mask="url(#jnFm)" class="jn-fill"/>';
+    svg+='<path d="'+p+'" pathLength="1" fill="none" stroke="url(#jnRamp)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="jn-cap"/>';
+    // today's room left: a dashed box from the floor up to the cap
+    var bw=Math.max(2,Math.min(13,sw*0.62)), brx=Math.min(4,bw/2);
+    if(ti>=0&&!isZeroEra&&days[ti].cap>0){
+      var tcx=ti*sw+sw/2;
+      svg+='<rect x="'+(tcx-bw/2-1.5).toFixed(1)+'" y="'+yv(days[ti].cap).toFixed(1)+'" width="'+(bw+3).toFixed(1)+'" height="'+(base-yv(days[ti].cap)).toFixed(1)+
+        '" rx="'+(brx+1).toFixed(1)+'" class="jn-room"/>';
+    }
+    // clean runs at zero: one band per unbroken run, the run's length on it
+    if(zi>=0){
+      var runS=-1;
+      for(var i=zi;i<=n;i++){
+        var cm=days[i], clean=cm&&!cm.future&&cm.isZ&&cm.eff===0;
+        if(clean&&runS<0)runS=i;
+        if(!clean&&runS>=0){
+          var x0=runS*sw+Math.min(1.5,sw*.2), x1=i*sw-Math.min(1.5,sw*.2), len=i-runS;
+          svg+='<rect x="'+x0.toFixed(1)+'" y="'+(base-7)+'" width="'+Math.max(2,x1-x0).toFixed(1)+'" height="7" rx="3.5" class="jn-clean"/>';
+          if(x1-x0>=46)svg+=jnT((x0+x1)/2,base-12,'jn-vl jn-t-under',len+' clean','middle');
+          runS=-1;
+        }
+      }
+    }
+    // the days, as bars in their status colour
+    var firstLogged=-1;
+    days.forEach(function(m,i){if(firstLogged<0&&m.eff!==null&&m.eff>0&&!m.isZ)firstLogged=i;});
+    days.forEach(function(m,i){
+      if(m.eff===null||m.eff<=0)return;
+      var cx=i*sw+sw/2, x=cx-bw/2, yt=yv(m.eff), h=Math.max(2.5,base-yt);
+      svg+='<rect x="'+x.toFixed(1)+'" y="'+(base-h).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="'+brx.toFixed(1)+
+        '" fill="'+(JN_BAR[m.cls]||'var(--ghost)')+'" class="jn-bar" style="--dl:'+Math.min(900,120+i*(700/n)).toFixed(0)+'ms"/>';
+      var show=wide||m.isToday||i===firstLogged||m.cls==='slip';
+      if(!show)return;
+      var inside=wide&&h>=19&&m.cls!=='at'&&!m.isToday;
+      svg+=inside
+        ?jnT(cx,base-h+13,'jn-vl jn-in',m.eff,'middle')
+        :jnT(cx,base-h-5,'jn-vl'+(wide?'':' jn-t-'+(m.cls==='at'?'at':m.cls==='under'?'under':'over')),m.eff,'middle');
+    });
+    // caps on the treads still ahead, and the zero at the end
+    var runs=[], rs=0;
+    for(var j=1;j<=n;j++){
+      if(j===n||days[j].cap!==days[rs].cap){runs.push({a:rs,b:j-1,m:days[rs]});rs=j;}
+    }
+    runs.forEach(function(ru){
+      if(ru.m.cap<=0||ti<0||ru.b<=ti)return;
+      var a=Math.max(ru.a,ti+1), cx=(a+ru.b+1)/2*sw;
+      svg+=jnT(cx,yv(ru.m.cap)-7,'jn-cl',esc(ru.m.capText||String(ru.m.cap)),'middle');
+    });
+    if(zi>=0&&!isZeroEra)svg+=jnT(zi*sw+sw/2,base-7,'jn-cl jn-t-under','0','middle');
+    // yesterday's count by this hour, a dashed ghost on today's bar
+    if(pv&&ti>=0){
+      var gx=ti*sw+sw/2, gy=yv(pv.y);
+      svg+='<line x1="'+(gx-bw/2-4).toFixed(1)+'" y1="'+gy.toFixed(1)+'" x2="'+(gx+bw/2+4).toFixed(1)+'" y2="'+gy.toFixed(1)+'" class="jn-yday"/>';
+      var right=gx+bw/2+6+78<W;
+      svg+=jnT(right?gx+bw/2+6:gx-bw/2-6,gy+3.5,'jn-ax jn-ydl',pv.y+' by now yday',right?'start':'end');
+    }
+    // today, marked on its tread (or on the floor, at zero)
+    if(ti>=0){
+      var hx=ti*sw+sw/2, hy=isZeroEra?base-3.5:yv(days[ti].cap);
+      svg+='<circle cx="'+hx.toFixed(1)+'" cy="'+hy.toFixed(1)+'" r="9" class="jn-halo"/>'+
+        '<circle cx="'+hx.toFixed(1)+'" cy="'+hy.toFixed(1)+'" r="4.3" class="jn-now"/>';
+    }
+    // the x axis: day one, today and zero always; the rest thinned to fit
+    var labs=[{i:0,t:fmtShort(start),c:'',p:2}];
+    if(ti>0)labs.push({i:ti,t:'Today',c:' jn-ax-today',p:3});
+    else if(ti===0)labs[0]={i:0,t:'Today',c:' jn-ax-today',p:3};
+    if(zi>=0&&zi!==ti)labs.push({i:zi,t:'Zero',c:' jn-ax-zero',p:3});
+    var k=n<=12?2:n<=21?3:n<=35?7:14, lastM=start.getMonth();
+    for(var q=k;q<n;q+=k){
+      var qd=days[q].date, t=qd.getMonth()!==lastM?fmtShort(qd):String(qd.getDate());
+      lastM=qd.getMonth();
+      labs.push({i:q,t:t,c:'',p:1});
+    }
+    labs.sort(function(a,b){return b.p-a.p;});
+    var taken=[];
+    labs.forEach(function(l){
+      var w=l.t.length*6.1+4, cx=l.i*sw+sw/2, a='middle';
+      if(cx-w/2<0){cx=0;a='start';}else if(cx+w/2>W){cx=W;a='end';}
+      var L=a==='start'?cx:a==='end'?cx-w:cx-w/2, R=L+w;
+      for(var s=0;s<taken.length;s++)if(L<taken[s][1]+4&&R>taken[s][0]-4)return;
+      taken.push([L,R]);
+      svg+=jnT(cx,H-6,'jn-ax'+l.c,l.t,a);
+    });
+    // full-height hit zones last, so every day is easy to tap
+    days.forEach(function(m,i){
+      svg+='<rect x="'+(sw*i).toFixed(1)+'" y="0" width="'+sw.toFixed(1)+'" height="'+H+'" fill="transparent" data-k="'+m.key+'" style="cursor:pointer"/>';
     });
     svg+='</svg>';
-    el.innerHTML=svg;
+    // header + legend
+    var zs=isZeroEra?zeroStats():null;
+    var chip=isZeroEra
+      ?(zs?'<span class="chip sm clean"><span class="dot"></span>'+zs.clean+' clean since zero</span>':'')
+      :(tp.logged?'<span class="chip sm '+(tp.under===tp.logged?'under':'ghost')+'">'+(tp.under===tp.logged?'<span class="dot"></span>':'')+tp.under+' of '+tp.logged+' within cap</span>':'');
+    var sub=fmtShort(start)+' → '+(isZeroEra?'zero was ':'zero ')+'<b>'+jnWk(z)+' '+fmtShort(z)+'</b> · '+tp.tot+' logged';
+    var key='<span><i class="jk-ramp"></i>Cap</span><span><i style="background:var(--under)"></i>Under</span>'+
+      '<span><i style="background:var(--atcap)"></i>At cap</span><span><i style="background:var(--over)"></i>'+(zi>=0&&zi<=ti?'Over or slip':'Over')+'</span>'+
+      (zi>=0&&zi<=ti?'<span><i class="jk-clean"></i>Clean run</span>':'')+
+      (ti>=0&&!isZeroEra?'<span><i class="jk-room"></i>Room left</span>':'');
+    el.innerHTML='<div class="jn-h"><div class="jn-ht"><p class="label">The descent</p><p class="jn-sub">'+sub+'</p></div>'+chip+'</div>'+
+      svg+'<div class="jn-key">'+key+'</div>';
   }
   $('trendChart').addEventListener('click',function(ev){
     var r=ev.target.closest('[data-k]');if(!r)return;
@@ -4842,42 +5106,130 @@ try{
     openDayPage(r.dataset.k);
   });
 
-  /* the live comparison header at the top of Day by day — a sentence, not tiles */
+  /* the Journey headline: today against yesterday at this same clock time,
+     one big delta, the facts under it, and the day so far drawn as a step
+     line over yesterday's (dashed). Re-rendered by the 30s tick, so the
+     now line steps with the clock. Zero era: the clean record instead. */
   function renderDayHead(){
     var el=$('ddSum');if(!el)return;
     var t=taperProgress(), start=schedule()[0].start;
-    var now='',sub='';
     if(today<start){
-      now='Day one lands '+fmtShort(start)+'.';
-      sub='The road: '+t.totalD+' days, '+BASE_PHASES[0].capText+' → 0.';
-    }else if(isZeroEra){
-      var zs=zeroStats(), c0=countOf(todayKey)||0;
-      if(c0>0){
-        now='<span class="dv pill bad">slip today</span>';
-        sub='A slip dents the record — it doesn’t delete it.';
-      }else{
-        now='<span class="dv pill good">Day '+Math.max(1,zs?zs.run:1)+' clean</span>';
-        sub=zs&&zs.slips?zs.slips+' slip'+(zs.slips>1?'s':'')+', banked and past.':'';
-      }
-    }else{
-      var pv=paceVsYesterday();
-      if(!pv){
-        now='No log yesterday — today stands on its own.';
-      }else{
-        var yM=dayMetrics(dkeyOf(addDays(today,-1)));
-        var pill;
-        if(pv.t===pv.y)pill='<span class="dv pill flat">even</span>';
-        else{
-          var good=pv.t<pv.y, arrow=good?'▾':'▴';
-          var pct=pv.y>0?Math.round(Math.abs(pv.t-pv.y)/pv.y*100)+'%':String(Math.abs(pv.t-pv.y));
-          pill='<span class="dv pill '+(good?'good':'bad')+'">'+arrow+pct+'</span>';
-        }
-        now=pill+' vs yesterday by this hour';
-        sub=(countOf(todayKey)||0)+' so far · yesterday had '+pv.y+' by now'+(yM.eff!==null?', and closed at '+yM.eff:'')+'.';
-      }
+      el.innerHTML='<p class="label">Day one lands '+jnWk(start)+' '+fmtShort(start)+'</p>'+
+        '<div class="jh-row"><span class="n-hero jh-num">'+t.totalD+'<span class="unit">days</span></span>'+
+        '<span class="chip ghost">'+esc(BASE_PHASES[0].capText)+' a day → 0</span></div>'+
+        '<p class="jh-facts">The comparison starts on day two — each day read against the one before, hour by hour.</p>';
+      return;
     }
-    el.innerHTML='<div class="dd-now">'+now+'</div>'+
-      (sub?'<div class="dd-sub">'+sub+'</div>':'');
+    if(isZeroEra){
+      var zs=zeroStats()||{clean:0,run:0,best:0,slips:0}, c0=countOf(todayKey)||0, zc=Math.max(1,zeroCalDay());
+      var h;
+      if(c0>0){
+        h='<p class="label">Slip today · the record stands</p>'+
+          '<div class="jh-row"><span class="n-hero jh-num">'+c0+'<span class="unit">logged today</span></span>'+
+          '<span class="chip slip"><span class="dot"></span>Slip</span></div>'+
+          '<p class="jh-facts"><b>'+zs.clean+'</b> clean of '+zc+' day'+(zc===1?'':'s')+' since zero · best run <b>'+zs.best+'</b> · the run restarts tomorrow</p>';
+      }else{
+        h='<p class="label">Since zero · '+jnWk(zeroDay())+' '+fmtShort(zeroDay())+'</p>'+
+          '<div class="jh-row"><span class="n-hero jh-num jh-good">'+zs.clean+'<span class="unit">of '+zc+' days clean</span></span></div>'+
+          '<p class="jh-facts">This run <b>'+Math.max(1,zs.run)+'</b> · best <b>'+zs.best+'</b> · '+
+          (zs.slips?zs.slips+' slip'+(zs.slips>1?'s':'')+', banked and past':'not one slip')+'</p>';
+      }
+      el.innerHTML=h+'<div class="jh-foot"><span class="chip ghost">~'+t.avoided.toLocaleString()+' not smoked vs ~'+BASELINE+'/day</span></div>';
+      return;
+    }
+    var pv=paceVsYesterday(), tc=countOf(todayKey)||0;
+    var yM=dayMetrics(dkeyOf(addDays(today,-1)));
+    var nowTxt=fmtTime(new Date());
+    var label, num, facts;
+    if(!pv){
+      label='Day '+t.dayN+' of '+t.totalD+' · nothing yesterday to read against';
+      num='<span class="n-hero jh-num">'+tc+'<span class="unit">of '+cap+' so far</span></span>';
+      facts='Tomorrow reads against today, hour by hour.';
+    }else{
+      if(pv.t===pv.y){
+        label='Even with yesterday by '+nowTxt;
+        num='<span class="n-hero jh-num">±0</span>';
+      }else{
+        var good=pv.t<pv.y, diff=Math.abs(pv.t-pv.y);
+        label=(good?'Fewer':'More')+' than yesterday by '+nowTxt;
+        num='<span class="n-hero jh-num '+(good?'jh-good':'jh-up')+'">'+icon(good?'down':'up')+
+          (pv.y>0?Math.round(diff/pv.y*100)+'<span class="unit">%</span>':diff+'<span class="unit">more</span>')+'</span>';
+      }
+      facts='<b>'+tc+'</b> so far · yesterday had <b>'+pv.y+'</b> by now'+(yM.eff!==null?', closed at <b>'+yM.eff+'</b>':'');
+    }
+    // the secondary figure: yesterday's close (or today's cap) against the old baseline
+    var ref=pv&&yM.eff!==null?yM.eff:cap, bp=Math.round((ref-BASELINE)/BASELINE*100);
+    var side='<span class="jh-side"><span class="n-md">'+(bp<0?'−':'+')+Math.abs(bp)+'<span class="unit">%</span></span>'+
+      '<small>'+(pv&&yM.eff!==null?'yesterday':'today’s cap')+' vs<br>the old ~'+BASELINE+'/day</small></span>';
+    el.innerHTML='<p class="label">'+label+'</p>'+
+      '<div class="jh-row">'+num+side+'</div>'+
+      '<p class="jh-facts">'+facts+'</p>'+jnPaceSVG(yM,pv);
+  }
+  /* by this hour: today's running count as a solid step line from 4am to
+     now, yesterday's whole day dashed beneath it on the same clock, the cap
+     dotted across, a now line with both counts called out on it */
+  function jnPaceSVG(yM,pv){
+    var W=325,H=124,top=16,base=100;
+    var d4=jnDay4(today), now=Date.now();
+    var nowH=Math.max(0,Math.min(24,(now-d4)/3600000));
+    function hrs(key,dd){
+      var e=data.days[key], a4=jnDay4(dd);
+      return ((e&&e.hits)||[]).map(function(h){return (new Date(h).getTime()-a4)/3600000;})
+        .filter(function(h){return isFinite(h);}).sort(function(a,b){return a-b;})
+        .map(function(h){return Math.max(0,Math.min(24,h));});
+    }
+    var tc=countOf(todayKey)||0, th=hrs(todayKey,today);
+    var tAdj=Math.max(0,tc-th.length);
+    var yOn=!!(pv&&yM.eff!==null), yh=yOn?hrs(yM.key,yM.date):[], yAdj=yOn?Math.max(0,yM.eff-yh.length):0;
+    var maxV=Math.max(cap,tc,yOn?yM.eff:0,2)*1.08;
+    function yv(v){return base-(v/maxV)*(base-top);}
+    function xh(h){return h/24*W;}
+    function step(times,c0,endH){
+      var c=c0, p='M0 '+yv(c).toFixed(1);
+      times.forEach(function(h){if(h>endH)return;p+=' H'+xh(h).toFixed(1)+' V'+yv(++c).toFixed(1);});
+      return {d:p+' H'+xh(endH).toFixed(1),c:c};
+    }
+    var s='<svg class="jn-svg jh-chart" viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Hits by this hour: '+tc+' today'+
+      (yOn?', '+pv.y+' yesterday by now, '+yM.eff+' by the end of yesterday':'')+'; cap '+cap+'.">';
+    s+='<defs><linearGradient id="jhFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--acc)" stop-opacity=".22"/><stop offset="1" stop-color="var(--acc)" stop-opacity="0"/></linearGradient></defs>';
+    // hour grid: a hairline per 4 hours, labelled below
+    [[4,'8a'],[8,'12p'],[12,'4p'],[16,'8p'],[20,'12a']].forEach(function(g){
+      var x=xh(g[0]);
+      s+='<line x1="'+x.toFixed(1)+'" y1="'+top+'" x2="'+x.toFixed(1)+'" y2="'+base+'" class="jh-grid"/>';
+      if(Math.abs(x-xh(nowH))>22)s+=jnT(x,H-6,'jn-ax',g[1],'middle');
+    });
+    s+='<line x1="0" y1="'+base+'" x2="'+W+'" y2="'+base+'" class="jn-floor"/>';
+    // the cap
+    var cy=yv(cap);
+    s+='<line x1="0" y1="'+cy.toFixed(1)+'" x2="'+W+'" y2="'+cy.toFixed(1)+'" class="jh-cap"/>'+
+      jnT(W,cy-5,'jn-ax','cap '+cap,'end');
+    // yesterday, the whole day, dashed
+    if(yOn){
+      var yp=step(yh,yAdj,24);
+      s+='<path d="'+yp.d+'" class="jh-yday"/>';
+    }
+    // today so far, solid, with a soft fill under it
+    var tp=step(th,tAdj,nowH);
+    s+='<path d="'+tp.d+' V'+base+' H0 Z" fill="url(#jhFill)" stroke="none"/>'+
+      '<path d="'+tp.d+'" class="jh-today"/>';
+    // now
+    var nx=xh(nowH);
+    s+='<line x1="'+nx.toFixed(1)+'" y1="'+(top-6)+'" x2="'+nx.toFixed(1)+'" y2="'+base+'" class="jh-now"/>'+
+      jnT(Math.min(W-14,Math.max(14,nx)),H-6,'jn-ax jn-ax-today',fmtClk(new Date(now)),'middle');
+    var left=nx>W-70, ty=yv(tc);
+    if(yOn){
+      var yy=yv(pv.y);
+      s+='<circle cx="'+nx.toFixed(1)+'" cy="'+yy.toFixed(1)+'" r="3.6" class="jh-ydot"/>';
+      // keep the two call-outs apart when the counts sit close
+      var ly=Math.abs(yy-ty)<13?(yy<ty?yy-5:yy+11):yy+4;
+      s+=jnT(left?nx-8:nx+8,ly,'jn-ax jh-yl',pv.y+' yday',left?'end':'start');
+    }
+    s+='<circle cx="'+nx.toFixed(1)+'" cy="'+ty.toFixed(1)+'" r="4.4" class="jh-tdot"/>'+
+      jnT(left?nx-9:nx+9,(yOn&&Math.abs(yv(pv.y)-ty)<13&&yv(pv.y)<ty)?ty+12:ty-6,'jn-vl jh-tl',tc+' today',left?'end':'start');
+    s+='</svg>';
+    s+='<div class="jn-key"><span><i class="jk-line"></i>Today</span>'+(yOn?'<span><i class="jk-dash"></i>Yesterday</span>':'')+
+      '<span><i class="jk-dot"></i>Cap</span></div>';
+    return s;
   }
 
   /* a plain-words description of the day's clock, for screen readers and for
@@ -4912,7 +5264,7 @@ try{
     var stamps=[], rowEnd=[];
     m.sessions.forEach(function(sess){
       var st=fmtClk(sess[0])+(sess.length>1?' ×'+sess.length:'');
-      var w=st.length*4.4, x=xAt(sess[0].getTime()), row=0;
+      var w=st.length*4.9, x=xAt(sess[0].getTime()), row=0;
       // resolve the anchor first: a stamp clamped to the edge occupies a
       // different box than one centred on its dot, and the packing has to
       // reserve the box that actually gets drawn
@@ -4928,7 +5280,7 @@ try{
     // the hour scale rides above the line, leaving the space below for stamps
     [[8,'8a'],[12,'12p'],[16,'4p'],[20,'8p'],[24,'12a']].forEach(function(t){
       var x=X0+((t[0]-DAY_CUTOFF_H)/24)*XW;
-      svg+='<text x="'+x.toFixed(1)+'" y="11" font-size="7.5" fill="var(--faint)" text-anchor="middle" font-family="Karla,sans-serif">'+t[1]+'</text>';
+      svg+='<text x="'+x.toFixed(1)+'" y="11" font-size="7.5" fill="var(--ink-3)" text-anchor="middle">'+t[1]+'</text>';
       svg+='<line x1="'+x.toFixed(1)+'" y1="'+(AX-4)+'" x2="'+x.toFixed(1)+'" y2="'+(AX+4)+'" stroke="var(--line)" stroke-width="1"/>';
     });
     svg+='<line x1="'+X0+'" y1="'+AX+'" x2="'+(X0+XW)+'" y2="'+AX+'" stroke="var(--line)" stroke-width="2"/>';
@@ -4944,20 +5296,20 @@ try{
         svg+='<line x1="'+x1.toFixed(1)+'" y1="'+AX+'" x2="'+x2.toFixed(1)+'" y2="'+AX+'" stroke="var(--accent)" stroke-width="7" stroke-linecap="round" stroke-opacity=".28"/>'+
           '<line x1="'+x1.toFixed(1)+'" y1="'+(AX-7)+'" x2="'+x1.toFixed(1)+'" y2="'+(AX+7)+'" stroke="var(--accent)" stroke-width="1.3" stroke-opacity=".7"/>'+
           '<line x1="'+x2.toFixed(1)+'" y1="'+(AX-7)+'" x2="'+x2.toFixed(1)+'" y2="'+(AX+7)+'" stroke="var(--accent)" stroke-width="1.3" stroke-opacity=".7"/>';
-        var lbl=(gx.on?'↤ ':'')+fmtDur(gx.ms)+' longest';
-        var mid=Math.min(340-lbl.length*2.6,Math.max(lbl.length*2.6,(x1+x2)/2));
-        svg+='<text x="'+mid.toFixed(1)+'" y="24" font-size="8.5" font-weight="700" fill="var(--accent)" text-anchor="middle" font-family="Karla,sans-serif">'+lbl+'</text>';
+        var lbl=fmtDur(gx.ms)+' longest'+(gx.on?' · overnight':'');
+        var mid=Math.min(340-lbl.length*2.9,Math.max(lbl.length*2.9,(x1+x2)/2));
+        svg+='<text x="'+mid.toFixed(1)+'" y="24" font-size="8.5" font-weight="700" fill="var(--acc-t)" text-anchor="middle">'+lbl+'</text>';
       }
     }
     // a dot per hit
     m.sessions.forEach(function(sess){
       sess.forEach(function(hd){
-        svg+='<circle cx="'+xAt(hd.getTime()).toFixed(1)+'" cy="'+AX+'" r="4" fill="var(--amber)" fill-opacity=".9"/>';
+        svg+='<circle cx="'+xAt(hd.getTime()).toFixed(1)+'" cy="'+AX+'" r="4" fill="var(--ink-2)" fill-opacity=".85"/>';
       });
     });
     // then the stamps, in the rows laid out above
     stamps.forEach(function(s){
-      svg+='<text x="'+s.tx.toFixed(1)+'" y="'+(46+s.row*8)+'" font-size="8" fill="var(--muted)" text-anchor="'+s.anch+'" font-family="Karla,sans-serif">'+s.t+'</text>';
+      svg+='<text x="'+s.tx.toFixed(1)+'" y="'+(46+s.row*8)+'" font-size="8" fill="var(--ink-2)" text-anchor="'+s.anch+'">'+s.t+'</text>';
     });
     return svg+'</svg>';
   }
@@ -4983,14 +5335,12 @@ try{
   }
 
   /* ================= the journey deck =================
-     One card per day, oldest to newest, each read against the day before
-     it (the engine's vs — the previous LOGGED day). Swipe or ‹ › to walk
-     the run; every card opens the full day page. */
+     The deck of day tiles used to sit above the day rows and say the same
+     thing twice. The rows below carry every day now (sitting times, pips,
+     deltas), so the deck stays parked: #journey hidden, #jdeck empty, its
+     tap contract (.jday[data-jd] → day page) kept for anything that builds
+     tiles into it. */
   var jdPosT=null;
-  /* The deck is a surface you thumb through, not the archive. Unbounded, a
-     year at zero means ~370 cards rebuilt on every paint for a deck nobody
-     flicks past the recent end of. The full record stays whole in Day by
-     day and in the day pager — this keeps the window that gets touched. */
   var JD_WINDOW=90;
   function jdDeckKeys(){
     var start=schedule()[0].start,ks=[];
@@ -5000,50 +5350,21 @@ try{
     while(d<=today){ks.push(dkeyOf(d));d=addDays(d,1);}
     return ks;
   }
-  /* one glanceable tile per day: date, the count wearing its status color,
-     a sliver of meter against the cap, and the delta chip. The full story
-     is one tap away on the day page. */
   function jdCardHTML(m,i){
-    var d=m.date;
-    var col=STAT_COL[m.cls]||'var(--sand)';
-    var big,meter='',chip;
-    if(m.isZ){
-      big=m.eff>0?'<span style="color:var(--clay)">'+m.eff+'</span>':'<span style="color:var(--sage)">✓</span>';
-      chip='<span class="hstat '+m.cls+'">'+m.stat+'</span>';
-    }else if(m.eff===null&&!m.isToday){
-      big='<span style="color:var(--faint)">·</span>';
-      chip='<span class="hstat nolog">no log</span>';
-    }else{
-      var eff=m.eff||0;
-      big='<span style="color:'+col+'">'+eff+'</span><small>/'+m.cap+'</small>';
-      var pct=m.cap>0?Math.min(100,eff/m.cap*100):100;
-      meter='<span class="jt-bar"><i style="width:'+pct+'%;background:'+col+'"></i></span>';
-      if(m.isToday){
-        var pv=paceVsYesterday();
-        chip=pv?(pv.t===pv.y?dv('even',null):dv((pv.t<pv.y?'▾':'▴')+Math.abs(pv.t-pv.y),pv.t<pv.y))
-          :'<span class="hstat '+m.cls+'" style="opacity:.75">'+m.stat+'</span>';
-      }else{
-        chip=hitsPill(m);
-      }
-    }
-    return '<div class="jday'+(m.isToday?' today':'')+'" data-jd="'+m.key+'" role="button" tabindex="0" aria-label="'+
-      WEEKDAYS[d.getDay()].slice(0,3)+' '+fmtShort(d)+' — open this day">'+
-      '<span class="jt-dow">'+WEEKDAYS[d.getDay()].slice(0,3)+' '+(d.getMonth()+1)+'/'+d.getDate()+'</span>'+
-      '<span class="jt-big">'+big+'</span>'+meter+
-      '<span class="jt-chip">'+chip+'</span></div>';
+    var d=m.date, eff=m.eff;
+    return '<div class="jday'+(m.isToday?' is-today':'')+'" data-jd="'+m.key+'" role="button" tabindex="0" aria-label="'+
+      jnWk(d)+' '+fmtShort(d)+' — '+(eff===null?'no log':eff+(m.isZ?'':' of '+m.cap))+', '+m.stat+'. Open this day.">'+
+      '<span class="jt-dow">'+jnWk(d)+'</span><span class="jt-big">'+d.getDate()+'</span>'+jnChip(m,true)+'</div>';
   }
   function jdTomorrowHTML(){
     var d=addDays(today,1),m=dayMetrics(dkeyOf(d));
     return '<div class="jday future" data-jd="'+dkeyOf(d)+'" role="button" tabindex="0" aria-label="Tomorrow — open the plan">'+
-      '<span class="jt-dow">'+WEEKDAYS[d.getDay()].slice(0,3)+' '+(d.getMonth()+1)+'/'+d.getDate()+'</span>'+
-      '<span class="jt-big"><span style="color:var(--muted)">'+(m.isZ?'0':m.cap)+'</span></span>'+
-      '<span class="jt-chip"><span class="hstat nolog">'+(m.isZ?'zero day':'next step')+'</span></span></div>';
+      '<span class="jt-dow">'+jnWk(d)+'</span><span class="jt-big">'+d.getDate()+'</span>'+
+      '<span class="chip sm ghost">'+(m.isZ?'zero day':'cap '+esc(m.capText))+'</span></div>';
   }
-  /* the strip opens parked on the newest days; while it sits inside a
-     hidden view it has no layout, so retry once it's back on screen */
   function jdReposition(){
     var deck=$('jdeck');
-    if(!deck||deck.hidden)return;
+    if(!deck||deck.hidden||!deck.firstElementChild)return;
     if(deck.clientWidth===0){
       clearTimeout(jdPosT);
       jdPosT=setTimeout(jdReposition,450);
@@ -5054,14 +5375,8 @@ try{
   function renderJourney(){
     var wrap=$('journey'),deck=$('jdeck');
     if(!wrap||!deck)return;
-    var ks=jdDeckKeys();
-    if(!ks.length){wrap.hidden=true;return;}
-    wrap.hidden=false;
-    var html='';
-    ks.forEach(function(k,i){html+=jdCardHTML(dayMetrics(k),i);});
-    if(!isZeroEra)html+=jdTomorrowHTML();
-    deck.innerHTML=html;
-    jdReposition();
+    wrap.hidden=true;
+    if(deck.firstElementChild)deck.innerHTML='';
   }
   $('jdeck').addEventListener('click',function(ev){
     var c=ev.target.closest('.jday[data-jd]');if(!c)return;
@@ -5076,87 +5391,236 @@ try{
     clearTimeout(jdPosT);jdPosT=setTimeout(jdReposition,220);
   });
 
+  /* ================= Day by day =================
+     One row per day, newest first, each read against the day before it (the
+     engine's vs — the previous LOGGED day): the date block, "15 of 16" over
+     mini-pips, every sitting's raw clock time (wrapping, never cut), the
+     longest stretch with its delta, and on the right the status in words and
+     the count delta. The main page builds the newest JN_ROWS; the full
+     record is built only once the card is opened (.expanded). Zero-era days
+     read as clean or slip and are never graded across the zero line. */
+  var JN_ROWS=5;
+  function jnPips(m){
+    var eff=m.eff||0, c=m.cap, h='';
+    var on=eff>=c?'a':'u';
+    for(var i=0;i<c;i++)h+='<i'+(i<eff?' class="'+on+'"':'')+'></i>';
+    if(eff>c){h+='<b></b>';for(var j=c;j<eff;j++)h+='<i class="o"></i>';}
+    return '<span class="jr-pips" aria-hidden="true">'+h+'</span>';
+  }
+  function jnSittings(m){
+    var out=m.sessions.map(function(s){
+      return '<b>'+fmtClk(s[0])+(s.length>1?'<i>×'+s.length+'</i>':'')+'</b>';
+    });
+    if(m.adj>0)out.push('<span>+'+m.adj+' untimed</span>');
+    return out;
+  }
+  // today's next opening, the same arithmetic the gap clock runs on
+  function jnNextOpen(m){
+    if(!m.isToday||isZeroEra||idx<0||phase.single)return '';
+    var c=countOf(todayKey)||0, g=spacingHNow(), last=lastHitEver();
+    if(c>=cap||!g||!last)return '';
+    var at=last.getTime()+g*3600000;
+    return at>Date.now()?'<b class="jr-next">next ~'+fmtClk(new Date(at))+'</b>':'<b class="jr-next">open now</b>';
+  }
+  function jnLongest(m){
+    var live=m.isToday?liveGapNow(m):null, lw=!!(live&&live.wins);
+    var cur=lw?live.ms:m.gapMaxMs;
+    if(cur===null||cur===undefined)return '';
+    var d='';
+    if(!m.vs){
+      d='<span class="jr-soft">first day</span>';
+    }else{
+      var pm=dayMetrics(m.vs.key);
+      if(pm.gapMaxMs!==null&&!pm.isZ){
+        var df=cur-pm.gapMaxMs;
+        // a stretch short of the day before is a fact, not a failure
+        d=df>=60000?'<span class="delta good">+'+fmtDur(df)+'</span>'
+          :df<=-60000?'<span class="delta flat">'+fmtDur(-df)+' short</span>'
+          :'<span class="delta flat">even</span>';
+      }
+    }
+    var span=lw?'running since '+fmtTime(live.from):(m.gapMax?fmtSpan(m.gapMax.from,m.gapMax.to):'');
+    return '<p class="jr-long"'+(span?' title="'+esc(span)+'"':'')+'>Longest <b>'+fmtDur(cur)+'</b>'+
+      (lw?'<span class="jr-soft">running</span>':'')+d+'</p>';
+  }
+  function jnDate(m){
+    return '<span class="jr-dt"><small>'+jnWk(m.date)+'</small><b>'+m.date.getDate()+'</b></span>';
+  }
+  function jnRowHTML(m,run){
+    var d=m.date, mid='', rt='', cls='hrow jr', aria;
+    if(m.isToday)cls+=' is-today';
+    if(m.isZ){
+      cls+=' jr-z';
+      if(m.eff>0){
+        var st=jnSittings(m);
+        mid='<p class="jr-top"><span class="jr-n jn-t-over">'+m.eff+'</span><span class="jr-of">logged'+(m.isToday?' today':'')+'</span></p>'+
+          (st.length?'<p class="jr-times">'+st.join(' · ')+'</p>':'');
+        rt=jnChip(m,true)+'<small>run restarts<br>'+(m.isToday?'tomorrow':'the next day')+'</small>';
+        aria='slip, '+m.eff+' logged';
+      }else{
+        mid='<p class="jr-top"><span class="jr-n jn-t-under">'+run+'</span><span class="jr-of">day'+(run===1?'':'s')+' clean'+(m.isToday?' so far':'')+'</span></p>'+
+          '<p class="jr-soft jr-line">'+(m.isToday?'Nothing logged yet today':'Nothing logged — the run holds')+'</p>';
+        rt=jnChip(m,true,m.isToday?'Clean so far':'Clean');
+        aria='clean, day '+run+' of the run';
+      }
+    }else if(m.count===null&&!m.isToday){
+      cls+=' jr-nolog';
+      mid='<p class="jr-top"><span class="jr-of">Nothing logged this day</span></p>';
+      rt=jnChip(m,true);
+      aria='no log';
+    }else{
+      var eff=m.eff||0, sits=jnSittings(m), nx=jnNextOpen(m);
+      if(nx)sits.push(nx);
+      mid='<p class="jr-top"><span class="jr-n">'+eff+'</span><span class="jr-of">of '+esc(m.capText)+(m.isToday?' so far':'')+'</span></p>'+
+        jnPips(m)+
+        (sits.length?'<p class="jr-times">'+sits.join(' <span class="jr-sep">·</span> ')+'</p>'
+          :'<p class="jr-soft jr-line">Nothing logged yet today</p>')+
+        jnLongest(m);
+      rt=jnChip(m,true);
+      if(m.isToday){
+        var pv=paceVsYesterday();
+        if(pv){
+          rt+=pv.t===pv.y?'<span class="delta flat">even</span>'
+            :'<span class="delta '+(pv.t<pv.y?'good':'bad')+'">'+icon(pv.t<pv.y?'down':'up')+Math.abs(pv.t-pv.y)+'</span>';
+          rt+='<small>by now<br>vs '+pv.y+'</small>';
+        }
+      }else if(m.vs){
+        rt+=hitsPill(m)+'<small>vs '+m.vs.prevEff+'</small>';
+      }else if(eff<BASELINE){
+        rt+='<span class="delta good">'+icon('down')+(BASELINE-eff)+'</span><small>vs ~'+BASELINE+'<br>baseline</small>';
+      }
+      aria=eff+' of '+m.capText+', '+m.stat;
+    }
+    return '<div class="'+cls+'" data-key="'+m.key+'" role="button" tabindex="0" aria-label="'+
+      jnWk(d)+' '+fmtShort(d)+' — '+aria+'. Open this day.">'+
+      jnDate(m)+'<div class="jr-mid">'+mid+'</div><div class="jr-rt">'+rt+'</div></div>';
+  }
   function renderHistory(){
     var rowsEl=$('historyRows');
-    var sch=schedule();
-    if(today<sch[0].start){
-      rowsEl.innerHTML='<p class="hempty">Your days will stack up here as you go.</p>';
+    var sch=schedule(), start=sch[0].start;
+    if(today<start){
+      rowsEl.innerHTML='<p class="hempty">Your days stack up here from '+jnWk(start)+' '+fmtShort(start)+' — each one read against the day before.</p>';
       return;
     }
-    var rows='', shown=0, total=0;
-    /* collapsed, CSS showed three rows and hid the rest — but every hidden
-       row was still built, dayMetrics'd and given its inline SVG. A year
-       into the zero era that is ~370 rows constructed on every paint to
-       display three. Build what is visible; the rest arrive when the card
-       is opened (openDetail/closeDetail re-render on the class change). */
     var expanded=$('dayCard').classList.contains('expanded');
-    var d=new Date(today);
-    while(d>=sch[0].start){
-      total++;
-      if(!expanded&&shown>=3){d=addDays(d,-1);continue;}
+    var total=Math.round((today-start)/MS_DAY)+1;
+    // the clean run each zero-era day stood on — one pass, zero to today
+    var runOf={}, z=zeroDay();
+    if(isZeroEra&&z<=today){
+      var r=0,zd=new Date(z);
+      while(zd<=today){var zk=dkeyOf(zd);r=(countOf(zk)||0)>0?0:r+1;runOf[zk]=r;zd=addDays(zd,1);}
+    }
+    var zKey=isZeroEra?dkeyOf(z):null;
+    var rows='', shown=0, d=new Date(today);
+    while(d>=start){
+      if(!expanded&&shown>=JN_ROWS)break;
       var m=dayMetrics(dkeyOf(d));
-      var head='',chips=[],line='',rowCls='',aria;
-      if(m.isZ){
-        head='<span class="hcount">'+(m.eff>0?'<span style="color:var(--clay)">'+m.eff+'</span>':'<span style="color:var(--sage)">✓</span>')+'</span>'+
-          '<span class="hstat '+m.cls+'">'+m.stat+'</span>';
-        if(!m.eff)chips.push('<span class="hchip">nothing logged — the streak holds</span>');
-        line=daylineSVG(m.key);
-        aria=m.eff>0?'slip, '+m.eff+' logged':'clean at zero';
-      }else if(m.count===null&&!m.isToday){
-        rowCls=' nolog';
-        head='<span class="hstat nolog" style="margin-left:auto">no log</span>';
-        aria='no log';
-      }else{
-        // today can exist without an entry yet (nothing logged since 4am) — eff is null then
-        var effN=m.eff||0;
-        var col=m.cls==='over'?'var(--clay)':m.cls==='at'?'var(--amber)':'var(--sage)';
-        head='<span class="hcount"><span style="color:'+col+'">'+effN+'</span> <span class="hcap">/ '+m.cap+'</span></span>'+
-          '<span class="hstat '+m.cls+'"'+(m.isToday?' style="opacity:.75"':'')+'>'+m.stat+'</span>'+
-          // a half day never wears a closed-day delta — the header carries the live one
-          (m.isToday||!m.vs?'':hitsPill(m));
-        aria=effN+' of '+m.cap+', '+m.stat;
-        line=daylineSVG(m.key);
-        if(m.sessN){
-          chips.push('<span class="hchip">'+m.sessN+' sitting'+(m.sessN>1?'s':'')+(m.isToday?' so far':'')+'</span>');
-          // the longest stretch leads — it's the number the taper moves
-          if(m.gapMaxMs!==null){
-            var ltxt='longest '+fmtDur(m.gapMaxMs);
-            var lTitle=m.gapMax?fmtSpan(m.gapMax.from,m.gapMax.to)+(m.gapMax.on?' · overnight':''):'';
-            if(m.vs&&m.vs.gapMaxPct!==null&&!m.isToday){
-              var lp=m.vs.gapMaxPct;
-              chips.push('<span class="dv pill '+(lp>0?'good':lp<0?'bad':'flat')+'" title="'+esc(lTitle)+'">'+ltxt+' '+(lp>=0?'+':'−')+Math.abs(lp)+'%</span>');
-            }else{
-              chips.push('<span class="hchip"'+(lTitle?' title="'+esc(lTitle)+'"':'')+'>'+ltxt+'</span>');
-            }
-          }
-          if(m.gapAvgMs!==null&&m.gaps.length>1){
-            var gtxt='gap '+fmtDur(m.gapAvgMs);
-            var gTitle=m.reqGapH>0?(m.heldRule?'held the '+fmtGapH(m.reqGapH)+' rule':'short of the '+fmtGapH(m.reqGapH)+' rule'):'';
-            if(m.vs&&m.vs.gapAvgPct!==null&&!m.isToday){
-              var gp=m.vs.gapAvgPct;
-              chips.push('<span class="dv pill '+(gp>0?'good':gp<0?'bad':'flat')+'"'+(gTitle?' title="'+gTitle+'"':'')+'>'+gtxt+' '+(gp>=0?'+':'−')+Math.abs(gp)+'%</span>');
-            }else{
-              chips.push('<span class="hchip"'+(gTitle?' title="'+gTitle+'"':'')+'>'+gtxt+'</span>');
-            }
-          }
-        }
-        if(m.adj>0)chips.push('<span class="hchip">'+m.adj+' untimed</span>');
-      }
-      var rowHtml='<div class="hrow'+rowCls+(m.isToday?' hnow':'')+(shown>=3?' hpast':'')+'" data-key="'+m.key+'" role="button" tabindex="0" aria-label="'+
-        WEEKDAYS[d.getDay()].slice(0,3)+' '+fmtShort(d)+' — '+aria+'. Open this day.">'+
-        '<div class="hrow-main">'+
-        '<span class="hdate">'+WEEKDAYS[d.getDay()].slice(0,3)+' <small>'+(d.getMonth()+1)+'/'+d.getDate()+'</small></span>'+
-        head+'</div>'+
-        (line?'<div class="hline">'+line+'</div>':'')+
-        (chips.length?'<div class="hchips">'+chips.join('')+'</div>':'')+
-        '</div>';
-      rows+=rowHtml;
+      rows+=jnRowHTML(m,runOf[m.key]||0);
       shown++;
+      // the zero line: nothing below it is graded against anything above it
+      if(m.key===zKey&&d>start&&(expanded||shown<JN_ROWS))
+        rows+='<div class="jr-zero" role="separator"><span>'+icon('check','ic-xs')+'Zero · '+jnWk(d)+' '+fmtShort(d)+'</span><small>the cap ends here</small></div>';
       d=addDays(d,-1);
     }
-    if(total>3)rows+='<button class="linklike hall">All '+total+' days →</button>';
+    if(!expanded&&total>JN_ROWS)
+      rows+='<button class="hall">All '+total+' days<span class="jr-soft">every sitting, every gap</span>'+icon('chev','ic-sm')+'</button>';
     rowsEl.innerHTML=rows||'<p class="hempty">Your days will stack up here as you go.</p>';
   }
+
+  /* ---- the longest-gap trend (new card, owner J) ----
+     The number the taper actually moves: each day's longest stretch as a
+     bar, that day's gap rule ticked across it, the best closed day lit, and
+     today (live, if the stretch running now already leads) in the accent
+     with a dashed box up to the mark to beat. Taper era only — at zero the
+     gap is the whole day. Rides the 30s tick, so today's bar keeps growing. */
+  var GT_DAYS=7;
+  function renderGapTrend(){
+    var card=$('gapTrend');if(!card)return;
+    var start=schedule()[0].start;
+    if(isZeroEra||today<start){if(!card.hidden){card.hidden=true;card.innerHTML='';}return;}
+    var all=[], d=new Date(start);
+    while(d<=today){var m=dayMetrics(dkeyOf(d));if(!m.isZ)all.push(m);d=addDays(d,1);}
+    function gOf(m){
+      if(m.isToday){var lv=liveGapNow(m);if(lv&&lv.wins)return lv.ms;}
+      return m.gapMaxMs;
+    }
+    var best=null, tM=null, tG=null;
+    all.forEach(function(m){
+      var g=gOf(m);
+      if(m.isToday){tM=m;tG=g;return;}
+      if(g!==null&&g!==undefined&&(!best||g>best.g))best={m:m,g:g};
+    });
+    if(!best&&(tG===null||tG===undefined)){card.hidden=true;card.innerHTML='';return;}
+    card.hidden=false;
+    var todayBest=tG!==null&&tG!==undefined&&(!best||tG>best.g);
+    // the headline: the best stretch so far and how far it moved
+    var hm=todayBest?tM:best.m, hg=todayBest?tG:best.g, lbl, chip='', vs='';
+    if(todayBest){
+      lbl='Longest gap · a new best, today';
+      if(best){chip='<span class="chip under">'+icon('up')+fmtDur(hg-best.g)+' past it</span>';
+        vs='vs '+jnWk(best.m.date)+' '+fmtDur(best.g);}
+    }else{
+      lbl='Longest gap · best so far';
+      var pm=hm.vs?dayMetrics(hm.vs.key):null;
+      if(pm&&!pm.isZ&&pm.gapMaxMs){
+        var df=hg-pm.gapMaxMs, pc=Math.round(df/pm.gapMaxMs*100);
+        if(df>=60000)chip='<span class="chip under">'+icon('up')+fmtDur(df)+' · +'+pc+'%</span>';
+        vs='vs '+jnWk(pm.date)+' '+fmtDur(pm.gapMaxMs);
+      }
+    }
+    var hh=Math.floor(hg/3600000), mm=Math.floor(hg%3600000/60000);
+    var head='<div class="jn-h gt-h"><div class="jn-ht"><p class="label">'+lbl+'</p>'+
+      '<p class="n-lg gt-num">'+(hh?hh+'<span class="unit">h</span> ':'')+mm+'<span class="unit">m</span>'+
+      '<span class="gt-when">'+(hm.isToday?'today':jnWk(hm.date))+'</span></p></div>'+
+      ((chip||vs)?'<div class="gt-side">'+chip+(vs?'<small>'+vs+'</small>':'')+'</div>':'')+'</div>';
+    // the bars: the last GT_DAYS taper days, today last
+    var win=all.slice(-GT_DAYS), n=win.length;
+    var W=325, H=156, top=22, base=128, gut=22;
+    var maxG=0;
+    win.forEach(function(m){var g=gOf(m);if(g>maxG)maxG=g;if(m.reqGapH*3600000>maxG)maxG=m.reqGapH*3600000;});
+    if(best&&best.g>maxG)maxG=best.g;
+    var maxH=Math.max(12,Math.ceil(maxG/3600000/4)*4);
+    function yh(ms){return base-(ms/3600000/maxH)*(base-top);}
+    var slot=(W-gut)/Math.max(n,5), x0=gut+((W-gut)-slot*n)/2, bw=Math.min(30,slot*.56);
+    var s='<svg class="jn-svg gt-chart" viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Longest gap per day, last '+n+' day'+(n===1?'':'s')+': '+
+      win.map(function(m){var g=gOf(m);return jnWk(m.date)+' '+(g===null||g===undefined?'no gap':fmtDur(g));}).join(', ')+'.">';
+    for(var q=4;q<=maxH;q+=4){
+      var gy=yh(q*3600000);
+      s+='<line x1="'+gut+'" y1="'+gy.toFixed(1)+'" x2="'+W+'" y2="'+gy.toFixed(1)+'" class="gt-grid"/>'+jnT(0,gy+3.5,'jn-ax',q+'h');
+    }
+    s+='<line x1="'+gut+'" y1="'+base+'" x2="'+W+'" y2="'+base+'" class="jn-floor"/>';
+    win.forEach(function(m,i){
+      var g=gOf(m), cx=x0+slot*i+slot/2, x=cx-bw/2;
+      var isBest=best&&m.key===best.m.key&&!todayBest, kind=m.isToday?'today':isBest?'best':'past';
+      if(g===null||g===undefined){
+        s+='<rect x="'+x.toFixed(1)+'" y="'+(base-3)+'" width="'+bw.toFixed(1)+'" height="3" rx="1.5" class="gt-bar gt-none"/>'+
+          jnT(cx,base-9,'jn-ax','—','middle');
+      }else{
+        var yt=yh(g), bh=Math.max(4,base-yt);
+        // the mark to beat, boxed in dashes above today's bar
+        if(m.isToday&&best&&!todayBest){
+          var by=yh(best.g);
+          s+='<rect x="'+(x-1).toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+(bw+2).toFixed(1)+'" height="'+Math.max(2,(base-bh)-by).toFixed(1)+'" rx="7" class="gt-beat"/>';
+        }
+        s+='<rect x="'+x.toFixed(1)+'" y="'+(base-bh).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="'+Math.min(8,bw/2).toFixed(1)+
+          '" class="gt-bar gt-'+kind+'" style="--dl:'+(260+i*60)+'ms"/>';
+        var ly=(m.isToday&&best&&!todayBest)?Math.min(yt,yh(best.g)):yt;
+        s+=jnT(cx,ly-7,'jn-vl gt-v gt-v-'+kind,jnDurTight(g),'middle');
+      }
+      if(m.reqGapH>0){
+        var ry=yh(m.reqGapH*3600000);
+        s+='<line x1="'+(x-5).toFixed(1)+'" y1="'+ry.toFixed(1)+'" x2="'+(x+bw+5).toFixed(1)+'" y2="'+ry.toFixed(1)+'" class="gt-rule"/>';
+      }
+      s+=jnT(cx,H-6,'jn-ax'+(m.isToday?' jn-ax-today':''),m.isToday?'Today':jnWk(m.date),'middle');
+    });
+    s+='</svg>';
+    var key='<div class="jn-key"><span><i style="background:var(--acc)"></i>Today, so far</span>'+
+      (best&&!todayBest?'<span><i style="background:var(--under)"></i>Best</span>':'')+
+      '<span><i class="jk-rule"></i>Gap rule that day</span></div>';
+    card.innerHTML=head+s+key;
+  }
+  RENDER_HOOKS.push(renderGapTrend);
+  TICK_HOOKS.push(renderGapTrend);
 
   /* the session editor — extracted from the old inline row flow; it lives
      on the day page now. Same data-act contract, same save path. */
@@ -7470,28 +7934,87 @@ try{
       t:t,ps:t,us:us,ga:ga,zs:zs,held:held,early:early,eased:eased,
       money:t.money};
   }
+  /* the five stops of the descent, from the real schedule: day one, the
+     first step down, the cap at about half, the first evening-only rung, and
+     zero. Rungs a rebuild skipped have no dates and are passed over; a stop
+     is reached once its date has come. */
+  function jnMilestones(){
+    var sch=schedule(), P=BASE_PHASES, s0=sch[0].start, c0=P[0].cap;
+    var zd=isZeroEra?zeroDay():zeroDate();
+    var fs=-1, hg=-1, ev=-1;
+    for(var i=1;i<P.length-1;i++){
+      if(!sch[i]||!sch[i].start)continue;
+      if(fs<0&&P[i].cap<c0)fs=i;
+      if(hg<0&&P[i].cap<=c0*0.55)hg=i;
+      if(ev<0&&P[i].single)ev=i;
+    }
+    var out=[{t:'Day one',v:'1',d:s0,tone:'ember'}];
+    if(fs>0)out.push({t:'First step',v:P[fs].capText,d:sch[fs].start,tone:'honey',sub:P[0].capText+' → '+P[fs].capText});
+    if(hg>0)out.push({t:'Half gone',v:P[hg].capText,d:sch[hg].start,tone:'citrine'});
+    if(ev>0)out.push({t:'Evenings',v:P[ev].capText,d:sch[ev].start,tone:'jade'});
+    out.push({t:'Zero',v:'0',d:zd,tone:'zero'});
+    out.forEach(function(m){m.on=m.d<=today;});
+    return out;
+  }
+  function jnMedalSVG(m){
+    var fs=String(m.v).length>2?13:m.v.length>1?17:19;
+    if(!m.on)return '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="28.5" class="md-lock"/>'+
+      '<path d="M9 47h11l5-5h9l5-5h9l5-4h4M12 53h10l5-5h9l5-4h9l5-4h2" class="md-lock-c"/>'+
+      '<text x="32" y="'+(32+fs*0.36).toFixed(1)+'" text-anchor="middle" class="md-lock-t" style="font-size:'+(fs-3)+'px">'+esc(m.v)+'</text></svg>';
+    return '<svg viewBox="0 0 64 64" aria-hidden="true">'+
+      '<circle cx="32" cy="34" r="29" class="md-shadow md-'+m.tone+'"/>'+
+      '<circle cx="32" cy="32" r="29" class="md-disc md-'+m.tone+'"/>'+
+      '<circle cx="32" cy="32" r="29" fill="url(#jnMedHi)"/>'+
+      '<circle cx="32" cy="32" r="24.5" class="md-ring"/>'+
+      '<path d="M8 41h12l5-6h9l5-6h9l5-5h7M8 48h14l5-6h9l5-6h9l5-5h5M10 55h14l5-6h9l5-6h9l5-5h3" class="md-contour"/>'+
+      '<path d="M13 22a22 22 0 0 1 13.5-11.5" class="md-shine"/>'+
+      '<text x="32" y="'+(32+fs*0.36).toFixed(1)+'" text-anchor="middle" class="md-t" style="font-size:'+fs+'px">'+esc(m.v)+'</text></svg>';
+  }
+  function jnMedalsHTML(ms){
+    var defs='<svg width="0" height="0" class="md-defs" aria-hidden="true"><defs><radialGradient id="jnMedHi" cx="34%" cy="26%" r="78%">'+
+      '<stop offset="0" stop-color="#fff" stop-opacity=".42"/><stop offset=".55" stop-color="#fff" stop-opacity=".06"/><stop offset="1" stop-color="#000" stop-opacity=".12"/></radialGradient></defs></svg>';
+    return defs+'<div class="md-row">'+ms.map(function(m){
+      var when=m.d?(dkeyOf(m.d)===todayKey?'today':fmtShort(m.d)):'—';
+      return '<div class="md'+(m.on?'':' locked')+'" aria-label="'+esc(m.t+', '+(m.on?'reached ':'planned ')+when)+'">'+jnMedalSVG(m)+
+        '<b>'+m.t+'</b><span>'+(m.sub&&m.on?m.sub:when)+'</span></div>';
+    }).join('')+'</div>';
+  }
   function renderStory(){
     var card=$('storyCard');if(!card)return;
-    if(!isZeroEra){card.hidden=true;return;}
+    var start=schedule()[0].start;
+    if(today<start){card.hidden=true;return;}
     card.hidden=false;
+    var ms=jnMedalsHTML(jnMilestones()), got=jnMilestones().filter(function(m){return m.on;}).length;
+    var share=$('btnShareStory');
+    if(!isZeroEra){
+      // the taper era: the stops so far, and the ones still ahead
+      share.hidden=true;$('storyMsg').textContent='';
+      $('storyBody').innerHTML='<div class="jn-h"><div class="jn-ht"><p class="label">The story so far</p><h3 class="st-t">Milestones</h3></div>'+
+        '<span class="chip sm ghost">'+got+' of '+jnMilestones().length+'</span></div>'+ms;
+      return;
+    }
+    share.hidden=false;
     var s=storyStats();
-    function stat(v,l,c){return '<div class="stat" style="animation:none"><span class="sv"'+(c?' style="color:'+c+'"':'')+'>'+v+'</span><span class="sl">'+l+'</span></div>';}
+    function tile(v,l,f,c){return '<div class="tile"><p class="label">'+l+'</p><p class="n-lg"'+(c?' style="color:'+c+'"':'')+'>'+v+'</p>'+(f?'<p class="foot">'+f+'</p>':'')+'</div>';}
+    var bits=[];
+    if(s.held)bits.push(s.held+' held day'+(s.held>1?'s':''));
+    if(s.eased)bits.push(s.eased+' step'+(s.eased>1?'s':'')+' eased');
+    if(s.early)bits.push(s.early+' step'+(s.early>1?'s':'')+' finished early');
     $('storyBody').innerHTML=
-      '<p class="chart-note" style="margin-top:0">Started <strong>'+fmtShort(s.start)+'</strong> from a ~'+BASELINE+'-a-day baseline · reached zero <strong>'+fmtShort(s.z)+'</strong> — '+s.totalD+' days of stepping down'+
-      (s.held?', '+s.held+' held day'+(s.held>1?'s':'')+' along the way':'')+
-      (s.eased?', '+s.eased+' step'+(s.eased>1?'s':'')+' eased when the slope ran steep':'')+
-      (s.early?', '+s.early+' step'+(s.early>1?'s':'')+' finished early':'')+'.</p>'+
-      '<div class="stat-row" style="animation:none">'+
-      stat(s.ps.avoided,'hits not smoked','var(--sage)')+
-      stat(s.t.tot,'logged honestly')+
-      stat(s.us?s.us.total:0,'urges outlasted','var(--sage)')+
-      '</div><div class="stat-row" style="animation:none">'+
-      stat(s.zs?s.zs.clean:0,'days at zero','var(--sage)')+
-      stat(s.zs?s.zs.best:0,'best run')+
-      stat(s.t.under+'/'+s.t.logged,'days under cap')+
+      '<div class="st-h"><p class="label">The story</p><h3 class="st-t">From ~'+BASELINE+' a day to zero</h3>'+
+      '<p class="st-sub">'+jnWk(s.start)+' '+fmtShort(s.start)+' → zero <b>'+jnWk(zeroDay())+' '+fmtShort(zeroDay())+'</b> · '+s.totalD+' days of stepping down'+
+      (bits.length?' · '+bits.join(', '):'')+'</p></div>'+ms+
+      '<div class="tiles three st-tiles">'+
+        tile(s.ps.avoided.toLocaleString(),'Not smoked','vs ~'+BASELINE+' a day','var(--under-t)')+
+        tile(s.t.tot.toLocaleString(),'Logged','honestly')+
+        tile(s.us?s.us.total:0,'Urges','outlasted')+
+        tile(s.zs?s.zs.clean:0,'At zero','clean days','var(--under-t)')+
+        tile(s.zs?s.zs.best:0,'Best run','days in a row')+
+        tile(s.t.under+'<span class="unit">/'+s.t.logged+'</span>','Under cap','taper days')+
       '</div>'+
-      (s.ga?'<p class="chart-note">'+(s.ga.adherence!==null?s.ga.adherence+'% of the session gaps that had a rule met it, averaging ':'Session gaps averaged ')+fmtDur(s.ga.avg*3600000)+' apart'+(s.ga.widening?' — widening the whole way, exactly as designed':'')+'.</p>':'')+
-      (s.money!==null?'<p class="chart-note">≈ <strong style="color:var(--sage)">$'+s.money.toLocaleString()+'</strong> not spent.</p>':'');
+      (s.ga?'<p class="st-note">'+(s.ga.adherence!==null?'<b>'+s.ga.adherence+'%</b> of the session gaps that had a rule met it, averaging ':'Session gaps averaged ')+
+        '<b>'+fmtDur(s.ga.avg*3600000)+'</b> apart'+(s.ga.widening?' — widening the whole way, exactly as designed':'')+'.</p>':'')+
+      (s.money!==null?'<p class="st-note">≈ <b class="jn-t-under">$'+s.money.toLocaleString()+'</b> not spent.</p>':'');
   }
   function storyText(){
     var s=storyStats(),L=[];
