@@ -1463,7 +1463,7 @@
   .sheet-back span{
     position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;
   }
-  .sheet-back:focus-visible,.dp-nav button:focus-visible,.cz-dot:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+  .sheet-back:focus-visible,.dp-nav button:focus-visible,.cz-dot:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
   .cz-title,#detailTitle{
     flex:1;min-width:0;font-family:var(--f-round);font-size:18px;font-weight:700;letter-spacing:-.015em;
     color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;
@@ -1570,12 +1570,14 @@
   .mv-key i{width:14px;height:6px;border-radius:3px;background:var(--ghost)}
   .mv-key i.mk-b{background:var(--ink)}
   .mv-row{padding:11px 0 10px;border-top:1px solid var(--line)}
-  .mv-key+.mv-row{border-top:0}
+  .mv-key+.mv-row,.mv-verdict+.mv-row{border-top:0}
   .mv-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px}
   .mv-k{font-size:13.5px;font-weight:650;color:var(--ink)}
   .mv-k small{font-size:12px;font-weight:500;color:var(--ink-2)}
   .mv-hd .dv{white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
   .mv-hd .dv .tri{width:9px;height:9px}
+  .mv-flat{display:flex;flex-wrap:wrap;gap:6px}
+  .mv-flat .chip .ic{margin-right:2px}
   .mv-bars{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:12px;row-gap:5px}
   .mv-bar{position:relative;height:8px;border-radius:4px;background:var(--s3);overflow:hidden}
   .mv-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--ghost);transform-origin:left center}
@@ -1630,7 +1632,7 @@
   .dc-row{padding:10px 12px 8px;border-radius:var(--r-md);background:var(--s2)}
   .dc-row.cur{background:var(--acc-bg);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--acc) 45%,transparent)}
   .dc-hd{display:flex;align-items:center;gap:8px;margin-bottom:2px}
-  .dc-l{flex:1;min-width:0;font-size:12.5px;font-weight:550;color:var(--ink-2);line-height:1.3}
+  .dc-l{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px;font-weight:550;color:var(--ink-2);line-height:1.3}
   .dc-l b{color:var(--ink);font-weight:650}
   .dc-row.cur .dc-l b{color:var(--acc-t)}
   .dc-n{font-family:var(--f-round);font-weight:700;font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -6707,6 +6709,10 @@ try{
   /* one metric as two bars — the day before in ghost, this day wearing its
      verdict — with the named delta on the right of the label */
   function mvRow(o){
+    /* two clean days side by side: bars of nothing would say less than the words */
+    if(o.flat)return '<div class="mv-row flat"><div class="mv-hd"><span class="mv-k">'+o.k+'</span>'+(o.chip||'')+'</div>'+
+      '<div class="mv-flat"><span class="chip sm clean">'+icon('check','ic-xs')+o.pl+' · clean</span>'+
+      '<span class="chip sm clean">'+icon('check','ic-xs')+o.cl+' · clean</span></div></div>';
     var max=Math.max(o.pv||0,o.cv||0,o.max||0)||1;
     var pw=Math.round((o.pv||0)/max*100), cw=Math.round((o.cv||0)/max*100);
     var v=o.good===true?' good':o.good===false?' bad':'';
@@ -6748,12 +6754,14 @@ try{
         mvBase(m));
     }
     var rows=[], goodN=0, badN=0, badNames=[];
+    var flatZ=m.isZ&&!m.eff&&!pm.eff;
     function note(g,name){if(g===true)goodN++;else if(g===false){badN++;if(name)badNames.push(name);}}
     var hGood=v.count<0?true:v.count>0?false:null; note(hGood,'count');
     var hTxt=v.count===0?'even':((v.count<0?icon('down'):icon('up'))+(v.prevEff>=5&&v.countPct!==null?Math.abs(v.countPct)+'%':Math.abs(v.count)));
     rows.push(mvRow({k:'Hits',pv:pm.eff,cv:m.eff,max:Math.max(pm.cap||0,m.cap||0),
       pt:pm.eff+(pm.cap>0?' of '+pm.cap:''),ct:m.eff+(m.cap>0?' of '+m.cap:'')+(m.partial?' so far':''),
-      good:hGood,chip:dv(hTxt,hGood)}));
+      good:hGood,chip:dv(hTxt,hGood),flat:flatZ,
+      pl:WEEKDAYS[pd.getDay()].slice(0,3)+' '+fmtShort(pd),cl:m.isToday?'Today':WEEKDAYS[m.date.getDay()].slice(0,3)+' '+fmtShort(m.date)}));
     if(m.capPct!==null&&pm.capPct!==null){
       var cGood=m.capPct<pm.capPct?true:m.capPct>pm.capPct?false:null; note(cGood,'cap margin');
       rows.push(mvRow({k:'Share of the cap',pv:pm.capPct,cv:m.capPct,max:100,
@@ -6822,6 +6830,7 @@ try{
     else if(badN===0&&goodN>0)close='Every needle moved the right way.';
     else if(hGood===true&&badN>0)close='Fewer hits — count the win, watch the '+badNames.join(' and ')+'.';
     else if(hGood===false)close='Up on the day before — data, not doom.'+(m.heldRule?' The gaps still held.':'');
+    else if(flatZ)close='Clean, and clean the day before — the run carries on.';
     else close='About even with the day before — holding is allowed.';
     var hd=m.partial?'vs yesterday — so far, by the clock'
       :'vs '+WEEKDAYS[pd.getDay()].slice(0,3)+' '+fmtShort(pd)+(v.key!==dkeyOf(addDays(m.date,-1))?' — the last logged day':'');
@@ -6838,7 +6847,7 @@ try{
     var key='<p class="mv-key"><span><i class="mk-a"></i>'+WEEKDAYS[pd.getDay()].slice(0,3)+' '+fmtShort(pd)+'</span>'+
       '<span><i class="mk-b"></i>'+(m.isToday?'Today':WEEKDAYS[m.date.getDay()].slice(0,3)+' '+fmtShort(m.date))+'</span></p>';
     return mvCard('The move',hd,
-      '<p class="mv-verdict">'+close+'</p>'+key+rows.join('')+
+      '<p class="mv-verdict">'+close+'</p>'+(flatZ&&rows.length===1?'':key)+rows.join('')+
       (m.adj>0?'<p class="dc-sum mv-adj">'+m.adj+' untimed — invisible to the time rows above.</p>':'')+
       pace+mvBase(m));
   }
@@ -6853,7 +6862,7 @@ try{
     }else{
       if(m.future){var inD=Math.round((d-today)/MS_DAY);facts.push('In '+inD+' day'+(inD>1?'s':''));}
       else facts.push('Day '+(Math.round((d-schedule()[0].start)/MS_DAY)+1)+' of '+t.totalD);
-      facts.push('Cap '+m.capText);
+      if(!m.future)facts.push('Cap '+m.capText);
       if(m.single)facts.push('Evening only');
       else if(m.reqGapH>0)facts.push(fmtGapH(m.reqGapH)+' gaps');
       era='<span class="chip sm acc">'+icon('plan')+'Taper</span>';
@@ -6866,8 +6875,9 @@ try{
       side='<span class="chip sm ghost">Ahead</span>';
     }else if(m.isZ){
       big=m.eff>0?'<span class="dp-n">'+m.eff+'</span><span class="dp-of">hit'+(m.eff>1?'s':'')+'</span>'
-        :'<span class="dp-cleanmark">'+icon('check')+'</span><span class="dp-word">Clean day</span>';
-      side=dpStatusChip(m);
+        :'<span class="dp-cleanmark">'+icon('check')+'</span><span class="dp-word">'+(m.isToday?'Clean so far':'Clean day')+'</span>';
+      // the check and the word already say it — no second "Clean" chip
+      side=m.eff>0?dpStatusChip(m):'';
     }else{
       // eff null is "never logged", not zero — a 64px "0 / cap" would read as
       // the best day possible on a day with no record at all
