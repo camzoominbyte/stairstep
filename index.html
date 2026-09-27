@@ -5444,9 +5444,12 @@ try{
     });
     return out;
   });}
+  /* the three check-in series wear their own non-status hues (defined on
+     .cv-ck): cravings are not a failure, so they never borrow clay */
+  var CK_SER=[['sleep','Sleep','var(--ck-sleep)'],['mood','Mood','var(--ck-mood)'],['crave','Cravings','var(--ck-crave)']];
   function checkinChartSVG(ser){
     var n=Math.min(ser.length,21),s=ser.slice(-n);
-    var W=340,H=92,padL=14,padR=8,padT=8,padB=16;
+    var W=340,H=116,padL=20,padR=10,padT=12,padB=24;
     /* Spacing by array index made every reading equidistant, so once the
        check-in turns weekly past zero day 21 a 7-day step drew the same
        width as a 1-day step and the line read as an unbroken nightly
@@ -5460,16 +5463,16 @@ try{
     function Y(v){return padT+(1-(v-1)/4)*(H-padT-padB);}
     var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Nightly check-ins: sleep, mood, cravings">';
     [1,3,5].forEach(function(g){
-      svg+='<line x1="'+padL+'" y1="'+Y(g).toFixed(1)+'" x2="'+(W-padR)+'" y2="'+Y(g).toFixed(1)+'" stroke="var(--surface2)" stroke-width="1"/>'+
-        '<text x="'+(padL-4)+'" y="'+(Y(g)+3).toFixed(1)+'" font-size="8" fill="var(--muted)" text-anchor="end" font-family="Karla,sans-serif">'+g+'</text>';
+      svg+='<line x1="'+padL+'" y1="'+Y(g).toFixed(1)+'" x2="'+(W-padR)+'" y2="'+Y(g).toFixed(1)+'" stroke="var(--line)" stroke-width="1"'+(g===3?' stroke-dasharray="2 4"':'')+'/>'+
+        txt(padL-7,Y(g)+3.5,10.5,'var(--ink-3)','end',g);
     });
-    [['sleep','var(--accent)'],['mood','var(--sage)'],['crave','var(--clay)']].forEach(function(mc){
+    CK_SER.forEach(function(mc){
       var pts=s.map(function(x,i){return X(i).toFixed(1)+','+Y(x[mc[0]]).toFixed(1);}).join(' ');
-      svg+='<polyline points="'+pts+'" fill="none" stroke="'+mc[1]+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'+
-        '<circle cx="'+X(n-1).toFixed(1)+'" cy="'+Y(s[n-1][mc[0]]).toFixed(1)+'" r="3" fill="'+mc[1]+'"/>';
+      if(n>1)svg+='<polyline class="draw" pathLength="1" points="'+pts+'" fill="none" stroke="'+mc[2]+'" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>';
+      svg+='<circle cx="'+X(n-1).toFixed(1)+'" cy="'+Y(s[n-1][mc[0]]).toFixed(1)+'" r="3.8" fill="'+mc[2]+'" stroke="var(--s1)" stroke-width="1.6"/>';
     });
-    svg+='<text x="'+padL+'" y="'+(H-3)+'" font-size="8.5" fill="var(--muted)" font-family="Karla,sans-serif">'+fmtShort(dateOf(s[0].k))+'</text>'+
-      '<text x="'+(W-padR)+'" y="'+(H-3)+'" font-size="8.5" fill="var(--muted)" text-anchor="end" font-family="Karla,sans-serif">'+fmtShort(dateOf(s[n-1].k))+'</text>';
+    svg+=txt(padL,H-6,10.5,'var(--ink-3)',null,fmtShort(dateOf(s[0].k)))+
+      txt(W-padR,H-6,10.5,'var(--ink-3)','end',fmtShort(dateOf(s[n-1].k)));
     return svg+'</svg>';
   }
   function ckInsightFigs(ser){
@@ -5485,10 +5488,11 @@ try{
           :m.k==='sleep'?'dipped — settles last':'dipped';
         else word='steady';
         // which direction is good depends on the metric: cravings falling
-        // is the win, sleep and mood climbing are
+        // is the win, sleep and mood climbing are. A dip stays neutral ink —
+        // a rough night is not a status.
         var good=l3===p?null:(m.bad?l3<p:l3>p);
-        figs.push({v:l3,l:m.t+' · last 3 readings',s:word+(l3!==p?' · was '+p:''),
-          c:good===null?null:good?'var(--sage)':'var(--amber)'});
+        figs.push({v:l3+'<small>/5</small>',l:m.t+' · last 3',s:word+(l3!==p?' · was '+p:''),
+          c:good?'var(--sage)':null});
       });
     }else{
       figs.push({v:ser.length,l:'night'+(ser.length>1?'s':'')+' logged',s:'trends appear after a few more'});
@@ -5497,12 +5501,10 @@ try{
   }
   function checkinBlockHTML(){
     var ser=ckSeries();if(!ser.length)return '';
-    var html='<h3 class="xtra-h" style="margin-top:16px">The nights</h3>';
+    var html=xh('The nights',ser.length+' logged');
     if(ser.length>=2){
-      html+=zoomable('nights',checkinChartSVG(ser))+
-        '<p class="chart-note"><span class="legend-dot" style="background:var(--accent)"></span>sleep &nbsp;'+
-        '<span class="legend-dot" style="background:var(--sage)"></span>mood &nbsp;'+
-        '<span class="legend-dot" style="background:var(--clay)"></span>cravings (5 = loud)</p>';
+      html+='<div class="cv-ck">'+zoomable('nights',checkinChartSVG(ser))+
+        cvLegend(CK_SER.map(function(m){return ['line',m[2],m[0]==='crave'?'Cravings · 5 is loud':m[1]];}))+'</div>';
     }
     html+=figsHTML(ckInsightFigs(ser));
     return html;
@@ -5558,21 +5560,23 @@ try{
   function urgeBlockHTML(){
     var us=urgeStats();
     if(!us)return '';
-    var note;
+    var note,chip='';
     if(us.prev7>0){
       note=us.last7<us.prev7
         ?'Down from <strong>'+us.prev7+'</strong> the week before — the waves are thinning, right on the research’s curve.'
         :us.last7>us.prev7
         ?'Up from '+us.prev7+' the week before — more waves came, and you outlasted them.'
         :'Even with the week before — and every one outlasted.';
+      // fewer waves is the win; more waves, all outlasted, is never a failure
+      var dd=us.last7-us.prev7;
+      chip=dv(dd===0?'even with last week':(dd<0?'▾':'▴')+Math.abs(dd)+' vs last week',dd<0?true:null);
     }else{
       note='Each one is a hit that never happened.';
     }
-    return '<h3 class="xtra-h" style="margin-top:16px">Urges outlasted</h3>'+
-      '<div class="stat-row" style="animation:none">'+
-      '<div class="stat" style="animation:none"><span class="sv" style="color:var(--sage)">'+us.total+'</span><span class="sl">all time</span></div>'+
-      '<div class="stat" style="animation:none"><span class="sv">'+us.last7+'</span><span class="sl">last 7 days</span></div>'+
-      '<div class="stat" style="animation:none"><span class="sv">'+us.today+'</span><span class="sl">today</span></div></div>'+
+    return xh('Urges outlasted')+
+      '<div class="cv-head"><span class="cv-big" style="color:var(--under-t)">'+us.total+'</span>'+
+      '<span class="cv-big-l">all time</span>'+chip+'</div>'+
+      figsHTML([{v:us.last7,l:'last 7 days'},{v:us.today,l:'today'}])+
       '<p class="chart-note">'+note+'</p>';
   }
   /* A timer left running is not a wave outlasted. The tick banks any
@@ -5788,21 +5792,31 @@ try{
     if(bi<0||!best)return null;
     return {from:fmtHourLbl(bi),to:fmtHourLbl(bi+2),share:Math.round(best/total*100)};
   }
+  /* compact hour histogram: other hours in ghost, the heaviest two-hour
+     window in the accent gradient with its one annotation above it */
   function hourChartSVG(hist){
-    var max=1;hist.forEach(function(v){if(v>max)max=v;});
-    var maxIdx=hist.indexOf(max);
-    var W=340,base=58,bw=W/24;
-    var svg='<svg viewBox="0 0 340 76" width="100%" role="img" aria-label="Hits by time of day">';
-    hist.forEach(function(v,i){
+    var max=1,tot=0;hist.forEach(function(v){if(v>max)max=v;tot+=v;});
+    var best=0,bi=-1;
+    for(var i=0;i<23;i++){var s2=hist[i]+hist[i+1];if(s2>best){best=s2;bi=i;}}
+    var W=340,H=106,padT=26,base=82,bw=W/24,gid=cvId('hg');
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Hits by time of day">'+
+      '<defs>'+vGrad(gid,'var(--acc-2)','var(--acc)')+'</defs>';
+    if(bi>=0)svg+='<rect x="'+(bi*bw).toFixed(1)+'" y="'+(padT-4)+'" width="'+(bw*2).toFixed(1)+'" height="'+(base-padT+4)+'" rx="7" fill="var(--acc-bg)"/>';
+    hist.forEach(function(v,j){
+      var x=j*bw+2.2,w=bw-4.4;
       if(v>0){
-        var hh=Math.max(3,(v/max)*46);
-        svg+='<rect x="'+(i*bw+1.5).toFixed(1)+'" y="'+(base-hh).toFixed(1)+'" width="'+(bw-3).toFixed(1)+'" height="'+hh.toFixed(1)+'" rx="2.5" fill="'+(i===maxIdx?'var(--accent)':'var(--amber)')+'" fill-opacity="'+(i===maxIdx?'1':'.5')+'"/>';
+        var hh=Math.max(4,(v/max)*(base-padT)),pk=bi>=0&&(j===bi||j===bi+1);
+        svg+='<path class="grow" style="--dl:'+(j*14)+'ms" d="'+rbar(x,base-hh,w,hh,3)+'" fill="'+(pk?'url(#'+gid+')':'var(--ghost)')+'"/>';
       }else{
-        svg+='<rect x="'+(i*bw+1.5).toFixed(1)+'" y="'+(base-2)+'" width="'+(bw-3).toFixed(1)+'" height="2" rx="1" fill="var(--surface2)"/>';
+        svg+='<rect x="'+x.toFixed(1)+'" y="'+(base-2)+'" width="'+w.toFixed(1)+'" height="2" rx="1" fill="var(--s3)"/>';
       }
     });
-    [[4,'8a'],[8,'12p'],[12,'4p'],[16,'8p'],[20,'12a']].forEach(function(t){
-      svg+='<text x="'+(t[0]*bw+bw/2).toFixed(1)+'" y="72" font-size="8.5" fill="var(--muted)" text-anchor="middle" font-family="Karla,sans-serif">'+t[1]+'</text>';
+    if(bi>=0&&tot){
+      var cx=Math.max(64,Math.min(242,(bi+1)*bw));
+      svg+=txt(cx,13,11,'var(--acc-t)','middle','Peak '+fmtHourLbl(bi)+'–'+fmtHourLbl(bi+2)+' · '+Math.round(best/tot*100)+'%',true);
+    }
+    [[0,'4a'],[4,'8a'],[8,'12p'],[12,'4p'],[16,'8p'],[20,'12a']].forEach(function(t){
+      svg+=txt(t[0]===0?2:t[0]*bw+bw/2,H-6,10.5,'var(--ink-3)',t[0]===0?null:'middle',t[1]);
     });
     return svg+'</svg>';
   }
@@ -5870,7 +5884,7 @@ try{
     // no scored gaps at all (evening-only rungs, zero era) — the tile drops
     // out rather than printing a percentage of nothing
     var col=g.adherence>=70?'var(--sage)':g.adherence>=50?'var(--amber)':'var(--clay)';
-    return '<h3 class="xtra-h" style="margin-top:16px">Time between sessions</h3>'+
+    return xh('Time between sessions')+
       figsHTML([
         g.best?{v:fmtDur(g.best.h*3600000),l:'longest yet',mid:true,c:'var(--accent)',
           s:fmtShort(dateOf(g.best.k))}:null,
@@ -5882,40 +5896,59 @@ try{
           s:g.widening?'widening as designed':'early avg '+fmtDur(g.early*3600000),
           c:g.widening?'var(--sage)':null}:null
       ])+
-      '<p class="chart-note"><button class="linklike" data-big="gaps">See every gap, charted →</button></p>';
+      cvLink('gaps','See every gap, charted','wave');
   }
-  /* all days side by side: columns = days, top→bottom = 4am→4am, dots = hits */
+  /* recent days side by side: columns = days, top→bottom = 4am→4am, dots =
+     hits, a soft capsule per sitting. The compact face keeps the last three
+     weeks readable; the full record lives in the big chart. */
+  var _pcWin='';
   function punchcardSVG(){
-    var sch=schedule(),days=[];
+    var sch=schedule(),all=[];
     var d=new Date(sch[0].start);
     while(d<=today){
       var k=dkeyOf(d),e=data.days[k];
-      days.push({d:new Date(d),k:k,di:phaseIndexFor(d),
-        hits:(e&&e.hits?e.hits:[]).map(function(t){return new Date(t);})});
+      all.push({d:new Date(d),k:k,di:phaseIndexFor(d),n:(e&&e.hits?e.hits.length:0)});
       d=addDays(d,1);
     }
-    if(!days.length)return '';
-    var anyTimed=days.some(function(x){return x.hits.length;});
-    if(!anyTimed)return '';
-    var n=days.length,W=340,padL=20,padR=8,padT=8,padB=18,H=164;
-    var colW=(W-padL-padR)/n,plotH=H-padT-padB;
+    _pcWin='';
+    if(!all.length)return '';
+    var lastHit=-1;
+    all.forEach(function(x,i){if(x.n)lastHit=i;});
+    if(lastHit<0)return '';
+    var N=21,end=all.length-1;
+    // nothing timed in the recent window (a clean run at zero): show the
+    // last stretch that has hits instead of an empty grid
+    if(lastHit<end-N+1)end=lastHit;
+    var days=all.slice(Math.max(0,end-N+1),end+1);
+    var n=days.length;
+    _pcWin=n<all.length?(end===all.length-1?'last '+n+' days':fmtShort(days[0].d)+'–'+fmtShort(days[n-1].d)):'';
+    var W=340,padL=28,padR=4,padT=8,padB=24,H=190,plotH=H-padT-padB;
+    var colW=(W-padL-padR)/n;
+    var r=Math.max(1.9,Math.min(3.3,colW*.23));
     function Y(lh){return padT+(lh/24)*plotH;}
     function lh(t){return ((t.getHours()-DAY_CUTOFF_H+24)%24)+t.getMinutes()/60;}
-    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Every day side by side — when you smoked">';
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Recent days side by side — when you smoked">';
     [[4,'8a'],[8,'12p'],[12,'4p'],[16,'8p'],[20,'12a']].forEach(function(t){
       var y=Y(t[0]);
-      svg+='<line x1="'+padL+'" y1="'+y.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+y.toFixed(1)+'" stroke="var(--surface2)" stroke-width="1"/>';
-      svg+='<text x="2" y="'+(y+3).toFixed(1)+'" font-size="7.5" fill="var(--muted)" font-family="Karla,sans-serif">'+t[1]+'</text>';
+      svg+='<line x1="'+padL+'" y1="'+y.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+y.toFixed(1)+'" stroke="var(--line)" stroke-width="1"/>'+
+        txt(0,y+3.5,10.5,'var(--ink-3)',null,t[1]);
     });
+    var step=n<=8?1:n<=14?2:3,dots='';
     days.forEach(function(day,i){
-      var x0=padL+colW*i,cx=x0+colW/2,isZ=day.di===BASE_PHASES.length-1;
-      if(day.k===todayKey)svg+='<rect x="'+x0.toFixed(1)+'" y="'+padT+'" width="'+colW.toFixed(1)+'" height="'+plotH+'" fill="var(--accent)" fill-opacity=".07"/>';
-      day.hits.forEach(function(h){
-        svg+='<circle cx="'+cx.toFixed(1)+'" cy="'+Y(lh(h)).toFixed(1)+'" r="2.6" fill="'+(isZ?'var(--clay)':'var(--accent)')+'" fill-opacity=".8"/>';
+      var x0=padL+colW*i,cx=x0+colW/2,isZ=day.di===BASE_PHASES.length-1,isT=day.k===todayKey;
+      if(isT)svg+='<rect x="'+(x0+1).toFixed(1)+'" y="'+(padT-4)+'" width="'+Math.max(2,colW-2).toFixed(1)+'" height="'+(plotH+8)+'" rx="6" fill="var(--acc-bg)"/>';
+      var col=isZ?'var(--over)':'var(--acc)';
+      sessionsFor(day.k).forEach(function(run){
+        var y1=Y(lh(run[0])),y2=Y(lh(run[run.length-1]));
+        if(y2-y1>1)svg+='<rect x="'+(cx-r-1).toFixed(1)+'" y="'+(y1-r-1).toFixed(1)+'" width="'+(2*r+2).toFixed(1)+'" height="'+(y2-y1+2*r+2).toFixed(1)+'" rx="'+(r+1).toFixed(1)+'" fill="'+col+'" fill-opacity=".18"/>';
+        run.forEach(function(h){
+          dots+='<circle cx="'+cx.toFixed(1)+'" cy="'+Y(lh(h)).toFixed(1)+'" r="'+r.toFixed(1)+'" fill="'+col+'"/>';
+        });
       });
-      if(n<=11||i%2===0)svg+='<text x="'+cx.toFixed(1)+'" y="'+(H-6)+'" font-size="7" fill="'+(day.k===todayKey?'var(--accent)':'var(--muted)')+'" text-anchor="middle" font-family="Karla,sans-serif">'+(day.d.getMonth()+1)+'/'+day.d.getDate()+'</text>';
+      var last=i===n-1&&colW<30;
+      if((n-1-i)%step===0)svg+=txt(last?W-padR:cx,H-6,10,isT?'var(--acc-t)':'var(--ink-3)',last?'end':'middle',isT?'Today':(day.d.getMonth()+1)+'/'+day.d.getDate(),isT);
     });
-    return svg+'</svg>';
+    return svg+'<g class="pop">'+dots+'</g></svg>';
   }
   function paceVsYesterday(){
     // deliberately a raw 24h slice, not logical hours — "by this time yesterday"
@@ -5991,9 +6024,88 @@ try{
       return {x:x<0?0:x>24?24:x,y:i+1};
     });
   }
+  /* ================= the chart language (owner C) =================
+     Rounded tabular chart text (svg text inherits --f-round), status
+     colours only beside a label or legend, the accent for time / today /
+     the peak, the descent ramp for every cap line, one or two faint guides
+     plus a single annotated point instead of gridlines. Entrance motion is
+     gated (cvFirst / czWrap) — renderAll rebuilds these every paint. */
+  var _cvGid=0;
+  function cvId(p){return 'cv'+p+(++_cvGid);}
+  // a bar with rounded top corners, square on its baseline
+  function rbar(x,y,w,h,r){
+    if(!(h>0)||!(w>0))return '';
+    r=Math.max(0,Math.min(r,w/2,h));
+    function f(v){return (+v).toFixed(1);}
+    return 'M'+f(x)+' '+f(y+h)+'V'+f(y+r)+'Q'+f(x)+' '+f(y)+' '+f(x+r)+' '+f(y)+
+      'H'+f(x+w-r)+'Q'+f(x+w)+' '+f(y)+' '+f(x+w)+' '+f(y+r)+'V'+f(y+h)+'Z';
+  }
+  // the descent ramp, laid along x in user space (a horizontal cap line has
+  // a zero-height bbox, so objectBoundingBox would paint nothing)
+  function rampGrad(id,x1,x2){
+    return '<linearGradient id="'+id+'" gradientUnits="userSpaceOnUse" x1="'+(+x1).toFixed(1)+'" y1="0" x2="'+(+x2).toFixed(1)+'" y2="0">'+
+      '<stop offset="0" stop-color="var(--r-ember)"/><stop offset=".4" stop-color="var(--r-honey)"/>'+
+      '<stop offset=".72" stop-color="var(--r-citrine)"/><stop offset="1" stop-color="var(--r-jade)"/></linearGradient>';
+  }
+  // vertical gradient: top colour → bottom colour (optionally fading)
+  function vGrad(id,top,bot,o1,o2){
+    return '<linearGradient id="'+id+'" x1="0" y1="0" x2="0" y2="1">'+
+      '<stop offset="0" stop-color="'+top+'"'+(o1!=null?' stop-opacity="'+o1+'"':'')+'/>'+
+      '<stop offset="1" stop-color="'+bot+'"'+(o2!=null?' stop-opacity="'+o2+'"':'')+'/></linearGradient>';
+  }
+  // a rounded label plate + text, for annotations that sit over marks
+  function tag(x,y,s,fill,anchor,plate){
+    var w=s.replace(/<[^>]*>/g,'').length*6.1+14,x0=anchor==='end'?x-w:anchor==='middle'?x-w/2:x;
+    return '<rect x="'+x0.toFixed(1)+'" y="'+(y-12).toFixed(1)+'" width="'+w.toFixed(1)+'" height="17" rx="8.5" fill="'+(plate||'var(--s1)')+'" stroke="var(--line)" stroke-width="1"/>'+
+      txt(x0+w/2,y+.5,10.5,fill,'middle',s,true);
+  }
+  // section header inside a detail page: title + optional one-line data
+  function xh(t,sub){return '<h3 class="xtra-h"><span>'+t+'</span>'+(sub?'<span class="xh-sub">'+sub+'</span>':'')+'</h3>';}
+  // a chevron row that opens a big chart (the [data-big] delegate catches it)
+  function cvLink(key,label,ic){
+    return '<button class="cv-link" data-big="'+key+'">'+icon(ic||'wave','ic-sm')+'<span>'+label+'</span>'+icon('chev','ic-sm')+'</button>';
+  }
+  /* legend: every coloured mark gets a word. items: [kind,colour,label]
+     kind: dot | sq | line | dash | ramp | ring */
+  function cvLegend(items){
+    return '<div class="cv-legend">'+items.filter(Boolean).map(function(it){
+      var st=it[0]==='ring'?'border-color:'+it[1]:it[0]==='ramp'?'':'background:'+it[1];
+      return '<span class="lg"><i class="lg-'+it[0]+'"'+(st?' style="'+st+'"':'')+'></i>'+it[2]+'</span>';
+    }).join('')+'</div>';
+  }
+  // status fills (graphics) and their text-safe inks
+  var STAT_COL={under:'var(--under)',at:'var(--atcap)',over:'var(--over)',clean:'var(--under)',slip:'var(--over)',nolog:'var(--ink-3)'};
+  var STAT_TXT={under:'var(--under-t)',at:'var(--atcap-t)',over:'var(--over-t)',clean:'var(--under-t)',slip:'var(--over-t)',nolog:'var(--ink-3)'};
+  // a figure's colour is a graphic token; its number needs the text ink
+  var _TCOL={'var(--sage)':'var(--under-t)','var(--under)':'var(--under-t)','var(--clean)':'var(--under-t)',
+    'var(--amber)':'var(--atcap-t)','var(--atcap)':'var(--atcap-t)',
+    'var(--clay)':'var(--over-t)','var(--over)':'var(--over-t)','var(--slip)':'var(--over-t)',
+    'var(--accent)':'var(--acc-t)','var(--acc)':'var(--acc-t)','var(--faint)':'var(--ink-3)','var(--muted)':'var(--ink-2)','var(--sand)':'var(--ink)'};
+  function tcol(c){return _TCOL[c]||c;}
+  // entrance gates: once per session per key (detail pages), and once per
+  // opening of a chart page (a live re-render of the same page stays still)
+  var _cvSeen={};
+  function cvFirst(key){if(!motionOK||_cvSeen[key])return false;_cvSeen[key]=1;return true;}
+  function czWrap(key,html){
+    var b=$('czBody'),fresh=motionOK&&!(b&&b.querySelector('[data-czc="'+key+'"]'));
+    return '<div class="cv-cz'+(fresh?' cv-anim':'')+'" data-czc="'+key+'">'+html+'</div>';
+  }
+  // wide charts scroll; their y-axis is pinned beside the scroller
+  function wideChart(svg,axis,hint){
+    return roChart('<div class="cv-wide">'+axis+'<div class="cz-scroll">'+svg+'</div></div>',hint);
+  }
+  function pinAxis(H,rows){
+    var s='<svg class="cv-yax" viewBox="0 0 34 '+H+'" width="34" height="'+H+'" aria-hidden="true">';
+    rows.forEach(function(r){
+      s+='<rect x="1" y="'+(r[0]-8.5).toFixed(1)+'" width="30" height="17" rx="8.5" fill="var(--s1)" fill-opacity=".94" stroke="var(--line)" stroke-width="1"/>'+
+        txt(16,r[0]+3.6,10,r[2]||'var(--ink-2)','middle',r[1],r[3]);
+    });
+    return s+'</svg>';
+  }
+
   /* today's cumulative line vs yesterday's, under the cap line */
   function paceChartSVG(){
-    var W=340,H=150,padL=10,padR=10,padT=16,padB=20;
+    var W=340,H=160,padL=10,padR=10,padT=30,padB=24;
     var tPts=cumPoints(todayKey);
     var yDate=addDays(today,-1);
     var yPts=yDate>=schedule()[0].start?cumPoints(dkeyOf(yDate)):[];
@@ -6013,39 +6125,46 @@ try{
       if(endH>pts[pts.length-1].x)d+=' L'+X(endH).toFixed(1)+' '+Y(cur).toFixed(1);
       return d;
     }
-    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Cumulative hits today versus yesterday, under the cap line">';
-    // gridline every 2h, a tick for every hour, label every 2h
-    for(var g=1;g<24;g++){
-      var gx=X(g);
-      if(g%2===0)svg+='<line x1="'+gx.toFixed(1)+'" y1="'+padT+'" x2="'+gx.toFixed(1)+'" y2="'+(H-padB)+'" stroke="var(--surface2)" stroke-width="1"'+(g%4?' stroke-opacity=".55"':'')+'/>';
-      svg+='<line x1="'+gx.toFixed(1)+'" y1="'+(H-padB)+'" x2="'+gx.toFixed(1)+'" y2="'+(H-padB+(g%4?2.5:4))+'" stroke="var(--line)" stroke-width="1"/>';
-      if(g%2===0)svg+='<text x="'+gx.toFixed(1)+'" y="'+(H-6)+'" font-size="7.5" fill="var(--muted)" text-anchor="middle"'+(g%4===0?' font-weight="700"':'')+' font-family="Karla,sans-serif">'+fmtHourLbl(g)+'</text>';
-    }
+    var rg=cvId('pr'),ag=cvId('pa');
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Cumulative hits today versus yesterday, under the cap line">'+
+      '<defs>'+rampGrad(rg,X(0),X(24))+vGrad(ag,'var(--acc)','var(--acc)',.24,0)+'</defs>';
+    svg+='<line x1="'+X(0).toFixed(1)+'" y1="'+Y(0).toFixed(1)+'" x2="'+X(24).toFixed(1)+'" y2="'+Y(0).toFixed(1)+'" stroke="var(--line-2)" stroke-width="1"/>';
+    [0,4,8,12,16,20,24].forEach(function(g){
+      svg+=txt(X(g),H-6,10.5,'var(--ink-3)',g===0?null:g===24?'end':'middle',fmtHourLbl(g%24));
+    });
     if(cap>0){
-      svg+='<line x1="'+X(0).toFixed(1)+'" y1="'+Y(cap).toFixed(1)+'" x2="'+X(24).toFixed(1)+'" y2="'+Y(cap).toFixed(1)+'" stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="5 4" stroke-opacity=".65"/>';
-      svg+='<text x="'+X(24).toFixed(1)+'" y="'+(Y(cap)-4).toFixed(1)+'" font-size="9" fill="var(--amber)" text-anchor="end" font-weight="700" font-family="Karla,sans-serif">cap '+cap+'</text>';
+      svg+='<line x1="'+X(0).toFixed(1)+'" y1="'+Y(cap).toFixed(1)+'" x2="'+X(24).toFixed(1)+'" y2="'+Y(cap).toFixed(1)+'" stroke="url(#'+rg+')" stroke-width="2" stroke-dasharray="4 5" stroke-linecap="round"/>'+
+        txt(X(0),Y(cap)-7,10.5,'var(--ink-2)',null,'Cap '+cap,true);
     }
     if(yPts.length){
-      svg+='<path d="'+stepPath(yPts,24)+'" fill="none" stroke="var(--faint)" stroke-width="2" stroke-linejoin="round"/>';
+      svg+='<path class="draw" pathLength="1" d="'+stepPath(yPts,24)+'" fill="none" stroke="var(--ghost)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+      var ly=Y(yTot)-7;if(ly<30||Math.abs(ly-(Y(cap)-7))<12)ly=Y(yTot)+15;
+      svg+=txt(X(24),ly,10.5,'var(--ink-2)','end','Yesterday '+yTot,true);
     }
     if(tPts.length){
       var pd=stepPath(tPts,nowX);
-      svg+='<path d="'+pd+' L'+X(nowX).toFixed(1)+' '+Y(0).toFixed(1)+' Z" fill="var(--accent)" fill-opacity=".09" stroke="none"/>';
-      svg+='<path d="'+pd+'" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>';
+      svg+='<path d="'+pd+' L'+X(nowX).toFixed(1)+' '+Y(0).toFixed(1)+' Z" fill="url(#'+ag+')" stroke="none"/>'+
+        '<path class="draw" pathLength="1" d="'+pd+'" fill="none" stroke="var(--acc)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
     }
-    svg+='<circle cx="'+X(nowX).toFixed(1)+'" cy="'+Y(tTot).toFixed(1)+'" r="4" fill="var(--accent)"/>';
+    var nx=X(nowX),ny=Y(tTot);
+    svg+='<circle cx="'+nx.toFixed(1)+'" cy="'+ny.toFixed(1)+'" r="4.5" fill="var(--acc)" stroke="var(--s1)" stroke-width="2"/>'+
+      txt(Math.max(padL+30,Math.min(W-40,nx)),ny-10,10.5,'var(--acc-t)','middle','Today '+tTot,true);
     return svg+'</svg>';
   }
-  /* progress ring (zero era: days through the 21-day adjustment window) */
+  /* progress ring — only where more is better (the taper score, the 21-day
+     adjustment). Also drawn by the landscape cockpit (#dhRing): keep the
+     signature; labels arrive uppercase from callers and are set in sentence case. */
   function ringSVG(pct,center,label,color){
-    pct=Math.max(0,Math.min(1,pct));
-    var R=54,C=2*Math.PI*R;
-    return '<svg viewBox="0 0 140 140" width="150" style="display:block;margin:4px auto" role="img" aria-label="'+center+' '+label+'">'+
-      '<circle cx="70" cy="70" r="'+R+'" fill="none" stroke="var(--surface2)" stroke-width="11"/>'+
-      '<circle cx="70" cy="70" r="'+R+'" fill="none" stroke="'+color+'" stroke-width="11" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+(C*(1-pct)).toFixed(1)+'" transform="rotate(-90 70 70)"/>'+
-      '<text x="70" y="70" text-anchor="middle" font-family="Fraunces,serif" font-size="34" font-weight="600" fill="var(--sand)">'+center+'</text>'+
-      '<text x="70" y="90" text-anchor="middle" font-family="Karla,sans-serif" font-size="8.5" letter-spacing="1.2" font-weight="700" fill="var(--muted)">'+label+'</text></svg>';
+    pct=Math.max(0,Math.min(1,pct||0));
+    var lbl=String(label||'');lbl=lbl.charAt(0).toUpperCase()+lbl.slice(1).toLowerCase();
+    return '<svg class="cv-ring" viewBox="0 0 140 140" width="150" style="display:block;margin:4px auto" role="img" aria-label="'+center+' '+lbl+'">'+
+      '<circle cx="70" cy="70" r="57" fill="none" stroke="var(--s3)" stroke-width="12"/>'+
+      (pct>0?'<circle class="ring-arc" cx="70" cy="70" r="57" fill="none" stroke="'+color+'" stroke-width="12" stroke-linecap="round" pathLength="100" stroke-dasharray="'+(pct*100).toFixed(2)+' 100" transform="rotate(-90 70 70)"/>':'')+
+      '<text x="70" y="78" text-anchor="middle" font-size="40" font-weight="700" letter-spacing="-1.2" fill="var(--ink)">'+center+'</text>'+
+      '<text x="70" y="98" text-anchor="middle" font-size="11" font-weight="650" fill="var(--ink-2)">'+lbl+'</text></svg>';
   }
+  var MILESTONES=[10,25,50,100,250,500,1000,2500,5000,10000,25000];
+  function milestoneUnder(v){var m=0;MILESTONES.forEach(function(x){if(x<=v*.88)m=x;});return m;}
   /* cumulative hits-not-smoked vs the ~30/day baseline — only ever rises */
   function avoidedChartSVG(){
     var sch=schedule(),pts=[],cum=0;
@@ -6059,17 +6178,22 @@ try{
     }
     var maxV=pts[pts.length-1];
     if(!pts.length||maxV<=0)return '';
-    var W=340,H=110,padL=10,padR=14,padT=26,padB=14;
-    function X(i){return padL+(pts.length===1?1:(i/(pts.length-1)))*(W-padL-padR);}
+    var W=340,H=124,padL=6,padR=12,padT=36,padB=22,n=pts.length;
+    function X(i){return padL+(n===1?1:(i/(n-1)))*(W-padL-padR);}
     function Y(v){return padT+(1-v/maxV)*(H-padT-padB);}
     var line='M'+X(0).toFixed(1)+' '+Y(pts[0]).toFixed(1);
-    for(var i=1;i<pts.length;i++)line+=' L'+X(i).toFixed(1)+' '+Y(pts[i]).toFixed(1);
-    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Cumulative hits not smoked versus baseline">';
-    svg+='<path d="'+line+' L'+X(pts.length-1).toFixed(1)+' '+(H-padB)+' L'+X(0).toFixed(1)+' '+(H-padB)+' Z" fill="var(--sage)" fill-opacity=".14"/>';
-    svg+='<path d="'+line+'" fill="none" stroke="var(--sage)" stroke-width="2.5" stroke-linejoin="round"/>';
-    svg+='<circle cx="'+X(pts.length-1).toFixed(1)+'" cy="'+Y(maxV).toFixed(1)+'" r="4" fill="var(--sage)"/>';
-    // label lives top-left so the tap-to-expand badge never covers it
-    svg+='<text x="'+(padL+2)+'" y="'+(padT-8)+'" font-family="Fraunces,serif" font-size="15" font-weight="600" fill="var(--sage)">'+maxV+' not smoked</text>';
+    for(var i=1;i<n;i++)line+=' L'+X(i).toFixed(1)+' '+Y(pts[i]).toFixed(1);
+    var ag=cvId('aa');
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Cumulative hits not smoked versus baseline">'+
+      '<defs>'+vGrad(ag,'var(--under)','var(--under)',.26,.02)+'</defs>';
+    var ms=milestoneUnder(maxV);
+    if(ms)svg+='<line x1="'+padL+'" y1="'+Y(ms).toFixed(1)+'" x2="'+(W-padR)+'" y2="'+Y(ms).toFixed(1)+'" stroke="var(--line-2)" stroke-width="1" stroke-dasharray="2 4"/>'+
+      txt(padL,Y(ms)-5,10.5,'var(--ink-3)',null,ms);
+    svg+='<path d="'+line+' L'+X(n-1).toFixed(1)+' '+(H-padB)+' L'+X(0).toFixed(1)+' '+(H-padB)+' Z" fill="url(#'+ag+')"/>';
+    svg+='<path class="draw" pathLength="1" d="'+line+'" fill="none" stroke="var(--under)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
+    svg+='<circle cx="'+X(n-1).toFixed(1)+'" cy="'+Y(maxV).toFixed(1)+'" r="4.5" fill="var(--under)" stroke="var(--s1)" stroke-width="2"/>';
+    svg+=txt(X(n-1)-11,Y(maxV)+4,13,'var(--under-t)','end',maxV,true);
+    svg+=txt(padL,H-6,10.5,'var(--ink-3)',null,fmtShort(sch[0].start))+txt(W-padR,H-6,10.5,'var(--ink-3)','end','Today');
     return svg+'</svg>';
   }
 
@@ -6079,42 +6203,46 @@ try{
   function zoomable(key,svg){
     if(!svg)return '';
     return '<div class="zoomable" role="button" tabindex="0" data-big="'+key+'" aria-label="Expand this chart">'+svg+
-      '<span class="zoom-ico" aria-hidden="true">⤢</span></div>';
+      '<span class="zoom-ico" aria-hidden="true">'+icon('open','ic-xs')+'</span></div>';
   }
   function txt(x,y,size,fill,anchor,s,bold){
     return '<text x="'+(+x).toFixed(1)+'" y="'+(+y).toFixed(1)+'" font-size="'+size+'" fill="'+fill+'"'+
-      (anchor?' text-anchor="'+anchor+'"':'')+(bold?' font-weight="700"':'')+
-      ' font-family="Karla,sans-serif">'+s+'</text>';
+      (anchor?' text-anchor="'+anchor+'"':'')+' font-weight="'+(bold?700:600)+'">'+s+'</text>';
   }
-  var STAT_COL={under:'var(--sage)',at:'var(--amber)',over:'var(--clay)',clean:'var(--sage)',slip:'var(--clay)',nolog:'var(--faint)'};
 
-  /* stat chips: a row of number-first tiles replaces a paragraph of prose.
-     item: {v,l, s? sub-line, c? color, mid? smaller value} */
+  /* stat figures: afterglow tiles — label, number, one foot line.
+     item: {v,l, s? sub-line, c? colour token, mid? smaller value} */
   function figsHTML(items){
     items=items.filter(Boolean);
     if(!items.length)return '';
-    return '<div class="stat-row wrap" style="animation:none">'+items.map(function(f){
-      return '<div class="stat" style="animation:none">'+
-        '<span class="sv'+(f.mid?' mid':'')+'"'+(f.c?' style="color:'+f.c+'"':'')+'>'+f.v+'</span>'+
-        '<span class="sl">'+f.l+'</span>'+
-        (f.s?'<span class="ss">'+f.s+'</span>':'')+'</div>';
+    var n=items.length;
+    var short=items.every(function(f){return String(f.v).replace(/<[^>]*>/g,'').length<=5;});
+    var cls=n===3&&short?' three':n%2?' odd':'';
+    return '<div class="figs'+cls+'">'+items.map(function(f){
+      return '<div class="fig">'+
+        '<span class="fl">'+f.l+'</span>'+
+        '<span class="fv'+(f.mid?' mid':'')+'"'+(f.c?' style="color:'+tcol(f.c)+'"':'')+'>'+f.v+'</span>'+
+        (f.s?'<span class="fs">'+f.s+'</span>':'')+'</div>';
     }).join('')+'</div>';
   }
-  /* one before/after metric drawn as two bars: prev faint, current wearing
-     the verdict. o: {k, pv,cv magnitudes, pt,ct value texts, good, chip?, max?} */
+  /* one before/after metric drawn as two bars: the day before in ghost, this
+     one wearing the verdict, with a tick on it at the mark to beat.
+     o: {k, pv,cv magnitudes, pt,ct value texts, good, chip?, max?} */
   function pairHTML(o){
     var max=Math.max(o.pv||0,o.cv||0,o.max||0)||1;
     var pw=Math.round((o.pv||0)/max*100), cw=Math.round((o.cv||0)/max*100);
     return '<div class="pair"><div class="pair-hd"><span class="pk">'+o.k+'</span>'+(o.chip||'')+'</div>'+
       '<div class="pair-bars">'+
       '<span class="pbar"><i style="width:'+pw+'%"></i></span><span class="pval">'+o.pt+'</span>'+
-      '<span class="pbar cur'+(o.good===true?' good':o.good===false?' bad':'')+'"><i style="width:'+cw+'%"></i></span><span class="pval cur">'+o.ct+'</span>'+
+      '<span class="pbar cur'+(o.good===true?' good':o.good===false?' bad':'')+'"><i style="width:'+cw+'%"></i>'+
+        (pw>0?'<b class="pmark" style="left:'+pw+'%"></b>':'')+'</span><span class="pval cur">'+o.ct+'</span>'+
       '</div></div>';
   }
   /* an interactive chart: invisible column zones (.rohit with data-ro) feed
-     the readout line as the finger slides; data-k zones also open their day */
+     the floating readout chip as the finger slides; data-k zones also open
+     their day */
   function roChart(svg,hint){
-    return '<div class="rochart"><p class="ro-strip">'+(hint||'Slide across the chart to read it.')+'</p>'+svg+'</div>';
+    return '<div class="rochart"><p class="ro-strip" aria-live="polite">'+(hint||'Slide across the chart to read it.')+'</p>'+svg+'</div>';
   }
 
   function bigHoursHTML(){
@@ -6124,30 +6252,36 @@ try{
     hist.forEach(function(v){if(v>max)max=v;});
     var best=0,bi=-1;
     for(var i=0;i<23;i++){var s2=hist[i]+hist[i+1];if(s2>best){best=s2;bi=i;}}
-    var W=360,H=258,padL=10,padR=10,padT=24,padB=30,bw=(W-padL-padR)/24;
+    var W=360,H=250,padL=6,padR=6,padT=34,padB=24,bw=(W-padL-padR)/24,gid=cvId('bh');
     function Y(v){return padT+(1-v/max)*(H-padT-padB);}
-    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Hits by hour of day, detailed">';
-    if(bi>=0)svg+='<rect x="'+(padL+bi*bw).toFixed(1)+'" y="'+padT+'" width="'+(bw*2).toFixed(1)+'" height="'+(H-padT-padB)+'" fill="var(--accent)" fill-opacity=".08" rx="6"/>';
-    hist.forEach(function(v,i){
-      var x=padL+i*bw;
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Hits by hour of day, detailed">'+
+      '<defs>'+vGrad(gid,'var(--acc-2)','var(--acc)')+'</defs>';
+    if(bi>=0){
+      svg+='<rect x="'+(padL+bi*bw).toFixed(1)+'" y="'+(padT-6)+'" width="'+(bw*2).toFixed(1)+'" height="'+(H-padT-padB+6)+'" fill="var(--acc-bg)" rx="8"/>';
+      var cx=Math.max(78,Math.min(W-78,padL+(bi+1)*bw));
+      svg+=txt(cx,padT-14,11.5,'var(--acc-t)','middle','Peak '+fmtHourLbl(bi)+'–'+fmtHourLbl(bi+2)+' · '+Math.round(best/tot*100)+'% of hits',true);
+    }
+    svg+='<line x1="'+padL+'" y1="'+(H-padB+.5)+'" x2="'+(W-padR)+'" y2="'+(H-padB+.5)+'" stroke="var(--line-2)" stroke-width="1"/>';
+    var mi=hist.indexOf(max);
+    hist.forEach(function(v,j){
+      var x=padL+j*bw,pk=bi>=0&&(j===bi||j===bi+1);
       if(v>0){
         var y=Y(v);
-        svg+='<rect class="grow" style="animation-delay:'+(i*16)+'ms" x="'+(x+1.5).toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+(bw-3).toFixed(1)+'" height="'+(H-padB-y).toFixed(1)+'" rx="3" fill="'+(v===max?'var(--accent)':'var(--amber)')+'" fill-opacity="'+(v===max?'1':'.55')+'"/>'+
-          txt(x+bw/2,y-4,8,'var(--sand)','middle',v,true);
+        svg+='<path class="grow" style="--dl:'+(j*16)+'ms" d="'+rbar(x+2,y,bw-4,H-padB-y,3.5)+'" fill="'+(pk?'url(#'+gid+')':'var(--ghost)')+'"/>';
+        if(pk||j===mi)svg+=txt(x+bw/2,y-5,10.5,pk?'var(--acc-t)':'var(--ink-2)','middle',v,true);
       }else{
-        svg+='<rect x="'+(x+1.5).toFixed(1)+'" y="'+(H-padB-2)+'" width="'+(bw-3).toFixed(1)+'" height="2" rx="1" fill="var(--surface2)"/>';
+        svg+='<rect x="'+(x+2).toFixed(1)+'" y="'+(H-padB-2)+'" width="'+(bw-4).toFixed(1)+'" height="2" rx="1" fill="var(--s3)"/>';
       }
-      // every hour gets a label, staggered on two rows so none collide
-      svg+=txt(x+bw/2,i%2===0?H-17:H-8,7,'var(--muted)','middle',fmtHourLbl(i),i%4===0);
+      if(j%3===0)svg+=txt(j===0?x+1:x+bw/2,H-7,10.5,'var(--ink-3)',j===0?null:'middle',fmtHourLbl(j));
     });
     // invisible hour zones ride on top — slide a finger to read any bar
-    hist.forEach(function(v,i){
-      var x=padL+i*bw;
-      svg+='<rect class="rohit" x="'+x.toFixed(1)+'" y="0" width="'+bw.toFixed(1)+'" height="'+H+'" fill="transparent" data-ro="<strong>'+v+' hit'+(v===1?'':'s')+'</strong> '+fmtHourLbl(i)+'–'+fmtHourLbl((i+1)%24)+(v>0?' · '+Math.round(v/tot*100)+'% of all hits':'')+'"/>';
+    hist.forEach(function(v,j){
+      var x=padL+j*bw;
+      svg+='<rect class="rohit" x="'+x.toFixed(1)+'" y="0" width="'+bw.toFixed(1)+'" height="'+H+'" fill="transparent" data-ro="<strong>'+v+' hit'+(v===1?'':'s')+'</strong> '+fmtHourLbl(j)+'–'+fmtHourLbl((j+1)%24)+(v>0?' · '+Math.round(v/tot*100)+'% of all hits':'')+'"/>';
     });
     svg+='</svg>';
     var pk=peakWindow(hist,tot),ss=sessionStatsAll();
-    var bn=0;for(var j=0;j<8;j++)bn+=hist[j];
+    var bn=0;for(var k=0;k<8;k++)bn+=hist[k];
     var figs=[];
     if(pk)figs.push({v:pk.from+'–'+pk.to,l:'heaviest window',s:pk.share+'% of all hits',mid:true,c:'var(--accent)'});
     figs.push({v:Math.round(bn/tot*100)+'<small>%</small>',l:'before noon'});
@@ -6156,9 +6290,10 @@ try{
       figs.push({v:ss.perSession,l:'hits / session',s:'across '+ss.sessions+' sessions'});
       if(ss.avgGap!==null)figs.push({v:'~'+ss.avgGap+'h',l:'apart',s:'nights included'});
     }
-    return roChart(svg,'Slide across the bars to read any hour.')+
-      '<p class="chart-note">Every timed hit by hour, 4am → 4am — the shaded band is the heaviest two hours.</p>'+
-      figsHTML(figs);
+    return czWrap('hours',roChart(svg,'Slide across the bars to read any hour.')+
+      cvLegend([['sq','var(--acc)','Heaviest two hours'],['sq','var(--ghost)','Other hours']])+
+      '<p class="chart-note">Every timed hit by hour, 4am → 4am.</p>'+
+      figsHTML(figs));
   }
 
   function bigPunchHTML(){
@@ -6169,32 +6304,35 @@ try{
       d=addDays(d,1);
     }
     if(!days.length)return '<p class="chart-note">Nothing logged yet.</p>';
-    var colW=34,padL=26,padR=8,padT=30,padB=20,plotH=380;
+    var colW=34,padL=38,padR=10,padT=42,padB=26,plotH=380;
     var W=padL+padR+colW*days.length,H=padT+plotH+padB;
     function Y(lh){return padT+(lh/24)*plotH;}
     function lh(t){return ((t.getHours()-DAY_CUTOFF_H+24)%24)+t.getMinutes()/60;}
     var svg='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" role="img" aria-label="Every day in detail — sessions and hits by time">';
-    // hour-by-hour rows: a line and label for every hour, heavier every 4th
-    for(var g=0;g<=24;g++){
+    var ax=[];
+    for(var g=0;g<=24;g+=2){
       var gy=Y(g),mj=g%4===0;
-      svg+='<line x1="'+padL+'" y1="'+gy.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+gy.toFixed(1)+'" stroke="var(--surface2)" stroke-width="1"'+(mj?'':' stroke-opacity=".5"')+'/>'+
-        txt(2,gy+3,mj?8:7,'var(--muted)',null,fmtHourLbl(g%24),mj);
+      if(mj)svg+='<line x1="'+padL+'" y1="'+gy.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+gy.toFixed(1)+'" stroke="var(--line)" stroke-width="1"/>';
+      ax.push([gy,fmtHourLbl(g%24),mj?'var(--ink-2)':'var(--ink-3)',mj]);
     }
+    var anySlip=false,dots='';
     days.forEach(function(day,i){
-      var x0=padL+colW*i,cx=x0+colW/2;
-      if(day.k===todayKey)svg+='<rect x="'+x0+'" y="'+padT+'" width="'+colW+'" height="'+plotH+'" fill="var(--accent)" fill-opacity=".06"/>';
-      var col=day.s.cls==='slip'?'var(--clay)':'var(--accent)';
+      var x0=padL+colW*i,cx=x0+colW/2,isT=day.k===todayKey;
+      if(isT)svg+='<rect x="'+(x0+2)+'" y="'+(padT-38)+'" width="'+(colW-4)+'" height="'+(plotH+38+22)+'" rx="10" fill="var(--acc-bg)"/>';
+      var slip=day.s.cls==='slip';if(slip&&day.sess.length)anySlip=true;
+      var col=slip?'var(--over)':'var(--acc)';
       day.sess.forEach(function(run){
         var y1=Y(lh(run[0])),y2=Y(lh(run[run.length-1]));
-        svg+='<rect class="grow" style="animation-delay:'+(i*26)+'ms" x="'+(cx-5).toFixed(1)+'" y="'+(y1-5).toFixed(1)+'" width="10" height="'+((y2-y1)+10).toFixed(1)+'" rx="5" fill="'+col+'" fill-opacity=".16"/>';
+        svg+='<rect class="grow" style="--dl:'+Math.min(i*18,900)+'ms" x="'+(cx-5.5).toFixed(1)+'" y="'+(y1-5.5).toFixed(1)+'" width="11" height="'+((y2-y1)+11).toFixed(1)+'" rx="5.5" fill="'+col+'" fill-opacity=".18"/>';
         run.forEach(function(h){
-          svg+='<circle cx="'+cx.toFixed(1)+'" cy="'+Y(lh(h)).toFixed(1)+'" r="3.4" fill="'+col+'" fill-opacity=".85"/>';
+          dots+='<circle cx="'+cx.toFixed(1)+'" cy="'+Y(lh(h)).toFixed(1)+'" r="3.4" fill="'+col+'"/>';
         });
       });
-      svg+=txt(cx,14,10,STAT_COL[day.s.cls]||'var(--muted)','middle',day.s.c===null?'·':day.s.c,true)+
-        txt(cx,24,7,'var(--muted)','middle',day.s.cap>0?'cap '+day.s.cap:'zero')+
-        txt(cx,H-6,8,day.k===todayKey?'var(--accent)':'var(--muted)','middle',(day.d.getMonth()+1)+'/'+day.d.getDate());
+      svg+=txt(cx,17,12.5,STAT_TXT[day.s.cls]||'var(--ink-3)','middle',day.s.c===null?'–':day.s.c,true)+
+        txt(cx,31,10,'var(--ink-3)','middle',day.s.cap>0?'of '+day.s.cap:'zero')+
+        txt(cx,H-8,10.5,isT?'var(--acc-t)':'var(--ink-3)','middle',isT?'Today':(day.d.getMonth()+1)+'/'+day.d.getDate(),isT);
     });
+    svg+='<g class="pop">'+dots+'</g>';
     // day zones on top: slide to read, tap to open that day
     days.forEach(function(day,i){
       var ro='<strong>'+WEEKDAYS[day.d.getDay()].slice(0,3)+' '+(day.d.getMonth()+1)+'/'+day.d.getDate()+'</strong> · '+
@@ -6206,8 +6344,10 @@ try{
       svg+='<rect class="rohit" x="'+(padL+colW*i)+'" y="0" width="'+colW+'" height="'+H+'" fill="transparent" data-k="'+day.k+'" data-ro="'+ro+'"/>';
     });
     svg+='</svg>';
-    return roChart('<div class="cz-scroll">'+svg+'</div>','Slide across the days to read them — tap one to open it.')+
-      '<p class="chart-note">Each column is a day, 4am → 4am. Pills are sessions, dots are hits. Swipe the chart sideways as the record grows.</p>';
+    return czWrap('punch',wideChart(svg,pinAxis(H,ax),'Slide across the days to read them — tap one to open it.')+
+      cvLegend([['dot','var(--acc)','Hit'],['pill','var(--acc)','Sitting'],anySlip?['dot','var(--over)','Slip after zero']:null,
+        ['dot','var(--under)','Under'],['dot','var(--atcap)','At cap'],['dot','var(--over)','Over']])+
+      '<p class="chart-note">Each column is a day, 4am → 4am; the number on top is that day’s count, coloured by how it landed. Swipe sideways for older days.</p>');
   }
 
   function bigPaceHTML(){
@@ -6216,7 +6356,7 @@ try{
     var yDate=addDays(today,-1);
     var yPts=yDate>=schedule()[0].start?cumPoints(dkeyOf(yDate)):[];
     if(!tPts.length&&!yPts.length)return '<p class="chart-note">No timed hits yesterday or today yet.</p>';
-    var W=360,H=296,padL=22,padR=14,padT=18,padB=40;
+    var W=360,H=290,padL=24,padR=12,padT=22,padB=26;
     var tTot=tPts.length?tPts[tPts.length-1].y:0,yTot=yPts.length?yPts[yPts.length-1].y:0;
     var maxY=Math.max(cap||1,tTot,yTot,1)*1.15;
     var nowX=(Date.now()-new Date(today.getFullYear(),today.getMonth(),today.getDate(),DAY_CUTOFF_H).getTime())/3600000;
@@ -6232,52 +6372,57 @@ try{
       if(endH>pts[pts.length-1].x)pd+=' L'+X(endH).toFixed(1)+' '+Y(cur).toFixed(1);
       return pd;
     }
-    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Cumulative hits today versus yesterday, detailed">';
-    // hour-by-hour grid: a line and tick for every hour, heavier every 4th,
-    // labels staggered on two rows so all 24 hours fit without colliding
-    for(var g=0;g<=24;g++){
-      var gx2=X(g),mj=g%4===0;
-      svg+='<line x1="'+gx2.toFixed(1)+'" y1="'+padT+'" x2="'+gx2.toFixed(1)+'" y2="'+(H-padB)+'" stroke="var(--surface2)" stroke-width="1"'+(mj?'':' stroke-opacity=".45"')+'/>'+
-        '<line x1="'+gx2.toFixed(1)+'" y1="'+(H-padB)+'" x2="'+gx2.toFixed(1)+'" y2="'+(H-padB+(mj?5:3))+'" stroke="var(--line)" stroke-width="1"/>'+
-        txt(gx2,H-padB+(g%2===0?14:23),7,'var(--muted)','middle',fmtHourLbl(g%24),mj);
-    }
-    var step=Math.max(1,Math.ceil(maxY/6));
+    var rg=cvId('bpr'),ag=cvId('bpa');
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Cumulative hits today versus yesterday, detailed">'+
+      '<defs>'+rampGrad(rg,X(0),X(24))+vGrad(ag,'var(--acc)','var(--acc)',.26,0)+'</defs>';
+    // two or three faint guides with their counts, and the hour every three
+    var step=Math.max(1,Math.ceil(maxY/4));
     for(var v=step;v<=maxY;v+=step){
-      svg+='<line x1="'+padL+'" y1="'+Y(v).toFixed(1)+'" x2="'+(W-padR)+'" y2="'+Y(v).toFixed(1)+'" stroke="var(--surface2)" stroke-width="1" stroke-dasharray="2 3"/>'+
-        txt(2,Y(v)+3,8,'var(--muted)',null,v);
+      svg+='<line x1="'+padL+'" y1="'+Y(v).toFixed(1)+'" x2="'+(W-padR)+'" y2="'+Y(v).toFixed(1)+'" stroke="var(--line)" stroke-width="1"/>'+
+        txt(padL-7,Y(v)+3.5,10.5,'var(--ink-3)','end',v);
+    }
+    svg+='<line x1="'+padL+'" y1="'+Y(0).toFixed(1)+'" x2="'+(W-padR)+'" y2="'+Y(0).toFixed(1)+'" stroke="var(--line-2)" stroke-width="1"/>'+
+      txt(padL-7,Y(0)+3.5,10.5,'var(--ink-3)','end',0);
+    for(var g=0;g<=24;g+=3){
+      svg+='<line x1="'+X(g).toFixed(1)+'" y1="'+Y(0).toFixed(1)+'" x2="'+X(g).toFixed(1)+'" y2="'+(Y(0)+4).toFixed(1)+'" stroke="var(--line-2)" stroke-width="1"/>'+
+        txt(X(g),H-7,10.5,'var(--ink-3)',g===24?'end':'middle',fmtHourLbl(g%24));
     }
     if(cap>0){
-      svg+='<line x1="'+X(0).toFixed(1)+'" y1="'+Y(cap).toFixed(1)+'" x2="'+X(24).toFixed(1)+'" y2="'+Y(cap).toFixed(1)+'" stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="5 4" stroke-opacity=".7"/>'+
-        txt(X(24),Y(cap)-4,9,'var(--amber)','end','cap '+cap,true);
+      svg+='<line x1="'+X(0).toFixed(1)+'" y1="'+Y(cap).toFixed(1)+'" x2="'+X(24).toFixed(1)+'" y2="'+Y(cap).toFixed(1)+'" stroke="url(#'+rg+')" stroke-width="2.25" stroke-dasharray="4 5" stroke-linecap="round"/>'+
+        tag(X(24),Y(cap)-4,'Cap '+cap,'var(--ink)','end');
     }
     if(yPts.length){
-      svg+='<path class="draw" pathLength="1" d="'+stepPath(yPts,24)+'" fill="none" stroke="var(--faint)" stroke-width="2" stroke-linejoin="round"/>'+
-        txt(X(24),Y(yTot)+12,9,'var(--muted)','end','yesterday '+yTot,true);
-      yPts.forEach(function(p){
-        svg+='<circle cx="'+X(p.x).toFixed(1)+'" cy="'+Y(p.y).toFixed(1)+'" r="2" fill="var(--faint)"/>';
-      });
+      svg+='<path class="draw" pathLength="1" d="'+stepPath(yPts,24)+'" fill="none" stroke="var(--ghost)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+      var yly=Y(yTot)-8;
+      if(cap>0&&Math.abs(Y(yTot)-Y(cap))<22)yly=Y(yTot)+(yTot>=cap?-26:18);
+      if(yly<12)yly=Y(yTot)+18;
+      svg+=txt(X(24),yly,10.5,'var(--ink-2)','end','Yesterday '+yTot,true);
+      var yd='';
+      yPts.forEach(function(p){yd+='<circle cx="'+X(p.x).toFixed(1)+'" cy="'+Y(p.y).toFixed(1)+'" r="2.2" fill="var(--ghost)"/>';});
+      svg+='<g class="pop">'+yd+'</g>';
     }
     var tTimes=hitTimes(todayKey);
     if(tPts.length){
       var pd2=stepPath(tPts,nowX);
-      svg+='<path d="'+pd2+' L'+X(nowX).toFixed(1)+' '+Y(0).toFixed(1)+' Z" fill="var(--accent)" fill-opacity=".09" stroke="none"/>'+
-        '<path class="draw" pathLength="1" d="'+pd2+'" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>';
-      tPts.forEach(function(p){
-        svg+='<circle cx="'+X(p.x).toFixed(1)+'" cy="'+Y(p.y).toFixed(1)+'" r="2.6" fill="var(--accent)"/>';
-      });
+      svg+='<path d="'+pd2+' L'+X(nowX).toFixed(1)+' '+Y(0).toFixed(1)+' Z" fill="url(#'+ag+')" stroke="none"/>'+
+        '<path class="draw" pathLength="1" d="'+pd2+'" fill="none" stroke="var(--acc)" stroke-width="2.75" stroke-linejoin="round" stroke-linecap="round"/>';
+      var td='';
+      tPts.forEach(function(p){td+='<circle cx="'+X(p.x).toFixed(1)+'" cy="'+Y(p.y).toFixed(1)+'" r="2.8" fill="var(--acc)"/>';});
+      svg+='<g class="pop">'+td+'</g>';
       // stamp each hit with its clock time, skipping any that would pile up
       var lastLX=-99;
       tPts.forEach(function(p,i){
         var hx=X(p.x);
-        if(!tTimes[i]||hx-lastLX<26)return;
-        if(i===tPts.length-1&&X(nowX)-hx<52)return; // the now label owns that corner
+        if(!tTimes[i]||hx-lastLX<36)return;
+        if(i===tPts.length-1&&X(nowX)-hx<64)return; // the now label owns that corner
         lastLX=hx;
-        svg+=txt(hx-4,Y(p.y)-6,7,'var(--accent)','end',fmtClk(tTimes[i]),true);
+        svg+=txt(hx-5,Y(p.y)-6,10,'var(--acc-t)','end',fmtClk(tTimes[i]),true);
       });
     }
-    svg+='<line x1="'+X(nowX).toFixed(1)+'" y1="'+padT+'" x2="'+X(nowX).toFixed(1)+'" y2="'+(H-padB)+'" stroke="var(--accent)" stroke-width="1" stroke-dasharray="2 3" stroke-opacity=".55"/>'+
-      '<circle cx="'+X(nowX).toFixed(1)+'" cy="'+Y(tTot).toFixed(1)+'" r="4.5" fill="var(--accent)"/>'+
-      txt(X(nowX),Y(tTot)-8,9,'var(--accent)',nowX>20?'end':nowX<2?null:'middle','now '+tTot+' · '+fmtClk(new Date()),true);
+    var nx=X(nowX),ny=Y(tTot);
+    svg+='<line x1="'+nx.toFixed(1)+'" y1="'+padT+'" x2="'+nx.toFixed(1)+'" y2="'+Y(0).toFixed(1)+'" stroke="var(--acc)" stroke-width="1.25" stroke-dasharray="2 4" stroke-linecap="round" stroke-opacity=".7"/>'+
+      '<circle cx="'+nx.toFixed(1)+'" cy="'+ny.toFixed(1)+'" r="5" fill="var(--acc)" stroke="var(--s1)" stroke-width="2.25"/>'+
+      tag(nowX>19?nx-8:nowX<3?nx+8:nx,ny-12,'Now '+tTot+' · '+fmtClk(new Date()),'var(--acc-t)',nowX>19?'end':nowX<3?null:'middle');
     // hour zones: slide to compare the two days at any point of the day
     for(var zh=0;zh<24;zh++){
       var tc=0,yc=0;
@@ -6291,13 +6436,14 @@ try{
     var pv=paceVsYesterday(),note='';
     if(pv){
       var pGood=pv.t<pv.y?true:pv.t>pv.y?false:null;
-      note=pairHTML({k:'by this hour',pv:pv.y,cv:pv.t,max:cap||0,
+      note=pairHTML({k:'By this hour',pv:pv.y,cv:pv.t,max:cap||0,
         pt:pv.y+' yesterday',ct:pv.t+' today',good:pGood,
         chip:dv(pGood===null?'even':(pGood?'▾':'▴')+Math.abs(pv.t-pv.y),pGood)})+
         (pGood===false?'<p class="chart-note">Running ahead — the 20-minute timer is right there.</p>':'');
     }
-    return roChart(svg,'Slide across the day to compare the two lines.')+
-      '<p class="chart-note">Each step is a hit, stamped with its time. Stay under the amber cap line; hug the floor for longer to widen your gaps.</p>'+note;
+    return czWrap('pace',roChart(svg,'Slide across the day to compare the two lines.')+
+      cvLegend([['line','var(--acc)','Today'],['line','var(--ghost)','Yesterday'],['ramp','','Cap']])+
+      '<p class="chart-note">Each step is a hit, stamped with its time. Stay under the cap line; hug the floor for longer to widen your gaps.</p>'+note);
   }
 
   function bigAvoidedHTML(){
@@ -6311,36 +6457,43 @@ try{
     }
     var maxV=pts.length?pts[pts.length-1].v:0;
     if(!pts.length||maxV<=0)return '<p class="chart-note">Nothing here yet — it only ever rises.</p>';
-    var W=360,H=240,padL=10,padR=14,padT=26,padB=22,n=pts.length;
+    var W=360,H=236,padL=8,padR=14,padT=20,padB=24,n=pts.length;
     function X(i){return padL+(n===1?1:(i/(n-1)))*(W-padL-padR);}
     function Y(v){return padT+(1-v/maxV)*(H-padT-padB);}
-    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Cumulative hits not smoked, detailed">';
-    var step=Math.max(10,Math.ceil(maxV/5/10)*10);
-    for(var gv=step;gv<=maxV;gv+=step){
-      svg+='<line x1="'+padL+'" y1="'+Y(gv).toFixed(1)+'" x2="'+(W-padR)+'" y2="'+Y(gv).toFixed(1)+'" stroke="var(--surface2)" stroke-width="1" stroke-dasharray="2 3"/>'+
-        txt(padL+2,Y(gv)-3,8,'var(--muted)',null,gv);
-    }
+    var ag=cvId('ba');
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Cumulative hits not smoked, detailed">'+
+      '<defs>'+vGrad(ag,'var(--under)','var(--under)',.28,.02)+'</defs>';
+    // milestone guides: the two round numbers already passed
+    var ms1=milestoneUnder(maxV),ms0=ms1?milestoneUnder(ms1/.88*.5):0;
+    [ms0,ms1].forEach(function(m){
+      if(!m)return;
+      svg+='<line x1="'+padL+'" y1="'+Y(m).toFixed(1)+'" x2="'+(W-padR)+'" y2="'+Y(m).toFixed(1)+'" stroke="var(--line-2)" stroke-width="1" stroke-dasharray="2 4"/>'+
+        txt(padL,Y(m)-5,10.5,'var(--ink-3)',null,m.toLocaleString());
+    });
+    svg+='<line x1="'+padL+'" y1="'+(H-padB)+'" x2="'+(W-padR)+'" y2="'+(H-padB)+'" stroke="var(--line-2)" stroke-width="1"/>';
     var line='M'+X(0).toFixed(1)+' '+Y(pts[0].v).toFixed(1);
     for(var i=1;i<n;i++)line+=' L'+X(i).toFixed(1)+' '+Y(pts[i].v).toFixed(1);
-    svg+='<path d="'+line+' L'+X(n-1).toFixed(1)+' '+(H-padB)+' L'+X(0).toFixed(1)+' '+(H-padB)+' Z" fill="var(--sage)" fill-opacity=".14"/>'+
-      '<path class="draw" pathLength="1" d="'+line+'" fill="none" stroke="var(--sage)" stroke-width="2.5" stroke-linejoin="round"/>';
-    var lblEvery=Math.max(1,Math.round(n/6));
-    pts.forEach(function(p,i){
-      svg+='<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(p.v).toFixed(1)+'" r="2.6" fill="var(--sage)"/>';
-      if(i>0&&(i%lblEvery===0||i===n-1))svg+=txt(X(i),Y(p.v)-7,8,'var(--sage)',i===n-1?'end':'middle',p.v,true);
-      if(i%Math.max(1,Math.round(n/8))===0||i===n-1)svg+=txt(X(i),H-8,7.5,'var(--muted)','middle',(p.d.getMonth()+1)+'/'+p.d.getDate());
+    svg+='<path d="'+line+' L'+X(n-1).toFixed(1)+' '+(H-padB)+' L'+X(0).toFixed(1)+' '+(H-padB)+' Z" fill="url(#'+ag+')"/>'+
+      '<path class="draw" pathLength="1" d="'+line+'" fill="none" stroke="var(--under)" stroke-width="2.75" stroke-linejoin="round" stroke-linecap="round"/>'+
+      '<circle cx="'+X(n-1).toFixed(1)+'" cy="'+Y(maxV).toFixed(1)+'" r="5" fill="var(--under)" stroke="var(--s1)" stroke-width="2.25"/>';
+    var every=Math.max(1,Math.ceil(n/5));
+    pts.forEach(function(p,j){
+      var lastL=j===n-1,show=lastL||(j%every===0&&n-1-j>=every*.6);
+      if(show)svg+=txt(X(j),H-7,10.5,lastL?'var(--ink-2)':'var(--ink-3)',j===0?'start':lastL?'end':'middle',lastL?'Today':(p.d.getMonth()+1)+'/'+p.d.getDate(),lastL);
     });
     // day zones: slide to read the running total at any point
     var slotA=(W-padL-padR)/Math.max(1,n-1);
-    pts.forEach(function(p,i){
-      var x=Math.max(0,X(i)-slotA/2);
+    pts.forEach(function(p,j){
+      var x=Math.max(0,X(j)-slotA/2);
       svg+='<rect class="rohit" x="'+x.toFixed(1)+'" y="0" width="'+slotA.toFixed(1)+'" height="'+H+'" fill="transparent" data-ro="by '+(p.d.getMonth()+1)+'/'+p.d.getDate()+' · <strong>'+p.v+'</strong> not smoked'+(data.costPerHit?' · ≈ $'+Math.round(p.v*data.costPerHit).toLocaleString():'')+'"/>';
     });
     svg+='</svg>';
     var money=(data.costPerHit&&maxV>0)?Math.round(maxV*data.costPerHit):null;
-    return roChart(svg,'Slide along the line — it only ever rises.')+
+    return czWrap('avoided','<div class="cv-head"><span class="cv-big" style="color:var(--under-t)">'+maxV.toLocaleString()+'</span>'+
+        '<span class="cv-big-l">hits not smoked</span>'+(money!==null?'<span class="chip sm under">≈ $'+money.toLocaleString()+' kept</span>':'')+'</div>'+
+      roChart(svg,'Slide along the line — it only ever rises.')+
       '<p class="chart-note">Every hit under the ~'+BASELINE+'/day baseline, stacking up since day one.'+
-      (money!==null?' At your cost per hit that’s <strong>≈ $'+money.toLocaleString()+'</strong> not spent.':'')+'</p>';
+      (money!==null?' At your cost per hit that’s <strong>≈ $'+money.toLocaleString()+'</strong> not spent.':'')+'</p>');
   }
 
   function bigTrendHTML(){
@@ -6352,34 +6505,47 @@ try{
     if(!days.length)return '<p class="chart-note">Nothing logged yet.</p>';
     var maxV=1;
     days.forEach(function(x){maxV=Math.max(maxV,x.s.c||0,x.s.cap||0);});
-    var colW=34,padL=22,padR=8,padT=24,padB=20,plotH=210;
+    maxV*=1.08;
+    var colW=34,padL=38,padR=10,padT=30,padB=26,plotH=220;
     var W=padL+padR+colW*days.length,H=padT+plotH+padB;
     function Y(v){return padT+(1-v/maxV)*plotH;}
-    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" role="img" aria-label="Every day against its cap, detailed">';
-    var step=Math.max(1,Math.ceil(maxV/5));
-    for(var gv=0;gv<=maxV;gv+=step){
-      svg+='<line x1="'+padL+'" y1="'+Y(gv).toFixed(1)+'" x2="'+(W-padR)+'" y2="'+Y(gv).toFixed(1)+'" stroke="var(--surface2)" stroke-width="1"/>'+
-        txt(2,Y(gv)+3,8,'var(--muted)',null,gv);
+    var rg=cvId('btr');
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" role="img" aria-label="Every day against its cap, detailed">'+
+      '<defs>'+rampGrad(rg,padL,W-padR)+'</defs>';
+    var step=Math.max(1,Math.ceil(maxV/3)),ax=[];
+    for(var gv=step;gv<=maxV;gv+=step){
+      svg+='<line x1="'+padL+'" y1="'+Y(gv).toFixed(1)+'" x2="'+(W-padR)+'" y2="'+Y(gv).toFixed(1)+'" stroke="var(--line)" stroke-width="1"/>';
+      ax.push([Y(gv),gv]);
     }
+    ax.push([Y(0),0]);
+    svg+='<line x1="'+padL+'" y1="'+Y(0).toFixed(1)+'" x2="'+(W-padR)+'" y2="'+Y(0).toFixed(1)+'" stroke="var(--line-2)" stroke-width="1"/>';
+    // the cap as a stepped ramp line over each day's cap capsule
+    var cp='',labels='',marks='',seen={};
     days.forEach(function(day,i){
-      var x0=padL+colW*i+5,bw2=colW-10,cx=x0+bw2/2;
-      if(i>0&&day.di!==days[i-1].di)
-        svg+='<line x1="'+(padL+colW*i).toFixed(1)+'" y1="'+padT+'" x2="'+(padL+colW*i).toFixed(1)+'" y2="'+(padT+plotH)+'" stroke="var(--line)" stroke-width="1" stroke-dasharray="3 4"/>';
-      if(day.s.cap>0)
-        svg+='<rect x="'+x0.toFixed(1)+'" y="'+Y(day.s.cap).toFixed(1)+'" width="'+bw2+'" height="'+(Y(0)-Y(day.s.cap)).toFixed(1)+'" rx="4" fill="var(--surface2)" fill-opacity=".8"/>';
-      var c=day.s.c,col=STAT_COL[day.s.cls]||'var(--muted)';
-      if(c!==null&&c>0){
-        svg+='<rect class="grow" style="animation-delay:'+(i*22)+'ms" x="'+(x0+3).toFixed(1)+'" y="'+Y(c).toFixed(1)+'" width="'+(bw2-6)+'" height="'+Math.max(2,(Y(0)-Y(c))).toFixed(1)+'" rx="4" fill="'+col+'" fill-opacity=".85"/>'+
-          txt(cx,Y(c)-4,9,col,'middle',c,true);
-      }else if(day.s.cls==='clean'){
-        svg+=txt(cx,Y(0)-6,11,'var(--sage)','middle','✓',true);
-      }else if(c===null){
-        svg+=txt(cx,Y(0)-6,10,'var(--faint)','middle','·');
-      }else{
-        svg+=txt(cx,Y(0)-6,9,col,'middle','0',true);
+      var x0=padL+colW*i,cx=x0+colW/2,bw2=colW-12,bx=x0+6,cy=Y(day.s.cap>0?day.s.cap:0),isT=day.k===todayKey;
+      if(isT)svg+='<rect x="'+(x0+2)+'" y="'+(padT-26)+'" width="'+(colW-4)+'" height="'+(plotH+26+22)+'" rx="10" fill="var(--acc-bg)"/>';
+      cp+=(i?' L':'M')+x0.toFixed(1)+' '+cy.toFixed(1)+' L'+(x0+colW).toFixed(1)+' '+cy.toFixed(1);
+      if(i===0||day.di!==days[i-1].di){
+        if(i>0)svg+='<line x1="'+x0.toFixed(1)+'" y1="'+(padT-4)+'" x2="'+x0.toFixed(1)+'" y2="'+Y(0).toFixed(1)+'" stroke="var(--line-2)" stroke-width="1" stroke-dasharray="2 4"/>';
+        if(!seen[day.di]){seen[day.di]=1;labels+=txt(x0+4,padT-12,10.5,'var(--ink-2)',null,day.s.cap>0?'cap '+day.s.cap:'zero',true);}
       }
-      svg+=txt(cx,H-6,8,day.k===todayKey?'var(--accent)':'var(--muted)','middle',(day.d.getMonth()+1)+'/'+day.d.getDate());
+      if(day.s.cap>0)svg+='<rect x="'+bx.toFixed(1)+'" y="'+cy.toFixed(1)+'" width="'+bw2+'" height="'+(Y(0)-cy).toFixed(1)+'" rx="6" fill="var(--s3)" fill-opacity=".7"/>';
+      var c=day.s.c,col=STAT_COL[day.s.cls]||'var(--ghost)',tc=STAT_TXT[day.s.cls]||'var(--ink-3)';
+      if(c!==null&&c>0){
+        var by=Y(c);
+        marks+='<path class="grow" style="--dl:'+Math.min(i*20,900)+'ms" d="'+rbar(bx+3,by,bw2-6,Math.max(2,Y(0)-by),5)+'" fill="'+col+'"/>'+
+          txt(cx,by-5,11,tc,'middle',c,true);
+      }else if(day.s.cls==='clean'){
+        marks+='<circle cx="'+cx.toFixed(1)+'" cy="'+(Y(0)-10).toFixed(1)+'" r="8" fill="var(--under-bg)"/>'+
+          '<path d="M'+(cx-3.6).toFixed(1)+' '+(Y(0)-10).toFixed(1)+' l2.6 2.6 l4.8 -5" fill="none" stroke="var(--under-t)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>';
+      }else if(c===null){
+        marks+='<circle cx="'+cx.toFixed(1)+'" cy="'+(Y(0)-6).toFixed(1)+'" r="3" fill="none" stroke="var(--ghost)" stroke-width="1.5"/>';
+      }else{
+        marks+=txt(cx,Y(0)-6,11,tc,'middle','0',true);
+      }
+      labels+=txt(cx,H-8,10.5,isT?'var(--acc-t)':'var(--ink-3)','middle',isT?'Today':(day.d.getMonth()+1)+'/'+day.d.getDate(),isT);
     });
+    svg+='<path class="draw" pathLength="1" d="'+cp+'" fill="none" stroke="url(#'+rg+')" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'+marks+labels;
     // day zones on top: slide to read, tap to open that day
     days.forEach(function(day,i){
       var m2=dayMetrics(day.k);
@@ -6389,45 +6555,55 @@ try{
       svg+='<rect class="rohit" x="'+(padL+colW*i)+'" y="0" width="'+colW+'" height="'+H+'" fill="transparent" data-k="'+day.k+'" data-ro="'+ro+'"/>';
     });
     svg+='</svg>';
-    return roChart('<div class="cz-scroll">'+svg+'</div>','Slide across the days to read them — tap one to open it.')+
-      '<p class="chart-note">Grey blocks are each day’s cap; colored bars are what you logged — sage under, amber at, clay over. Dashed lines mark step-downs; ✓ is a clean zero-era day.</p>';
+    var hasClean=days.some(function(x){return x.s.cls==='clean';}),hasSlip=days.some(function(x){return x.s.cls==='slip';});
+    return czWrap('trend',wideChart(svg,pinAxis(H,ax),'Slide across the days to read them — tap one to open it.')+
+      cvLegend([['dot','var(--under)','Under'],['dot','var(--atcap)','At cap'],['dot','var(--over)',hasSlip?'Over · slip':'Over'],
+        ['ramp','','Cap'],hasClean?['ring','var(--under-t)','Clean day']:null,['ring','var(--ghost)','No log']])+
+      '<p class="chart-note">Each day’s cap is the grey capsule under the ramp line; the bar is what you logged. Dashed lines mark step-downs.</p>');
   }
 
   function bigNightsHTML(){
     var ser=ckSeries();
     if(!ser.length)return '<p class="chart-note">No check-ins logged yet — the nightly card feeds this.</p>';
     var s=ser.slice(-28),n=s.length;
-    var defs=[['sleep','Sleep','var(--accent)'],['mood','Mood','var(--sage)'],['crave','Cravings — 5 is loud','var(--clay)']];
-    var html='';
-    defs.forEach(function(df){
-      var W=360,H=110,padL=16,padR=10,padT=14,padB=18;
-      // by date, not index — a weekly reading must not draw the same width
-      // as a nightly one (see checkinChartSVG)
-      var bt0=dateOf(s[0].k).getTime(), bspan=n>1?dateOf(s[n-1].k).getTime()-bt0:0;
-      function X(i){
-        if(n<2||!bspan)return padL+0.5*(W-padL-padR);
-        return padL+((dateOf(s[i].k).getTime()-bt0)/bspan)*(W-padL-padR);
-      }
-      function Y(v){return padT+(1-(v-1)/4)*(H-padT-padB);}
+    var W=360,H=96,padL=18,padR=10,padT=10,padB=20;
+    var bt0=dateOf(s[0].k).getTime(), bspan=n>1?dateOf(s[n-1].k).getTime()-bt0:0;
+    // by date, not index — a weekly reading must not draw the same width
+    // as a nightly one (see checkinChartSVG)
+    function X(i){
+      if(n<2||!bspan)return padL+0.5*(W-padL-padR);
+      return padL+((dateOf(s[i].k).getTime()-bt0)/bspan)*(W-padL-padR);
+    }
+    function Y(v){return padT+(1-(v-1)/4)*(H-padT-padB);}
+    // one readout for all three: each night's zone reads sleep · mood · cravings
+    var zones='';
+    s.forEach(function(x,i){
+      var a=i?(X(i)+X(i-1))/2:0,b=i<n-1?(X(i)+X(i+1))/2:W;
+      zones+='<rect class="rohit" x="'+a.toFixed(1)+'" y="0" width="'+Math.max(1,b-a).toFixed(1)+'" height="'+H+'" fill="transparent" data-ro="<strong>'+fmtShort(dateOf(x.k))+'</strong> · sleep '+x.sleep+' · mood '+x.mood+' · cravings '+x.crave+'"/>';
+    });
+    var rows='';
+    CK_SER.forEach(function(df){
+      var last=s[n-1][df[0]],prev=n>1?s[n-2][df[0]]:null;
       var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="'+df[1]+' by night">';
       [1,3,5].forEach(function(g){
-        svg+='<line x1="'+padL+'" y1="'+Y(g).toFixed(1)+'" x2="'+(W-padR)+'" y2="'+Y(g).toFixed(1)+'" stroke="var(--surface2)" stroke-width="1"/>'+
-          txt(2,Y(g)+3,8,'var(--muted)',null,g);
+        svg+='<line x1="'+padL+'" y1="'+Y(g).toFixed(1)+'" x2="'+(W-padR)+'" y2="'+Y(g).toFixed(1)+'" stroke="var(--line)" stroke-width="1"'+(g===3?' stroke-dasharray="2 4"':'')+'/>'+
+          txt(padL-7,Y(g)+3.5,10.5,'var(--ink-3)','end',g);
       });
       var ptsStr=s.map(function(x,i){return X(i).toFixed(1)+','+Y(x[df[0]]).toFixed(1);}).join(' ');
-      if(n>1)svg+='<polyline class="draw" pathLength="1" points="'+ptsStr+'" fill="none" stroke="'+df[2]+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+      if(n>1)svg+='<polyline class="draw" pathLength="1" points="'+ptsStr+'" fill="none" stroke="'+df[2]+'" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>';
+      var dd='';
       s.forEach(function(x,i){
-        svg+='<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(x[df[0]]).toFixed(1)+'" r="3" fill="'+df[2]+'"/>'+
-          txt(X(i),Y(x[df[0]])-7,7.5,'var(--muted)','middle',x[df[0]]);
+        dd+='<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(x[df[0]]).toFixed(1)+'" r="'+(i===n-1?4:2.4)+'" fill="'+df[2]+'"'+(i===n-1?' stroke="var(--s1)" stroke-width="1.8"':'')+'/>';
       });
-      svg+=txt(padL,H-4,8,'var(--muted)',null,fmtShort(dateOf(s[0].k)))+
-        txt(W-padR,H-4,8,'var(--muted)','end',fmtShort(dateOf(s[n-1].k)));
-      svg+='</svg>';
-      html+='<h3 class="xtra-h" style="margin-top:14px">'+df[1]+'</h3>'+svg;
+      svg+='<g class="pop">'+dd+'</g>'+txt(padL,H-5,10.5,'var(--ink-3)',null,fmtShort(dateOf(s[0].k)))+
+        txt(W-padR,H-5,10.5,'var(--ink-3)','end',fmtShort(dateOf(s[n-1].k)))+zones+'</svg>';
+      rows+='<div class="cv-ckrow"><div class="cv-ckh"><span class="cv-ckn"><i style="background:'+df[2]+'"></i>'+
+        (df[0]==='crave'?'Cravings <em>5 is loud</em>':df[1])+'</span>'+
+        '<span class="cv-ckv">'+last+'<small>/5</small>'+(prev!==null&&prev!==last?'<em>was '+prev+'</em>':'')+'</span></div>'+svg+'</div>';
     });
-    html+=figsHTML(ckInsightFigs(ser))+
-      '<p class="chart-note">Odd nights and vivid dreams weeks in are REM rebound — recovery, not relapse risk. <a class="dlink" href="guide.html#withdrawal">Sources →</a></p>';
-    return html;
+    return czWrap('nights','<div class="cv-ck">'+roChart(rows,'Slide across any line to read that night.')+'</div>'+
+      figsHTML(ckInsightFigs(ser))+
+      '<p class="chart-note">Odd nights and vivid dreams weeks in are REM rebound — recovery, not relapse risk. <a class="dlink" href="guide.html#withdrawal">Sources →</a></p>');
   }
 
   function bigGapsHTML(){
@@ -6436,37 +6612,44 @@ try{
     var recs=g.recs,n=recs.length;
     var maxH=1;
     recs.forEach(function(r){maxH=Math.max(maxH,r.h,r.req);});
-    maxH*=1.15;
-    var W=360,H=260,padL=20,padR=10,padT=16,padB=24;
+    maxH*=1.12;
+    var W=360,H=256,padL=26,padR=10,padT=16,padB=26;
     function X(i){return padL+(n===1?0.5:(i/(n-1)))*(W-padL-padR);}
     function Y(h){return padT+(1-h/maxH)*(H-padT-padB);}
     var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Every session gap against its day’s rule">';
-    var step=maxH>8?2:1;
+    var step=maxH>16?8:maxH>8?4:2;
     for(var gv=step;gv<=maxH;gv+=step){
-      svg+='<line x1="'+padL+'" y1="'+Y(gv).toFixed(1)+'" x2="'+(W-padR)+'" y2="'+Y(gv).toFixed(1)+'" stroke="var(--surface2)" stroke-width="1" stroke-dasharray="2 3"/>'+
-        txt(2,Y(gv)+3,8,'var(--muted)',null,gv+'h');
+      svg+='<line x1="'+padL+'" y1="'+Y(gv).toFixed(1)+'" x2="'+(W-padR)+'" y2="'+Y(gv).toFixed(1)+'" stroke="var(--line)" stroke-width="1"/>'+
+        txt(padL-6,Y(gv)+3.5,10.5,'var(--ink-3)','end',gv+'h');
     }
-    // the rule, as a step line
+    svg+='<line x1="'+padL+'" y1="'+Y(0).toFixed(1)+'" x2="'+(W-padR)+'" y2="'+Y(0).toFixed(1)+'" stroke="var(--line-2)" stroke-width="1"/>';
+    // the rule, as a step line (the gap each day asked for)
     var rp='';
     recs.forEach(function(r,i){
       rp+=(i?' L':'M')+X(i).toFixed(1)+' '+Y(r.req).toFixed(1);
     });
-    svg+='<path class="draw" pathLength="1" d="'+rp+'" fill="none" stroke="var(--amber)" stroke-width="1.5" stroke-opacity=".8"/>';
-    var lastK=null;
+    svg+='<path class="draw" pathLength="1" d="'+rp+'" fill="none" stroke="var(--ink-2)" stroke-width="1.5" stroke-dasharray="3 3" stroke-linejoin="round"/>';
+    // each day's longest gap leads: an accent halo
+    var dayMax={};
+    recs.forEach(function(r,i){if(dayMax[r.k]===undefined||r.h>recs[dayMax[r.k]].h)dayMax[r.k]=i;});
+    var lastK=null,dts='',dots='',every=Math.max(1,Math.ceil(Object.keys(dayMax).length/6)),dn=0;
     recs.forEach(function(r,i){
-      var gc=r.ok?'var(--sage)':'var(--clay)';
+      var gc=r.ok===null?'var(--ghost)':r.ok?'var(--under)':'var(--over)',cx=X(i).toFixed(1),cy=Y(r.h).toFixed(1);
+      if(dayMax[r.k]===i)dots+='<circle cx="'+cx+'" cy="'+cy+'" r="7" fill="none" stroke="var(--acc)" stroke-width="1.6"/>';
       // overnight gaps draw hollow — same judgment, different kind of night
-      svg+=r.on
-        ?'<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(r.h).toFixed(1)+'" r="3.4" fill="none" stroke="'+gc+'" stroke-width="1.8"/>'
-        :'<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(r.h).toFixed(1)+'" r="3.4" fill="'+gc+'"/>';
+      dots+=r.on
+        ?'<circle cx="'+cx+'" cy="'+cy+'" r="3.4" fill="var(--s1)" stroke="'+gc+'" stroke-width="1.9"/>'
+        :'<circle cx="'+cx+'" cy="'+cy+'" r="3.6" fill="'+gc+'"/>';
       if(r.k!==lastK){
         lastK=r.k;
-        if(n<=14||i%2===0){
+        if(dn%every===0){
           var dd=dateOf(r.k);
-          svg+=txt(X(i),H-8,7.5,'var(--muted)','middle',(dd.getMonth()+1)+'/'+dd.getDate());
+          dts+=txt(X(i),H-7,10.5,'var(--ink-3)',i===0?'start':'middle',(dd.getMonth()+1)+'/'+dd.getDate());
         }
+        dn++;
       }
     });
+    svg+='<g class="pop">'+dots+'</g>'+dts;
     // gap zones: slide to read each dot against its day's rule
     var slotG=(W-padL-padR)/Math.max(1,n-1);
     recs.forEach(function(r,i){
@@ -6477,14 +6660,16 @@ try{
     });
     svg+='</svg>';
     var col=g.adherence>=70?'var(--sage)':g.adherence>=50?'var(--amber)':'var(--clay)';
-    return roChart(svg,'Slide to read each gap — tap to open its day.')+
-      '<p class="chart-note"><span class="legend-dot" style="background:var(--sage)"></span>met the rule &nbsp;<span class="legend-dot" style="background:var(--clay)"></span>came up short &nbsp;<span class="legend-dot" style="background:none;border:1.5px solid var(--muted)"></span>overnight &nbsp;<span style="color:var(--amber)">—</span> that day’s required gap</p>'+
+    return czWrap('gaps',roChart(svg,'Slide to read each gap — tap to open its day.')+
+      cvLegend([['dot','var(--under)','Met the rule'],['dot','var(--over)','Came up short'],['ring','var(--ink-2)','Overnight'],
+        ['ring','var(--acc)','Day’s longest'],['dash','var(--ink-2)','That day’s required gap'],
+        recs.some(function(r){return r.ok===null;})?['dot','var(--ghost)','No rule that day']:null])+
       figsHTML([
         g.adherence!==null?{v:g.adherence+'<small>%</small>',l:'met the rule',
           s:'of '+g.scored+' gap'+(g.scored===1?'':'s')+' with a rule',c:col}:null,
         {v:fmtDur(g.avg*3600000),l:'avg gap',mid:true},
         g.early!==null?{v:fmtDur(g.recent*3600000),l:'lately',mid:true,s:'early avg '+fmtDur(g.early*3600000)+(g.widening?' — widening as designed':''),c:g.widening?'var(--sage)':null}:null
-      ]);
+      ]));
   }
 
   var BIG_CHARTS={
@@ -6966,13 +7151,20 @@ try{
     t.zeroDays=zd.length; t.zeroClean=zd.filter(function(m){return m.eff===0;}).length;
     return t;
   });}
-  /* verdict-colored delta span. good=true → sage, false → clay, null → muted "flat". */
-  function dv(txt,good){return '<span class="dv '+(good===null?'flat':good?'good':'bad')+'">'+txt+'</span>';}
+  /* verdict-coloured delta chip. good=true → under, false → over, null →
+     neutral. A leading ▾/▴ from any caller becomes the sprite triangle, so
+     the direction is drawn, never a unicode glyph. */
+  function dv(txt,good){
+    var s=String(txt),ic='';
+    if(s.charAt(0)==='▾'){ic=icon('down');s=s.slice(1);}
+    else if(s.charAt(0)==='▴'){ic=icon('up');s=s.slice(1);}
+    return '<span class="dv '+(good===null?'flat':good?'good':'bad')+'">'+ic+s+'</span>';
+  }
   /* the hits pill for a closed day row: % when the base is big enough to
      mean something, absolute when it isn't, a status word when there's
      nothing to compare against. */
   function hitsPill(m){
-    if(!m.vs)return '<span class="hstat '+m.cls+'">'+m.stat+'</span>';
+    if(!m.vs)return '<span class="hstat '+m.cls+'">'+m.stat.charAt(0).toUpperCase()+m.stat.slice(1)+'</span>';
     var v=m.vs;
     if(v.count===0)return dv('even',null);
     var good=v.count<0, arrow=good?'▾':'▴';
@@ -6981,15 +7173,28 @@ try{
   }
   /* status for a calendar day — a thin view over the engine */
   function dayStatus(d){var m=dayMetrics(dkeyOf(d));return {cls:m.cls,stat:m.stat,c:m.eff,cap:m.isZ?0:m.cap};}
+  /* the record as a real calendar: weekday columns, a label where each
+     month starts, status tints with a legend underneath (never colour alone) */
+  var CC_LBL={under:'Under',at:'At cap',over:'Over',clean:'Clean',slip:'Slip',nolog:'No log'};
   function chipCalHTML(){
-    var start=schedule()[0].start,chips='';
+    var start=schedule()[0].start,cells='',cnt={},mo=-1;
     var d=new Date(start);
+    ['S','M','T','W','T','F','S'].forEach(function(w){cells+='<span class="cc-wd" aria-hidden="true">'+w+'</span>';});
     while(d<=today){
       var k=dkeyOf(d),s=dayStatus(d);
-      chips+='<span class="chip chip-'+s.cls+(k===todayKey?' chip-today':'')+'" data-key="'+k+'" role="button" tabindex="0" title="'+fmtShort(d)+' · '+s.stat+'" aria-label="'+fmtShort(d)+' · '+s.stat+' — open this day">'+d.getDate()+'</span>';
+      if(d.getMonth()!==mo){
+        mo=d.getMonth();
+        cells+='<span class="cc-m">'+MONTHS[mo]+'</span>';
+        for(var b=0;b<d.getDay();b++)cells+='<span class="cc-b" aria-hidden="true"></span>';
+      }
+      cnt[s.cls]=(cnt[s.cls]||0)+1;
+      cells+='<span class="chip chip-'+s.cls+(k===todayKey?' chip-today':'')+'" data-key="'+k+'" role="button" tabindex="0" title="'+fmtShort(d)+' · '+s.stat+'" aria-label="'+fmtShort(d)+' · '+s.stat+' — open this day">'+d.getDate()+'</span>';
       d=addDays(d,1);
     }
-    return '<div class="chipcal">'+chips+'</div>';
+    var lg=['under','at','over','clean','slip','nolog'].filter(function(c){return cnt[c];}).map(function(c){
+      return '<span class="lg"><i class="lg-cc chip-'+c+'"></i>'+CC_LBL[c]+' <b>'+cnt[c]+'</b></span>';
+    }).join('');
+    return '<div class="chipcal"><div class="cc-grid">'+cells+'</div><div class="cv-legend">'+lg+'</div></div>';
   }
   /* what stands out — stat chips over the engine's insight raws */
   function recordInsights(){
@@ -7254,6 +7459,22 @@ try{
     }
     return h;
   }
+  /* charts in a detail page draw in the first time that page is on screen
+     this session; later repaints (a hit, a tick) land still. The class is
+     taken off again once the entrance has played. */
+  function xAnim(el,key){
+    if(!el)return;
+    var on=!!el.closest('.expanded')&&cvFirst('x-'+key);
+    if(on){
+      el.classList.add('cv-anim');
+      clearTimeout(el._cvT);
+      el._cvT=setTimeout(function(){el.classList.remove('cv-anim');},1800);
+    }
+  }
+  function scoreChip(v,label){
+    var c=v>=70?'under':v>=55?'atcap':'over';
+    return '<span class="chip sm '+c+'"><span class="dot"></span>'+label+'</span>';
+  }
   function renderXtras(){
     var tx=$('todayXtra');
     if(tx){
@@ -7266,17 +7487,18 @@ try{
            and best-run stats directly below. */
         var n=Math.max(0,zeroCalDay());
         var zs=scoreToday();
-        html+='<h3 class="xtra-h">The adjustment, visually</h3>'+
-          ringSVG(n/21,n,n===1?'DAY SINCE ZERO':'DAYS SINCE ZERO','var(--sage)')+
-          '<p class="chart-note" style="text-align:center">'+
+        html+=xh('The adjustment',Math.min(n,21)+' of 21 days')+
+          '<div class="cv-score">'+ringSVG(n/21,n,n===1?'DAY SINCE ZERO':'DAYS SINCE ZERO','var(--sage)')+
+          '<div class="cv-score-t"><p>'+
           (n>=21?'The 2–3 week adjustment window the research maps is behind you. From here it’s maintenance.'
-                :'Filling the 2–3 week receptor-adjustment window the research maps. Every day counts, and it only fills.')+'</p>';
+                :'Filling the 2–3 week receptor-adjustment window the research maps. Every day counts, and it only fills.')+'</p></div></div>';
         var zst=zeroStats();
         if(zst&&zst.slips){
-          html+='<div class="stat-row" style="animation:none">'+
-            '<div class="stat" style="animation:none"><span class="sv" style="color:var(--sage)">'+zst.clean+'</span><span class="sl">clean days total</span></div>'+
-            '<div class="stat" style="animation:none"><span class="sv">'+zst.best+'</span><span class="sl">best run</span></div>'+
-            '<div class="stat" style="animation:none"><span class="sv" style="color:var(--clay)">'+zst.slips+'</span><span class="sl">slip day'+(zst.slips>1?'s':'')+'</span></div></div>'+
+          html+=figsHTML([
+            {v:zst.clean,l:'clean days total',c:'var(--sage)'},
+            {v:zst.best,l:'best run'},
+            {v:zst.slips,l:'slip day'+(zst.slips>1?'s':''),c:'var(--clay)'}
+          ])+
             '<p class="chart-note">A slip dents the record — it doesn’t delete it. The clean total and best run are banked for good.</p>';
         }
         html+=contribHTML(zs.parts)+
@@ -7284,91 +7506,101 @@ try{
           checkinBlockHTML();
       }else{
         var sc=scoreToday();
-        html+='<h3 class="xtra-h">Today’s taper score</h3>'+
-          ringSVG(sc.total/100,sc.total,sc.label.split(' — ')[0].toUpperCase(),scoreColor(sc.total))+
-          contribHTML(sc.parts)+
-          '<p class="chart-note">Scored from your own log: room under the cap, gaps held, session size, and pace against yesterday.</p>';
+        var lbl=sc.label.split(' — ')[0];
+        html+=xh('Today’s taper score')+
+          '<div class="cv-score">'+ringSVG(sc.total/100,sc.total,lbl.toUpperCase(),scoreColor(sc.total))+
+          '<div class="cv-score-t">'+scoreChip(sc.total,lbl)+
+          '<p>Scored from your own log: room under the cap, gaps held, session size, and pace against yesterday.</p></div></div>'+
+          contribHTML(sc.parts);
         var pace=paceVsYesterday();
-        html+='<h3 class="xtra-h" style="margin-top:16px">Today’s pace</h3>'+zoomable('pace',paceChartSVG())+
-          '<p class="chart-note"><span class="legend-dot" style="background:var(--accent)"></span>today &nbsp;'+
-          '<span class="legend-dot" style="background:var(--faint)"></span>yesterday &nbsp;'+
-          '<span style="color:var(--amber)">┄</span> cap</p>';
+        html+=xh('Today’s pace','by '+fmtClk(new Date()))+zoomable('pace',paceChartSVG())+
+          cvLegend([['line','var(--acc)','Today'],['line','var(--ghost)','Yesterday'],cap>0?['ramp','','Cap']:null]);
         if(pace){
           var pcGood=pace.t<pace.y?true:pace.t>pace.y?false:null;
-          html+=pairHTML({k:'by this hour',pv:pace.y,cv:pace.t,max:cap||0,
+          html+=pairHTML({k:'By this hour',pv:pace.y,cv:pace.t,max:cap||0,
             pt:pace.y+' yesterday',ct:pace.t+' today',good:pcGood,
             chip:dv(pcGood===null?'even':(pcGood?'▾':'▴')+Math.abs(pace.t-pace.y),pcGood)});
           if(pcGood===false)html+='<p class="chart-note">Running ahead — the delay timer is right there.</p>';
         }
         html+=urgeBlockHTML();
         if(ckActive())html+=checkinBlockHTML();
-        html+='<h3 class="xtra-h" style="margin-top:16px">Today’s sessions</h3>'+daySummaryHTML(todayKey);
+        html+=xh('Today’s sessions')+daySummaryHTML(todayKey);
       }
       tx.innerHTML=html;
+      xAnim(tx,'today');
     }
     var gx=$('trendXtra');
     if(gx){
       var tp=taperProgress();
-      var html2='<h3 class="xtra-h">The progress</h3><div class="stat-row" style="animation:none">'+
-        '<div class="stat" style="animation:none"><span class="sv" style="color:var(--sage)">'+tp.cutPct+'%</span><span class="sl">below baseline</span></div>'+
-        '<div class="stat" style="animation:none"><span class="sv" style="color:var(--sage)">'+tp.avoided+'</span><span class="sl">hits not smoked</span></div>'+
-        '<div class="stat" style="animation:none"><span class="sv">'+tp.streak+'</span><span class="sl">day streak held</span></div></div>';
+      var html2=xh('The progress')+figsHTML([
+        {v:tp.cutPct+'<small>%</small>',l:'below baseline',c:'var(--sage)'},
+        {v:tp.avoided,l:'hits not smoked',c:'var(--sage)'},
+        {v:tp.streak,l:'day streak held'}
+      ]);
       html2+=(tp.money!==null)
-        ?'<p class="chart-note">≈ <strong style="color:var(--sage)">$'+tp.money.toLocaleString()+'</strong> not spent vs the ~'+BASELINE+'/day baseline · <button class="linklike" id="costSet">edit cost</button></p>'
+        ?'<p class="chart-note">≈ <strong style="color:var(--under-t)">$'+tp.money.toLocaleString()+'</strong> not spent vs the ~'+BASELINE+'/day baseline · <button class="linklike" id="costSet">edit cost</button></p>'
         :'<p class="chart-note"><button class="linklike" id="costSet">Track money saved →</button></p>';
       var av=avoidedChartSVG();
       if(av){
-        html2+='<h3 class="xtra-h" style="margin-top:16px">What you didn’t smoke</h3>'+zoomable('avoided',av)+
+        html2+=xh('What you didn’t smoke','vs ~'+BASELINE+' a day')+zoomable('avoided',av)+
           '<p class="chart-note">vs the ~'+BASELINE+'/day baseline — and it only rises.</p>';
       }
-      html2+='<h3 class="xtra-h" style="margin-top:16px">The numbers so far</h3><div class="stat-row" style="animation:none">'+
-        '<div class="stat" style="animation:none"><span class="sv">'+tp.tot+'</span><span class="sl">total logged</span></div>'+
-        '<div class="stat" style="animation:none"><span class="sv">'+tp.avgPerDay+'</span><span class="sl">avg / day</span></div>'+
-        '<div class="stat" style="animation:none"><span class="sv">'+tp.under+'/'+tp.logged+'</span><span class="sl">days under cap</span></div></div>'+
-        '<p class="chart-note"><button class="linklike" data-big="trend">Open every day vs its cap, charted →</button></p>';
+      html2+=xh('The numbers so far')+figsHTML([
+        {v:tp.tot,l:'total logged'},
+        {v:tp.avgPerDay,l:'avg / day'},
+        {v:tp.under+'<small>/'+tp.logged+'</small>',l:'days under cap'}
+      ])+cvLink('trend','Every day vs its cap, charted','journey');
       var hits=timedHits();
       if(hits.length>=4){
         var hist=hourHist(hits);
-        html2+='<h3 class="xtra-h" style="margin-top:16px">When you smoke</h3>'+zoomable('hours',hourChartSVG(hist));
+        html2+=xh('When you smoke','4a → 4a')+zoomable('hours',hourChartSVG(hist));
         var pk=peakWindow(hist,hits.length);
         var beforeNoon=0;
         for(var i=0;i<8;i++)beforeNoon+=hist[i];
         html2+=figsHTML([
           pk?{v:pk.from+'–'+pk.to,l:'heaviest window',s:pk.share+'% of all hits',mid:true,c:'var(--accent)'}:null,
-          {v:Math.round(beforeNoon/hits.length*100)+'<small>%</small>',l:'before noon'}
+          {v:Math.round(beforeNoon/hits.length*100)+'<small>%</small>',l:'before noon',mid:true}
         ]);
       }else{
-        html2+='<p class="hnote-line" style="margin-top:10px">Patterns — your heaviest hours, session habits, pace — appear here once a few timed hits are logged.</p>';
+        html2+='<p class="chart-note cv-empty">Patterns — your heaviest hours, session habits, pace — appear here once a few timed hits are logged.</p>';
       }
       gx.innerHTML=html2;
+      xAnim(gx,'trend');
     }
     var rx=$('recordXtra');
     if(rx){
       var ins=recordInsights();
       var pc=punchcardSVG();
-      rx.innerHTML='<h3 class="xtra-h" style="margin-top:16px">At a glance</h3>'+chipCalHTML()+
-        '<p class="chart-note">Tap any chip to open that day.</p>'+
-        (pc?'<h3 class="xtra-h" style="margin-top:16px">Every day, side by side</h3>'+zoomable('punch',pc)+
+      rx.innerHTML=xh('At a glance')+chipCalHTML()+
+        '<p class="chart-note">Tap any day to open it.</p>'+
+        (pc?xh('Every day, side by side',_pcWin)+zoomable('punch',pc)+
+            cvLegend([['dot','var(--acc)','Hit'],['pill','var(--acc)','Sitting'],/var\(--over\)/.test(pc)?['dot','var(--over)','Slip after zero']:null])+
             '<p class="chart-note">Columns are days, top to bottom is 4am → 4am. Fewer dots, drifting later — that’s the shift.</p>':'')+
         sessionRhythmHTML()+
-        (ins.length?'<h3 class="xtra-h" style="margin-top:16px">What stands out</h3>'+figsHTML(ins):'');
+        (ins.length?xh('What stands out')+figsHTML(ins):'');
+      xAnim(rx,'record');
     }
     var sx=$('stepXtra');
     if(sx){
       var tpr=taperProgress();
-      var roadBlock='<p class="chart-note" style="margin-top:14px">Spacing lives with the record now — every gap, judged against its day’s rule, is in <strong>Day by day ⤢</strong>.</p>'+
-        '<h3 class="xtra-h" style="margin-top:16px">The running schedule</h3>'+roadAheadHTML()+
+      var roadBlock='<p class="chart-note">Spacing lives with the record now — every gap, judged against its day’s rule, is in <strong>Day by day</strong>.</p>'+
+        xh('The running schedule')+roadAheadHTML()+
         '<p class="chart-note">Dates ride on your actual progress — a held step shifts everything below it, zero day included. The milestones past zero are the research’s map, <a class="dlink" href="guide.html#withdrawal">cited here →</a></p>';
+      var track=function(pct){
+        return '<div class="taper-track" style="--pct:'+pct+'%" role="img" aria-label="'+pct+'% of the way to zero"><div style="width:'+pct+'%"></div><i></i></div>'+
+          '<div class="tt-ends"><span>Cap '+BASE_PHASES[0].cap+'</span><span>Zero</span></div>';
+      };
       if(isZeroEra){
         var nz=Math.max(0,daysFree());
-        sx.innerHTML='<h3 class="xtra-h">The road</h3><div class="taper-track"><div style="width:100%"></div></div>'+
+        sx.innerHTML=xh('The road','complete')+track(100)+
           '<p class="chart-note">Taper complete — the cap walked '+BASE_PHASES[0].cap+' → 0 in '+tpr.totalD+' days. Day '+nz+' at zero, and the counter only climbs.</p>'+roadBlock;
       }else if(today>=schedule()[0].start){
-        sx.innerHTML='<h3 class="xtra-h">The road</h3><div class="taper-track"><div style="width:'+tpr.pctToZero+'%"></div></div>'+
+        sx.innerHTML=xh('The road',tpr.pctToZero+'% of the way')+track(tpr.pctToZero)+
           '<p class="chart-note">Day <strong>'+tpr.dayN+' of '+tpr.totalD+'</strong> · '+tpr.pctToZero+'% of the way to zero. Today’s cap of '+cap+' is <strong>'+tpr.dropBase+'% below baseline</strong>'+(tpr.dropStart>0?' and '+tpr.dropStart+'% below where the taper started':'')+'.</p>'+roadBlock;
       }else{
         sx.innerHTML=roadBlock;
       }
+      xAnim(sx,'step');
     }
   }
 
