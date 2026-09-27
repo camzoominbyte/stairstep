@@ -1816,86 +1816,355 @@
 
 
   /* ==== [M] MORE + COCKPIT ==== */
-  /* legacy rules moved here unchanged by foundation (fonts token-swapped: Karla -> var(--f-ui), Fraunces -> var(--f-round)); owner rewrites this section */
-  /* ---- backup ---- */
-  .data-btns{display:flex;gap:10px;margin-bottom:10px}
-  .data-btns[hidden]{display:none}  /* author rule outranks the UA [hidden] rule */
-  .data-btns button{
-    flex:1;font-family:var(--f-ui);font-weight:700;font-size:13.5px;
-    padding:11px 0;border-radius:12px;border:1px solid var(--line);
-    background:#fff;color:var(--ink);cursor:pointer;box-shadow:var(--shadow-sm);
-  }
-  #dataBox{
-    width:100%;background:var(--surface2);border:1px solid var(--line);border-radius:12px;
-    color:var(--ink);font-size:11px;font-family:ui-monospace,monospace;
-    padding:10px;resize:vertical;-webkit-user-select:text;user-select:text;
-  }
-  #dataMsg{font-size:12.5px;color:var(--sage);margin-top:8px;min-height:1em}
+  /* More = an inset-grouped list in the Afterglow material: a hero row for
+     the deep guide, the reading sections as expandable rows (icon tile ·
+     title · one-line summary · chevron), "Your why" as its own row, and
+     Backup & data as a grouped action list. The landscape cockpit (#dash)
+     is always dark — a night glance surface — in either theme. */
 
-  .guide-link{
-    display:flex;justify-content:space-between;align-items:center;gap:12px;
-    background:var(--surface);
-    border:1px solid var(--line);border-radius:16px;
-    padding:16px 18px;margin-bottom:12px;text-decoration:none;
-    color:var(--ink);
+  /* ---- More: rhythm ---- */
+  /* the view staggers in as blocks (staggerView); rows inside a group must
+     not fade in one by one, so the F scroll-reveal is neutralised here */
+  #vMore .reveal{opacity:1;transform:none}
+  .mo-sec{margin-top:24px}
+  .mo-cap{
+    font-family:var(--f-ui);font-size:13px;font-weight:600;letter-spacing:0;line-height:1.3;
+    color:var(--ink-2);margin:0 6px 8px;
   }
-  .guide-link strong{color:var(--sand);font-size:15.5px}
-  .guide-link small{font-size:13px;color:var(--muted)}
-  .guide-arrow{font-family:var(--f-round);font-size:24px;color:var(--accent);flex:0 0 auto;transition:transform .3s var(--spring)}
-  @media (hover:hover){.guide-link:hover .guide-arrow{transform:translateX(4px)}}
-  .guide-link{transition:transform .3s var(--spring),box-shadow .3s var(--spring)}
-  .guide-link:active{transform:scale(.98)}
-  @media (hover:hover){.guide-link:hover{transform:translateY(-2px);box-shadow:var(--shadow)}}
-  html.dark .data-btns button{background:#2e2920}
+  .mo-group{
+    position:relative;background:var(--s1);border-radius:20px;
+    box-shadow:var(--shadow-card);overflow:hidden;
+  }
+  #systemSection{margin:0}   /* .section's 36px bottom margin, not in a list */
+  /* icon tile: one per row, neutral (hue is data elsewhere) */
+  .mo-ic{
+    width:32px;height:32px;border-radius:9px;flex:none;display:grid;place-items:center;
+    background:var(--s2);color:var(--ink-2);
+    transition:background-color var(--d-fast) var(--e-move),color var(--d-fast) var(--e-move);
+  }
+  .mo-ic .ic{width:18px;height:18px}
+
+  /* ---- the deep guide: hero row + quick jumps ---- */
+  .mo-hero{
+    position:relative;overflow:hidden;background:var(--s1);border-radius:var(--r-lg);
+    box-shadow:var(--shadow-card);padding:4px 4px 14px;
+  }
+  .mo-hero::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(300px 190px at 100% 0%,var(--acc-bg),transparent 72%);
+  }
+  #vMore .guide-link{
+    position:relative;display:grid;grid-template-columns:54px minmax(0,1fr) auto;column-gap:14px;
+    align-items:center;padding:14px 12px 12px 14px;border-radius:22px;
+    text-decoration:none;color:var(--ink);
+    transition:transform var(--d-press) var(--snap);
+  }
+  #vMore .guide-link:active{transform:scale(.985)}
+  #vMore .guide-link:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
+  .mo-hero-ic{
+    width:54px;height:54px;border-radius:16px;display:grid;place-items:center;
+    background:linear-gradient(145deg,var(--acc),var(--acc-2));color:var(--on-acc);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 10px 22px -12px var(--acc-glow);
+  }
+  .mo-hero-ic .ic{width:27px;height:27px;stroke-width:1.9}
+  .mo-hero-tx{min-width:0}
+  .mo-hero-tx strong{
+    display:block;font-family:var(--f-round);font-size:19px;font-weight:700;letter-spacing:-.018em;
+    color:var(--ink);line-height:1.2;
+  }
+  .mo-hero-tx small{display:block;font-size:13.5px;line-height:1.38;color:var(--ink-2);margin-top:3px}
+  #vMore .guide-arrow{
+    width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+    background:var(--s2);color:var(--ink-2);transition:transform var(--d-base) var(--settle);
+  }
+  #vMore .guide-arrow .ic{width:16px;height:16px;stroke-width:2.2}
+  @media (hover:hover){#vMore .guide-link:hover .guide-arrow{transform:translateX(3px);color:var(--acc-t)}}
+  .mo-jump{position:relative;display:flex;flex-wrap:wrap;gap:8px;padding:2px 14px 0 82px}
+  .mo-jump a{
+    position:relative;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 13px 0 10px;
+    border-radius:var(--r-pill);background:var(--s2);box-shadow:inset 0 0 0 1px var(--line);
+    color:var(--ink);text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap;
+    transition:transform var(--d-press) var(--snap);
+  }
+  .mo-jump a::after{content:"";position:absolute;inset:-5px -2px}   /* 44px hit area */
+  .mo-jump a:active{transform:scale(.96)}
+  .mo-jump a:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+  .mo-jump .ic{width:15px;height:15px;color:var(--acc-t);stroke-width:2}
+
+  /* ---- expandable rows (the reading sections, backup) ---- */
+  /* no margin/padding on <details> (the accordion JS measures it); the
+     inset hairline is a background line so it adds no height */
+  .mo-group>details{
+    background:linear-gradient(var(--line),var(--line)) 60px 0/calc(100% - 60px) 1px no-repeat;
+    box-shadow:none;border-radius:0;margin:0;overflow:hidden;
+  }
+  .mo-group>details:first-child{background:none}
+  .mo-group>details>summary{
+    display:grid;grid-template-columns:32px minmax(0,1fr) auto;column-gap:14px;row-gap:1px;
+    align-items:center;min-height:62px;padding:12px 14px;
+  }
+  .mo-group>details>summary .mo-ic{grid-row:1/3}
+  .mo-t{grid-column:2;grid-row:1;font-size:15px;font-weight:600;letter-spacing:-.01em;color:var(--ink);line-height:1.3}
+  .mo-live{
+    grid-column:2;grid-row:2;min-width:0;font-size:13px;font-weight:500;color:var(--ink-2);line-height:1.35;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;
+  }
+  .mo-group>details>summary::after{grid-column:3;grid-row:1/3;margin-left:0;width:17px;height:17px}
+  .mo-group>details[open]>summary .mo-ic{background:var(--ink);color:var(--ink-inv)}
+  @media (hover:hover){.mo-group>details>summary:hover{color:inherit;background:var(--s2)}}
+  .mo-group>details>summary:active{background:var(--s2)}
+  /* long-read body: 15/1.5, ~60ch */
+  .mo-group .d-body{padding:4px 18px 20px;font-size:15px;line-height:1.5;color:var(--ink)}
+  .mo-group .d-body>p{max-width:60ch;margin-bottom:12px}
+  .mo-group .d-body>p:last-child{margin-bottom:0}
+  .mo-group .d-body em{font-style:italic}
+  /* the cited notes: a small recessed note carrying the guide link */
+  .mo-group .d-evid{
+    position:relative;margin-top:16px;padding:11px 14px 11px 40px;border:0;border-radius:14px;
+    background:var(--s2);font-size:12.5px;line-height:1.45;color:var(--ink-2);
+  }
+  .mo-group .d-evid::before{
+    content:"";position:absolute;left:13px;top:12px;width:16px;height:16px;background:var(--ink-3);
+    -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 18.5V6a2.5 2.5 0 0 1 2.5-2.5H19v13H7.5A2.5 2.5 0 0 0 5 19a2.5 2.5 0 0 0 2.5 2.5H19'/%3E%3C/svg%3E") center/contain no-repeat;
+            mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 18.5V6a2.5 2.5 0 0 1 2.5-2.5H19v13H7.5A2.5 2.5 0 0 0 5 19a2.5 2.5 0 0 0 2.5 2.5H19'/%3E%3C/svg%3E") center/contain no-repeat;
+  }
+  .mo-group .d-evid .dlink{display:inline-block;padding:2px 0;color:var(--acc-t)}
+
+  /* ---- your why ---- */
+  .mo-why{display:grid;grid-template-columns:32px minmax(0,1fr) auto;column-gap:14px;align-items:center;padding:14px}
+  .mo-why-tx{min-width:0;font-size:14px;line-height:1.4;color:var(--ink-2)}
+  .mo-why-tx small{display:block;font-size:12.5px;line-height:1.35;color:var(--ink-3);margin-top:4px}
+  .mo-why:not(.filled) .mo-why-tx small{display:none}
+  .mo-why.filled{align-items:start}
+  .mo-why.filled .mo-ic{background:var(--ink);color:var(--ink-inv)}
+  .mo-why.filled #whyText{
+    display:block;font-family:var(--f-round);font-size:17px;font-weight:600;line-height:1.35;
+    letter-spacing:-.012em;color:var(--ink);padding-top:4px;
+  }
+  .mo-why-btn.btn.sm{height:38px;padding:0 15px;font-size:14px}
+  .mo-why.filled .mo-why-btn{margin-top:-3px}
+
+  /* ---- backup & data ---- */
+  .mo-bk{padding:2px 14px 16px!important}
+  .mo-bk .mo-bk-lead{font-size:14px;line-height:1.45;color:var(--ink-2);padding:0 4px;margin-bottom:0}
+  .mo-bk .mo-bk-lead strong{color:var(--ink)}
+  .mo-list-cap{display:block;font-size:12.5px;font-weight:600;color:var(--ink-2);margin:18px 4px 8px}
+  .mo-list-cap span{font-weight:500;color:var(--ink-3)}
+  .mo-list{display:block;margin:0;background:var(--s2);border-radius:16px;overflow:hidden}
+  .mo-act{
+    display:grid;grid-template-columns:32px minmax(0,1fr);column-gap:13px;align-items:center;
+    width:100%;min-height:58px;padding:10px 14px 10px 12px;border:0;cursor:pointer;
+    background:transparent;color:var(--ink);text-align:left;font-family:var(--f-ui);
+    transition:background-color var(--d-fast) var(--e-move);
+  }
+  .mo-act+.mo-act,.mo-undo{background-image:linear-gradient(var(--line),var(--line));background-size:calc(100% - 57px) 1px;background-position:57px 0;background-repeat:no-repeat}
+  .mo-act:active{transform:none;background-color:var(--s3)}
+  .mo-act:focus-visible{outline:2px solid var(--acc);outline-offset:-2px;border-radius:16px}
+  .mo-act .mo-ic{background:var(--s1);box-shadow:inset 0 0 0 1px var(--line)}
+  .mo-act .mo-ic.acc{background:var(--acc-bg);color:var(--acc-t);box-shadow:none}
+  .mo-act-tx{min-width:0}
+  .mo-act-tx b{display:block;font-size:15px;font-weight:600;letter-spacing:-.01em;line-height:1.25}
+  .mo-act-tx small{display:block;font-size:12.5px;color:var(--ink-2);line-height:1.3;margin-top:2px}
+  .mo-undo[hidden]{display:none}
+  #dataBox{
+    display:block;width:100%;min-height:88px;margin:0;border:0;border-radius:14px;
+    padding:11px 13px;background:var(--bg-2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-2);
+    font-family:var(--f-mono);font-size:11.5px;line-height:1.5;letter-spacing:0;
+    resize:vertical;-webkit-user-select:text;user-select:text;overflow-wrap:anywhere;
+    transition:box-shadow var(--d-fast) var(--e-move);
+  }
+  #dataBox::placeholder{font-family:var(--f-ui);font-size:13.5px;color:var(--ink-3);letter-spacing:-.005em}
+  #dataBox:focus{outline:none;box-shadow:inset 0 0 0 2px var(--acc)}
+  /* outcome messages: tint + glyph + the words (never color alone) */
+  #dataMsg{
+    display:flex;gap:9px;align-items:flex-start;margin:10px 0 0;padding:10px 12px;border-radius:12px;
+    font-size:13.5px;font-weight:550;line-height:1.4;background:var(--s2);color:var(--ink-2);
+  }
+  #dataMsg:empty{display:none}
+  #dataMsg::before{
+    content:"";flex:none;width:17px;height:17px;margin-top:1px;background:currentColor;
+    -webkit-mask:var(--mo-msg-ic) center/contain no-repeat;mask:var(--mo-msg-ic) center/contain no-repeat;
+  }
+  #dataMsg{--mo-msg-ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='8.6'/%3E%3Cpath d='M12 11v5.2'/%3E%3Ccircle cx='12' cy='7.9' r='.6'/%3E%3C/svg%3E")}
+  #dataMsg.msg-ok{background:var(--under-bg);color:var(--under-t);--mo-msg-ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.6'/%3E%3Cpath d='M8.2 12.3l2.6 2.6 5-5.4'/%3E%3C/svg%3E")}
+  #dataMsg.msg-err{background:var(--over-bg);color:var(--over-t);--mo-msg-ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='8.6'/%3E%3Cpath d='M12 7.4v5.4'/%3E%3Ccircle cx='12' cy='16.3' r='.6'/%3E%3C/svg%3E")}
+  #dataMsg.msg-info{background:var(--adjust-bg);color:var(--adjust-t)}
 
   /* ---- landscape: the cockpit ----
-     Rotating the phone turns the app into a full-bleed live dashboard —
-     six glass tiles, no scrolling, everything glanceable and tappable. */
-  #dash{display:none}
+     Rotating the phone turns the app into a full-bleed live dashboard: six
+     tiles, no scrolling. Always dark (its own token scope, both eras); the
+     legacy aliases are re-declared here so JS inline var(--sage)… follow. */
+  #dash{
+    display:none;color-scheme:dark;
+    --bg:#0A0C11; --s1:#13161E; --s2:#1B1F29; --s3:#252A36;
+    --line:rgba(255,255,255,.07); --line-2:rgba(255,255,255,.14);
+    --ink:#F3F5F9; --ink-2:#A3AAB8; --ink-3:#8A92A2; --ink-inv:#0A0C11; --ghost:#5E6679;
+    --under:#4FDDA0; --under-t:#5BE3A8; --under-bg:rgba(79,221,160,.12);
+    --atcap:#F2D04C; --atcap-t:#F5D960; --atcap-bg:rgba(242,208,76,.13);
+    --over:#FF6A5C;  --over-t:#FF7D70;  --over-bg:rgba(255,106,92,.13);
+    --adjust:#9D9BFF; --adjust-t:#AEACFF; --adjust-bg:rgba(157,155,255,.13);
+    --clean:var(--under); --clean-t:var(--under-t); --clean-bg:var(--under-bg);
+    --slip:var(--over); --slip-t:var(--over-t); --slip-bg:var(--over-bg);
+    --acc:#FF9A45; --acc-2:#FFBE7A; --acc-t:#FFAE66; --acc-bg:rgba(255,154,69,.13); --acc-glow:rgba(255,140,50,.36);
+    --on-acc:#1A1204;
+    --surface:var(--s1); --surface2:var(--s2); --hair:var(--line); --sand:var(--ink);
+    --muted:var(--ink-2); --faint:var(--ink-3); --accent:var(--acc); --accent-soft:var(--acc-bg);
+    --amber:var(--atcap); --sage:var(--under); --clay:var(--over);
+    color:var(--ink);font-family:var(--f-ui);
+  }
+  html[data-era="zero"] #dash{
+    --acc:#4FDDA0; --acc-2:#9CF0C9; --acc-t:#5BE3A8; --acc-bg:rgba(79,221,160,.12); --acc-glow:rgba(60,220,160,.34);
+    --on-acc:#062417;
+  }
   @media (orientation:landscape) and (max-height:560px){
     #dash{
       display:grid;box-sizing:border-box;
       width:100vw;height:100dvh;
       padding:calc(10px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right))
               calc(10px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));
-      grid-template-columns:1.45fr 1fr 1fr 1fr;
+      grid-template-columns:1.62fr 1fr 1fr 1fr;
       grid-template-rows:1fr 1fr;
-      gap:11px;
+      gap:10px;
+      background:
+        radial-gradient(520px 300px at 8% 0%,rgba(255,140,50,.10),transparent 70%),
+        radial-gradient(420px 260px at 96% 100%,rgba(90,160,255,.06),transparent 70%),
+        var(--bg);
+    }
+    html[data-era="zero"] #dash{
+      background:
+        radial-gradient(520px 300px at 8% 0%,rgba(40,200,150,.11),transparent 70%),
+        radial-gradient(420px 260px at 96% 100%,rgba(90,160,255,.07),transparent 70%),
+        var(--bg);
     }
   }
   .dtile{
-    position:relative;overflow:hidden;border-radius:18px;
-    background:var(--surface);
-    border:1px solid var(--line);
-    padding:14px 16px 13px;display:flex;flex-direction:column;
-    justify-content:space-between;align-items:flex-start;gap:6px;
+    position:relative;overflow:hidden;min-width:0;min-height:0;border:0;border-radius:22px;
+    background:var(--s1);color:var(--ink);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.055),0 0 0 1px var(--line),0 18px 40px -22px rgba(0,0,0,.9);
+    padding:13px 15px 12px;display:flex;flex-direction:column;
+    justify-content:space-between;align-items:stretch;gap:6px;
     cursor:pointer;text-align:left;font-family:var(--f-ui);
-    animation:dtin .6s var(--spring) both;
-    transition:transform .22s var(--spring);
+    animation:dtin 520ms var(--settle) backwards;
+    transition:transform var(--d-press) var(--snap);
   }
   .dtile:active{transform:scale(.975)}
-  .dtile:nth-child(2){animation-delay:.05s}
-  .dtile:nth-child(3){animation-delay:.1s}
-  .dtile:nth-child(4){animation-delay:.15s}
-  .dtile:nth-child(5){animation-delay:.2s}
-  .dtile:nth-child(6){animation-delay:.25s}
-  @keyframes dtin{from{opacity:0;transform:translateY(18px) scale(.96)}}
-  .dtile.hero{grid-row:1/3;grid-column:1}
+  .dtile:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+  .dtile:nth-child(2){animation-delay:40ms}
+  .dtile:nth-child(3){animation-delay:80ms}
+  .dtile:nth-child(4){animation-delay:120ms}
+  .dtile:nth-child(5){animation-delay:160ms}
+  .dtile:nth-child(6){animation-delay:200ms}
+  @keyframes dtin{from{opacity:0;transform:translateY(12px) scale(.985)}}
+  @keyframes dtfade{from{opacity:0}}
+  .dtile.hero{grid-row:1/3;grid-column:1;justify-content:flex-start;gap:0;padding:16px 18px 15px}
+  .dtile.hero::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(260px 200px at 0% 0%,var(--acc-bg),transparent 75%);
+  }
   .dtile.wide{grid-column:span 2}
-  .dt-eyebrow{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:700;white-space:nowrap}
-  .dt-big{font-family:var(--f-round);font-weight:600;color:var(--sand);font-size:clamp(44px,11vh,76px);line-height:1;letter-spacing:-.01em;margin-top:6px}
-  .dt-big small{font-family:var(--f-round);font-size:.36em;color:var(--muted);font-weight:500}
-  .dt-mid{font-family:var(--f-round);font-weight:600;color:var(--sand);font-size:clamp(20px,6.5vh,32px);line-height:1.05}
-  .dt-sub{font-size:11px;color:var(--muted);line-height:1.45}
-  .dt-fill{width:100%}
-  .bar-mini{height:7px;border-radius:99px;background:var(--surface2);overflow:hidden;margin:0 0 8px;width:100%}
-  .bar-mini>div{height:100%;border-radius:99px;background:var(--sage);transition:width .6s var(--spring)}
-  .dt-stats{display:flex;gap:14px;width:100%}
-  .dt-stats .ds{flex:1;border-top:1px solid var(--line);padding:8px 0 0;text-align:left;min-width:0}
-  .dt-stats .dsv{display:block;font-family:var(--f-round);font-weight:600;font-size:clamp(15px,4.6vh,22px);color:var(--sand);line-height:1.1}
-  .dt-stats .dsl{display:block;font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:2px;white-space:nowrap}
-  .dt-ring{display:flex;align-items:center;justify-content:center;flex:1;width:100%}
-  #dash .dt-ring svg{width:min(104px,20vh)!important;margin:0!important}
+  .dtile>*{position:relative}
+  .dt-top{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+  .dt-eyebrow{
+    display:inline-flex;align-items:center;gap:6px;min-width:0;
+    font-size:12.5px;font-weight:600;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .dt-eyebrow .ic{width:15px;height:15px;color:var(--ink-3)}
+  .dt-chip .chip{height:22px}
+  .dt-big{
+    display:block;font-family:var(--f-round);font-weight:700;color:var(--ink);
+    font-size:clamp(52px,17vh,78px);line-height:.95;letter-spacing:-.04em;
+    font-variant-numeric:tabular-nums;margin:14px 0 12px;
+  }
+  .dt-big small{font-size:.34em;color:var(--ink-2);font-weight:600;letter-spacing:-.01em}
+  .dt-dial{display:block;width:min(150px,36vh);margin:8px auto 0}
+  .dt-dial[hidden]{display:none}
+  .dt-dial svg{display:block;width:100%;height:auto}
+  .has-dial .dt-big{font-size:clamp(34px,10vh,48px);margin:8px 0}
+  /* pips: one per allowed hit (empty ring ≥3:1), overs appended */
+  .dt-pips{display:flex;gap:4px;width:100%}
+  .dt-pips:empty{display:none}
+  .dt-pips i{flex:1 1 0;max-width:18px;height:20px;border-radius:6px;box-shadow:inset 0 0 0 1.5px var(--ghost)}
+  .dt-pips i.under{background:var(--under);box-shadow:0 0 12px -3px var(--under)}
+  .dt-pips i.atcap{background:var(--atcap);box-shadow:0 0 12px -3px var(--atcap)}
+  .dt-pips i.over{background:var(--over);box-shadow:none}
+  .dt-pips{flex-wrap:wrap}
+  .dt-pips.many{gap:3px}
+  .dt-pips.many i{height:16px;border-radius:5px}
+  .dt-pcap{flex:0 0 100%;font-size:11.5px;font-weight:600;color:var(--ink-2);margin-bottom:3px}
+  html[data-era="zero"] .dt-pips i.under{box-shadow:none;opacity:.8}
+  html[data-era="zero"] .dt-pips i.now{opacity:1;box-shadow:0 0 12px -3px var(--under)}
+  .dt-tape{display:block;width:100%;margin:auto 0 0;padding-top:10px}
+  .dt-tape[hidden]{display:none}
+  .dt-tape svg{display:block;width:100%;height:auto;max-height:24vh}
+  .dt-stats{display:flex;gap:12px;width:100%;margin-top:auto}
+  .dt-tape:not([hidden])+.dt-stats{margin-top:14px}
+  .dt-stats .ds{flex:1;min-width:0;border-top:1px solid var(--line);padding:9px 0 0}
+  .dt-stats .dsv{
+    display:block;font-family:var(--f-round);font-weight:700;font-size:clamp(16px,5.2vh,22px);
+    color:var(--ink);line-height:1.1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap;
+  }
+  .dt-stats .dsl{display:block;font-size:11.5px;font-weight:600;color:var(--ink-2);line-height:1.2;margin-top:3px}
+  .dt-sub{display:block;font-size:12px;line-height:1.35;color:var(--ink-2)}
+  .dt-note{
+    margin-top:10px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;
+  }
+  .dt-mid{
+    display:block;font-family:var(--f-round);font-weight:700;color:var(--ink);
+    font-size:clamp(28px,10vh,40px);line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+  }
+  .dt-mid small{font-size:.5em;font-weight:600;color:var(--ink-2);letter-spacing:-.01em;margin-left:1px}
+  /* next window: time is the accent; the track fills toward the opening */
+  #dtWindow .dt-mid{color:var(--acc-t)}
+  #dtWindow .dt-mid small{color:var(--acc-t);opacity:.75}
+  .dt-track{display:block;height:6px;border-radius:3px;background:var(--s3);overflow:hidden}
+  .dt-track i{display:block;height:100%;width:0;border-radius:3px;background:linear-gradient(90deg,var(--acc),var(--acc-2));transition:width 1s linear}
+  #dtWindow.open .dt-track i{width:100%!important}
+  #dtWindow.none .dt-track{visibility:hidden}
+  #dtWindow.none .dt-mid{color:var(--ink)}
+  /* score: the number, its word, the parts it is made of */
+  .dt-score{display:flex;flex-direction:column;gap:2px;flex:1;justify-content:flex-end;min-height:0}
+  .dt-scn{font-family:var(--f-round);font-weight:700;font-size:clamp(28px,10vh,40px);line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+  .dt-scn small{font-size:.42em;color:var(--ink-3);font-weight:600;letter-spacing:0;margin-left:2px}
+  .dt-scl{font-size:13px;font-weight:650;color:var(--ink);margin-bottom:6px}
+  .dt-parts{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;border-top:1px solid var(--line);padding-top:7px}
+  .dt-parts span{font-size:11.5px;font-weight:600;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dt-parts b{font-family:var(--f-round);font-weight:700;color:var(--ink);margin-right:5px;font-variant-numeric:tabular-nums}
+  /* urge: tally when idle; a 20-minute countdown ring (fill is good) when running */
+  .dt-urow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .dt-uring{width:clamp(44px,15vh,60px);height:auto;flex:none}
+  .dt-uring .go{color:var(--acc-t);fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;transition:opacity var(--d-base) var(--e-move)}
+  #dtUrge.running .dt-uring .go{opacity:0}
+  .dt-uring .trk{fill:none;stroke:var(--s3);stroke-width:4.5}
+  .dt-uring .val{fill:none;stroke:var(--acc);stroke-width:4.5;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;transition:stroke-dashoffset 1s linear}
+  #dtUrge.running .dt-mid{color:var(--acc-t);font-size:clamp(24px,8vh,32px)}
+  #dtUrge:not(.running) .dt-uring .val{opacity:0}
+  #dtUrge.running .dt-uring{width:clamp(34px,11vh,44px)}
+  .dt-urow .dt-mid{min-width:0}
+  .dt-u-run{display:none}
+  #dtUrge.running .dt-u-run{display:inline}
+  #dtUrge.running .dt-u-idle{display:none}
+  /* the week */
+  .dt-fill{display:block;flex:1;min-height:0;width:100%}
+  .dt-fill svg{display:block;width:100%;height:100%}
+  .dt-legend{display:flex;gap:10px;flex:none}
+  .dt-legend span{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:var(--ink-2)}
+  .dt-legend i{width:8px;height:8px;border-radius:3px}
+  .dt-legend .under i{background:var(--under)}
+  .dt-legend .atcap i{background:var(--atcap)}
+  .dt-legend .over i{background:var(--over)}
+  #dtZero .dt-mid{margin-top:auto}
+  #dtZero .dt-track{margin-top:4px}
+  /* the descent ramp is the track; the fill is the part not yet walked */
+  #dtZero .dt-track{display:flex;background:linear-gradient(90deg,#FFA24C 0%,#F2C94C 40%,#B5DE6A 72%,#4FDDA0 100%)}
+  #dtZero .dt-track i{margin-left:auto;border-radius:0 3px 3px 0;background:var(--s3);box-shadow:-2px 0 0 var(--s1)}
+  .dt-note{-webkit-line-clamp:2}
+  @media (prefers-reduced-motion:reduce){
+    .dt-track i,.dt-uring .val,.dt-uring .go{transition:none}
+    .dtile{animation:dtfade 150ms linear backwards}
+    .dtile:nth-child(n){animation-delay:0ms}
+    .dtile:active{transform:none}
+  }
   /* ==== [/M] ==== */
 
 
@@ -2284,40 +2553,46 @@ try{
 </div>
 
 <div id="dash" aria-label="Landscape dashboard">
+  <!-- the landscape cockpit (M): always dark, six live tiles. The 17 dh*/dt*
+       ids are written by renderDash and its 1s tick. #dhDial is an empty slot
+       a compact dial can drop into (dashDialSVG, if the app defines one). -->
   <button class="dtile hero" id="dtHero" aria-label="Open today in detail">
-    <div>
-      <span class="dt-eyebrow" id="dhEyebrow">Today</span>
-      <div class="dt-big" id="dhBig">–</div>
-    </div>
-    <div class="dt-stats" id="dhStats"></div>
-    <div class="dt-fill">
-      <div class="bar-mini"><div id="dhBar"></div></div>
-      <p class="dt-sub" id="dhNote"></p>
-    </div>
+    <span class="dt-top"><span class="dt-eyebrow" id="dhEyebrow">Today</span><span class="dt-chip" id="dhChip"></span></span>
+    <span class="dt-dial" id="dhDial" hidden></span>
+    <span class="dt-big" id="dhBig">–</span>
+    <span class="dt-pips" id="dhBar" aria-hidden="true"></span>
+    <span class="dt-tape" id="dhTape"></span>
+    <span class="dt-stats" id="dhStats"></span>
+    <span class="dt-sub dt-note" id="dhNote"></span>
   </button>
   <button class="dtile" id="dtWindow" aria-label="Open today in detail">
-    <span class="dt-eyebrow" id="dhWinLbl">Next window</span>
-    <div class="dt-mid" id="dhWin">–</div>
-    <p class="dt-sub" id="dhWinSub"></p>
+    <span class="dt-top"><span class="dt-eyebrow"><svg class="ic" aria-hidden="true"><use href="#i-timer"/></svg><span id="dhWinLbl">Next window</span></span></span>
+    <span class="dt-mid" id="dhWin">–</span>
+    <span class="dt-track" aria-hidden="true"><i id="dhWinBar"></i></span>
+    <span class="dt-sub" id="dhWinSub"></span>
   </button>
   <button class="dtile" id="dtScore" aria-label="Open the taper score in detail">
-    <span class="dt-eyebrow">Taper score</span>
-    <div class="dt-ring" id="dhRing"></div>
+    <span class="dt-top"><span class="dt-eyebrow"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg>Taper score</span></span>
+    <span class="dt-score" id="dhRing"></span>
   </button>
   <button class="dtile" id="dtUrge" aria-label="Start or check the urge timer">
-    <span class="dt-eyebrow">Urges outlasted</span>
-    <div class="dt-mid" id="dhUrge">0</div>
-    <p class="dt-sub" id="dhUrgeSub">Tap to start the 20-minute timer</p>
+    <span class="dt-top"><span class="dt-eyebrow"><svg class="ic" aria-hidden="true"><use href="#i-wave"/></svg><span class="dt-u-idle">Urges outlasted</span><span class="dt-u-run">Urge timer</span></span></span>
+    <span class="dt-urow">
+      <span class="dt-mid" id="dhUrge">0</span>
+      <svg class="dt-uring" viewBox="0 0 44 44" aria-hidden="true"><circle class="trk" cx="22" cy="22" r="18"/><circle class="val" id="dhUrgeRing" cx="22" cy="22" r="18" pathLength="100" transform="rotate(-90 22 22)"/><use class="go" href="#i-timer" x="13" y="13" width="18" height="18"/></svg>
+    </span>
+    <span class="dt-sub" id="dhUrgeSub">Tap to start the 20-minute timer</span>
   </button>
   <button class="dtile wide" id="dtTrend" aria-label="Open the full day-by-day chart">
-    <span class="dt-eyebrow">The week</span>
-    <div class="dt-fill" id="dhTrend"></div>
-    <p class="dt-sub" id="dhTrendSub"></p>
+    <span class="dt-top"><span class="dt-eyebrow"><svg class="ic" aria-hidden="true"><use href="#i-journey"/></svg>The week</span><span class="dt-legend" id="dhLegend"></span></span>
+    <span class="dt-fill" id="dhTrend"></span>
+    <span class="dt-sub" id="dhTrendSub"></span>
   </button>
   <button class="dtile" id="dtZero" aria-label="Open the step-down in detail">
-    <span class="dt-eyebrow" id="dhZeroLbl">Zero day</span>
-    <div class="dt-mid" id="dhZero">–</div>
-    <p class="dt-sub" id="dhZeroSub"></p>
+    <span class="dt-top"><span class="dt-eyebrow"><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg><span id="dhZeroLbl">Zero day</span></span></span>
+    <span class="dt-mid" id="dhZero">–</span>
+    <span class="dt-track" aria-hidden="true"><i id="dhZeroBar"></i></span>
+    <span class="dt-sub" id="dhZeroSub"></span>
   </button>
 </div>
 
@@ -2587,30 +2862,37 @@ try{
 </main>
 
 <main class="view" id="vMore">
-<details class="fold" id="sysFold">
-  <summary><span class="fold-ic" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-book"/></svg></span><span class="fold-t">The system</span><span class="fold-live">Rules · guide · backup</span></summary>
-  <div class="fold-body">
-<div class="section openable" id="systemSection" data-title="The system">
-  <button class="xopen" data-target="systemSection" data-title="The system" aria-label="Open the system in detail"><svg class="ic" aria-hidden="true"><use href="#i-open"/></svg></button>
-  <h2>The system</h2>
+<!-- More: an inset-grouped list. #sysFold/#systemSection keep their ids
+     (setView sets #sysFold.open on a More tap — harmless on a div). -->
+<div class="mo-hero">
   <a class="guide-link" href="guide.html">
-    <span><strong>The deep guide</strong><br>
-    <small>The full day-by-day playbook, plus what the research says about tapering, withdrawal, and staying quit — with sources.</small></span>
-    <span class="guide-arrow">→</span>
+    <span class="mo-hero-ic" aria-hidden="true"><svg class="ic"><use href="#i-book"/></svg></span>
+    <span class="mo-hero-tx"><strong>The deep guide</strong>
+    <small>The day-by-day playbook, and what the research says about tapering, withdrawal and staying quit — with sources.</small></span>
+    <span class="guide-arrow" aria-hidden="true"><svg class="ic"><use href="#i-chev"/></svg></span>
   </a>
+  <nav class="mo-jump" aria-label="Jump into the guide">
+    <a href="guide.html#withdrawal"><svg class="ic" aria-hidden="true"><use href="#i-wave"/></svg>Withdrawal</a>
+    <a href="guide.html#after"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg>After zero</a>
+    <a href="guide.html#resources"><svg class="ic" aria-hidden="true"><use href="#i-life"/></svg>Helplines</a>
+  </nav>
+</div>
+
+<div class="mo-sec" id="sysFold">
+<h2 class="mo-cap">The system</h2>
+<div class="section openable mo-group" id="systemSection" data-title="The system">
   <details>
-    <summary>The three rules</summary>
+    <summary><span class="mo-ic" aria-hidden="true"><svg class="ic" viewBox="0 0 24 24"><path d="M9.5 6.5H20M9.5 12H20M9.5 17.5H20"/><circle cx="5" cy="6.5" r="1.2" fill="currentColor" stroke="none"/><circle cx="5" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="5" cy="17.5" r="1.2" fill="currentColor" stroke="none"/></svg></span><span class="mo-t">The three rules</span><span class="mo-live">Ceiling · 20-minute delay · log every hit</span></summary>
     <div class="d-body">
       <p><strong>1 · The cap is a ceiling, not a target.</strong> Under is always fine. Over is never fine. It only moves down.</p>
       <p><strong>2 · The 20-minute delay.</strong> Every urge waits 20 minutes before it counts. Half the time the wave passes and you banked a hit.</p>
       <p><strong>3 · Every hit gets logged.</strong> Same machinery as your puff-limit system. What gets counted gets controlled.</p>
       <p><strong>The fine print under all three:</strong> the hit is the unit — same piece, same flower, same size pull. Fewer hits only means less if the hit itself doesn’t grow.</p>
-      <p><strong>Your why.</strong> <span id="whyText"></span> <button class="linklike" id="whySet">Write it</button></p>
       <p class="d-evid">These three are the behavioral core the research calls first-line — gradual reduction, urge-delay, and self-monitoring. No medication is approved for cannabis withdrawal; this is the backbone. <a class="dlink" href="guide.html#manage">Why they work →</a></p>
     </div>
   </details>
   <details>
-    <summary>What zero week feels like</summary>
+    <summary><span class="mo-ic" aria-hidden="true"><svg class="ic"><use href="#i-wave"/></svg></span><span class="mo-t">What zero week feels like</span><span class="mo-live">Peak days 2–6 · baseline by week 3</span></summary>
     <div class="d-body">
       <p>First, the context that matters: <strong>the numbers below describe abrupt stops from heavy use.</strong> In pooled studies of over 20,000 regular users, about <strong>47%</strong> get clinically meaningful withdrawal — but the THC-dosing trials show symptom load tracks the <em>size of the drop</em>, and you'll be stepping off from 2–3 hits, not ~30. <span class="ok">You've done most of the receptor adjustment on the way down. Expect the blunted version of everything here.</span></p>
       <p><strong>First 24–48 hours:</strong> symptoms begin — restlessness, irritability, appetite dip. Cravings fire on old cue times; each wave passes in minutes.</p>
@@ -2621,7 +2903,7 @@ try{
     </div>
   </details>
   <details>
-    <summary>Sleep — the long tail</summary>
+    <summary><span class="mo-ic" aria-hidden="true"><svg class="ic"><use href="#i-moon"/></svg></span><span class="mo-t">Sleep — the long tail</span><span class="mo-live">Fixed wake time · bed for sleep only</span></summary>
     <div class="d-body">
       <p>Expect off sleep and <strong>vivid dreams for several weeks or more</strong> after zero — the research finds sleep disturbance outlasts every other symptom. The dreams are REM rebound: your brain rebooting dreaming after a decade of suppression. <span class="ok">It's a progress signal, not a problem.</span></p>
       <p>Sleep is also the symptom most often named in going back, so guarding it <em>is</em> relapse prevention. The pieces of CBT-I that actually carry the effect are simple: keep a <strong>fixed wake time</strong> no matter how the night went, use the bed only for sleep, and go when you're sleepy rather than when it's just the time. The wind-down routines every app ships test inert against those two.</p>
@@ -2631,7 +2913,7 @@ try{
     </div>
   </details>
   <details>
-    <summary>Structural supports</summary>
+    <summary><span class="mo-ic" aria-hidden="true"><svg class="ic" viewBox="0 0 24 24"><path d="M4 11.2 12 4.5l8 6.7"/><path d="M6.5 9.3v10.2h11V9.3"/><path d="M10 19.5v-4.8h4v4.8"/></svg></span><span class="mo-t">Structural supports</span><span class="mo-live">Space · friend · professional · food</span></summary>
     <div class="d-body">
       <p><strong>Your space:</strong> the plan works where you live — no relying on being somewhere else. The stash stays put during the taper; the cap is the guardrail, not scarcity. Then the night before zero, everything goes — flower, pieces, papers — so home isn't a loaded environment for zero week. Control in your own space is the version that lasts.</p>
       <p><strong>Friend is briefed:</strong> knows the zero date, won't enable a supply run, expects week one to be prickly.</p>
@@ -2640,7 +2922,7 @@ try{
     </div>
   </details>
   <details>
-    <summary>If you slip</summary>
+    <summary><span class="mo-ic" aria-hidden="true"><svg class="ic"><use href="#i-slip"/></svg></span><span class="mo-t">If you slip</span><span class="mo-live">Data, not doom · the schedule bends</span></summary>
     <div class="d-body">
       <p>A day over cap is <strong>data, not doom</strong>: the schedule holds that cap an extra day by itself, then keeps stepping down — nothing to fix, nothing to redo. After zero there is no cap left to hold, so a slip moves nothing — the run restarts tomorrow while the clean total and the best run stay banked.</p>
       <p>A genuinely rough patch goes further: <strong>every two hard days at one cap ease the following step by an extra day</strong>, so the whole remaining descent slows instead of snapping. The taper bends to the terrain; the direction never changes.</p>
@@ -2648,28 +2930,45 @@ try{
       <p class="d-evid">Concrete rewards for clean days help too — that's contingency management, an evidence-backed add-on. <a class="dlink" href="guide.html#relapse">Staying quit →</a></p>
     </div>
   </details>
+</div>
+</div>
+
+<div class="mo-sec">
+<h2 class="mo-cap">Your why</h2>
+<div class="mo-group mo-why" id="whyRow">
+  <span class="mo-ic" aria-hidden="true"><svg class="ic" viewBox="0 0 24 24"><path d="M10.2 6.5C7.3 7.6 5.5 10 5.5 13.6v3.4a1 1 0 0 0 1 1H10a1 1 0 0 0 1-1v-3.3a1 1 0 0 0-1-1H5.6"/><path d="M18.7 6.5c-2.9 1.1-4.7 3.5-4.7 7.1v3.4a1 1 0 0 0 1 1h3.5a1 1 0 0 0 1-1v-3.3a1 1 0 0 0-1-1h-4.4"/></svg></span>
+  <p class="mo-why-tx"><span id="whyText"></span><small>Surfaces on Today when an urge timer runs, and on rough days.</small></p>
+  <button class="btn sm ghost mo-why-btn" id="whySet">Write it</button>
+</div>
+</div>
+
+<div class="mo-sec">
+<h2 class="mo-cap">Backup &amp; data</h2>
+<div class="mo-group">
   <details id="backupDetails">
-    <summary>Backup &amp; data</summary>
-    <div class="d-body">
-      <p>Everything lives on this device — nothing is sent anywhere. Copy a backup every few days and paste it into Notes, so a lost phone can't erase the record. The app also keeps an <strong>automatic snapshot</strong> from the first open of each day, and restores it by itself if the saved data ever turns up damaged.</p>
-      <div class="data-btns">
-        <button id="btnExport">Copy backup</button>
-        <button id="btnImport">Import pasted backup</button>
+    <summary><span class="mo-ic" aria-hidden="true"><svg class="ic"><use href="#i-archive"/></svg></span><span class="mo-t">Backup &amp; restore</span><span class="mo-live" id="backupSum">Lives on this phone only</span></summary>
+    <div class="d-body mo-bk">
+      <p class="mo-bk-lead">Everything lives on this device — nothing is sent anywhere. Copy a backup every few days and paste it into Notes, so a lost phone can't erase the record. The app also keeps an <strong>automatic snapshot</strong> from the first open of each day, and restores it by itself if the saved data ever turns up damaged.</p>
+      <p class="mo-list-cap">Save a copy</p>
+      <div class="data-btns mo-list">
+        <button class="mo-act" id="btnExport"><span class="mo-ic acc" aria-hidden="true"><svg class="ic"><use href="#i-copy"/></svg></span><span class="mo-act-tx"><b>Copy backup</b><small>To the clipboard — paste it into Notes</small></span></button>
+        <button class="mo-act" id="btnShare"><span class="mo-ic acc" aria-hidden="true"><svg class="ic"><use href="#i-share"/></svg></span><span class="mo-act-tx"><b>Share backup file</b><small>Save a .json file to Files or Notes</small></span></button>
       </div>
-      <div class="data-btns">
-        <button id="btnShare">Share backup file</button>
-        <button id="btnSnap">Restore today’s auto-snapshot</button>
+      <label class="mo-list-cap" for="dataBox">Backup text</label>
+      <textarea id="dataBox" rows="4" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Your backup appears here — or paste one and tap Import."></textarea>
+      <p id="dataMsg" role="status" aria-live="polite"></p>
+      <p class="mo-list-cap">Restore <span>· the current data is stashed first</span></p>
+      <div class="data-btns mo-list">
+        <button class="mo-act" id="btnImport"><span class="mo-ic" aria-hidden="true"><svg class="ic" viewBox="0 0 24 24"><rect x="5" y="4.5" width="14" height="16" rx="2.5"/><path d="M9.2 4.5v-.7a.8.8 0 0 1 .8-.8h4a.8.8 0 0 1 .8.8v.7M12 9v6.6M9 12.8l3 3 3-3"/></svg></span><span class="mo-act-tx"><b>Import pasted backup</b><small>From the box above</small></span></button>
+        <button class="mo-act" id="btnSnap"><span class="mo-ic" aria-hidden="true"><svg class="ic"><use href="#i-earlier"/></svg></span><span class="mo-act-tx"><b>Restore today’s auto-snapshot</b><small>Taken at the first open of the day</small></span></button>
+        <div class="mo-undo" id="undoRow" hidden>
+          <button class="mo-act" id="btnUndoRestore"><span class="mo-ic" aria-hidden="true"><svg class="ic"><use href="#i-undo"/></svg></span><span class="mo-act-tx"><b>Undo the last restore</b><small>Swaps the stashed copy back in</small></span></button>
+        </div>
       </div>
-      <div class="data-btns" id="undoRow" hidden>
-        <button id="btnUndoRestore">Undo the last restore</button>
-      </div>
-      <textarea id="dataBox" rows="4" placeholder="Your backup appears here — or paste one and tap Import."></textarea>
-      <p id="dataMsg"></p>
     </div>
   </details>
 </div>
-  </div>
-</details>
+</div>
 </main>
 
 <p class="footer">The cap only goes down. The gaps only widen.</p>
@@ -9009,6 +9308,10 @@ try{
   /* ---- landscape cockpit: six live tiles, no scrolling ---- */
   var dashTick=null;
   var dashMQ=matchMedia('(orientation: landscape) and (max-height: 560px)');
+  /* the week: each day's cap as a track, the count as a status-coloured
+     bar with its number on it, today's date in the accent. Statuses used
+     are named in the legend (dhLegend) — color never ships alone. */
+  var DASH_ST={under:['under','Under'],at:['atcap','At cap'],over:['over','Over'],clean:['under','Clean'],slip:['over','Slip']};
   function dashTrendSVG(){
     var days=[],start=schedule()[0].start;
     var d=addDays(today,-6);
@@ -9017,17 +9320,71 @@ try{
     if(!days.length)return '';
     var maxV=1;
     days.forEach(function(x){maxV=Math.max(maxV,x.s.c||0,x.s.cap||0);});
-    var n=days.length,W=300,H=66,padB=12,bw=W/n;
-    function Y(v){return 2+(H-padB-2)*(1-v/maxV);}
-    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="The last '+n+' days against their caps">';
+    var n=days.length,W=320,H=92,top=14,base=H-17,bw=W/n;
+    function Y(v){return top+(base-top)*(1-v/maxV);}
+    var used={};
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-label="The last '+n+' days against their caps">';
     days.forEach(function(day,i){
-      var x=i*bw+3,w=bw-6;
-      if(day.s.cap>0)svg+='<rect x="'+x.toFixed(1)+'" y="'+Y(day.s.cap).toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+((H-padB)-Y(day.s.cap)).toFixed(1)+'" rx="4" fill="var(--surface2)"/>';
-      var c=day.s.c,col=STAT_COL[day.s.cls]||'var(--muted)';
-      if(c!==null&&c>0)svg+='<rect x="'+(x+2).toFixed(1)+'" y="'+Y(c).toFixed(1)+'" width="'+(w-4).toFixed(1)+'" height="'+((H-padB)-Y(c)).toFixed(1)+'" rx="4" fill="'+col+'" fill-opacity=".9"/>';
-      else if(day.s.cls==='clean')svg+='<text x="'+(x+w/2).toFixed(1)+'" y="'+(H-padB-4).toFixed(1)+'" font-size="11" fill="var(--sage)" text-anchor="middle" font-weight="700" font-family="Karla,sans-serif">✓</text>';
-      svg+='<text x="'+(x+w/2).toFixed(1)+'" y="'+(H-2)+'" font-size="8" fill="'+(day.k===todayKey?'var(--accent)':'var(--muted)')+'" text-anchor="middle" font-family="Karla,sans-serif">'+day.d.getDate()+'</text>';
+      var w=Math.min(34,bw-12),x=i*bw+(bw-w)/2,cx=x+w/2,isT=day.k===todayKey;
+      var c=day.s.c,cap=day.s.cap,st=DASH_ST[day.s.cls];
+      if(st&&(c>0||day.s.cls==='clean'))used[day.s.cls]=st;
+      if(cap>0){
+        svg+='<rect x="'+x.toFixed(1)+'" y="'+Y(cap).toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+(base-Y(cap)).toFixed(1)+'" rx="7" fill="var(--s3)"/>';
+        svg+='<text x="'+cx.toFixed(1)+'" y="'+(Y(Math.max(cap,c||0))-4).toFixed(1)+'" font-size="9.5" font-weight="600" fill="var(--ink-3)" text-anchor="middle">'+cap+'</text>';
+      }
+      if(c!==null&&c>0){
+        var col=st?'var(--'+st[0]+')':'var(--ink-3)',h=Math.max(12,base-Y(c));
+        svg+='<rect x="'+(x+3).toFixed(1)+'" y="'+(base-h).toFixed(1)+'" width="'+(w-6).toFixed(1)+'" height="'+h.toFixed(1)+'" rx="5" fill="'+col+'"/>';
+        if(cap>0&&c>cap)svg+='<line x1="'+(x+3).toFixed(1)+'" x2="'+(x+w-3).toFixed(1)+'" y1="'+Y(cap).toFixed(1)+'" y2="'+Y(cap).toFixed(1)+'" stroke="var(--s1)" stroke-width="2"/>';
+        svg+='<text x="'+cx.toFixed(1)+'" y="'+(base-4).toFixed(1)+'" font-size="10" font-weight="700" fill="var(--ink-inv)" text-anchor="middle">'+c+'</text>';
+      }else if(day.s.cls==='clean'){
+        svg+='<circle cx="'+cx.toFixed(1)+'" cy="'+(base-10).toFixed(1)+'" r="9" fill="var(--under-bg)" stroke="var(--under)" stroke-width="1.5"/>'+
+          '<path d="M'+(cx-4).toFixed(1)+' '+(base-10).toFixed(1)+'l2.8 2.8 5-5.4" fill="none" stroke="var(--under)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>';
+      }
+      svg+='<text x="'+cx.toFixed(1)+'" y="'+(H-3)+'" font-size="10" font-weight="'+(isT?'700':'600')+'" fill="'+(isT?'var(--acc-t)':'var(--ink-3)')+'" text-anchor="middle">'+(isT?'Today':WEEKDAYS[day.d.getDay()].slice(0,2)+' '+day.d.getDate())+'</text>';
     });
+    var lg=$('dhLegend');
+    if(lg)lg.innerHTML=Object.keys(used).map(function(k){
+      return '<span class="'+used[k][0]+'"><i></i>'+used[k][1]+'</span>';
+    }).join('');
+    return svg+'</svg>';
+  }
+  /* the hero tile's clock: yesterday over today on one 4a→4a line, every
+     logged hit a tick (yesterday ghost, today accent, past-cap ticks over),
+     a clean day a filled run. Stands in until a compact dial exists. */
+  var DASH_TW=320;
+  function dashTapeX(t,k){
+    var s=dateOf(k).getTime()+DAY_CUTOFF_H*3600000;
+    return Math.max(0,Math.min(DASH_TW,(t-s)/MS_DAY*DASH_TW));
+  }
+  function dashTapeSVG(){
+    var W=DASH_TW,H=78,rows=[{k:ydayKey(),y:22,lbl:'Yesterday',t:false},{k:todayKey,y:50,lbl:'Today',t:true}];
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Hits by clock time, yesterday above today">';
+    [0,4,8,12,16,20,24].forEach(function(h){
+      var x=h/24*W;
+      svg+='<line x1="'+x.toFixed(1)+'" x2="'+x.toFixed(1)+'" y1="'+(h%24===0?14:16)+'" y2="58" stroke="var(--line)" stroke-width="1"/>';
+      if(h>0&&h<24){var hh=(h+DAY_CUTOFF_H)%24;
+        svg+='<text x="'+x.toFixed(1)+'" y="'+(H-3)+'" font-size="10" font-weight="600" fill="var(--ink-3)" text-anchor="middle">'+(hh===0?'12a':hh===12?'12p':(hh%12)+(hh<12?'a':'p'))+'</text>';}
+    });
+    rows.forEach(function(r){
+      var e=data.days[r.k],hits=(e&&e.hits?e.hits.slice():[]).map(function(t){return +new Date(t);}).sort(function(a,b){return a-b;});
+      var cnt=countOf(r.k),cap=0;
+      var dm=dayMetrics(r.k),zd=dm.isZ;cap=(zd||dm.di<0)?0:dm.cap;
+      svg+='<text x="0" y="'+(r.y-8)+'" font-size="10.5" font-weight="650" fill="'+(r.t?'var(--ink-2)':'var(--ink-3)')+'">'+r.lbl+'</text>';
+      svg+='<rect x="0" y="'+(r.y-3)+'" width="'+W+'" height="6" rx="3" fill="var(--s3)"/>';
+      var end=r.t?dashTapeX(Date.now(),r.k):W;
+      if(zd&&!cnt&&(e||r.t)){
+        svg+='<rect x="0" y="'+(r.y-3)+'" width="'+end.toFixed(1)+'" height="6" rx="3" fill="var(--under)" fill-opacity="'+(r.t?'.85':'.4')+'"/>';
+      }else if(r.t&&!zd){
+        svg+='<rect x="0" y="'+(r.y-3)+'" width="'+end.toFixed(1)+'" height="6" rx="3" fill="var(--acc)" fill-opacity=".16"/>';
+      }
+      hits.forEach(function(t,i){
+        var x=dashTapeX(t,r.k),col=!r.t?'var(--ghost)':(cap&&i>=cap)||zd?'var(--over)':'var(--acc)';
+        svg+='<rect x="'+(x-1.5).toFixed(1)+'" y="'+(r.y-8)+'" width="3" height="16" rx="1.5" fill="'+col+'"/>';
+      });
+    });
+    var nx=dashTapeX(Date.now(),todayKey);
+    svg+='<g id="dhNow" transform="translate('+nx.toFixed(1)+' 0)"><line x1="0" x2="0" y1="40" y2="60" stroke="var(--ink)" stroke-width="1.5" stroke-linecap="round"/><circle cx="0" cy="50" r="3.5" fill="var(--ink)" stroke="var(--s1)" stroke-width="2"/></g>';
     return svg+'</svg>';
   }
   function renderDash(){
@@ -9035,18 +9392,43 @@ try{
     if(!$('dash')||!dashMQ.matches)return;
     var c=countOf(todayKey)||0;
     function ds(v,l){return '<span class="ds"><span class="dsv">'+v+'</span><span class="dsl">'+l+'</span></span>';}
+    function chip(cls,t){return '<span class="chip sm '+cls+'"><span class="dot"></span>'+t+'</span>';}
+    // an optional compact dial: only if the app defines dashDialSVG() (it must
+    // use its own gradient/def ids — the cockpit sits before #vToday in the DOM)
+    var dd=$('dhDial'),dsvg='';
+    try{if(typeof dashDialSVG==='function')dsvg=dashDialSVG()||'';}catch(e){dsvg='';}
+    if(dd){dd.hidden=!dsvg;dd.innerHTML=dsvg;}
+    $('dtHero').classList.toggle('has-dial',!!dsvg);
+    var tp=$('dhTape');if(tp){tp.hidden=!!dsvg;tp.innerHTML=dsvg?'':dashTapeSVG();}
     if(isZeroEra){
       var n=Math.max(0,daysFree()),zsH=zeroStats();
-      $('dhEyebrow').textContent='Days off · only climbs';
+      $('dhEyebrow').textContent='Days this run';
+      $('dhChip').innerHTML=c>0?chip('slip','Slip today'):chip('clean','Clean today');
       $('dhBig').innerHTML=n+'<small> day'+(n===1?'':'s')+'</small>';
+      // the last two weeks since zero, a cell a day: clean filled, slip in
+      // the over hue with its own label in the caption (never color alone)
+      var zc='',zsl=0,zd0=zeroDay(),zdd=addDays(today,-13);
+      if(zdd<zd0)zdd=new Date(zd0);
+      for(;zdd<=today;zdd=addDays(zdd,1)){
+        var zst=dayStatus(zdd),isT=dkeyOf(zdd)===todayKey,sl=zst.cls==='slip'||zst.c>0;
+        if(sl)zsl++;
+        zc+='<i class="'+(sl?'over':(isT&&!c)?'under now':'under')+'"></i>';
+      }
+      $('dhBar').innerHTML='<span class="dt-pcap">Last '+Math.min(14,zeroCalDay())+' days · '+(zsl?zsl+' slip'+(zsl>1?'s':''):'all clean')+'</span>'+zc;
       $('dhStats').innerHTML=ds(zsH?zsH.clean:0,'clean total')+ds(zsH?zsH.best:0,'best run')+ds(data.urges.length,'urges beat');
-      $('dhBar').style.width='100%';
-      $('dhBar').style.background=c>0?'var(--clay)':'var(--sage)';
       $('dhNote').textContent=c>0?'Slip logged — the clean total stays banked.':zeroTimelineNote(n,zeroCalDay());
     }else{
       var sch=schedule();
       $('dhEyebrow').textContent=idx>=0?'Today · '+sch[idx].lbl:'Starts '+fmtShort(sch[0].start);
-      $('dhBig').innerHTML=c+'<small> / '+cap+'</small>';
+      $('dhChip').innerHTML=c>cap?chip('over','Over cap'):c===cap?chip('atcap','At cap'):chip('under','Under cap');
+      $('dhBig').innerHTML=c+'<small> of '+cap+'</small>';
+      // pips: one per allowed hit, filled in the day's status; overs after
+      var pp='',fillCls=c>=cap?'atcap':'under';
+      for(var pi=0;pi<Math.max(cap,c);pi++){
+        pp+='<i class="'+(pi>=cap?'over':pi<c?fillCls:'')+'"></i>';
+      }
+      $('dhBar').innerHTML=pp;
+      $('dhBar').classList.toggle('many',Math.max(cap,c)>14);
       var siH=sessionInfo();
       var sessTxt=!siH?(phase.single?'evening':String(phase.sessionMax))
         :phase.single?'evening'
@@ -9056,44 +9438,71 @@ try{
       $('dhStats').innerHTML=ds(Math.max(0,cap-c),'left today')+
         ds(sessTxt,phase.single?'session':'left in session')+
         ds(siH?fmtTime(siH.last):'–','last hit');
-      var pct=cap>0?Math.min(100,(c/cap)*100):0;
-      $('dhBar').style.width=pct+'%';
-      $('dhBar').style.background=c>cap?'var(--clay)':c>=cap*0.8?'var(--amber)':'var(--sage)';
       $('dhNote').textContent=c>cap?'Over the cap — the schedule just adjusted: this step runs a day longer, zero moved a day back.':c===cap?'At the cap. Done for today.':(cap-c)+' left · under is always fine.';
     }
     var sc=scoreToday();
-    $('dhRing').innerHTML=ringSVG(sc.total/100,sc.total,sc.label.split(' — ')[0].toUpperCase(),scoreColor(sc.total));
+    var lab=sc.label.split(' — ');
+    $('dhRing').innerHTML='<span class="dt-scn">'+sc.total+'<small>/100</small></span>'+
+      '<span class="dt-scl">'+lab[0]+'</span>'+
+      '<span class="dt-parts">'+sc.parts.map(function(p){
+        var nm=p.name.replace(/^Session /,'').split(' ')[0];
+        return '<span><b>'+p.score+'</b>'+nm.charAt(0).toUpperCase()+nm.slice(1)+'</span>';
+      }).join('')+'</span>';
     function tick(){
       var si=(!isZeroEra&&idx>=0&&!phase.single&&spacingHNow()>0&&c<cap)?sessionInfo():null;
+      var nw=$('dhNow');if(nw)nw.setAttribute('transform','translate('+dashTapeX(Date.now(),todayKey).toFixed(1)+' 0)');
+      var wb=$('dhWinBar'),wt=$('dtWindow');
       if(si&&si.nextOpen){
         var diff=si.nextOpen-Date.now();
         if(diff>0){
           var tmTot=Math.ceil(diff/60000),h=Math.floor(tmTot/60),m=tmTot%60;
           $('dhWinLbl').textContent='Next window';
-          $('dhWin').textContent=(h?h+'h ':'')+m+'m';
+          $('dhWin').innerHTML=(h?h+'<small>h</small> ':'')+m+'<small>m</small>';
           $('dhWinSub').textContent='opens ~'+fmtTime(si.nextOpen)+' · gap '+fmtGapH(spacingHNow());
+          if(wb&&si.last){
+            var span=si.nextOpen-si.last.getTime();
+            wb.style.width=(span>0?Math.max(2,Math.min(100,(Date.now()-si.last.getTime())/span*100)):0).toFixed(1)+'%';
+          }
+          if(wt)wt.classList.remove('open','none');
         }else{
           $('dhWinLbl').textContent='Window';
           $('dhWin').textContent='open';
           $('dhWinSub').textContent='stretched '+Math.floor(-diff/60000)+'m past — every minute banks';
+          if(wb)wb.style.width='100%';
+          if(wt){wt.classList.add('open');wt.classList.remove('none');}
         }
       }else{
-        $('dhWinLbl').textContent=isZeroEra?'Windows':'Window';
-        $('dhWin').textContent=isZeroEra?'—':'open';
-        $('dhWinSub').textContent=isZeroEra?'No more windows to wait on.':(phase.single?'Evening only tonight.':'Nothing on the clock.');
+        var lh=isZeroEra?lastHitEver():null;
+        if(lh){
+          var cm=Math.max(0,Math.floor((Date.now()-lh)/60000)),cd=Math.floor(cm/1440),ch=Math.floor(cm%1440/60);
+          $('dhWinLbl').textContent='Clean stretch';
+          $('dhWin').innerHTML=cd?cd+'<small>d</small> '+ch+'<small>h</small>':ch+'<small>h</small> '+(cm%60)+'<small>m</small>';
+          $('dhWinSub').textContent='since '+WEEKDAYS[lh.getDay()].slice(0,3)+' '+fmtShort(lh)+', '+fmtTime(lh);
+        }else{
+          $('dhWinLbl').textContent=isZeroEra?'Windows':'Window';
+          $('dhWin').textContent=isZeroEra?'None':'open';
+          $('dhWinSub').textContent=isZeroEra?'No more windows to wait on.':(phase.single?'Evening only tonight.':'Nothing on the clock.');
+        }
+        if(wt){wt.classList.add('none');wt.classList.remove('open');}
       }
+      var ur=$('dhUrgeRing'),ut=$('dtUrge');
       if(data.urgeStart){
-        var left=URGE_MS-(Date.now()-data.urgeStart);
+        var el=Date.now()-data.urgeStart,left=URGE_MS-el;
+        if(ut)ut.classList.add('running');
         if(left>0){
           $('dhUrge').textContent=Math.floor(left/60000)+':'+pad(Math.floor((left%60000)/1000));
           $('dhUrgeSub').textContent='Wave passing — tap to cancel';
+          if(ur)ur.style.strokeDashoffset=(100-Math.min(100,el/URGE_MS*100)).toFixed(2);
         }else{
-          $('dhUrge').textContent='✓';
+          $('dhUrge').textContent='20:00';
           $('dhUrgeSub').textContent='Outlasted — banked for good';
+          if(ur)ur.style.strokeDashoffset='0';
         }
       }else{
+        if(ut)ut.classList.remove('running');
         $('dhUrge').textContent=data.urges.length;
         $('dhUrgeSub').textContent='Tap to start the 20-minute timer';
+        if(ur)ur.style.strokeDashoffset='100';
       }
     }
     tick();
@@ -9104,13 +9513,16 @@ try{
     if(isZeroEra){
       var zs=zeroStats();
       $('dhZeroLbl').textContent='The record';
-      $('dhZero').textContent=(zs?zs.clean:0)+' clean';
-      $('dhZeroSub').textContent=zs&&zs.best>1?'best run '+zs.best+' days — it only climbs':'the counter only climbs';
+      $('dhZero').innerHTML=(zs?zs.clean:0)+'<small> clean</small>';
+      var zcd=Math.max(1,zeroCalDay()),zcl=zs?zs.clean:0;
+      $('dhZeroSub').textContent=zcl+' of '+zcd+' day'+(zcd===1?'':'s')+' clean'+(zs&&zs.best>1?' · best run '+zs.best:'');
+      if($('dhZeroBar'))$('dhZeroBar').style.width=(100-Math.max(2,Math.min(100,zcl/zcd*100))).toFixed(1)+'%';
     }else{
       var z=zeroDate(),left2=Math.round((z-today)/MS_DAY);
       $('dhZeroLbl').textContent='Zero day';
-      $('dhZero').textContent=fmtShort(z);
-      $('dhZeroSub').textContent=WEEKDAYS[z.getDay()]+' · '+left2+' day'+(left2===1?'':'s')+' out';
+      $('dhZero').innerHTML=left2>0?left2+'<small> day'+(left2===1?'':'s')+'</small>':'Today';
+      $('dhZeroSub').textContent=WEEKDAYS[z.getDay()].slice(0,3)+' '+fmtShort(z)+' · '+ps.pctToZero+'% there';
+      if($('dhZeroBar'))$('dhZeroBar').style.width=(100-Math.max(2,Math.min(100,ps.pctToZero))).toFixed(1)+'%';
     }
   }
   function fmtDur(ms){
@@ -10074,14 +10486,36 @@ try{
       setTimeout(function(){det.scrollIntoView({behavior:motionOK?'smooth':'auto',block:'center'});},80);
     }
   });
+  /* backup messages: one line under the paste box, styled by outcome
+     (ok = done, err = nothing happened, info = what to do next) */
+  function setDataMsg(t,kind){
+    var m=$('dataMsg');if(!m)return;
+    m.textContent=t;
+    m.className=t?'msg-'+(kind||'info'):'';
+  }
+  /* More > Backup: the row's live line says when a copy last left the phone */
+  function renderBackupSum(){
+    var el=$('backupSum');if(!el)return;
+    var last=data.lastBackupAt;
+    if(!last){el.textContent='No copy has left this phone yet';return;}
+    var days=Math.floor((Date.now()-last)/MS_DAY);
+    el.textContent='Last copy '+(days<1?'today':days===1?'yesterday':days+' days ago')+' · snapshot daily';
+  }
+  RENDER_HOOKS.push(renderBackupSum);
+  /* More > Your why: the row reads as a quote once one is written */
+  function renderWhyRow(){
+    var r=$('whyRow');if(r)r.classList.toggle('filled',!!data.why);
+  }
+  RENDER_HOOKS.push(renderWhyRow);
+  document.addEventListener("click",function(ev){if(ev.target.closest("#whySet"))renderWhyRow();});
   $('btnExport').addEventListener('click',function(){
     var json=JSON.stringify(data);
     $('dataBox').value=json;
-    function fallback(){$('dataBox').select();$('dataMsg').textContent='Select-all and copy the text above.';}
+    function fallback(){$('dataBox').select();setDataMsg('Select-all and copy the text above.','info');}
     if(navigator.clipboard&&navigator.clipboard.writeText){
       navigator.clipboard.writeText(json).then(function(){
-        data.lastBackupAt=Date.now();save();renderBackupNudge();
-        $('dataMsg').textContent='Copied. Paste it somewhere safe (Notes works).';
+        data.lastBackupAt=Date.now();save();renderBackupNudge();renderBackupSum();
+        setDataMsg('Copied. Paste it somewhere safe (Notes works).','ok');
       },fallback);
     }else{fallback();}
   });
@@ -10091,8 +10525,8 @@ try{
     if(!navigator.share)return;
     var json=JSON.stringify(data);
     var done=function(){
-      data.lastBackupAt=Date.now();save();renderBackupNudge();
-      $('dataMsg').textContent='Shared — Notes or Files both make a safe home.';
+      data.lastBackupAt=Date.now();save();renderBackupNudge();renderBackupSum();
+      setDataMsg('Shared — Notes or Files both make a safe home.','ok');
     };
     try{
       var f=new File([json],'taper-backup-'+todayKey+'.json',{type:'application/json'});
@@ -10105,7 +10539,7 @@ try{
   });
   $('btnImport').addEventListener('click',function(){
     var raw=$('dataBox').value.trim();
-    if(!raw){$('dataMsg').textContent='Paste a backup into the box first.';return;}
+    if(!raw){setDataMsg('Paste a backup into the box first.','err');return;}
     try{
       var d=JSON.parse(raw);
       if(!validShape(d))throw new Error('bad');
@@ -10116,10 +10550,10 @@ try{
       data=normData(d);
       data.lastBackupAt=Date.now(); // the pasted copy IS a live backup
       save();dpEditOpen=false;renderAll();
-      $('dataMsg').textContent='Backup restored. (The data it replaced was stashed, just in case.)'+
+      setDataMsg('Backup restored. (The data it replaced was stashed, just in case.)'+
         (rep.dropped?' '+rep.dropped+' unreadable day'+(rep.dropped>1?'s were':' was')+' dropped.':'')+
-        (rep.fixed?' '+rep.fixed+' day'+(rep.fixed>1?'s':'')+' had damaged entries repaired.':'');
-    }catch(e){$('dataMsg').textContent='That doesn’t look like a valid backup.';}
+        (rep.fixed?' '+rep.fixed+' day'+(rep.fixed>1?'s':'')+' had damaged entries repaired.':''),'ok');
+    }catch(e){setDataMsg('That doesn’t look like a valid backup.','err');}
   });
   /* Both destructive restores stash what they replace under 'ttz2-preimport'
      and say so. Nothing ever read that key back, so "stashed, just in case"
@@ -10134,30 +10568,30 @@ try{
   $('btnUndoRestore').addEventListener('click',function(){
     var raw=null;
     try{raw=localStorage.getItem('ttz2-preimport');}catch(e){}
-    if(!raw){$('dataMsg').textContent='Nothing stashed to undo.';renderUndoRestore();return;}
+    if(!raw){setDataMsg('Nothing stashed to undo.','info');renderUndoRestore();return;}
     var pd=null;
     try{pd=JSON.parse(raw);}catch(e){}
-    if(!validShape(pd)){$('dataMsg').textContent='The stashed copy is unreadable.';return;}
+    if(!validShape(pd)){setDataMsg('The stashed copy is unreadable.','err');return;}
     if(!confirm('Put back the data that the last restore replaced? What is on the device now will be stashed in its place.'))return;
     var cur=JSON.stringify(data);
     repairDays(pd);
     data=normData(pd);save();
     try{localStorage.setItem('ttz2-preimport',cur);}catch(e){} // so the undo is itself undoable
     dpEditOpen=false;renderAll();renderUndoRestore();
-    $('dataMsg').textContent='Put back. (What it replaced is now the stashed copy — tap again to swap back.)';
+    setDataMsg('Put back. (What it replaced is now the stashed copy — tap again to swap back.)','ok');
   });
   $('btnSnap').addEventListener('click',function(){
     var snap=null;
     try{snap=JSON.parse(localStorage.getItem('ttz2-snap')||'null');}catch(e){}
-    if(!snap||!snap.raw){$('dataMsg').textContent='No automatic snapshot on this device yet — one is taken at the first open of each day.';return;}
+    if(!snap||!snap.raw){setDataMsg('No automatic snapshot on this device yet — one is taken at the first open of each day.','info');return;}
     var sd=null;
     try{sd=JSON.parse(snap.raw);}catch(e){}
-    if(!validShape(sd)){$('dataMsg').textContent='The snapshot on this device is unreadable.';return;}
+    if(!validShape(sd)){setDataMsg('The snapshot on this device is unreadable.','err');return;}
     if(!confirm('Replace current data with the automatic snapshot from '+snap.t+'? Anything logged since that snapshot is lost.'))return;
     try{localStorage.setItem('ttz2-preimport',JSON.stringify(data));}catch(e){}
     repairDays(sd);
     data=normData(sd);save();dpEditOpen=false;renderAll();
-    $('dataMsg').textContent='Snapshot from '+snap.t+' restored. (The data it replaced was stashed.)';
+    setDataMsg('Snapshot from '+snap.t+' restored. (The data it replaced was stashed.)','ok');
   });
 
   /* ---- glass bar ---- */
