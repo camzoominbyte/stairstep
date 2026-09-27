@@ -862,14 +862,11 @@
   .lo-st.z{color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ghost);background:transparent}
   .lo-ar{color:var(--adjust-t);display:inline-grid;place-items:center}
   .lo-each{margin-left:auto;font-size:12.5px;font-weight:600;color:var(--adjust-t)}
-  .lo-p{font-size:13.5px;line-height:1.5;margin:0;padding:0 2px 4px}
-  .lo-why{margin:10px 0 0}
-  .lo-why>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;cursor:pointer;
-    font-size:13.5px;font-weight:650;color:var(--adjust-t)}
-  .lo-why>summary::-webkit-details-marker{display:none}
-  .lo-why-ch{transform:rotate(90deg);transition:transform var(--d-fast) var(--e-move)}
-  .lo-why[open] .lo-why-ch{transform:rotate(-90deg)}
-  .lo-why>summary:focus-visible{outline:2px solid var(--adjust);outline-offset:2px;border-radius:8px}
+  .lo-p{font-size:13.5px;line-height:1.5;margin:0;padding:0 2px 12px}
+  details.lo-why{margin:10px 0 0;background:transparent;box-shadow:none;border-radius:0;overflow:hidden;border-bottom:1px solid var(--line)}
+  .lo-why>summary{min-height:44px;padding:10px 2px;gap:8px;font-size:13.5px;font-weight:650;color:var(--adjust-t)}
+  .lo-why>summary::after{background:var(--adjust-t)}
+  .lo-why>summary:focus-visible{outline-color:var(--adjust)}
   .btn.lo-go{width:100%;height:50px;border-radius:25px;margin-top:14px;font-weight:650;background:var(--adjust);color:var(--ink-inv);box-shadow:0 10px 22px -14px color-mix(in srgb,var(--adjust) 70%,transparent)}
   .lo-fine{list-style:none;margin:12px 0 0;padding:10px 0 0;border-top:1px solid var(--line);display:grid;gap:6px}
   .lo-fine li{position:relative;padding-left:14px;font-size:12.5px;line-height:1.45;color:var(--ink-2)}
@@ -4357,6 +4354,13 @@ try{
      split stair, the zero it lands on), one iris action, then the two
      footnotes and the decline stated before the choice is made. Renders on
      Today (#landCard) and inside the Plan cards — width-agnostic. */
+  /* the why-fold survives the re-renders (every hit and tick rebuilds the
+     offer's markup): its open state is remembered here. toggle doesn't
+     bubble, so it is caught on the way down. */
+  var loWhyOpen=false;
+  document.addEventListener('toggle',function(e){
+    var t=e.target;if(t&&t.classList&&t.classList.contains('lo-why'))loWhyOpen=t.open;
+  },true);
   function landOfferHTML(sug){
     var nz=sug.newZero, tail=landTail(sug.cap);
     var steps='<span class="lo-st now">'+sug.capText+'</span>'+
@@ -4370,7 +4374,7 @@ try{
         '<div class="lo-f"><span class="lo-k">Zero lands '+WEEKDAYS[nz.getDay()]+'</span><span class="lo-v">'+fmtShort(nz)+'</span></div>'+
       '</div>'+
       '<div class="lo-chain" aria-label="'+esc(capChain(sug.capText,tail))+', two days each">'+steps+'<span class="lo-each">2 days each</span></div>'+
-      '<details class="lo-why"><summary><span>Read it plainly · why split the last stair</span>'+icon('chev','ic-sm lo-why-ch')+'</summary>'+
+      '<details class="lo-why"'+(loWhyOpen?' open':'')+'><summary>Read it plainly · why split the stair</summary>'+
       '<p class="lo-p">The descent held — '+
         (sug.last.length?'the last three full days landed <b>'+sug.last.join(', ')+'</b>':'the sitting was holding')+
         ' — and what broke was the final step, the only one in the plan that asks for everything at once. '+
