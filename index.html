@@ -2170,188 +2170,314 @@
 
 
   /* ==== [O] OVERLAYS ==== */
-  /* legacy rules moved here unchanged by foundation (fonts token-swapped: Karla -> var(--f-ui), Fraunces -> var(--f-round)); owner rewrites this section */
-  /* the longest gap, called out wherever gap rows are listed */
-  .sgap.max{font-weight:800}
-  .gmax{
-    display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
-    color:var(--accent);background:var(--accent-soft);border-radius:99px;padding:1px 7px;margin-right:7px;
-    vertical-align:1px;
+  /* Sheets: the chart theatre (#czOverlay), the day pager (#dpOverlay) and
+     the section pages (#detailOverlay). Each overlay is the scroller and the
+     scrim; its .sheet child is the page — --bg, top radius 26, grabber,
+     sticky header. The finger drags the sheet (never the scrim). Exits fit
+     the JS timers: cz/dp hide at 280ms, the no-VT detail at 420ms. */
+  .cz-overlay,.detail-overlay{
+    position:fixed;inset:0;overflow-y:auto;overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+    background:var(--scrim);
+    padding:calc(10px + env(safe-area-inset-top,0px)) 0 0;
   }
-  /* day-vs-adjacent comparison in the record detail */
-  .daycmp{margin:2px 0 6px}
-  .dc-row{padding:7px 9px;border-radius:11px;margin:5px 0;background:#faf5ea;border:1px solid var(--hair)}
-  .dc-row.cur{border-color:var(--accent);background:var(--accent-soft)}
-  .dc-hd{display:flex;align-items:baseline;gap:8px;margin-bottom:1px}
-  .dc-l{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);flex:1}
-  .dc-row.cur .dc-l{color:var(--accent)}
-  .dc-n{font-family:var(--f-round);font-weight:600;font-size:14px;color:var(--sand)}
-  .dc-sum{font-size:12.5px;color:var(--muted);margin:6px 0 2px}
-  .dc-sum strong{color:var(--sand)}
-  html.dark .dc-row{background:#2b261c}
-  .hedit{display:flex;gap:8px;align-items:center}
-  .hedit button{
-    font-family:var(--f-ui);font-weight:700;font-size:15px;
-    width:34px;height:30px;border-radius:9px;border:1px solid var(--line);
-    background:#fff;color:var(--ink);cursor:pointer;box-shadow:var(--shadow-sm);
+  .cz-overlay{z-index:120}
+  .detail-overlay{z-index:80}
+  .cz-overlay[hidden],.detail-overlay[hidden]{display:none}
+  .cz-overlay:not(.show){pointer-events:none}  /* opacity:0 still catches taps for 280ms */
+  .sheet{
+    position:relative;min-height:100%;
+    max-width:560px;margin:0 auto;
+    background:var(--bg);border-radius:var(--r-lg) var(--r-lg) 0 0;
+    padding:0 var(--gutter) calc(48px + env(safe-area-inset-bottom,0px));
+    box-shadow:0 -1px 0 var(--line),0 -18px 40px -24px rgba(0,0,0,.35);
   }
-  .hedit button.hdone{width:auto;padding:0 12px;font-size:12px;color:#fff;background:var(--accent);border-color:var(--accent-deep)}
-  .hdetail{padding:2px 0 12px;font-size:13px}
-  .hsession{
-    background:#faf5ea;border:1px solid var(--hair);border-radius:14px;
-    padding:4px 12px 8px;margin:10px 0;
+  html.dark .sheet{box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 -18px 40px -20px rgba(0,0,0,.8)}
+  /* the rise: scrim fades, the sheet springs up; the exit is quicker */
+  .cz-overlay{opacity:0;transition:opacity .22s var(--e-exit)}
+  .cz-overlay.show{opacity:1;transition:opacity .16s linear}
+  .cz-overlay>.sheet{transform:translateY(100%);transition:transform .26s var(--e-exit)}
+  .cz-overlay.show>.sheet{transform:none;transition:transform .377s var(--snap)}
+  /* the detail sheet morphs from its card by View Transition; without VT it
+     rises the same way the other sheets do */
+  html.no-vt .detail-overlay{opacity:0;transition:opacity .3s var(--e-exit)}
+  html.no-vt .detail-overlay.show{opacity:1;transition:opacity .16s linear}
+  html.no-vt .detail-overlay>.sheet{transform:translateY(100%);transition:transform .32s var(--e-exit)}
+  html.no-vt .detail-overlay.show>.sheet{transform:none;transition:transform .377s var(--snap)}
+  /* container transform: the tapped card morphs into the detail page */
+  ::view-transition-group(card){animation-duration:.48s;animation-timing-function:var(--e-enter)}
+  ::view-transition-old(card),::view-transition-new(card){animation-duration:.3s}
+
+  .detail-grab{
+    position:relative;z-index:6;width:36px;height:5px;border-radius:var(--r-pill);
+    background:var(--line-2);margin:0 auto;top:7px;
   }
-  .hsession-head{
-    display:flex;align-items:baseline;gap:8px;padding:8px 0 4px;
+  /* ---- the sheet header: back · title · (dots | day stepper) ---- */
+  .cz-bar,.detail-bar{
+    position:sticky;top:0;z-index:5;
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    margin:-5px calc(-1 * var(--gutter)) 6px;padding:14px var(--gutter) 10px;
+    background:var(--bg);border-radius:var(--r-lg) var(--r-lg) 0 0;
   }
-  .hsession-head .sn{
-    font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;
-    color:var(--accent);
+  .cz-bar::after,.detail-bar::after{
+    content:"";position:absolute;left:0;right:0;bottom:-10px;height:10px;pointer-events:none;
+    background:linear-gradient(var(--bg),transparent);
   }
-  .hsession-head .srange{font-size:12px;color:var(--muted);flex:1}
-  .hsession-head .stot{font-family:var(--f-round);font-weight:600;font-size:14px;color:var(--sand)}
-  .hgroup{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--hair);font-size:14px}
-  .hgroup:first-of-type{border-top:none}
-  .hgroup .ht{font-family:var(--f-round);font-weight:600;font-size:15px;color:var(--sand);min-width:72px}
-  .hgroup .hn{color:var(--muted);flex:1;font-size:13px}
-  .hgroup button{
-    width:32px;height:29px;border-radius:9px;border:1px solid var(--line);
-    background:#fff;color:var(--ink);font-weight:700;font-size:15px;cursor:pointer;
-    box-shadow:var(--shadow-sm);
+  .sheet-back{
+    flex:none;width:40px;height:40px;padding:0;justify-content:center;border:0;border-radius:50%;
+    background:var(--s1);color:var(--ink);cursor:pointer;
+    box-shadow:inset 0 0 0 1px var(--line),0 1px 2px rgba(0,0,0,.05);
   }
-  .hgroup button:active{background:var(--surface2)}
-  .hnotime{
-    display:flex;align-items:center;gap:10px;padding:8px 12px;margin:10px 0;
-    background:#f8efe0;border:1px dashed rgba(165,104,31,.35);border-radius:12px;font-size:13px;
+  .sheet-back .ic{width:20px;height:20px;margin:0 1px 0 -1px;stroke-width:2}
+  .sheet-back span{
+    position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;
   }
-  .hnotime .ht{font-style:italic;color:var(--muted);font-weight:700;min-width:72px}
-  .hnotime .hn{color:var(--muted);flex:1}
-  .hnotime button{
-    width:32px;height:29px;border-radius:9px;border:1px solid var(--line);
-    background:#fff;color:var(--ink);font-weight:700;font-size:15px;cursor:pointer;box-shadow:var(--shadow-sm);
+  .sheet-back:focus-visible,.dp-nav button:focus-visible,.cz-dot:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
+  .cz-title,#detailTitle{
+    flex:1;min-width:0;font-family:var(--f-round);font-size:18px;font-weight:700;letter-spacing:-.015em;
+    color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;
   }
-  .sgap{position:relative;margin:0 0 0 26px;padding:7px 0 7px 14px;font-size:12px;font-weight:700}
-  .sgap::before{content:"";position:absolute;left:0;top:3px;bottom:3px;width:2px;border-radius:2px;background:currentColor;opacity:.4}
-  .sgap.ok{color:var(--sage)}
-  .sgap.short{color:var(--clay)}
-  .sgap.live{color:var(--accent)}
-  .sgap small{font-weight:400;color:var(--muted)}
-  .hnote-line{color:var(--muted);font-style:italic;padding:3px 0}
-  .hdetail .hedit{margin-top:10px;justify-content:flex-end}
-  .timefix{display:flex;gap:8px;margin-top:8px;align-items:stretch}
-  .timefix input{
-    flex:1;background:#fff;border:1px solid var(--line);border-radius:10px;
-    color:var(--sand);font-family:var(--f-ui);font-size:15px;padding:6px 8px;
-    min-width:0;
+  /* page pills for the chart theatre: a row of their own under the title */
+  .cz-dots{order:3;flex-basis:100%;display:flex;justify-content:center;gap:0;margin:2px 0 -4px}
+  .cz-dot{
+    width:22px;height:28px;border:0;padding:0;background:none;cursor:pointer;
+    display:grid;place-items:center;border-radius:8px;
   }
-  .timefix button{
-    flex:1.3;font-family:var(--f-ui);font-weight:700;font-size:12.5px;
-    padding:8px 0;border-radius:10px;border:1px solid var(--line);
-    background:#fff;color:var(--accent);cursor:pointer;box-shadow:var(--shadow-sm);
+  .cz-dot::before{
+    content:"";width:7px;height:7px;border-radius:var(--r-pill);background:var(--ink-3);opacity:.45;
+    transition:width var(--d-base) var(--snap),background var(--d-fast),opacity var(--d-fast);
   }
+  .cz-dot.on::before{width:18px;background:var(--acc);opacity:1}
+  /* the day stepper: ‹ 4 / 11 › in one capsule */
+  .dp-nav{
+    flex:none;display:flex;align-items:center;height:40px;border-radius:var(--r-pill);
+    background:var(--s1);box-shadow:inset 0 0 0 1px var(--line),0 1px 2px rgba(0,0,0,.05);
+  }
+  .dp-nav button{
+    width:44px;height:40px;border:0;padding:0;background:none;color:var(--ink);cursor:pointer;
+    display:grid;place-items:center;border-radius:var(--r-pill);
+  }
+  .dp-nav button .ic{width:18px;height:18px;stroke-width:2}
+  .dp-nav button[disabled]{color:var(--ink-3);opacity:.45;cursor:default}
+  .dp-pos{
+    min-width:44px;text-align:center;font-family:var(--f-round);font-size:13px;font-weight:650;
+    color:var(--ink-2);font-variant-numeric:tabular-nums;
+  }
+  .cz-body,.dp-body,.detail-body{max-width:528px;margin:0 auto}
+  /* the theatre: the chart sits on its own stage */
+  .cz-body{
+    margin-top:6px;padding:16px 14px 14px;border-radius:var(--r-lg);
+    background:var(--s1);box-shadow:var(--shadow-card);
+  }
+  .cz-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px}
+  @media (orientation:landscape) and (max-height:560px){
+    .sheet{max-width:760px}
+    .cz-body,.dp-body,.detail-body{max-width:700px}
+  }
+
+  /* ---- section pages: the moved card sits on the sheet like on the canvas ---- */
   .xtra{display:none}
   .expanded .xtra{display:block;margin-top:16px}
   .expanded>h2,.expanded>h3{display:none}
   .expanded .xopen{display:none}
-  .cz-overlay{
-    position:fixed;inset:0;z-index:120;background:var(--bg);overflow-y:auto;
-    -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;
-    padding:calc(14px + env(safe-area-inset-top)) 20px calc(60px + env(safe-area-inset-bottom));
-    opacity:0;transform:translateY(26px) scale(.975);
-    transition:opacity .26s ease,transform .46s var(--spring);
+  /* content settles in on first open only (JS adds .fresh for 950ms) */
+  .detail-overlay.fresh .xtra>*{animation:rise .52s var(--settle) both}
+  .detail-overlay.fresh .xtra>*:nth-child(2){animation-delay:.04s}
+  .detail-overlay.fresh .xtra>*:nth-child(3){animation-delay:.08s}
+  .detail-overlay.fresh .xtra>*:nth-child(4){animation-delay:.12s}
+  .detail-overlay.fresh .xtra>*:nth-child(5){animation-delay:.16s}
+  .detail-overlay.fresh .xtra>*:nth-child(6){animation-delay:.2s}
+  .detail-overlay.fresh .xtra>*:nth-child(n+7){animation-delay:.24s}
+
+  /* ================= the day page ================= */
+  .dp-body .card{margin-bottom:12px}
+  .dp-card-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .dp-card-t{font-family:var(--f-round);font-size:18px;font-weight:700;letter-spacing:-.015em;color:var(--ink)}
+  .dp-card-s{font-size:12.5px;font-weight:550;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  /* hero: weekday · date + era, the big count, its status in words, pips */
+  .dp-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .dp-when{font-size:13.5px;font-weight:550;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  .dp-when b{color:var(--ink);font-weight:650}
+  .dp-count{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:10px 0 2px}
+  .dp-big{display:flex;align-items:baseline;gap:8px;min-width:0}
+  .dp-n{
+    font-family:var(--f-round);font-size:64px;font-weight:700;line-height:.95;letter-spacing:-.04em;
+    color:var(--ink);font-variant-numeric:tabular-nums;
   }
-  .cz-overlay.show{opacity:1;transform:none}
-  .cz-overlay[hidden]{display:none}
-  .cz-overlay:not(.show){pointer-events:none}  /* opacity:0 still catches taps for 280ms */
-  .cz-body{max-width:600px;margin:0 auto}
-  .cz-bar{display:flex;align-items:center;gap:12px;max-width:600px;margin:0 auto 14px}
-  .cz-bar button{
-    font-family:var(--f-ui);font-weight:700;font-size:13.5px;
-    padding:8px 14px;border-radius:12px;border:1px solid var(--line);
-    background:#fff;color:var(--ink);cursor:pointer;box-shadow:var(--shadow-sm);
+  .dp-of{font-family:var(--f-round);font-size:19px;font-weight:650;color:var(--ink-3);letter-spacing:-.01em}
+  .dp-cleanmark{
+    width:52px;height:52px;border-radius:50%;display:grid;place-items:center;align-self:center;
+    background:var(--clean-bg);color:var(--clean-t);
   }
-  .cz-title{font-family:var(--f-round);font-weight:600;font-size:19px;color:var(--sand)}
-  .cz-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px}
-  html.dark .cz-bar button{background:#2e2920}
-  /* ---- the day pager: one page per day, swipe to walk the record ---- */
-  .dp-nav{display:flex;align-items:center;gap:4px;margin-left:auto}
-  .dp-pos{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:38px;text-align:center}
-  .dp .cz-bar button[disabled]{opacity:.35;cursor:default}
-  .dp-head{margin:2px 0 12px}
-  .dp-eyebrow{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700}
-  .dp-big{font-family:var(--f-round);font-weight:600;font-size:42px;line-height:1.15;color:var(--sand)}
-  .dp-big small{font-family:var(--f-ui);font-size:15px;color:var(--muted);font-weight:400}
-  .dp-big .hstat{font-size:13px;margin-left:8px}
-  .dp-goal{font-family:var(--f-round);font-size:17px;line-height:1.35;color:var(--sand);font-weight:500;margin:6px 0 2px}
-  .dmove{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:10px 0 14px;box-shadow:var(--shadow-sm)}
-  .dmove-hd{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800;margin-bottom:6px}
-  .dm-base{font-size:12.5px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--hair)}
-  .dm-base b{color:var(--sage);font-family:var(--f-round);font-size:14px}
-  .dmove .dc-sum{margin:8px 0 0}
-  .dp-plan{margin:12px 0}
-  .dp-plan .tp-day{border-bottom:none}
-  .detail-overlay{
-    position:fixed;inset:0;z-index:80;background:var(--bg);overflow-y:auto;
-    -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;
-    padding:calc(64px + env(safe-area-inset-top)) 20px calc(60px + env(safe-area-inset-bottom));
+  .dp-cleanmark .ic{width:28px;height:28px;stroke-width:2.4}
+  .dp-word{font-family:var(--f-round);font-size:30px;font-weight:700;letter-spacing:-.025em;color:var(--ink);align-self:center}
+  .dp-side{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex:none;padding-bottom:4px}
+  .dp-lg{display:flex;flex-direction:column;align-items:flex-end;line-height:1.1}
+  .dp-lg .k{font-size:12px;font-weight:600;color:var(--ink-2)}
+  .dp-lg .v{font-family:var(--f-round);font-size:21px;font-weight:700;letter-spacing:-.02em;color:var(--acc-t);font-variant-numeric:tabular-nums}
+  .dp-lg .unit{font-size:.62em;font-weight:650;margin:0 1px}
+  .dp-pips{display:grid;grid-template-columns:repeat(var(--n,12),minmax(0,18px));gap:5px;margin:14px 0 2px}
+  .dp-pips i{
+    aspect-ratio:1;border-radius:28%;
+    box-shadow:inset 0 0 0 1.5px var(--ghost);opacity:.75;
   }
-  .detail-grab{width:42px;height:5px;border-radius:99px;background:var(--line);margin:-4px auto 8px}
-  .detail-overlay[hidden]{display:none}
-  /* fallback when View Transitions aren't supported: fade + gentle rise */
-  html.no-vt .detail-overlay{
-    opacity:0;transform:translateY(28px) scale(.985);
-    transition:opacity .3s ease,transform .44s var(--spring);
+  .dp-pips i.on{box-shadow:none;opacity:1}
+  .dp-pips i.on.under{background:var(--under)}
+  .dp-pips i.on.at{background:var(--atcap)}
+  .dp-pips i.on.over{background:var(--over)}
+  .dp-pips i.x{background:var(--over);box-shadow:none;opacity:1;border-radius:50%;transform:scale(.8)}
+  .dp-facts{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+  .dp-facts .chip{color:var(--ink-2)}
+
+  /* the move: two bars per needle — the day before in ghost, this day in its verdict */
+  .mv-verdict{
+    font-family:var(--f-round);font-size:16.5px;font-weight:650;line-height:1.3;letter-spacing:-.01em;
+    color:var(--ink);margin:-2px 0 12px;
   }
-  html.no-vt .detail-overlay.show{opacity:1;transform:none}
-  /* container transform: the tapped card morphs into the detail page */
-  ::view-transition-group(card){animation-duration:.48s;animation-timing-function:var(--spring)}
-  ::view-transition-old(card),::view-transition-new(card){animation-duration:.3s}
-  .detail-bar{
-    position:fixed;top:0;left:0;right:0;z-index:10;
-    display:flex;align-items:center;gap:12px;
-    max-width:520px;margin:0 auto;
-    padding:calc(8px + env(safe-area-inset-top,0px)) 20px 8px;
+  .mv-key{display:flex;gap:14px;font-size:12px;font-weight:600;color:var(--ink-2);margin:0 0 4px}
+  .mv-key span{display:inline-flex;align-items:center;gap:6px}
+  .mv-key i{width:14px;height:6px;border-radius:3px;background:var(--ghost)}
+  .mv-key i.mk-b{background:var(--ink)}
+  .mv-row{padding:11px 0 10px;border-top:1px solid var(--line)}
+  .mv-key+.mv-row,.mv-verdict+.mv-row{border-top:0}
+  .mv-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px}
+  .mv-k{font-size:13.5px;font-weight:650;color:var(--ink)}
+  .mv-k small{font-size:12px;font-weight:500;color:var(--ink-2)}
+  .mv-hd .dv{white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
+  .mv-hd .dv .tri{width:9px;height:9px}
+  .mv-flat{display:flex;flex-wrap:wrap;gap:6px}
+  .mv-flat .chip .ic{margin-right:2px}
+  .mv-bars{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:12px;row-gap:5px}
+  .mv-bar{position:relative;height:8px;border-radius:4px;background:var(--s3);overflow:hidden}
+  .mv-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--ghost);transform-origin:left center}
+  .mv-bar.cur i{background:var(--ink-2)}
+  .mv-bar.cur.good i{background:var(--under)}
+  .mv-bar.cur.bad i{background:var(--over)}
+  .mv-v{
+    min-width:74px;text-align:right;font-family:var(--f-round);font-size:13px;font-weight:600;
+    color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap;
   }
-  .detail-bar::before{
-    content:"";position:absolute;pointer-events:none;
-    top:0;bottom:-8px;left:50%;width:100vw;transform:translateX(-50%);
-    background:rgba(250,246,238,.8);
-    -webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);
-    -webkit-mask-image:linear-gradient(black calc(100% - 22px),transparent);mask-image:linear-gradient(black calc(100% - 22px),transparent);
+  .mv-v.cur{font-size:14.5px;font-weight:700;color:var(--ink)}
+  .dp-fresh .mv-bar i{animation:grow-x .7s var(--settle) both}
+  .dp-fresh .mv-bar.cur i{animation-delay:.08s}
+  .dp-fresh .mv-bar.cur.bad i{animation:none}  /* over/slip never move */
+  .dc-sum{font-size:14px;line-height:1.45;color:var(--ink-2);margin:0}
+  .dc-sum strong{color:var(--ink)}
+  .mv-adj{font-size:12.5px;margin-top:8px}
+  .dm-base{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    margin-top:12px;padding:11px 14px;border-radius:var(--r-sm);background:var(--s2);
+    font-size:13px;font-weight:550;color:var(--ink-2);
   }
-  .detail-bar>*{position:relative}
-  #detailBack{
-    border:1px solid var(--line);background:#fff;border-radius:99px;padding:7px 15px;
-    font-weight:700;font-size:14px;color:var(--accent);font-family:var(--f-ui);
-    cursor:pointer;box-shadow:var(--shadow-sm);
+  .dm-base b{font-family:var(--f-round);font-size:16px;font-weight:700;color:var(--under-t);white-space:nowrap}
+
+  /* the clock: sittings and the gaps between them on one rail, raw times kept */
+  .clk{margin:2px 0 4px}
+  .clk-sit{display:grid;grid-template-columns:22px minmax(0,1fr) auto;align-items:start;column-gap:10px;padding:4px 0}
+  .clk-node{
+    width:12px;height:12px;border-radius:50%;margin:5px 0 0 5px;background:var(--ink);
+    box-shadow:0 0 0 3px var(--s1),0 0 0 4.5px var(--line-2);
   }
-  #detailTitle{font-family:var(--f-round);font-size:21px;color:var(--sand);font-weight:500}
-  .detail-body{max-width:480px;margin:0 auto}
-  @media (orientation:landscape) and (max-height:560px){
-    .detail-body,.cz-body{max-width:680px}
-    .cz-bar{max-width:680px}
-    .detail-bar{max-width:720px}
+  .clk-sd{display:flex;flex-direction:column;min-width:0}
+  .clk-t{font-family:var(--f-round);font-size:19px;font-weight:700;letter-spacing:-.015em;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.1}
+  .clk-t small{font-size:11.5px;font-weight:650;margin-left:2px;color:var(--ink-2)}
+  .clk-min{font-family:var(--f-mono);font-size:11.5px;color:var(--ink-2);margin-top:3px;word-spacing:2px;line-height:1.45}
+  .clk-c{font-family:var(--f-round);font-size:17px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;padding-top:2px}
+  .clk-c small{font-size:12px;font-weight:600;color:var(--ink-2)}
+  .clk-gap{display:grid;grid-template-columns:22px minmax(0,1fr);column-gap:10px;min-height:34px}
+  .clk-rail{justify-self:center;width:2px;border-radius:1px;background:var(--line-2);margin:2px 0}
+  .clk-gap.short .clk-rail{background:var(--over);opacity:.55}
+  .clk-gap.max .clk-rail,.clk-gap.live .clk-rail{background:var(--acc);width:3px;opacity:1}
+  .clk-gd{display:flex;flex-wrap:wrap;align-items:center;gap:4px 7px;padding:7px 0}
+  .clk-dur{font-family:var(--f-round);font-size:14px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+  .clk-gap.max .clk-dur,.clk-gap.live .clk-dur{color:var(--acc-t)}
+  .clk-tail{flex-basis:100%;font-size:12.5px;color:var(--ink-2);line-height:1.35}
+  .clk-empty,.hnote-line{font-size:13.5px;color:var(--ink-2);padding:3px 0;margin:0}
+  /* the legacy gap class survives only as a hook */
+  .sgap.max{font-weight:inherit}
+
+  /* around this day: the day before, this day, the day after */
+  .daycmp{display:flex;flex-direction:column;gap:8px}
+  .dc-row{padding:10px 12px 8px;border-radius:var(--r-md);background:var(--s2)}
+  .dc-row.cur{background:var(--acc-bg);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--acc) 45%,transparent)}
+  .dc-hd{display:flex;align-items:center;gap:8px;margin-bottom:2px}
+  .dc-l{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px;font-weight:550;color:var(--ink-2);line-height:1.3}
+  .dc-l b{color:var(--ink);font-weight:650}
+  .dc-row.cur .dc-l b{color:var(--acc-t)}
+  .dc-n{font-family:var(--f-round);font-weight:700;font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .dc-n small{font-size:12px;font-weight:600;color:var(--ink-2)}
+  .dc-row svg{display:block;width:100%;height:auto}
+  .dc-none{font-size:12.5px;color:var(--ink-2);margin:4px 0 2px}
+
+  /* the plan / timeline folds and the plan-was line */
+  .dp-fold{margin:0 0 12px}
+  .dp-fold .fold-ic{color:var(--acc-t);background:var(--acc-bg)}
+  .dp-goal{font-family:var(--f-round);font-size:17px;line-height:1.35;color:var(--ink);font-weight:650;letter-spacing:-.01em;margin:4px 0 4px}
+  .dp-note{font-size:13.5px;line-height:1.45;color:var(--ink-2);margin:4px 0 8px}
+  .dp-was{
+    display:flex;gap:9px;align-items:flex-start;margin:4px 2px 12px;
+    font-size:13px;line-height:1.45;color:var(--ink-2);
   }
-  .cz-dots{display:flex;gap:7px;margin-left:auto;padding:6px 2px}
-  .cz-dot{width:7px;height:7px;border-radius:50%;border:none;padding:0;background:var(--faint);opacity:.45;cursor:pointer;transition:transform .25s var(--spring),opacity .25s,background .25s}
-  .cz-dot.on{background:var(--accent);opacity:1;transform:scale(1.4)}
-  /* section pages: content settles in, line by line */
-  .detail-overlay.fresh .xtra>*{animation:fadeUp .5s var(--spring) both}
-  .detail-overlay.fresh .xtra>*:nth-child(2){animation-delay:.06s}
-  .detail-overlay.fresh .xtra>*:nth-child(3){animation-delay:.12s}
-  .detail-overlay.fresh .xtra>*:nth-child(4){animation-delay:.18s}
-  .detail-overlay.fresh .xtra>*:nth-child(5){animation-delay:.24s}
-  .detail-overlay.fresh .xtra>*:nth-child(6){animation-delay:.3s}
-  .detail-overlay.fresh .xtra>*:nth-child(7){animation-delay:.36s}
-  .detail-overlay.fresh .xtra>*:nth-child(8){animation-delay:.42s}
-  .detail-overlay.fresh .xtra>*:nth-child(n+9){animation-delay:.48s}
-  html.dark .hsession{background:#2b261c}
-  html.dark .hnotime{background:#322a1b}
-  html.dark .hedit button,html.dark .hgroup button,html.dark .hnotime button,
-  html.dark .timefix button,html.dark #detailBack{background:#2e2920}
-  html.dark .timefix input{background:#2e2920}
-  html.dark .hedit button.hdone{color:#2e2410}
-  html.dark .detail-bar::before{background:rgba(29,26,20,.8)}
+  .dp-was .ic{flex:none;margin-top:1px;color:var(--ink-3)}
+
+  /* the session editor: a tool, set apart from the reading above it */
+  .dp-adjust{display:flex;justify-content:center;margin:6px 0 4px}
+  .dp-edit{height:44px;color:var(--ink-2)}
+  .dp-edit .ic{color:var(--ink-3)}
+  .dp-editor{
+    background:var(--bg-2);box-shadow:inset 0 0 0 1.5px var(--line-2);
+    padding:14px 14px 16px;
+  }
+  .dp-editor .hedit{display:flex;align-items:center;gap:11px;margin-bottom:12px}
+  .ed-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--s1);color:var(--ink-2);flex:none;box-shadow:inset 0 0 0 1px var(--line)}
+  .ed-ic .ic{width:19px;height:19px}
+  .ed-tt{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+  .ed-tt b{font-size:15px;font-weight:650;color:var(--ink)}
+  .ed-tt span{font-size:12.5px;color:var(--ink-2)}
+  .dp-editor .hdone{height:44px;border-radius:22px;padding:0 16px;background:var(--ink);color:var(--ink-inv);box-shadow:none}
+  .hsession{background:var(--s1);border-radius:var(--r-sm);padding:2px 12px 4px;margin:0 0 8px;box-shadow:inset 0 0 0 1px var(--line)}
+  .hsession-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:10px 0 4px}
+  .hsession-head .sn{font-size:12.5px;font-weight:650;color:var(--ink-2)}
+  .hsession-head .stot{font-family:var(--f-round);font-weight:700;font-size:13.5px;color:var(--ink);font-variant-numeric:tabular-nums}
+  .hgroup,.hnotime{display:flex;align-items:center;gap:10px;min-height:48px;border-top:1px solid var(--line)}
+  .hsession-head+.hgroup{border-top:0}
+  .hgroup .ht{font-family:var(--f-round);font-weight:700;font-size:16px;color:var(--ink);min-width:84px;font-variant-numeric:tabular-nums}
+  .hgroup .hn,.hnotime .hn{flex:1;min-width:0;color:var(--ink-2);font-size:13px}
+  .hnotime{
+    margin:0 0 8px;padding:0 12px;border:0;border-radius:var(--r-sm);
+    background:var(--s1);box-shadow:inset 0 0 0 1.5px var(--line-2);
+  }
+  .hnotime .ht{font-weight:650;font-size:13px;color:var(--ink-2);min-width:62px}
+  .ed-minus{
+    width:44px;height:44px;flex:none;margin-right:-6px;border:0;border-radius:50%;cursor:pointer;
+    display:grid;place-items:center;background:transparent;color:var(--over-t);
+  }
+  .ed-minus::before{content:"";position:absolute;width:32px;height:32px;border-radius:50%;background:var(--over-bg)}
+  .ed-minus{position:relative}
+  .ed-minus .ic{position:relative;stroke-width:2.4}
+  .ed-minus:focus-visible{outline:2px solid var(--acc);outline-offset:-4px}
+  .ed-empty{font-size:13.5px;color:var(--ink-2);margin:2px 2px 10px}
+  .timefix{display:flex;gap:8px;align-items:stretch;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+  .ed-time{
+    flex:1;min-width:0;display:flex;align-items:center;gap:8px;height:46px;padding:0 6px 0 14px;
+    border-radius:23px;background:var(--s1);box-shadow:inset 0 0 0 1px var(--line-2);
+  }
+  .ed-time span{font-size:13px;font-weight:600;color:var(--ink-2)}
+  .ed-time input{
+    flex:1;min-width:0;height:40px;border:0;background:transparent;color:var(--ink);
+    font-family:var(--f-round);font-size:17px;font-weight:650;font-variant-numeric:tabular-nums;
+    color-scheme:light;
+  }
+  html.dark .ed-time input{color-scheme:dark}
+  .ed-time input:focus{outline:none}
+  .ed-time:focus-within{box-shadow:inset 0 0 0 2px var(--acc)}
+  .timefix .btn{flex:none;padding:0 18px}
+  .ed-msg{font-size:13px;font-weight:550;color:var(--over-t);margin:10px 2px 0}
+  @media (prefers-reduced-motion: reduce){
+    .cz-overlay>.sheet,html.no-vt .detail-overlay>.sheet{transform:none!important;transition:none!important}
+    .dp-fresh .mv-bar i{animation:none}
+    .cz-dot::before{transition:none}
+  }
   /* ==== [/O] ==== */
 
 
@@ -2985,36 +3111,42 @@ try{
 </nav>
 
 <div class="cz-overlay" id="czOverlay" role="dialog" aria-modal="true" aria-labelledby="czTitle" hidden>
-  <div class="detail-grab" aria-hidden="true"></div>
-  <div class="cz-bar">
-    <button id="czBack" class="back-btn"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-back"/></svg><span>Back</span></button>
-    <span class="cz-title" id="czTitle"></span>
-    <div class="cz-dots" id="czDots" aria-label="More charts — swipe or tap a dot"></div>
+  <div class="sheet">
+    <div class="detail-grab" aria-hidden="true"></div>
+    <div class="cz-bar">
+      <button id="czBack" class="back-btn sheet-back"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg><span>Back</span></button>
+      <span class="cz-title" id="czTitle"></span>
+      <div class="cz-dots" id="czDots" aria-label="More charts — swipe or tap a pill"></div>
+    </div>
+    <div class="cz-body" id="czBody"></div>
   </div>
-  <div class="cz-body" id="czBody"></div>
 </div>
 
 <div class="cz-overlay dp" id="dpOverlay" role="dialog" aria-modal="true" aria-labelledby="dpTitle" hidden>
-  <div class="detail-grab" aria-hidden="true"></div>
-  <div class="cz-bar">
-    <button id="dpBack" class="back-btn"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-back"/></svg><span>Back</span></button>
-    <span class="cz-title" id="dpTitle"></span>
-    <div class="dp-nav">
-      <button id="dpPrev" aria-label="Previous day"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-back"/></svg></button>
-      <span class="dp-pos" id="dpPos" aria-hidden="true"></span>
-      <button id="dpNext" aria-label="Next day"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-chev"/></svg></button>
+  <div class="sheet">
+    <div class="detail-grab" aria-hidden="true"></div>
+    <div class="cz-bar">
+      <button id="dpBack" class="back-btn sheet-back"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg><span>Back</span></button>
+      <span class="cz-title" id="dpTitle"></span>
+      <div class="dp-nav">
+        <button id="dpPrev" aria-label="Previous day"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-back"/></svg></button>
+        <span class="dp-pos" id="dpPos" aria-hidden="true"></span>
+        <button id="dpNext" aria-label="Next day"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-chev"/></svg></button>
+      </div>
     </div>
+    <div class="dp-body" id="dpBody"></div>
   </div>
-  <div class="cz-body" id="dpBody"></div>
 </div>
 
-<div class="detail-overlay" id="detailOverlay" hidden>
-  <div class="detail-grab" aria-hidden="true"></div>
-  <div class="detail-bar">
-    <button id="detailBack" class="back-btn"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-back"/></svg><span>Back</span></button>
-    <span id="detailTitle"></span>
+<div class="detail-overlay" id="detailOverlay" role="dialog" aria-modal="true" aria-labelledby="detailTitle" hidden>
+  <div class="sheet">
+    <div class="detail-grab" aria-hidden="true"></div>
+    <div class="detail-bar">
+      <button id="detailBack" class="back-btn sheet-back"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg><span>Back</span></button>
+      <span id="detailTitle"></span>
+    </div>
+    <div class="detail-body" id="detailBody"></div>
   </div>
-  <div class="detail-body" id="detailBody"></div>
 </div>
 
 <script>
@@ -7058,12 +7190,12 @@ try{
       var dd=addDays(d0,sp.off);
       if(dd<start||dd>today)return;
       var k=dkeyOf(dd), m=dayMetrics(k);
-      var countTxt=(!m.isZ&&m.cap>0)?(m.eff===null?'·':m.eff+' <span style="color:var(--muted);font-size:11px">/ '+m.cap+'</span>'):String(m.eff||0);
-      var line=daylineSVG(k)||'<div class="hnote-line" style="font-size:11.5px;padding:2px 0">no timed hits</div>';
+      var countTxt=(!m.isZ&&m.cap>0)?(m.eff===null?'—':m.eff)+'<small> of '+m.cap+'</small>'
+        :(m.eff||0)+'<small> hit'+((m.eff||0)===1?'':'s')+'</small>';
+      var line=daylineSVG(k)||'<p class="dc-none">No timed hits</p>';
       html+='<div class="dc-row'+(sp.off===0?' cur':'')+'">'+
-        '<div class="dc-hd"><span class="dc-l">'+sp.lbl+' · '+WEEKDAYS[dd.getDay()].slice(0,3)+' '+fmtShort(dd)+'</span>'+
-        '<span class="dc-n">'+countTxt+'</span>'+
-        '<span class="hstat '+m.cls+'">'+m.stat+'</span></div>'+line+'</div>';
+        '<div class="dc-hd"><span class="dc-l"><b>'+sp.lbl+'</b> · '+WEEKDAYS[dd.getDay()].slice(0,3)+' '+fmtShort(dd)+'</span>'+
+        '<span class="dc-n">'+countTxt+'</span>'+dpStatusChip(m,true)+'</div>'+line+'</div>';
     });
     return html+'</div>';
   }
@@ -7368,8 +7500,7 @@ try{
     var sessions=sessionsFor(key);
     sessions.forEach(function(sess,si){
       var block='<div class="hsession"><div class="hsession-head">'+
-        '<span class="sn">Session '+(si+1)+'</span>'+
-        '<span class="srange"></span>'+
+        '<span class="sn">Sitting '+(si+1)+'</span>'+
         '<span class="stot">'+sess.length+' hit'+(sess.length>1?'s':'')+'</span></div>';
       var groups={},order=[];
       sess.forEach(function(hd){
@@ -7382,22 +7513,24 @@ try{
         var g=groups[gk];
         block+='<div class="hgroup"><span class="ht">'+fmtTime(g.t)+'</span>'+
           '<span class="hn">'+g.n+' hit'+(g.n>1?'s':'')+'</span>'+
-          '<button data-act="gdec" data-hm="'+gk+'" aria-label="Remove one at this time">−</button></div>';
+          '<button class="ed-minus" data-act="gdec" data-hm="'+gk+'" aria-label="Remove one hit at '+fmtTime(g.t)+'">'+MINUS_IC+'</button></div>';
       });
       detail+=block+'</div>';
     });
     var adj=e?(e.adj||0):0;
     if(adj>0){
-      detail+='<div class="hnotime"><span class="ht">no time</span>'+
+      detail+='<div class="hnotime"><span class="ht">No time</span>'+
         '<span class="hn">'+adj+' hit'+(adj>1?'s':'')+' — re-add below with a time</span>'+
-        '<button data-act="adjdec" aria-label="One less untimed">−</button></div>';
+        '<button class="ed-minus" data-act="adjdec" aria-label="One less untimed hit">'+MINUS_IC+'</button></div>';
     }
-    if(!detail)detail='<div class="hnote-line">Nothing logged this day yet.</div>';
-    detail+='<div class="timefix"><input type="time" value="'+lastFixTime+'" aria-label="Time the hit happened">'+
-            '<button data-act="addat">+ Add hit</button></div>';
-    if(fixMsg)detail+='<div class="hnote-line">'+fixMsg+'</div>';
-    detail+='<div class="hedit"><button data-act="done" class="hdone">Done</button></div>';
-    return '<div class="hdetail" data-key="'+key+'">'+detail+'</div>';
+    if(!detail)detail='<p class="ed-empty">Nothing logged this day yet.</p>';
+    detail+='<div class="timefix"><label class="ed-time"><span>Time</span><input type="time" value="'+lastFixTime+'" aria-label="Time the hit happened"></label>'+
+            '<button class="btn acc" data-act="addat">'+icon('plus')+'Add hit</button></div>';
+    if(fixMsg)detail+='<p class="ed-msg" role="status">'+fixMsg+'</p>';
+    return '<section class="card dp-card hdetail dp-editor" data-key="'+key+'">'+
+      '<div class="hedit"><span class="ed-ic" aria-hidden="true">'+icon('earlier')+'</span>'+
+      '<span class="ed-tt"><b>Adjust this day</b><span>Fix the record — every change saves at once</span></span>'+
+      '<button data-act="done" class="btn sm hdone">Done</button></div>'+detail+'</section>';
   }
 
   /* ---- hold-the-phase banner ---- */
@@ -8819,16 +8952,54 @@ try{
     while(d<=end){ks.push(dkeyOf(d));d=addDays(d,1);}
     return ks;
   }
+  /* ---- day page building blocks (owner O) ---- */
+  // a status chip that always says its word — color is never the only signal
+  function dpStatusChip(m,sm){
+    var map={under:['under','Under cap'],at:['atcap','At cap'],over:['over','Over cap'],
+      clean:['clean','Clean'],slip:['slip','Slip'],nolog:['ghost','No log']};
+    var c=map[m.cls]||['ghost',m.stat];
+    var lbl=c[1];
+    if(m.partial&&(m.cls==='under'||m.cls==='at'||m.cls==='over'))lbl+=' · so far';
+    return '<span class="chip'+(sm?' sm':'')+' '+c[0]+'">'+(c[0]==='ghost'?'':'<span class="dot"></span>')+lbl+'</span>';
+  }
+  // "13h 20m" → numerals with small units, for the big figures
+  function durHTML(ms){
+    return fmtDur(ms).replace(/(\d+)([hm])/g,'$1<span class="unit">$2</span>');
+  }
+  var MINUS_IC='<svg class="ic ic-sm" aria-hidden="true" viewBox="0 0 24 24"><path d="M6 12h12"/></svg>';
+  /* one metric as two bars — the day before in ghost, this day wearing its
+     verdict — with the named delta on the right of the label */
+  function mvRow(o){
+    /* two clean days side by side: bars of nothing would say less than the words */
+    if(o.flat)return '<div class="mv-row flat"><div class="mv-hd"><span class="mv-k">'+o.k+'</span>'+(o.chip||'')+'</div>'+
+      '<div class="mv-flat"><span class="chip sm clean">'+icon('check','ic-xs')+o.pl+' · clean</span>'+
+      '<span class="chip sm clean">'+icon('check','ic-xs')+o.cl+' · clean</span></div></div>';
+    var max=Math.max(o.pv||0,o.cv||0,o.max||0)||1;
+    var pw=Math.round((o.pv||0)/max*100), cw=Math.round((o.cv||0)/max*100);
+    var v=o.good===true?' good':o.good===false?' bad':'';
+    return '<div class="mv-row"><div class="mv-hd"><span class="mv-k">'+o.k+'</span>'+(o.chip||'')+'</div>'+
+      '<div class="mv-bars">'+
+      '<span class="mv-bar"><i style="width:'+pw+'%"></i></span><span class="mv-v">'+o.pt+'</span>'+
+      '<span class="mv-bar cur'+v+'"><i style="width:'+cw+'%"></i></span><span class="mv-v cur">'+o.ct+'</span>'+
+      '</div></div>';
+  }
+  function mvCard(hd,sub,body){
+    return '<section class="card dp-card dmove"><div class="dp-card-h"><span class="dp-card-t">'+hd+'</span>'+
+      (sub?'<span class="dp-card-s">'+sub+'</span>':'')+'</div>'+body+'</section>';
+  }
+  function mvBase(m){
+    return m.eff!==null&&m.baseCutPct!==null
+      ?'<div class="dm-base"><span>Against the old '+BASELINE+' a day</span><b>'+m.baseCutPct+'% cut</b></div>':'';
+  }
   /* the move: this day against the previous logged day, every needle named */
   function dpMoveGridHTML(m){
     if(!m.vs){
       var isFirst=m.key===dkeyOf(schedule()[0].start);
-      return '<div class="dmove"><div class="dmove-hd">'+(isFirst?'Day one':'The move')+'</div>'+
-        '<p class="dc-sum" style="margin:0">'+(isFirst
+      return mvCard(isFirst?'Day one':'The move','',
+        '<p class="dc-sum">'+(isFirst
           ?'Nothing before it to compare — the baseline was ~'+BASELINE+' a day.'
           :(m.eff===null?'Nothing logged this day.':'No logged day before this one to compare against.'))+'</p>'+
-        (m.eff!==null&&m.baseCutPct!==null?'<div class="dm-base">Against the old '+BASELINE+' a day: <b>'+m.baseCutPct+'% cut</b>.</div>':'')+
-        '</div>';
+        mvBase(m));
     }
     var v=m.vs, pm=dayMetrics(v.key), pd=dateOf(v.key);
     /* the line the longest-stretch row already refuses to cross, drawn for
@@ -8837,23 +9008,24 @@ try{
        lives under — and because a slip's 2 hits "beat" yesterday's 3, the
        card could close a slip with "Every needle moved the right way." */
     if(m.isZ!==pm.isZ){
-      return '<div class="dmove"><div class="dmove-hd">The move</div>'+
-        '<p class="dc-sum" style="margin:0">'+(m.isZ
+      return mvCard('The move','',
+        '<p class="dc-sum">'+(m.isZ
           ?'Past the taper now. The last logged day before this one still had a cap and a session rule — different rules, so there is nothing honest to measure this against.'
           :'The last logged day before this one was at zero, which had no cap to compare against.')+'</p>'+
-        (m.eff!==null&&m.baseCutPct!==null?'<div class="dm-base">Against the old '+BASELINE+' a day: <b>'+m.baseCutPct+'% cut</b>.</div>':'')+
-        '</div>';
+        mvBase(m));
     }
     var rows=[], goodN=0, badN=0, badNames=[];
+    var flatZ=m.isZ&&!m.eff&&!pm.eff;
     function note(g,name){if(g===true)goodN++;else if(g===false){badN++;if(name)badNames.push(name);}}
     var hGood=v.count<0?true:v.count>0?false:null; note(hGood,'count');
-    var hTxt=v.count===0?'even':((v.count<0?'▾':'▴')+(v.prevEff>=5&&v.countPct!==null?Math.abs(v.countPct)+'%':Math.abs(v.count)));
-    rows.push(pairHTML({k:'hits',pv:pm.eff,cv:m.eff,max:Math.max(pm.cap||0,m.cap||0),
+    var hTxt=v.count===0?'even':((v.count<0?icon('down'):icon('up'))+(v.prevEff>=5&&v.countPct!==null?Math.abs(v.countPct)+'%':Math.abs(v.count)));
+    rows.push(mvRow({k:'Hits',pv:pm.eff,cv:m.eff,max:Math.max(pm.cap||0,m.cap||0),
       pt:pm.eff+(pm.cap>0?' of '+pm.cap:''),ct:m.eff+(m.cap>0?' of '+m.cap:'')+(m.partial?' so far':''),
-      good:hGood,chip:dv(hTxt,hGood)}));
+      good:hGood,chip:dv(hTxt,hGood),flat:flatZ,
+      pl:WEEKDAYS[pd.getDay()].slice(0,3)+' '+fmtShort(pd),cl:m.isToday?'Today':WEEKDAYS[m.date.getDay()].slice(0,3)+' '+fmtShort(m.date)}));
     if(m.capPct!==null&&pm.capPct!==null){
       var cGood=m.capPct<pm.capPct?true:m.capPct>pm.capPct?false:null; note(cGood,'cap margin');
-      rows.push(pairHTML({k:'of the cap',pv:pm.capPct,cv:m.capPct,max:100,
+      rows.push(mvRow({k:'Share of the cap',pv:pm.capPct,cv:m.capPct,max:100,
         pt:pm.capPct+'%',ct:m.capPct+'%',good:cGood,
         chip:dv(cGood===true?'more room':cGood===false?'less room':'even',cGood)}));
     }
@@ -8866,7 +9038,7 @@ try{
       // a day still running hasn't fallen short of anything yet — it's chasing
       if(lGood===false&&m.partial)lGood=null;
       note(lGood,'longest stretch');
-      rows.push(pairHTML({k:'longest stretch',pv:pm.gapMaxMs,cv:lCur,
+      rows.push(mvRow({k:'Longest stretch',pv:pm.gapMaxMs,cv:lCur,
         pt:fmtDur(pm.gapMaxMs),ct:fmtDur(lCur)+(m.partial?(lvWins?' running':' so far'):''),good:lGood,
         chip:dv(m.partial&&lDiff<0?fmtDur(-lDiff)+' to go'
           :lGood===null?'about even'
@@ -8874,7 +9046,7 @@ try{
     }
     if(v.gapAvgMs!==null&&m.gaps.length>1){
       var gGood=v.gapAvgPct===null?null:v.gapAvgPct>5?true:v.gapAvgPct<-5?false:null; note(gGood,'spacing');
-      rows.push(pairHTML({k:'avg gap',pv:pm.gapAvgMs,cv:m.gapAvgMs,
+      rows.push(mvRow({k:'Average gap',pv:pm.gapAvgMs,cv:m.gapAvgMs,
         pt:fmtDur(pm.gapAvgMs),ct:fmtDur(m.gapAvgMs),good:gGood,
         chip:dv(gGood===null?'about even':(v.gapAvgPct>=0?'+':'−')+Math.abs(v.gapAvgPct)+'%',gGood)}));
     }
@@ -8883,24 +9055,24 @@ try{
     var onIsLongest=m.gapMax&&m.gapMax.on&&pm.gapMax&&pm.gapMax.on;
     if(v.overnightMs!==null&&!onIsLongest){
       var oGood=v.overnightMs>=900000?true:v.overnightMs<=-900000?false:null; note(oGood,'overnight');
-      rows.push(pairHTML({k:'overnight',pv:pm.overnightMs,cv:m.overnightMs,
+      rows.push(mvRow({k:'Overnight',pv:pm.overnightMs,cv:m.overnightMs,
         pt:fmtDur(pm.overnightMs),ct:fmtDur(m.overnightMs),good:oGood,
         chip:dv(oGood===null?'about even':fmtDur(Math.abs(v.overnightMs))+(v.overnightMs>0?' longer':' shorter'),oGood)}));
     }
     if(v.firstMin!==null){
       var fGood=v.firstMin>=15?true:v.firstMin<=-15?false:null; note(fGood,'start time');
-      rows.push(pairHTML({k:'first hit — later is better',pv:pm.firstMin,cv:m.firstMin,max:24*60,
+      rows.push(mvRow({k:'First hit <small>· later is better</small>',pv:pm.firstMin,cv:m.firstMin,max:24*60,
         pt:fmtTime(pm.first),ct:fmtTime(m.first),good:fGood,
         chip:dv(fGood===null?'about even':fmtDur(Math.abs(v.firstMin)*60000)+(v.firstMin>0?' later':' earlier'),fGood)}));
     }
     if(v.sessN!==null){
       // a half day always has "fewer sittings" — no verdict until the day closes
       if(m.partial){
-        rows.push(pairHTML({k:'sittings',pv:pm.sessN,cv:m.sessN,
+        rows.push(mvRow({k:'Sittings',pv:pm.sessN,cv:m.sessN,
           pt:String(pm.sessN),ct:m.sessN+' so far',good:null,chip:dv('open',null)}));
       }else{
         var sGood=v.sessN<0?true:v.sessN>0?false:null; note(sGood,'sittings');
-        rows.push(pairHTML({k:'sittings',pv:pm.sessN,cv:m.sessN,
+        rows.push(mvRow({k:'Sittings',pv:pm.sessN,cv:m.sessN,
           pt:String(pm.sessN),ct:String(m.sessN),good:sGood,
           chip:dv(sGood===null?'even':(v.sessN<0?(-v.sessN)+' fewer':'+'+v.sessN),sGood)}));
       }
@@ -8908,7 +9080,7 @@ try{
     // span is meaningless mid-day — only closed days wear it
     if(v.spanMs!==null&&!m.partial){
       var spGood=v.spanMs<=-1200000?true:v.spanMs>=1200000?false:null; note(spGood,'span');
-      rows.push(pairHTML({k:'first to last',pv:pm.spanMs,cv:m.spanMs,max:24*3600000,
+      rows.push(mvRow({k:'First to last',pv:pm.spanMs,cv:m.spanMs,max:24*3600000,
         pt:fmtDur(pm.spanMs),ct:fmtDur(m.spanMs),good:spGood,
         chip:dv(spGood===null?'about even':fmtDur(Math.abs(v.spanMs))+(v.spanMs<0?' shorter':' longer'),spGood)}));
     }
@@ -8919,6 +9091,7 @@ try{
     else if(badN===0&&goodN>0)close='Every needle moved the right way.';
     else if(hGood===true&&badN>0)close='Fewer hits — count the win, watch the '+badNames.join(' and ')+'.';
     else if(hGood===false)close='Up on the day before — data, not doom.'+(m.heldRule?' The gaps still held.':'');
+    else if(flatZ)close='Clean, and clean the day before — the run carries on.';
     else close='About even with the day before — holding is allowed.';
     var hd=m.partial?'vs yesterday — so far, by the clock'
       :'vs '+WEEKDAYS[pd.getDay()].slice(0,3)+' '+fmtShort(pd)+(v.key!==dkeyOf(addDays(m.date,-1))?' — the last logged day':'');
@@ -8927,79 +9100,137 @@ try{
       var pvy=paceVsYesterday();
       if(pvy){
         var pGood=pvy.t<pvy.y?true:pvy.t>pvy.y?false:null;
-        pace=pairHTML({k:'by this hour',pv:pvy.y,cv:pvy.t,max:Math.max(pm.cap||0,m.cap||0),
+        pace=mvRow({k:'By this hour',pv:pvy.y,cv:pvy.t,max:Math.max(pm.cap||0,m.cap||0),
           pt:pvy.y+' by now',ct:pvy.t+' today',good:pGood,
-          chip:dv(pGood===null?'even':(pGood?'▾':'▴')+Math.abs(pvy.t-pvy.y),pGood)});
+          chip:dv(pGood===null?'even':(pGood?icon('down'):icon('up'))+Math.abs(pvy.t-pvy.y),pGood)});
       }
     }
-    var key='<p class="pair-key"><span><i class="pk-a"></i>'+WEEKDAYS[pd.getDay()].slice(0,3)+' '+fmtShort(pd)+'</span>'+
-      '<span><i class="pk-b"></i>'+(m.isToday?'today':WEEKDAYS[m.date.getDay()].slice(0,3)+' '+fmtShort(m.date))+'</span></p>';
-    return '<div class="dmove"><div class="dmove-hd">'+hd+'</div>'+key+rows.join('')+
-      (m.adj>0?'<p class="dc-sum" style="margin:6px 0 0">'+m.adj+' untimed — invisible to the time rows above.</p>':'')+
-      pace+
-      (m.baseCutPct!==null?'<div class="dm-base">Against the old '+BASELINE+' a day: <b>'+m.baseCutPct+'% cut</b>.</div>':'')+
-      '<p class="dc-sum">'+close+'</p></div>';
+    var key='<p class="mv-key"><span><i class="mk-a"></i>'+WEEKDAYS[pd.getDay()].slice(0,3)+' '+fmtShort(pd)+'</span>'+
+      '<span><i class="mk-b"></i>'+(m.isToday?'Today':WEEKDAYS[m.date.getDay()].slice(0,3)+' '+fmtShort(m.date))+'</span></p>';
+    return mvCard('The move',hd,
+      '<p class="mv-verdict">'+close+'</p>'+(flatZ&&rows.length===1?'':key)+rows.join('')+
+      (m.adj>0?'<p class="dc-sum mv-adj">'+m.adj+' untimed — invisible to the time rows above.</p>':'')+
+      pace+mvBase(m));
+  }
+  /* the hero: the day, its count against the cap as pips, its status in words */
+  function dpHeroHTML(m){
+    var d=m.date, t=taperProgress();
+    var facts=[], era;
+    if(m.isZ){
+      var off=Math.round((d-zeroDate())/MS_DAY)+1, inZ=Math.round((d-today)/MS_DAY);
+      facts.push(m.future?('In '+inZ+' day'+(inZ>1?'s':'')):('Day '+off+' at zero'));
+      era='<span class="chip sm clean">'+icon('spark')+'Zero era</span>';
+    }else{
+      if(m.future){var inD=Math.round((d-today)/MS_DAY);facts.push('In '+inD+' day'+(inD>1?'s':''));}
+      else facts.push('Day '+(Math.round((d-schedule()[0].start)/MS_DAY)+1)+' of '+t.totalD);
+      if(!m.future)facts.push('Cap '+m.capText);
+      if(m.single)facts.push('Evening only');
+      else if(m.reqGapH>0)facts.push(fmtGapH(m.reqGapH)+' gaps');
+      era='<span class="chip sm acc">'+icon('plan')+'Taper</span>';
+    }
+    var when='<span class="dp-when"><b>'+WEEKDAYS[d.getDay()]+'</b> · '+fmtShort(d)+(m.isToday?' · today':'')+'</span>';
+    var big, side='', pips='';
+    if(m.future){
+      big=m.isZ?'<span class="dp-n">0</span><span class="dp-of">the whole day</span>'
+        :'<span class="dp-n">'+m.capText+'</span><span class="dp-of">cap</span>';
+      side='<span class="chip sm ghost">Ahead</span>';
+    }else if(m.isZ){
+      big=m.eff>0?'<span class="dp-n">'+m.eff+'</span><span class="dp-of">hit'+(m.eff>1?'s':'')+'</span>'
+        :'<span class="dp-cleanmark">'+icon('check')+'</span><span class="dp-word">'+(m.isToday?'Clean so far':'Clean day')+'</span>';
+      // the check and the word already say it — no second "Clean" chip
+      side=m.eff>0?dpStatusChip(m):'';
+    }else{
+      // eff null is "never logged", not zero — a 64px "0 / cap" would read as
+      // the best day possible on a day with no record at all
+      big='<span class="dp-n">'+(m.eff===null?'—':m.eff)+'</span><span class="dp-of">of '+m.cap+'</span>';
+      side=dpStatusChip(m);
+      if(m.cap>0&&m.cap+Math.max(0,(m.eff||0)-m.cap)<=32){
+        var n=m.eff||0, cells=Math.max(m.cap,n), tone=m.cls==='over'?'over':m.cls==='at'?'at':'under';
+        for(var i=0;i<cells;i++)pips+='<i class="'+(i>=m.cap?'x':i<n?'on '+tone:'')+'"></i>';
+        pips='<div class="dp-pips" aria-hidden="true" style="--n:'+Math.min(cells,16)+'">'+pips+'</div>';
+      }
+    }
+    var lv=liveGapNow(m), lvWins=!!lv&&lv.wins, lg=lvWins?lv.ms:m.gapMaxMs;
+    if(!m.future&&lg!==null&&lg!==undefined)
+      side+='<span class="dp-lg"><span class="k">Longest'+(lvWins?' · running':'')+'</span><span class="v">'+durHTML(lg)+'</span></span>';
+    return '<section class="card dp-card dp-hero dp-head">'+
+      '<div class="dp-top">'+when+era+'</div>'+
+      '<div class="dp-count"><div class="dp-big">'+big+'</div><div class="dp-side">'+side+'</div></div>'+
+      pips+
+      '<div class="dp-facts">'+facts.map(function(f){return '<span class="chip sm ghost">'+f+'</span>';}).join('')+'</div>'+
+      '</section>';
+  }
+  // folds on the day page remember a hand-set state across the live re-renders
+  var dpFoldOpen={};
+  // only a hand on the summary counts — inserting <details open> also fires
+  // 'toggle', which would pin every default as if it had been chosen
+  $('dpBody').addEventListener('click',function(ev){
+    var sm=ev.target.closest('summary'), f=sm&&sm.parentNode;
+    if(f&&f.dataset&&f.dataset.dpf)dpFoldOpen[f.dataset.dpf]=!f.open;
+  });
+  function dpFold(name,ic,title,live,body,openDefault){
+    var open=dpFoldOpen.hasOwnProperty(name)?dpFoldOpen[name]:openDefault;
+    return '<details class="fold dp-fold" data-dpf="'+name+'"'+(open?' open':'')+'>'+
+      '<summary><span class="fold-ic" aria-hidden="true">'+icon(ic)+'</span><span class="fold-t">'+title+'</span>'+
+      '<span class="fold-live">'+live+'</span></summary><div class="fold-body">'+body+'</div></details>';
   }
   function dpPageHTML(key){
-    var m=dayMetrics(key), d=m.date, t=taperProgress();
+    var m=dayMetrics(key), d=m.date;
     var di=m.di<0?0:m.di;
-    var html='';
-    var eyebrow;
-    if(m.isZ){
-      var off=Math.round((d-zeroDate())/MS_DAY)+1;
-      eyebrow=m.future?('In '+Math.round((d-today)/MS_DAY)+' day'+(Math.round((d-today)/MS_DAY)>1?'s':'')+' · zero era'):('Day '+off+' at zero');
-    }else if(m.future){
-      var inD=Math.round((d-today)/MS_DAY);
-      eyebrow='In '+inD+' day'+(inD>1?'s':'')+' · cap '+m.capText+(m.single?' · evening only':m.reqGapH>0?' · '+fmtGapH(m.reqGapH)+' gaps':'');
-    }else{
-      var dayNum=Math.round((d-schedule()[0].start)/MS_DAY)+1;
-      eyebrow='Day '+dayNum+' of '+t.totalD+' · cap '+m.capText+(m.single?' · evening only':m.reqGapH>0?' · '+fmtGapH(m.reqGapH)+' gaps':'');
-    }
-    var big;
-    if(m.future)big='—';
-    else if(m.isZ)big=m.eff>0?(m.eff+'<span class="hstat slip">slip</span>'):('✓<span class="hstat clean">clean</span>');
-    // eff null is "never logged", not zero — coercing it printed a 42px "0 / cap",
-    // visually the best day possible, on a day with no record at all
-    else big=(m.eff===null?'·':m.eff)+'<small> / '+m.cap+'</small><span class="hstat '+m.cls+'">'+m.stat+(m.partial?' · so far':'')+'</span>';
-    html+='<div class="dp-head"><div class="dp-eyebrow">'+eyebrow+'</div><div class="dp-big">'+big+'</div></div>';
+    var html=dpHeroHTML(m);
     if(!m.future)html+=dpMoveGridHTML(m);
     // the day's clock, in the open — stamps and gaps without opening the editor
     if(!m.future&&m.sessions.length)
-      html+='<div class="dp-plan"><div class="tp-day-k">The clock</div>'+daySummaryHTML(key,true)+'</div>';
-    if(!m.future)html+=dayTimelinesHTML(key);
+      html+='<section class="card dp-card dp-plan dp-clock"><div class="dp-card-h"><span class="dp-card-t">The clock</span>'+
+        '<span class="dp-card-s">'+m.sessN+' sitting'+(m.sessN>1?'s':'')+' · '+fmtTime(m.first)+(m.sessN>1||m.sessions[0].length>1?' → '+fmtTime(m.last):'')+'</span></div>'+
+        daySummaryHTML(key,true)+'</section>';
+    if(!m.future)html+='<section class="card dp-card dp-days"><div class="dp-card-h"><span class="dp-card-t">Around this day</span>'+
+      '<span class="dp-card-s">The day before, this day, the day after</span></div>'+dayTimelinesHTML(key)+'</section>';
+    var P=BASE_PHASES[di];
     if(m.isZ&&!m.future){
       var off2=Math.max(1,Math.round((d-zeroDate())/MS_DAY)+1);
-      html+='<div class="dp-plan"><div class="tp-day-k">The timeline</div>'+
-        '<p class="chart-note" style="margin-top:6px">'+(dkeyOf(d)===todayKey?zeroTimelineNote(Math.max(1,daysFree()),zeroCalDay()):zeroTimelineNote(off2))+'</p>'+
-        (d>=today?feelHTML(d,m.di,true):'')+'</div>';
+      var tn=dkeyOf(d)===todayKey?zeroTimelineNote(Math.max(1,daysFree()),zeroCalDay()):zeroTimelineNote(off2);
+      html+=dpFold('zline','wave','The timeline','Day '+off2+' since zero',
+        '<p class="dp-note">'+tn+'</p>'+(d>=today?feelHTML(d,m.di,true):''),m.isToday);
     }else if(m.future||m.isToday){
       var pl=dayPlanOf(d,di);
-      html+='<div class="dp-plan"><div class="tp-day-k">'+(m.isToday?'Today’s plan':'The plan')+'</div>'+
+      var live=P.cap<=0?'Zero · the day count only':P.single?P.capText+' · evening only'
+        :'Cap '+P.capText+' · max '+P.sessionMax+' · '+fmtGapH(m.reqGapH||spacingHOn(d,di))+' gaps';
+      html+=dpFold('plan','plan',m.isToday?'Today’s plan':'The plan',live,
         '<div class="dp-goal">'+dayGoal(d,di)+'</div>'+
-        '<p class="chart-note" style="margin:2px 0 4px">'+dayStructure(d,di)+'</p>'+
+        '<p class="dp-note">'+dayStructure(d,di)+'</p>'+
         (pl?winsHTML(pl)+(pl.note?'<p class="win-note">'+pl.note+'</p>':'')+doListHTML(pl):'')+
-        feelHTML(d,m.di,true)+'</div>';
+        feelHTML(d,m.di,true),m.future);
     }else{
       var pl2=dayPlanOf(d,di);
-      html+='<p class="chart-note" style="margin-top:4px">The plan was: '+dayStructure(d,di)+(pl2&&pl2.w?' · windows '+pl2.w.join(' · '):'')+'.</p>';
+      html+='<p class="dp-was">'+icon('plan','ic-sm')+'<span>The plan was: '+dayStructure(d,di)+(pl2&&pl2.w?' · windows '+pl2.w.join(' · '):'')+'.</span></p>';
     }
     if(!m.future){
-      html+='<p class="chart-note" style="margin-top:14px"><button class="linklike" data-act="edit">Adjust this day '+(dpEditOpen?'▾':'▸')+'</button></p>';
       if(dpEditOpen)html+=sessionEditorHTML(key);
+      else html+='<div class="dp-adjust"><button class="btn ghost dp-edit" data-act="edit" aria-expanded="false">'+
+        icon('earlier')+'<span>Adjust this day</span></button></div>';
     }
-    html+='<p class="chart-note" style="margin-top:16px;color:var(--faint)">Swipe, or use ‹ ›, to walk the days.</p>';
     return html;
   }
+  var dpFreshT=null;
   function dpRender(key,keepScroll){
     var ov=$('dpOverlay');
     var st=keepScroll?ov.scrollTop:0;
     var ks=dpKeys(), i=ks.indexOf(key);
     var d=dateOf(key);
-    $('dpTitle').textContent=WEEKDAYS[d.getDay()].slice(0,3)+' · '+fmtShort(d);
+    $('dpTitle').textContent=WEEKDAYS[d.getDay()].slice(0,3)+' '+fmtShort(d);
     $('dpPos').textContent=(i+1)+' / '+ks.length;
     $('dpPrev').disabled=i<=0;
     $('dpNext').disabled=i>=ks.length-1;
-    $('dpBody').innerHTML=dpPageHTML(key);
+    var body=$('dpBody');
+    body.innerHTML=dpPageHTML(key);
+    // the bars grow only when a page is first shown or turned — never on the
+    // live re-renders (renderAll, the 30s tick, the editor)
+    if(!keepScroll&&motionOK){
+      body.classList.add('dp-fresh');
+      clearTimeout(dpFreshT);
+      dpFreshT=setTimeout(function(){body.classList.remove('dp-fresh');},900);
+    }else if(!keepScroll)body.classList.remove('dp-fresh');
     ov.scrollTop=st;
     safe(feelLive);
   }
@@ -9008,12 +9239,13 @@ try{
     var ov=$('dpOverlay');
     var wasOpen=!ov.hidden;
     if(dpKey!==key){dpEditOpen=false;fixMsg='';}
+    if(!wasOpen)dpFoldOpen={};
     dpKey=key;
     dpRender(key,false);
     if(dir){
       var body=$('dpBody');
       body.style.animation='none';void body.offsetWidth;
-      body.style.animation='czslide-'+dir+' .4s var(--spring)';
+      body.style.animation='czslide-'+dir+' .36s var(--e-enter)';
       ov.scrollTop=0;
     }
     if(wasOpen)return;
@@ -9581,47 +9813,63 @@ try{
   }
   function daySummaryHTML(key,noLine){
     var m=dayMetrics(key), sessions=m.sessions;
-    if(!sessions.length)return '<p class="hnote-line">Nothing logged yet today.</p>';
+    if(!sessions.length)return '<p class="clk-empty">Nothing logged yet today.</p>';
     var reqH=m.reqGapH,reqMs=reqH*3600000;
     var isTod=key===todayKey;
     var h=noLine?'':daylineSVG(key);
     // the stretch running right now can already be the day's longest — settle
     // that once, so the badge, the figure and the comparison agree
     var live=liveGapNow(m), liveWins=!!live&&live.wins;
+    function tHTML(t){var p=fmtTime(t).split(' ');return p[0]+'<small>'+p[1]+'</small>';}
     // gap rows come straight from the engine, so the "longest" badge lands on
     // the same stretch every other surface names
     function gapRow(g,gi){
       var isMax=gi===m.gapMaxIdx&&m.gaps.length>1&&!liveWins;
-      var tail=g.on?(' overnight · from '+fmtTime(g.from)+(isTod?' last night':''))
-        :(reqMs>0?'':' between');
+      var tail=g.on?('Overnight · from '+fmtTime(g.from)+(isTod?' last night':''))
+        :(reqMs>0?'':'Between sittings');
+      var short=reqMs>0&&g.ms<reqMs;
       var verdict=reqMs>0
-        ?(g.ms>=reqMs?' · ✓ held '+fmtGapH(reqH):' · ✗ '+fmtDur(reqMs-g.ms)+' short of '+fmtGapH(reqH))
+        ?(g.ms>=reqMs?'<span class="chip sm under">'+icon('check','ic-xs')+'Held '+fmtGapH(reqH)+'</span>'
+          :'<span class="chip sm over">'+(reqMs-g.ms<60000?'Just':fmtDur(reqMs-g.ms))+' short of '+fmtGapH(reqH)+'</span>')
         :'';
-      return '<div class="sgap '+(reqMs>0&&g.ms<reqMs?'short':'ok')+(isMax?' max':'')+'">'+
-        (isMax?'<span class="gmax">longest</span>':'')+fmtDur(g.ms)+tail+verdict+'</div>';
+      return '<div class="clk-gap sgap '+(short?'short':'ok')+(isMax?' max':'')+'">'+
+        '<span class="clk-rail" aria-hidden="true"></span>'+
+        '<span class="clk-gd"><span class="clk-dur">'+fmtDur(g.ms)+'</span>'+
+        (isMax?'<span class="chip sm acc gmax">Longest</span>':'')+verdict+
+        (tail?'<span class="clk-tail">'+tail+'</span>':'')+'</span></div>';
     }
+    h+='<div class="clk">';
     sessions.forEach(function(sess,si){
       // every gap that opens into this sitting — the overnight one leads the day
       m.gapSpans.forEach(function(g,gi){if(g.si===si)h+=gapRow(g,gi);});
-      // one line per sitting: the range, a dot per hit, the count
-      var range=sess.length>1?fmtTime(sess[0])+'–'+fmtTime(sess[sess.length-1]):fmtTime(sess[0]);
-      var dots=sess.length<=14?sess.map(function(){return '<i></i>';}).join(''):'';
-      h+='<div class="sessrow"><span class="sr-t">'+range+'</span>'+
-        '<span class="sr-dots">'+dots+'</span>'+
-        '<span class="sr-c">'+sess.length+'<small style="font-family:Karla,sans-serif;font-size:10px;color:var(--muted)"> hit'+(sess.length>1?'s':'')+'</small></span></div>';
+      // one row per sitting: its first clock time, the count, and every hit's
+      // raw minute in mono so no stamp hides behind a tap
+      var h0=sess[0].getHours();
+      var mins=sess.map(function(t){
+        return (t.getHours()===h0?'':(t.getHours()%12||12))+':'+pad(t.getMinutes());
+      }).join(' ');
+      h+='<div class="clk-sit"><span class="clk-node" aria-hidden="true"></span>'+
+        '<span class="clk-sd"><span class="clk-t">'+tHTML(sess[0])+
+        '</span>'+
+        '<span class="clk-min">'+mins+'</span></span>'+
+        '<span class="clk-c">'+sess.length+'<small> hit'+(sess.length>1?'s':'')+'</small></span></div>';
     });
     // live gap since the last hit (today only)
     if(live){
       var wOpen=reqMs>0?live.ms>=reqMs:true;
-      h+='<div class="sgap live'+(liveWins?' max':'')+'">'+(liveWins?'<span class="gmax">longest</span>':'')+
-        fmtDur(live.ms)+' since'+
-        (reqMs>0?(wOpen?' — window open, every extra minute is banked':' — window opens at '+fmtTime(new Date(live.from.getTime()+reqMs))):'')+'</div>';
+      h+='<div class="clk-gap sgap live'+(liveWins?' max':'')+'"><span class="clk-rail" aria-hidden="true"></span>'+
+        '<span class="clk-gd"><span class="clk-dur">'+fmtDur(live.ms)+'</span>'+
+        '<span class="chip sm acc">'+(liveWins?'Longest · running':'Running')+'</span>'+
+        '<span class="clk-tail">Since '+fmtTime(live.from)+
+        (reqMs>0?(wOpen?' — window open, every extra minute is banked':' — window opens at '+fmtTime(new Date(live.from.getTime()+reqMs))):'')+
+        '</span></span></div>';
     }
+    h+='</div>';
     // gap summary — the longest leads, the average backs it up
     if(m.gaps.length||liveWins){
       h+=figsHTML([
         {v:fmtDur(liveWins?live.ms:m.gapMaxMs),l:'longest '+(isTod?'today':'that day'),
-         mid:true,c:'var(--accent)',s:liveWins?'still running':null},
+         mid:true,c:'var(--acc-t)',s:liveWins?'still running':null},
         m.gaps.length>1?{v:fmtDur(m.gapAvgMs),l:'avg gap',mid:true}:null,
         reqMs>0?{v:fmtGapH(reqH),l:'the rule',mid:true}:null
       ])+longestVsHTML(m,true,liveWins?live:null);
@@ -9786,15 +10034,19 @@ try{
     detailPh.style.height=el.offsetHeight+'px';
     detailPh.style.marginBottom=getComputedStyle(el).marginBottom;
     var ov=$('detailOverlay');
+    var sh=ov.querySelector('.sheet');
     function doMove(){
       ov.style.transform='';ov.style.transition='';ov.style.opacity='';
+      if(sh){sh.style.transform='';sh.style.transition='';}
       detailFrom.insertBefore(detailPh,el);
       $('detailBody').appendChild(el);
       el.classList.add('expanded');
       $('detailTitle').textContent=title;
       ov.hidden=false;ov.scrollTop=0;
       document.body.style.overflow='hidden';
-      renderXtras();
+      // a throwing section must not escape doMove — that skipped 'show' and
+      // the busy release, leaving an overlay nobody could close
+      safe(renderXtras);
       safe(renderHistory); // the full record only gets built once it's on screen
       // stagger the page's content in on first open only — re-renders
       // while it sits open (logging a hit, ticking timers) stay still
@@ -9813,10 +10065,11 @@ try{
     var el=$('detailBody').firstElementChild;
     if(!el||detailBusy)return false;
     detailBusy=true;
-    var ov=$('detailOverlay');
+    var ov=$('detailOverlay'), sh=ov.querySelector('.sheet');
     function doMove(){
       ov.hidden=true;ov.classList.remove('show');
       ov.style.transform='';ov.style.transition='';ov.style.opacity='';
+      if(sh){sh.style.transform='';sh.style.transition='';}
       el.classList.remove('expanded');
       detailFrom.insertBefore(el,detailPh);
       if(detailPh){detailPh.remove();detailPh=null;}
@@ -10707,7 +10960,7 @@ try{
 
   /* ---- pull down to dismiss the detail page ---- */
   (function(){
-    var ov=$('detailOverlay');
+    var ov=$('detailOverlay'), sh=ov.querySelector('.sheet')||ov;
     var startY=0,dy=0,armed=false,dragging=false;
     ov.addEventListener('touchstart',function(e){
       if(detailBusy||ov.scrollTop>2){armed=false;return;}
@@ -10722,8 +10975,8 @@ try{
       dragging=true;
       e.preventDefault();
       var t=Math.max(0,Math.min(dy*0.55,280));
-      ov.style.transition='none';
-      ov.style.transform='translateY('+t+'px)';
+      sh.style.transition='none';
+      sh.style.transform='translateY('+t+'px)';
     },{passive:false});
     function end(){
       if(!armed)return;
@@ -10734,8 +10987,9 @@ try{
       var closed=false;
       if(t>90){
         if(!supportsVT||!motionOK){
-          ov.style.transition='transform .3s ease,opacity .25s ease';
-          ov.style.transform='translateY(105%)';
+          sh.style.transition='transform .3s var(--e-exit)';
+          sh.style.transform='translateY(105%)';
+          ov.style.transition='opacity .25s ease';
           ov.style.opacity='0';
         }
         closed=closeDetail();
@@ -10743,11 +10997,11 @@ try{
       /* closeDetail can refuse (mid-transition) — always snap back rather
          than leave the overlay stranded partway down the screen */
       if(!closed){
-        ov.style.transition='transform .35s var(--spring)';
-        ov.style.transform='translateY(0)';
+        sh.style.transition='transform .35s var(--snap)';
+        sh.style.transform='translateY(0)';
         ov.style.opacity='';
         setTimeout(function(){
-          if(!dragging){ov.style.transition='';ov.style.transform='';}
+          if(!dragging){sh.style.transition='';sh.style.transform='';}
         },360);
       }
     }
@@ -10759,6 +11013,8 @@ try{
      to page. Touches inside a .cz-scroll pan the content instead. Used
      by the chart zoom (pages charts) and the day pager (pages days). ---- */
   function attachOverlayGestures(ov,body,onPage,onDismiss){
+    // the sheet rides the finger; the scrim behind it stays put
+    var sh=ov.querySelector('.sheet')||ov;
     var sx=0,sy=0,dx=0,dy=0,mode=null,armed=false,noswipe=false;
     ov.addEventListener('touchstart',function(e){
       armed=true;mode=null;dx=dy=0;
@@ -10782,8 +11038,8 @@ try{
       e.preventDefault();
       if(mode==='pull'){
         var t=Math.max(0,Math.min(dy*0.55,280));
-        ov.style.transition='none';
-        ov.style.transform='translateY('+t+'px)';
+        sh.style.transition='none';
+        sh.style.transform='translateY('+t+'px)';
       }else{
         body.style.transition='none';
         body.style.transform='translateX('+(dx*0.4).toFixed(1)+'px)';
@@ -10796,16 +11052,21 @@ try{
       if(mode==='pull'){
         var t=Math.max(0,Math.min(dy*0.55,280));
         if(t>90){
-          ov.style.transition='transform .3s ease,opacity .25s ease';
-          ov.style.transform='translateY(105%)';ov.style.opacity='0';
+          sh.style.transition='transform .26s var(--e-exit)';
+          sh.style.transform='translateY(105%)';
+          ov.style.transition='opacity .24s ease';ov.style.opacity='0';
           setTimeout(function(){
             onDismiss();
-            ov.style.transition='';ov.style.transform='';ov.style.opacity='';
+            // let the close timer hide it before the inline styles let go
+            setTimeout(function(){
+              sh.style.transition='';sh.style.transform='';
+              ov.style.transition='';ov.style.opacity='';
+            },300);
           },240);
         }else{
-          ov.style.transition='transform .35s var(--spring)';
-          ov.style.transform='translateY(0)';
-          setTimeout(function(){ov.style.transition='';ov.style.transform='';},360);
+          sh.style.transition='transform .35s var(--snap)';
+          sh.style.transform='translateY(0)';
+          setTimeout(function(){sh.style.transition='';sh.style.transform='';},360);
         }
       }else if(mode==='swipe'){
         body.style.transition='';body.style.transform='';body.style.opacity='';body.style.animation='';
