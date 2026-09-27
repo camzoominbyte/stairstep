@@ -975,6 +975,7 @@
   .jn-ht{min-width:0}
   .jn-sub{font-size:13px;color:var(--ink-2);margin-top:3px;line-height:1.35;font-variant-numeric:tabular-nums}
   .jn-sub b{color:var(--ink);font-weight:650}
+  .jn-nw{white-space:nowrap}
   .jn-h .chip{flex:none;margin-top:1px}
   .jn-svg{display:block;width:100%;height:auto;overflow:visible;margin-top:10px}
   .jn-svg text{font-family:var(--f-round);font-variant-numeric:tabular-nums}
@@ -1104,6 +1105,8 @@
   .hrow.jr.jr-z .jr-dt{background:var(--clean-bg);color:var(--clean-t)}
   .hrow.jr.jr-z .jr-dt small{color:var(--clean-t)}
   .hrow.jr.jr-z.is-today .jr-dt{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--acc) 55%,transparent)}
+  .jr-month{font-family:var(--f-round);font-size:13px;font-weight:700;color:var(--ink-2);padding:14px 0 6px;border-top:1px solid var(--line)}
+  .jr-month+.hrow.jr{border-top:0;padding-top:6px}
   .jr-zero{display:flex;align-items:center;gap:10px;padding:10px 0 12px;border-top:1px solid var(--line)}
   .jr-zero span{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:var(--r-pill);
     background:var(--clean-bg);color:var(--clean-t);font-size:12.5px;font-weight:650;white-space:nowrap}
@@ -5022,6 +5025,8 @@ try{
         }
       }
     }
+    // yesterday's count by this hour (a floor-level 0 says nothing, so skip it)
+    var ghY=(pv&&ti>=0&&pv.y>0)?yv(pv.y):null;
     // the days, as bars in their status colour
     var firstLogged=-1;
     days.forEach(function(m,i){if(firstLogged<0&&m.eff!==null&&m.eff>0&&!m.isZ)firstLogged=i;});
@@ -5033,6 +5038,12 @@ try{
       var show=wide||m.isToday||i===firstLogged||m.cls==='slip';
       if(!show)return;
       var inside=wide&&h>=19&&m.cls!=='at'&&!m.isToday;
+      // today's figure steps aside when yesterday's by-now tick sits on it
+      if(m.isToday&&ghY!==null&&ghY<base-h+2&&base-h-9-ghY<11){
+        svg+=h>=16?jnT(cx,base-h+13,'jn-vl jn-in',m.eff,'middle')
+          :jnT(x-3,base-h+4,'jn-vl',m.eff,'end');
+        return;
+      }
       svg+=inside
         ?jnT(cx,base-h+13,'jn-vl jn-in',m.eff,'middle')
         :jnT(cx,base-h-5,'jn-vl'+(wide?'':' jn-t-'+(m.cls==='at'?'at':m.cls==='under'?'under':'over')),m.eff,'middle');
@@ -5049,11 +5060,10 @@ try{
     });
     if(zi>=0&&!isZeroEra)svg+=jnT(zi*sw+sw/2,base-7,'jn-cl jn-t-under','0','middle');
     // yesterday's count by this hour, a dashed ghost on today's bar
-    if(pv&&ti>=0){
-      var gx=ti*sw+sw/2, gy=yv(pv.y);
-      svg+='<line x1="'+(gx-bw/2-4).toFixed(1)+'" y1="'+gy.toFixed(1)+'" x2="'+(gx+bw/2+4).toFixed(1)+'" y2="'+gy.toFixed(1)+'" class="jn-yday"/>';
-      var right=gx+bw/2+6+78<W;
-      svg+=jnT(right?gx+bw/2+6:gx-bw/2-6,gy+3.5,'jn-ax jn-ydl',pv.y+' by now yday',right?'start':'end');
+    // (labelled in the legend, so it never fights the cap labels ahead)
+    if(ghY!==null){
+      var gx=ti*sw+sw/2;
+      svg+='<line x1="'+(gx-bw/2-5).toFixed(1)+'" y1="'+ghY.toFixed(1)+'" x2="'+(gx+bw/2+5).toFixed(1)+'" y2="'+ghY.toFixed(1)+'" class="jn-yday"/>';
     }
     // today, marked on its tread (or on the floor, at zero)
     if(ti>=0){
@@ -5092,11 +5102,12 @@ try{
     var chip=isZeroEra
       ?(zs?'<span class="chip sm clean"><span class="dot"></span>'+zs.clean+' clean since zero</span>':'')
       :(tp.logged?'<span class="chip sm '+(tp.under===tp.logged?'under':'ghost')+'">'+(tp.under===tp.logged?'<span class="dot"></span>':'')+tp.under+' of '+tp.logged+' within cap</span>':'');
-    var sub=fmtShort(start)+' → '+(isZeroEra?'zero was ':'zero ')+'<b>'+jnWk(z)+' '+fmtShort(z)+'</b> · '+tp.tot+' logged';
+    var sub='<span class="jn-nw">'+fmtShort(start)+' → '+(isZeroEra?'zero was ':'zero ')+'<b>'+jnWk(z)+' '+fmtShort(z)+'</b></span><br><span class="jn-nw">'+tp.tot.toLocaleString()+' logged · '+n+' days</span>';
     var key='<span><i class="jk-ramp"></i>Cap</span><span><i style="background:var(--under)"></i>Under</span>'+
       '<span><i style="background:var(--atcap)"></i>At cap</span><span><i style="background:var(--over)"></i>'+(zi>=0&&zi<=ti?'Over or slip':'Over')+'</span>'+
       (zi>=0&&zi<=ti?'<span><i class="jk-clean"></i>Clean run</span>':'')+
-      (ti>=0&&!isZeroEra?'<span><i class="jk-room"></i>Room left</span>':'');
+      (ti>=0&&!isZeroEra?'<span><i class="jk-room"></i>Room left</span>':'')+
+      (ghY!==null?'<span><i class="jk-dash"></i>Yday by now · '+pv.y+'</span>':'');
     el.innerHTML='<div class="jn-h"><div class="jn-ht"><p class="label">The descent</p><p class="jn-sub">'+sub+'</p></div>'+chip+'</div>'+
       svg+'<div class="jn-key">'+key+'</div>';
   }
@@ -5193,10 +5204,11 @@ try{
       (yOn?', '+pv.y+' yesterday by now, '+yM.eff+' by the end of yesterday':'')+'; cap '+cap+'.">';
     s+='<defs><linearGradient id="jhFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--acc)" stop-opacity=".22"/><stop offset="1" stop-color="var(--acc)" stop-opacity="0"/></linearGradient></defs>';
     // hour grid: a hairline per 4 hours, labelled below
+    var nowT=fmtClk(new Date(now)), nowW=nowT.length*6.3+4, nlx=Math.min(W-nowW/2,Math.max(nowW/2,xh(nowH)));
     [[4,'8a'],[8,'12p'],[12,'4p'],[16,'8p'],[20,'12a']].forEach(function(g){
       var x=xh(g[0]);
       s+='<line x1="'+x.toFixed(1)+'" y1="'+top+'" x2="'+x.toFixed(1)+'" y2="'+base+'" class="jh-grid"/>';
-      if(Math.abs(x-xh(nowH))>22)s+=jnT(x,H-6,'jn-ax',g[1],'middle');
+      if(Math.abs(x-nlx)>nowW/2+g[1].length*3.2+4)s+=jnT(x,H-6,'jn-ax',g[1],'middle');
     });
     s+='<line x1="0" y1="'+base+'" x2="'+W+'" y2="'+base+'" class="jn-floor"/>';
     // the cap
@@ -5215,17 +5227,23 @@ try{
     // now
     var nx=xh(nowH);
     s+='<line x1="'+nx.toFixed(1)+'" y1="'+(top-6)+'" x2="'+nx.toFixed(1)+'" y2="'+base+'" class="jh-now"/>'+
-      jnT(Math.min(W-14,Math.max(14,nx)),H-6,'jn-ax jn-ax-today',fmtClk(new Date(now)),'middle');
-    var left=nx>W-70, ty=yv(tc);
+      jnT(nlx,H-6,'jn-ax jn-ax-today',nowT,'middle');
+    var left=nx>W-80, ty=yv(tc), lx=left?nx-9:nx+9, la=left?'end':'start';
     if(yOn){
       var yy=yv(pv.y);
       s+='<circle cx="'+nx.toFixed(1)+'" cy="'+yy.toFixed(1)+'" r="3.6" class="jh-ydot"/>';
-      // keep the two call-outs apart when the counts sit close
-      var ly=Math.abs(yy-ty)<13?(yy<ty?yy-5:yy+11):yy+4;
-      s+=jnT(left?nx-8:nx+8,ly,'jn-ax jh-yl',pv.y+' yday',left?'end':'start');
     }
-    s+='<circle cx="'+nx.toFixed(1)+'" cy="'+ty.toFixed(1)+'" r="4.4" class="jh-tdot"/>'+
-      jnT(left?nx-9:nx+9,(yOn&&Math.abs(yv(pv.y)-ty)<13&&yv(pv.y)<ty)?ty+12:ty-6,'jn-vl jh-tl',tc+' today',left?'end':'start');
+    s+='<circle cx="'+nx.toFixed(1)+'" cy="'+ty.toFixed(1)+'" r="4.4" class="jh-tdot"/>';
+    // the call-outs: one when the counts match, stacked above when they sit close
+    if(yOn&&pv.y===tc){
+      s+=jnT(lx,ty-7,'jn-vl jh-tl',tc+' · even with yday',la);
+    }else if(yOn&&Math.abs(yy-ty)<14){
+      var hi=Math.min(yy,ty)-7, tTop=ty<yy;
+      s+=jnT(lx,tTop?hi:hi-13,'jn-ax jh-yl',pv.y+' yday',la)+jnT(lx,tTop?hi-13:hi,'jn-vl jh-tl',tc+' today',la);
+    }else{
+      if(yOn)s+=jnT(lx,yy+4,'jn-ax jh-yl',pv.y+' yday',la);
+      s+=jnT(lx,ty-7,'jn-vl jh-tl',tc+' today',la);
+    }
     s+='</svg>';
     s+='<div class="jn-key"><span><i class="jk-line"></i>Today</span>'+(yOn?'<span><i class="jk-dash"></i>Yesterday</span>':'')+
       '<span><i class="jk-dot"></i>Cap</span></div>';
@@ -5515,6 +5533,9 @@ try{
     while(d>=start){
       if(!expanded&&shown>=JN_ROWS)break;
       var m=dayMetrics(dkeyOf(d));
+      // a month line where the calendar turns, so a long list keeps its bearings
+      if(shown&&d.getDate()===new Date(d.getFullYear(),d.getMonth()+1,0).getDate())
+        rows+='<p class="jr-month" role="separator">'+MONTHS[d.getMonth()]+' '+d.getFullYear()+'</p>';
       rows+=jnRowHTML(m,runOf[m.key]||0);
       shown++;
       // the zero line: nothing below it is graded against anything above it
@@ -5579,12 +5600,13 @@ try{
     var maxG=0;
     win.forEach(function(m){var g=gOf(m);if(g>maxG)maxG=g;if(m.reqGapH*3600000>maxG)maxG=m.reqGapH*3600000;});
     if(best&&best.g>maxG)maxG=best.g;
-    var maxH=Math.max(12,Math.ceil(maxG/3600000/4)*4);
+    var maxH=Math.max(12,Math.ceil(maxG/3600000/4)*4), gStep=maxH>16?8:4;
+    if(maxH%gStep)maxH+=gStep-maxH%gStep;
     function yh(ms){return base-(ms/3600000/maxH)*(base-top);}
     var slot=(W-gut)/Math.max(n,5), x0=gut+((W-gut)-slot*n)/2, bw=Math.min(30,slot*.56);
     var s='<svg class="jn-svg gt-chart" viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Longest gap per day, last '+n+' day'+(n===1?'':'s')+': '+
       win.map(function(m){var g=gOf(m);return jnWk(m.date)+' '+(g===null||g===undefined?'no gap':fmtDur(g));}).join(', ')+'.">';
-    for(var q=4;q<=maxH;q+=4){
+    for(var q=gStep;q<=maxH;q+=gStep){
       var gy=yh(q*3600000);
       s+='<line x1="'+gut+'" y1="'+gy.toFixed(1)+'" x2="'+W+'" y2="'+gy.toFixed(1)+'" class="gt-grid"/>'+jnT(0,gy+3.5,'jn-ax',q+'h');
     }
