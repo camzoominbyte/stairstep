@@ -5100,7 +5100,7 @@ try{
     // header + legend
     var zs=isZeroEra?zeroStats():null;
     var chip=isZeroEra
-      ?(zs?'<span class="chip sm clean"><span class="dot"></span>'+zs.clean+' clean since zero</span>':'')
+      ?(zs?(zs.clean?'<span class="chip sm clean"><span class="dot"></span>'+zs.clean+' clean since zero</span>':'<span class="chip sm ghost">No clean day yet</span>'):'')
       :(tp.logged?'<span class="chip sm '+(tp.under===tp.logged?'under':'ghost')+'">'+(tp.under===tp.logged?'<span class="dot"></span>':'')+tp.under+' of '+tp.logged+' within cap</span>':'');
     var sub='<span class="jn-nw">'+fmtShort(start)+' → '+(isZeroEra?'zero was ':'zero ')+'<b>'+jnWk(z)+' '+fmtShort(z)+'</b></span><br><span class="jn-nw">'+tp.tot.toLocaleString()+' logged · '+n+' days</span>';
     var key='<span><i class="jk-ramp"></i>Cap</span><span><i style="background:var(--under)"></i>Under</span>'+
