@@ -2011,9 +2011,9 @@ try{
 </main>
 
 <main class="view" id="vPlan">
-<div id="stairsWrap">
+<section class="card st-card" id="stairsWrap" aria-label="The step-down">
   <div class="stairs" id="stairs" aria-label="Step-down schedule — daily hit cap, tap a step for details"></div>
-</div>
+</section>
 
 <details class="fold" id="afterFold" hidden>
   <summary><span class="fold-ic" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg></span><span class="fold-t">After zero</span><span class="fold-live" id="afterFoldLive"></span></summary>
@@ -2023,10 +2023,10 @@ try{
   <h2>After zero</h2>
   <div class="zp-head" id="zpHead"></div>
 
-  <h3 class="ac-h">If–then plans</h3>
+  <h3 class="ac-h"><span class="ac-ic" aria-hidden="true"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-life"/></svg></span>If–then plans</h3>
   <div class="planlist" id="planList"></div>
 
-  <h3 class="ac-h">The ladder</h3>
+  <h3 class="ac-h"><span class="ac-ic" aria-hidden="true"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-coin"/></svg></span>The reward ladder</h3>
   <div class="ladderbox" id="cmBox"></div>
 
   <p class="d-evid">Honest footnote: the reward ladder follows contingency-management design, which is the best-evidenced treatment for cannabis use disorder; the trials verified abstinence externally, and paying yourself on your own word is the weaker form of it. <a class="dlink" href="guide.html#after">The evidence →</a></p>
@@ -2034,19 +2034,23 @@ try{
   </div>
 </details>
 
-<details class="fold" id="stepFold">
-  <summary><span class="fold-ic" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-plan"/></svg></span><span class="fold-t">The step-down</span><span class="fold-live" id="stepFoldLive"></span></summary>
+<details class="fold pl-flow" id="stepFold">
+  <summary><span class="fold-ic" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-plan"/></svg></span><span class="fold-t">Today and the schedule</span><span class="fold-live" id="stepFoldLive"></span></summary>
   <div class="fold-body">
 <div class="section openable" id="stepSection" data-title="The step-down">
   <button class="xopen" data-target="stepSection" data-title="The step-down" aria-label="Open the step-down in detail"><svg class="ic" aria-hidden="true"><use href="#i-open"/></svg></button>
   <h2>The step-down</h2>
   <div class="tplan" id="todayPlan"></div>
-  <div class="schedctl" id="schedCtl" hidden></div>
-  <p class="sched-cap">The whole descent — tap any day for its full plan. <a class="dlink" href="guide.html#playbook">The written playbook →</a></p>
+  <div class="pl-h" id="schedHead" hidden>The schedule, and why</div>
+  <div class="schedctl card" id="schedCtl" hidden></div>
+  <div class="pl-h sched-cap"><span>The whole descent <small>tap a day for its plan</small></span><a class="dlink" href="guide.html#playbook">Playbook<svg class="ic ic-xs" aria-hidden="true"><use href="#i-chev"/></svg></a></div>
   <div class="sched-strip" id="schedStrip" aria-label="Day-by-day schedule — tap a day for details"></div>
   <div class="xtra" id="stepXtra"></div>
-  <div id="phases"></div>
-  <p class="d-evid" style="border-top:none;padding-top:0;margin-top:4px">Honest footnote: the research backs slow, stepped reduction over weeks, but no trial prescribes exact step sizes or session gaps — the caps carry the evidence-backed principle, and the daily-widening gaps are the structure that enforces it (each urge between windows is a wave the 20-minute rule already handles). That's why a hard day holds a step instead of breaking the plan — and a held day keeps its widest gap. <a class="dlink" href="guide.html#taper">The evidence →</a></p>
+  <details class="fold" id="phasesFold">
+    <summary><span class="fold-ic" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg></span><span class="fold-t">Every step, laid out</span><span class="fold-live" id="phasesFoldLive"></span></summary>
+    <div class="fold-body"><div id="phases"></div></div>
+  </details>
+  <p class="d-evid pl-evid">Honest footnote: the research backs slow, stepped reduction over weeks, but no trial prescribes exact step sizes or session gaps — the caps carry the evidence-backed principle, and the daily-widening gaps are the structure that enforces it (each urge between windows is a wave the 20-minute rule already handles). That's why a hard day holds a step instead of breaking the plan — and a held day keeps its widest gap. <a class="dlink" href="guide.html#taper">The evidence →</a></p>
 </div>
   </div>
 </details>
