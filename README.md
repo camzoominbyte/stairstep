@@ -10,7 +10,7 @@ A small personal PWA for tracking a 10-day cannabis taper (Jul 12–22, 2026), t
 
 ## Features
 
-- Daily hit tally against a stepping-down cap. Today leads with a **24-hour day dial**: every hit ticked at its real clock time, yesterday as a ghost ring inside it, the day's longest gap as the brightest arc (labelled with how it compares to yesterday's), the running gap, and the next window drawn where it will land. Below it, the count as pips grouped by sitting (the next sitting's allowance outlined), then hold-to-log
+- Daily hit tally against a stepping-down cap. Today leads with **one ring**: on a taper day it fills from your last hit toward the moment the next window opens (green and full once the gap has been kept), with the time since the last hit in the middle and one line under it — the next window, "Window open", or "done for today". After zero it fills toward the next marker day (30, 60, 90…) with the day number in the middle. Per-hit clock times, yesterday and the longest gap live on the cards below it, where they can be read. Below it, the count as pips grouped by sitting (the next sitting's allowance outlined), then hold-to-log
 - Per-hit timestamps drive the session rules ("max 3 hits/session · 3h between") — the today card shows when the next session opens
 - Timestamps are on the surface, not buried: every day timeline stamps each sitting with its clock time, and a "Yesterday" card on the Today screen spells out the prior day's sittings and the gaps between them
 - The longest gap is the headline stat — lit across the day's timeline, badged in the gap list, and compared against the previous logged day's longest everywhere a day appears (the Yesterday card also tracks the stretch running right now against yesterday's best)
@@ -34,7 +34,7 @@ A small personal PWA for tracking a 10-day cannabis taper (Jul 12–22, 2026), t
 - "The story" capstone card in the zero era — the whole taper in numbers, shareable
 - Optional money-saved tracking: give it what a normal week used to cost and it derives the rest, since nobody can price a single hit but everyone knows the weekly number. Feeds the hero's running total and the reward ladder
 - Every chart is tap-to-expand into a full-screen, fully labeled version — hour histogram, day punchcard, pace, avoided, day-vs-cap, nightly check-ins, and session gaps; swipe sideways (or tap the dots) to page between them, and lines draw themselves in
-- Rotate the phone for the cockpit: a full-bleed six-tile live dashboard (a glance copy of the day dial, next-window countdown, taper score, urge timer, the week, zero day) — every tile taps through to its detail page
+- Rotate the phone for the cockpit: a full-bleed six-tile live dashboard (today's count with yesterday-over-today clock tape, next-window countdown, taper score, urge timer, the week, zero day) — every tile taps through to its detail page
 - Tap any history row to correct its count
 - Copy/import JSON backup, share-sheet backup export, and a backup step in the zero-eve ritual — and every destructive restore can be undone, since the copy it replaced is stashed and now has a button to bring it back
 

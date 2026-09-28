@@ -663,7 +663,7 @@
 
   /* ---- the dial ---- */
   #heroCard{
-    position:relative;width:min(282px,100%);aspect-ratio:1;margin:2px auto 0;
+    position:relative;width:min(264px,100%);aspect-ratio:1;margin:6px auto 0;
     background:none;border:0;box-shadow:none;padding:0;color:var(--ink);
   }
   #heroCard[hidden]{display:none}
@@ -674,43 +674,7 @@
   html.dark .th-bloom{opacity:.7}
   .th-dial{position:absolute;inset:0;width:100%;height:100%;overflow:visible;display:block}
   .th-dial text{font-family:var(--f-round);font-variant-numeric:tabular-nums}
-  .thd-face{fill:var(--dial-face);opacity:.55}
-  html:not(.dark) .thd-face{fill:none;stroke:var(--line);stroke-width:1}
-  .thd-tick{stroke:var(--line-2);stroke-width:1.3;stroke-linecap:round}
-  .thd-tick.mj{stroke:var(--ghost);stroke-width:2}
-  .thd-hl{font-size:10.5px;font-weight:600;fill:var(--ink-3)}
-  .thd-trk{fill:none;stroke:var(--dial-track);stroke-width:15}
-  .thd-long{fill:none;stroke:url(#thAg);stroke-width:15;stroke-linecap:round}
-  .thd-glow{fill:none;stroke:var(--acc);stroke-width:15;stroke-linecap:round;opacity:.42;filter:url(#thSoft)}
   /* the cockpit's copy (dashDialSVG) carries its own def ids */
-  .dd-dial .thd-long{stroke:url(#ddAg)}
-  .dd-dial .thd-glow{filter:url(#ddSoft)}
-  html.dark .thd-glow{opacity:.5}
-  .thd-gap{fill:none;stroke:var(--acc);stroke-width:3;stroke-linecap:round;opacity:.45}
-  .thd-run{fill:none;stroke:var(--acc);stroke-width:15;stroke-linecap:round}
-  .thd-wait{fill:none;stroke:var(--ink-3);stroke-width:2.4;stroke-linecap:round;stroke-dasharray:.1 7}
-  .thd-win{fill:none;stroke:var(--acc);stroke-width:14;stroke-linecap:butt;opacity:.16}
-  .thd-wino{fill:none;stroke:var(--acc);stroke-width:1.4;stroke-dasharray:3 2.5;opacity:.9}
-  .thd-open{stroke:var(--acc);stroke-width:2.5;stroke-linecap:round}
-  .thd-hit{stroke:var(--ink);stroke-width:3;stroke-linecap:round}
-  .thd-hit.over{stroke:var(--over)}
-  .thd-sl{font-size:11.5px;font-weight:700;fill:var(--ink)}
-  .thd-sl.over{fill:var(--over-t)}
-  .thd-sx{font-size:10px;font-weight:700;fill:var(--ink-3)}
-  .thd-nl{font-size:11.5px;font-weight:700;fill:var(--acc-t)}
-  .thd-al{font-size:9.5px;font-weight:750;letter-spacing:.04em;fill:var(--on-acc)}
-  .thd-cap{font-size:9.5px;font-weight:650;fill:var(--ink-2)}
-  .thd-ytrk{fill:none;stroke:var(--dial-track);stroke-width:5}
-  .thd-ylong{fill:none;stroke:var(--ghost);stroke-width:5;stroke-linecap:round}
-  .thd-yhit{fill:var(--ink-3);stroke:var(--s1);stroke-width:1.2}
-  .thd-yslip{fill:var(--over);stroke:var(--s1);stroke-width:1.2}
-  .thd-yl{font-size:9px;font-weight:700;letter-spacing:.05em;fill:var(--ink-3)}
-  .thd-yclean{fill:none;stroke:var(--clean);stroke-width:5;opacity:.36}
-  .thd-wk{fill:none;stroke:var(--dial-track);stroke-width:4;stroke-linecap:round}
-  .thd-wk.on{stroke:var(--acc)}
-  .thd-wslip{fill:var(--over);stroke:var(--s1);stroke-width:1.5}
-  .thd-now{stroke:var(--ink);stroke-width:2;stroke-linecap:round}
-  .thd-nowd{fill:var(--ink);stroke:var(--acc);stroke-width:2.5}
 
   /* the dial's centre readout (taper: the running gap; zero era: days this run) */
   .th-center{
@@ -729,12 +693,13 @@
   }
   .th-big .u{font-size:.46em;font-weight:650;color:var(--ink-2);letter-spacing:0;margin:0 3px 0 1px}
   .th-big .u:last-child{margin-right:0}
-  .th-nx{font-size:12.5px;line-height:1.35;color:var(--ink-2);font-weight:500}
-  .th-nx b{color:var(--ink);font-weight:650}
+  .th-nx{font-size:12.5px;line-height:1.35;color:var(--ink-2);font-weight:500;text-wrap:balance}
+  .th-nx b{color:var(--ink);font-weight:650;white-space:nowrap}
   .th-rule{margin-top:6px;font-size:11.5px;font-weight:600;color:var(--ink-3);line-height:1.25}
   .th-rule:empty{display:none}
   .gap-hero.fresh .th-big{font-size:34px;letter-spacing:-.02em;color:var(--ink-2)}
-  .gap-hero.open .th-nx b{color:var(--acc-t)}
+  .gap-hero.open .th-nx b{color:var(--under-t)}
+  .gap-hero.done .th-nx b{color:var(--ink)}
   .th-cc .th-big{font-size:74px;letter-spacing:-.05em;margin:2px 0 4px}
   #todayCard.free .th-cc .th-k{color:var(--ink-2)}
   @keyframes thFlash{0%,100%{transform:none}35%{transform:scale(1.06)}}
@@ -964,6 +929,19 @@
   .gh-gain b{display:block;font:700 20px/1.1 var(--f-round);color:var(--ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
   .gh-gain span{display:block;margin-top:3px;font-size:12px;font-weight:550;color:var(--ink-2)}
 
+  /* ---- the hero ring: one ring, one meaning ---- */
+  .thr-trk{fill:none;stroke:var(--dial-track);stroke-width:18}
+  .thr-arc{fill:none;stroke-width:18;stroke-linecap:round}
+  .thr-arc.acc{stroke:url(#thAg)}
+  .thr-arc.open,.thr-arc.clean{stroke:var(--under)}
+  .thr-arc.done{stroke:var(--ink-3)}
+  .thr-knob{fill:var(--s1);stroke-width:4}
+  .thr-knob.acc{stroke:var(--acc)}
+  .thr-knob.clean{stroke:var(--under)}
+  .thr-in{animation:thrIn 900ms var(--e-enter) both}
+  @keyframes thrIn{from{stroke-dasharray:0 100}}
+  .th-bigrow{display:flex;align-items:baseline;justify-content:center;gap:5px}
+  .th-bigrow .th-sec{margin:0;font-size:16px;color:var(--ink-3)}
   /* ==== [/TH] ==== */
 
 
@@ -2862,6 +2840,7 @@
      are skipped in JS (motionOK=false → html.no-vt). The hold-to-log fill
      is NOT touched — it is the friction mechanic. */
   @media (prefers-reduced-motion: reduce){
+    .thr-in{animation:none!important}
     .ppane,.pseg-dot{animation:none!important}
     html{scroll-behavior:auto}
     .reveal{opacity:1!important;transform:none!important;transition:none!important}
@@ -3092,11 +3071,10 @@ try{
   </div>
   <div class="hero-card" id="heroCard">
     <div class="th-bloom breathe" aria-hidden="true"></div>
-    <svg class="th-dial" id="thDial" viewBox="0 0 296 296" role="img" aria-label="Today’s 24-hour dial"></svg>
+    <svg class="th-dial" id="thDial" viewBox="0 0 296 296" role="img" aria-label="Gap ring"></svg>
     <div class="gap-hero th-center" id="gapHero" hidden>
       <span class="th-k"><span id="ghLbl">Since</span> <span id="stLast">–</span></span>
-      <span class="th-big" id="ghSince">–</span>
-      <span class="th-sec" id="ghSub" aria-hidden="true" hidden></span>
+      <span class="th-bigrow"><span class="th-big" id="ghSince">–</span><span class="th-sec" id="ghSub" aria-hidden="true" hidden></span></span>
       <span class="th-nx" id="ghNote"></span>
       <span class="th-rule" id="ghRule"></span>
     </div>
@@ -5535,6 +5513,7 @@ try{
   document.addEventListener('animationend',function(e){
     var t=e.target;
     if(e.animationName==='drawIn'&&t&&t.classList&&t.classList.contains('draw-in'))t.classList.remove('draw-in');
+    if(e.animationName==='thrIn'&&t&&t.classList&&t.classList.contains('thr-in'))t.classList.remove('thr-in');
   },true);
   // stagger the top-level cards of a view in, once per session per view
   var VIEW_EL={today:'vToday',journey:'vJourney',plan:'vPlan',more:'vMore'};
@@ -7261,127 +7240,26 @@ try{
      the cap as pips grouped by sitting, then hold-to-log. The dial's time
      domain is the logical day: [04:00 of today, 04:00 tomorrow), midnight at
      the top, clockwise. Nothing here re-walks the schedule. */
-  var TH_C=148, TH_RT=112, TH_RY=91, TH_RW=77, TH_RL=141;
+  /* ================= the hero ring =================
+     One ring, one meaning. On a taper day it fills from the last hit toward
+     the moment the next window opens — full means the gap has been kept.
+     After zero it fills toward the next marker day. The 24-hour dial this
+     replaces tried to carry every hit, yesterday, the longest gap and the
+     next window at once; all of that lives on the cards below it, where it
+     can actually be read. */
+  var TH_C=148, TH_RR=120;
   var thDrawn=false, thDialMin=null, thLastCnt=null;
-  function thH(t){var d=new Date(t);return d.getHours()+d.getMinutes()/60;}
-  function thPt(h,r){var a=h/24*2*Math.PI-Math.PI/2;return [TH_C+r*Math.cos(a),TH_C+r*Math.sin(a)];}
   function thF(n){return n.toFixed(1);}
-  // clockwise arc from clock-hour h1 spanning sp hours; rev walks it backwards
-  // so a label on the lower half of the face reads upright
-  function thArc(h1,sp,r,rev){
-    sp=Math.max(0.002,Math.min(23.99,sp));
-    var a=thPt(h1,r),b=thPt(h1+sp,r),L=sp>12?1:0;
-    return rev
-      ?'M'+thF(b[0])+' '+thF(b[1])+'A'+r+' '+r+' 0 '+L+' 0 '+thF(a[0])+' '+thF(a[1])
-      :'M'+thF(a[0])+' '+thF(a[1])+'A'+r+' '+r+' 0 '+L+' 1 '+thF(b[0])+' '+thF(b[1]);
-  }
-  function thLower(h){h=((h%24)+24)%24;return h>6.2&&h<17.8;}
-  function thSpan(a,b){return Math.max(0,(b-a)/3600000);}
-  // "10:04" — the dial's own hour labels say whether it's a or p
   function thClk(t){var d=new Date(t);return (d.getHours()%12||12)+':'+pad(d.getMinutes());}
-  function thClkS(t){var d=new Date(t);return thClk(t)+(d.getHours()<12?'a':'p');}
-  // the exact elapsed since the last hit, to the second ("27d 22h 14m 05s")
-  function thExactText(){var aw=acuteWindow();if(!aw)return '';var sp=splitClean(aw.ms);return sp.big+(sp.small?' '+sp.small:'');}
+  // the exact elapsed since the last hit ("27d 22h 14m") for the clean centre
+  function thExactText(){var aw=acuteWindow();return aw?splitClean(aw.ms).plain:'';}
   function thDurHTML(ms){
     var m=Math.max(0,Math.floor(ms/60000)),h=Math.floor(m/60);
     return h?h+'<span class="u">h</span>'+pad(m%60)+'<span class="u">m</span>':m+'<span class="u">m</span>';
   }
-  // a label that rides its arc (textPath) — only when the arc is long enough to hold it
-  function thArcLabel(id,h1,sp,r,texts,cls){
-    var len=r*sp/24*2*Math.PI;
-    for(var i=0;i<texts.length;i++){
-      var tx=texts[i];
-      if(tx.length*6.1+14<=len){
-        return '<path id="'+id+'" d="'+thArc(h1,sp,r,thLower(h1+sp/2))+'" fill="none"/>'+
-          '<text class="'+cls+'" dominant-baseline="central"><textPath href="#'+id+'" startOffset="50%" text-anchor="middle">'+tx+'</textPath></text>';
-      }
-    }
-    return '';
-  }
-  function thDefs(){
-    return '<defs><linearGradient id="thAg" x1="0" y1="0" x2="1" y2="1">'+
-      '<stop offset="0" style="stop-color:var(--acc)"/><stop offset="1" style="stop-color:var(--th-g2)"/></linearGradient>'+
-      '<filter id="thSoft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="4"/></filter>'+
-      '<radialGradient id="thHalo"><stop offset="0" style="stop-color:var(--acc);stop-opacity:.5"/><stop offset="1" style="stop-color:var(--acc);stop-opacity:0"/></radialGradient></defs>';
-  }
-  // the face: disc, 24 hour ticks, and the four hour labels (a label steps
-  // aside for any sitting/window label sitting on top of it)
-  function thFace(taken){
-    var s='<circle class="thd-face" cx="'+TH_C+'" cy="'+TH_C+'" r="129"/>';
-    for(var h=0;h<24;h++){
-      var mj=h%6===0,a=thPt(h,mj?122:125),b=thPt(h,130);
-      s+='<line class="thd-tick'+(mj?' mj':'')+'" x1="'+thF(a[0])+'" y1="'+thF(a[1])+'" x2="'+thF(b[0])+'" y2="'+thF(b[1])+'"/>';
-    }
-    [['12a',0],['6a',6],['12p',12],['6p',18]].forEach(function(l){
-      var clash=(taken||[]).some(function(x){var d=Math.abs(x-l[1])%24;return Math.min(d,24-d)<1.15;});
-      if(clash)return;
-      var p=thPt(l[1],TH_RL);
-      s+='<text class="thd-hl" x="'+thF(p[0])+'" y="'+thF(p[1])+'" text-anchor="middle" dominant-baseline="central">'+l[0]+'</text>';
-    });
-    return s;
-  }
-  function thNow(h){
-    var a=thPt(h,120),b=thPt(h,134),d=thPt(h,TH_RT);
-    return '<line class="thd-now" x1="'+thF(a[0])+'" y1="'+thF(a[1])+'" x2="'+thF(b[0])+'" y2="'+thF(b[1])+'"/>'+
-      '<circle cx="'+thF(d[0])+'" cy="'+thF(d[1])+'" r="13" fill="url(#thHalo)"/>'+
-      '<circle class="thd-nowd" cx="'+thF(d[0])+'" cy="'+thF(d[1])+'" r="5.2"/>';
-  }
-  // outside labels (sittings, the next window): sorted by clock angle; two
-  // closer than ~20° merge into one ("10:04" over "×3+2") instead of colliding
-  function thLabels(list){
-    list.sort(function(a,b){return a.h-b.h;});
-    var out=[];
-    list.forEach(function(l){
-      var p=out[out.length-1];
-      if(p&&!p.win&&!l.win&&l.h-p.h<1.35){p.n.push(l.n[0]);return;}
-      if(p&&l.h-p.h<1.1)l.h=p.h+1.1;           // a window label nudges clear of a sitting
-      out.push(l);
-    });
-    // the first and last can collide across midnight
-    if(out.length>1&&out[0].h+24-out[out.length-1].h<1.1)out[out.length-1].h=out[0].h+24-1.1;
-    return out;
-  }
-  function thLabelSVG(l){
-    var p=thPt(l.h,TH_RL);
-    if(l.cap)return '<text class="thd-cap" x="'+thF(p[0])+'" y="'+thF(p[1]-5.5)+'" text-anchor="middle" dominant-baseline="central">from</text>'+
-      '<text class="thd-cap" x="'+thF(p[0])+'" y="'+thF(p[1]+6)+'" text-anchor="middle" dominant-baseline="central">'+l.t+'</text>';
-    if(l.win)return '<text class="thd-nl" x="'+thF(p[0])+'" y="'+thF(p[1])+'" text-anchor="middle" dominant-baseline="central">'+l.t+'</text>';
-    var tot=l.n.reduce(function(a,b){return a+b;},0);
-    var sub=l.n.length>1?'×'+l.n.join('+'):tot>1?'×'+tot:'';
-    return '<text class="thd-sl'+(l.over?' over':'')+'" x="'+thF(p[0])+'" y="'+thF(p[1]-(sub?5.5:0))+'" text-anchor="middle" dominant-baseline="central">'+l.t+'</text>'+
-      (sub?'<text class="thd-sx" x="'+thF(p[0])+'" y="'+thF(p[1]+7.5)+'" text-anchor="middle" dominant-baseline="central">'+sub+'</text>':'');
-  }
   function thDayBounds(d){
     return [new Date(d.getFullYear(),d.getMonth(),d.getDate(),DAY_CUTOFF_H).getTime(),
             new Date(d.getFullYear(),d.getMonth(),d.getDate()+1,DAY_CUTOFF_H).getTime()];
-  }
-  // the previous LOGGED day (yesterday unless it went unlogged) — the ghost ring
-  function thPrevKey(m){
-    var y=dayMetrics(ydayKey());
-    if(y.eff!==null)return y.key;
-    return m.vs?m.vs.key:null;
-  }
-  function thDraw(first){return first&&motionOK&&!thDrawn?' draw-in" pathLength="1':'';}
-  // yesterday on the inner ring: its longest gap as a ghost arc, labelled, and every hit as a dot
-  function thGhost(pk){
-    var s='<circle class="thd-ytrk" cx="'+TH_C+'" cy="'+TH_C+'" r="'+TH_RY+'"/>';
-    if(!pk)return s;
-    var pm=dayMetrics(pk), pb=thDayBounds(dateOf(pk));
-    var who=pk===ydayKey()?'YESTERDAY':WEEKDAYS[dateOf(pk).getDay()].slice(0,3).toUpperCase();
-    if(pm.gapMax){
-      var f=Math.max(pm.gapMax.from.getTime(),pb[0]),t=pm.gapMax.to.getTime(),sp=thSpan(f,t);
-      if(sp>0.05){
-        s+='<path class="thd-ylong'+thDraw(true)+'" d="'+thArc(thH(f),sp,TH_RY)+'"/>';
-        s+=thArcLabel('thYp',thH(f),sp,TH_RY+8,[who+' · '+fmtDur(pm.gapMaxMs),fmtDur(pm.gapMaxMs)],'thd-yl');
-      }
-    }else if(pm.eff===0){
-      s+=thArcLabel('thYp',20,8,TH_RY+8,[who+' · NOTHING LOGGED'],'thd-yl');
-    }
-    pm.sessions.forEach(function(ss){ss.forEach(function(t){
-      var p=thPt(thH(t),TH_RY);
-      s+='<circle class="thd-yhit" cx="'+thF(p[0])+'" cy="'+thF(p[1])+'" r="2.7"/>';
-    });});
-    return s;
   }
   function thNextWindow(cnt,now,de){
     if(idx<0||cnt>=cap)return null;
@@ -7397,168 +7275,60 @@ try{
     var si=sessionInfo();
     return si&&si.nextOpen&&si.nextOpen.getTime()<de?si.nextOpen.getTime():null;
   }
-  function dialSVG(){
-    var now=Date.now(), b=thDayBounds(today), ds=b[0], de=b[1];
-    var nowC=Math.min(Math.max(now,ds),de-60000), nowH=thH(nowC);
-    var m=dayMetrics(todayKey), cnt=countOf(todayKey)||0, last=lastHitEver();
-    var first=!thDrawn;
-    var s=thDefs(), labels=[], taken=[];
-    s+='<circle class="thd-trk" cx="'+TH_C+'" cy="'+TH_C+'" r="'+TH_RT+'"/>';
-    // the running stretch (last hit → now), and whether it already leads the day
-    var run=null;
-    if(last&&last.getTime()<=now){
-      var rf=Math.max(last.getTime(),ds);
-      if(nowC-rf>60000)run={f:rf,clipped:last.getTime()<ds,ms:now-last.getTime()};
+  // where the ring stands: {pct 0–100, tone, next}
+  function thRingState(){
+    var cnt=countOf(todayKey)||0, now=Date.now();
+    if(isZeroEra){
+      if(cnt>0)return {pct:0,tone:'clean'};   // a slip empties the ring; the banked total never resets
+      var n=Math.max(0,daysFree()), prev=0, next=null;
+      for(var i=0;i<MARKERS.length;i++){if(MARKERS[i][0]>n){next=MARKERS[i][0];break;}prev=MARKERS[i][0];}
+      if(!next)return {pct:100,tone:'clean'};
+      return {pct:Math.max(1.5,(n-prev)/(next-prev)*100),tone:'clean',next:next};
     }
-    var live=liveGapNow(m), runLeads=run&&(live?live.wins:!m.sessions.length);
-    // closed gaps: the longest lit, the rest quiet
-    var capTxt='';
-    m.gapSpans.forEach(function(g,gi){
-      var f=Math.max(g.from.getTime(),ds),t=g.to.getTime(),sp=thSpan(f,t);
-      if(sp<=0.02)return;
-      if(gi===m.gapMaxIdx&&!runLeads){
-        s+='<path class="thd-glow'+thDraw(first)+'" d="'+thArc(thH(f),sp,TH_RT)+'"/>';
-        s+='<path class="thd-long'+thDraw(first)+'" d="'+thArc(thH(f),sp,TH_RT)+'"/>';
-        s+=thArcLabel('thLp',thH(f),sp,TH_RT,['LONGEST · '+fmtDur(g.ms),fmtDur(g.ms)],'thd-al');
-        if(g.from.getTime()<ds)capTxt=thClkS(g.from);
-      }else{
-        s+='<path class="thd-gap" d="'+thArc(thH(f),sp,TH_RT)+'"/>';
-      }
-    });
-    // what's left of today's plan: the wait (dotted) and the next window
-    var nx=thNextWindow(cnt,now,de);
-    if(nx){
-      if(nx>nowC+60000){
-        s+='<path class="thd-wait" d="'+thArc(nowH+0.25,Math.max(0.01,thSpan(nowC,nx)-0.4),TH_RT)+'"/>';
-        var we=Math.min(nx+SESSION_GAP,de-60000),wsp=thSpan(nx,we);
-        s+='<path class="thd-win" d="'+thArc(thH(nx),wsp,TH_RT)+'"/>'+
-           '<path class="thd-wino" d="'+thArc(thH(nx),wsp,TH_RT+7)+'"/><path class="thd-wino" d="'+thArc(thH(nx),wsp,TH_RT-7)+'"/>';
-        labels.push({h:thH(nx)+wsp/2,t:'~'+thClkS(nx),win:true});
-      }else if(nx>=ds){
-        var p1=thPt(thH(nx),TH_RT-9),p2=thPt(thH(nx),TH_RT+9);
-        s+='<line class="thd-open" x1="'+thF(p1[0])+'" y1="'+thF(p1[1])+'" x2="'+thF(p2[0])+'" y2="'+thF(p2[1])+'"/>';
-        labels.push({h:thH(nx),t:'open '+thClkS(nx),win:true});
-      }
+    var last=lastHitEver();
+    if(idx<0||!last)return {pct:0,tone:'acc'};
+    var since=now-last.getTime(), full=cnt>=cap?'done':'open';
+    if(phase.single){
+      var nx=thNextWindow(cnt,now,thDayBounds(today)[1]);
+      if(nx&&nx>last.getTime())return {pct:Math.min(100,since/(nx-last.getTime())*100),tone:'acc'};
+      return {pct:100,tone:full};
     }
-    // the stretch running now: breathes (the screen's one loop), lit when it leads
-    if(run){
-      var rsp=thSpan(run.f,nowC), rh=thH(run.f);
-      var ph=' style="animation-delay:-'+(Date.now()%8000)+'ms"';
-      if(runLeads){
-        s+='<path class="thd-glow" d="'+thArc(rh,rsp,TH_RT)+'"/>';
-        s+='<path class="thd-long breathe" d="'+thArc(rh,rsp,TH_RT)+'"'+ph+'/>';
-        s+=thArcLabel('thRp',rh,rsp,TH_RT,['LONGEST · '+fmtDur(run.ms),fmtDur(run.ms)],'thd-al');
-        if(run.clipped)capTxt=thClkS(last);
-      }else{
-        s+='<path class="thd-run breathe" d="'+thArc(rh,rsp,TH_RT)+'"'+ph+'/>';
-        s+=thArcLabel('thRp',rh,rsp,TH_RT,[fmtDur(run.ms)],'thd-al');
-      }
-    }
-    // a gap that began before 04:00 is clipped there, with an end-cap label
-    if(capTxt)labels.push({h:DAY_CUTOFF_H,t:capTxt,cap:true,win:true});
-    s+=thGhost(thPrevKey(m));
-    // every hit at its real minute — a sitting reads as a cluster; hits past
-    // the cap are clay
-    var k=0;
-    m.sessions.forEach(function(ss){
-      var over=false;
-      ss.forEach(function(t){
-        var h=thH(t),a=thPt(h,TH_RT-9),c=thPt(h,TH_RT+10),o=k>=cap&&!isZeroEra;
-        if(o)over=true;
-        s+='<line class="thd-hit'+(o?' over':'')+'" x1="'+thF(a[0])+'" y1="'+thF(a[1])+'" x2="'+thF(c[0])+'" y2="'+thF(c[1])+'"/>';
-        k++;
-      });
-      var f0=ss[0].getTime(),f1=ss[ss.length-1].getTime();
-      labels.push({h:thH((f0+f1)/2),t:thClk(ss[0]),n:[ss.length],over:over});
-    });
-    thLabels(labels).forEach(function(l){taken.push(((l.h%24)+24)%24);s+=thLabelSVG(l);});
-    s+=thNow(nowH);
-    return thFace(taken)+s;
+    var req=spacingHNow()*3600000;
+    if(!(req>0))return {pct:100,tone:full};
+    var pc=since/req*100;
+    return {pct:Math.min(100,pc),tone:pc>=100?full:'acc'};
   }
-  /* the zero era's face: clean time is more-is-better, so here (and only
-     here) an arc may fill toward complete. Today clean from 4a to now,
-     yesterday as a full ring, and the 12-week consolidation ring. */
-  function cleanDialSVG(){
-    var now=Date.now(), b=thDayBounds(today), ds=b[0], de=b[1];
-    var nowC=Math.min(Math.max(now,ds),de-60000), nowH=thH(nowC);
-    var cnt=countOf(todayKey)||0, first=!thDrawn;
-    var s=thDefs(), labels=[], taken=[];
-    s+='<circle class="thd-trk" cx="'+TH_C+'" cy="'+TH_C+'" r="'+TH_RT+'"/>';
-    var hits=sessionsFor(todayKey), flat=[];
-    hits.forEach(function(ss){ss.forEach(function(t){flat.push(t.getTime());});});
-    var cleanEnd=flat.length?Math.max(ds,flat[0]):nowC, csp=thSpan(ds,cleanEnd);
-    if(csp>0.05){
-      s+='<path class="thd-glow'+thDraw(first)+'" d="'+thArc(DAY_CUTOFF_H,csp,TH_RT)+'"/>';
-      s+='<path class="thd-long'+thDraw(first)+'" d="'+thArc(DAY_CUTOFF_H,csp,TH_RT)+'"/>';
-      s+=thArcLabel('thLp',DAY_CUTOFF_H,csp,TH_RT,['CLEAN · '+fmtDur(cleanEnd-ds),fmtDur(cleanEnd-ds)],'thd-al');
-    }
-    if(flat.length){
-      // after a slip the day keeps its clock: the stretch since the last one, quietly
-      var lf=flat[flat.length-1];
-      if(nowC-lf>60000)s+='<path class="thd-run breathe" d="'+thArc(thH(lf),thSpan(lf,nowC),TH_RT)+'" style="animation-delay:-'+(Date.now()%8000)+'ms"/>';
-      hits.forEach(function(ss){
-        ss.forEach(function(t){
-          var h=thH(t),a=thPt(h,TH_RT-9),c=thPt(h,TH_RT+10);
-          s+='<line class="thd-hit over" x1="'+thF(a[0])+'" y1="'+thF(a[1])+'" x2="'+thF(c[0])+'" y2="'+thF(c[1])+'"/>';
-        });
-        labels.push({h:thH((ss[0].getTime()+ss[ss.length-1].getTime())/2),t:'Slip '+thClk(ss[0]),n:[ss.length],over:true});
-      });
-    }
-    if(de-nowC>30*60000)s+='<path class="thd-wait" d="'+thArc(nowH+0.25,thSpan(nowC,de)-0.5,TH_RT)+'"/>';
-    // yesterday: a full ring when it was clean, its hits in clay when it wasn't
-    var yk=ydayKey(), yc=countOf(yk)||0, yb=thDayBounds(addDays(today,-1)), zd=zeroDay();
-    var yPre=addDays(today,-1)<zd;
-    if(!yc){
-      s+='<circle class="thd-yclean" cx="'+TH_C+'" cy="'+TH_C+'" r="'+TH_RY+'"/>';
-      s+=thArcLabel('thYp',21,6,TH_RY+8,['YESTERDAY · CLEAN'],'thd-yl');
-    }else{
-      s+='<circle class="thd-ytrk" cx="'+TH_C+'" cy="'+TH_C+'" r="'+TH_RY+'"/>';
-      sessionsFor(yk).forEach(function(ss){ss.forEach(function(t){
-        var p=thPt(thH(t),TH_RY);
-        s+='<circle class="'+(yPre?'thd-yhit':'thd-yslip')+'" cx="'+thF(p[0])+'" cy="'+thF(p[1])+'" r="3"/>';
-      });});
-      s+=thArcLabel('thYp',21,6,TH_RY+8,['YESTERDAY · '+(yPre?yc+' HIT'+(yc>1?'S':''):'SLIP ×'+yc)],'thd-yl');
-    }
-    // twelve weeks of consolidation, one segment a week; slip days as clay dots
-    var zcd=Math.max(1,zeroCalDay()), done=Math.min(12,Math.floor((zcd-1)/7)), part=zcd>84?0:((zcd-1)%7+1)/7;
-    for(var w=0;w<12;w++){
-      var h1=w*2+0.2,h2=w*2+1.8;
-      s+='<path class="thd-wk" d="'+thArc(h1,h2-h1,TH_RW)+'"/>';
-      if(w<done||zcd>84)s+='<path class="thd-wk on'+thDraw(first)+'" d="'+thArc(h1,h2-h1,TH_RW)+'"/>';
-      else if(w===done&&part>0)s+='<path class="thd-wk on" d="'+thArc(h1,(h2-h1)*part,TH_RW)+'"/>';
-    }
-    for(var d=new Date(zd),n=1;d<=today&&n<=84;d=addDays(d,1),n++){
-      if((countOf(dkeyOf(d))||0)>0){
-        var wk=Math.floor((n-1)/7),hh=wk*2+0.2+1.6*(((n-1)%7)+0.5)/7,pp=thPt(hh,TH_RW);
-        s+='<circle class="thd-wslip" cx="'+thF(pp[0])+'" cy="'+thF(pp[1])+'" r="3.2"/>';
+  function thRingSVG(st){
+    var pct=Math.max(0,Math.min(100,st.pct||0)), C=TH_C, R=TH_RR;
+    var s='<defs><linearGradient id="thAg" x1="0" y1="0" x2="1" y2="1">'+
+      '<stop offset="0" style="stop-color:var(--acc)"/><stop offset="1" style="stop-color:var(--th-g2)"/></linearGradient></defs>'+
+      '<circle class="thr-trk" cx="'+C+'" cy="'+C+'" r="'+R+'"/>';
+    if(pct>0){
+      s+='<circle class="thr-arc '+st.tone+(!thDrawn&&motionOK?' thr-in':'')+'" cx="'+C+'" cy="'+C+'" r="'+R+'" pathLength="100"'+
+        ' stroke-dasharray="'+pct.toFixed(2)+' 100" transform="rotate(-90 '+C+' '+C+')"/>';
+      if(pct<100){
+        var a=pct/100*2*Math.PI-Math.PI/2;
+        s+='<circle class="thr-knob '+st.tone+'" cx="'+thF(C+R*Math.cos(a))+'" cy="'+thF(C+R*Math.sin(a))+'" r="8"/>';
       }
     }
-    thLabels(labels).forEach(function(l){taken.push(((l.h%24)+24)%24);s+=thLabelSVG(l);});
-    s+=thNow(nowH);
-    return thFace(taken)+s;
+    return s;
   }
   function thDrawDial(){
     var svg=$('thDial');if(!svg)return;
-    svg.innerHTML=isZeroEra?cleanDialSVG():dialSVG();
+    var st=thRingState();
+    svg.innerHTML=thRingSVG(st);
+    svg.setAttribute('aria-label',isZeroEra
+      ?(st.next?'Day '+Math.max(0,daysFree())+' of the way to day '+st.next:'Clean-time ring')
+      :'Gap ring, '+Math.round(st.pct)+'% of the way to the next window');
     thDialMin=Math.floor(Date.now()/60000);
     thDrawn=true;
   }
-  // the now hand steps once a minute — never a continuous tween
+  // the ring moves once a minute — never a continuous tween
   function thDialTick(){if(Math.floor(Date.now()/60000)!==thDialMin)thDrawDial();}
-  /* the landscape cockpit's glance copy of the dial (renderDash drops it into
-     #dhDial). Same drawing, its own def ids: #dash precedes #vToday in the DOM
-     and is display:none in portrait, so a shared id would resolve into the
-     hidden copy and blank the hero's gradient. No labels at 150px, and no
-     breathe — the cockpit is read at a glance, not watched. */
-  function dashDialSVG(){
-    var host=$('thDial');if(!host)return '';
-    var inner=isZeroEra?cleanDialSVG():dialSVG();
-    if(!inner)return '';
-    inner=inner.replace(/\bth(Ag|Soft|Halo)\b/g,'dd$1')
-      .replace(/<text\b[\s\S]*?<\/text>/g,'')
-      .replace(/\s(?:breathe|draw-in)(?=[\s"])/g,'');
-    return '<svg class="dd-dial" viewBox="'+(host.getAttribute('viewBox')||'0 0 296 296')+'" aria-hidden="true">'+inner+'</svg>';
-  }
+  /* the landscape cockpit keeps its own yesterday-over-today tape rather than
+     a second copy of this ring (it already has a next-window tile of its own);
+     renderDash falls back to the tape whenever this comes back empty */
+  function dashDialSVG(){return '';}
   /* pips: one per allowed hit, grouped by sitting (a wider gap between
      sittings); the next sitting's allowance outlined in the accent; hits
      past the cap appended in clay after the cap run — never a ring. */
@@ -7641,8 +7411,8 @@ try{
         /* the day number stays the headline — markers, the ladder and the
            twelve weeks count calendar days — but never alone: the exact
            elapsed rides directly under it, ticking (renderGap's 1Hz clock) */
-        $('thCS').innerHTML='<span class="th-exact" id="thExact">'+thExactText()+'</span>'+
-          '<span class="th-cs2">'+((zs0&&zs0.slips)?'<b>'+zs0.clean+'</b> clean in total':'clean since <b>'+fmtShort(zeroDay())+'</b>')+'</span>';
+        var ex0=thExactText();
+        $('thCS').innerHTML=ex0?'<span class="th-exact" id="thExact">'+ex0+'</span> clean':'clean since <b>'+fmtShort(zeroDay())+'</b>';
         if(gg){var awg=acuteWindow();gg.hidden=!awg;if(awg)gg.innerHTML=gainsHTML(cleanGains(awg.ms));}
         // the medallion line: where this run stands, and the next marker
         var best=zs0?zs0.best:nFree, nm=null;
@@ -9501,14 +9271,6 @@ try{
      UP — stretching the gap past the mark is the taper mechanism itself.
      These lines live in the dial's centre, so each is two short lines. */
   var gapTick=null;
-  function gapOpenMsg(m){
-    if(m<1)return '<b>Window open</b><br>every minute you stretch is banked';
-    if(m<15)return '<b>Window open '+m+' min</b><br>each minute stretched is a win';
-    if(m<30)return '<b>Stretched '+m+' min</b><br>waves pass in minutes — proof';
-    if(m<60)return '<b>Stretched '+m+' min</b><br>a banked half hour, counting';
-    var h=Math.floor(m/60),r=m%60;
-    return '<b>Stretched '+h+'h'+(r?' '+r+'m':'')+'</b><br>wider spacing: the taper working';
-  }
   var winTimer=null, lastAlertedOpen=null;
   /* "Try to stretch it a little longer" is meant to fire once, when a window
      first opens. lastAlertedOpen was a plain var, so every app launch began
@@ -9602,15 +9364,14 @@ try{
       beat++;
       safe(thDialTick);
       wrap.classList.remove('open','done','fresh');
-      $('ghRule').textContent=phase.single?'Evening session only':'Gap rule '+fmtGapH(gapH);
+      $('ghRule').textContent='';
       if(!last){
         wrap.classList.add('fresh');
         $('ghLbl').textContent='Nothing logged yet';
         $('stLast').hidden=true;
         $('ghSince').textContent='Ready';lastDH='';
         $('ghSub').hidden=true;
-        $('ghNote').innerHTML='The clock starts<br>at the first hit';
-        $('ghRule').textContent=phase.single?'One evening session only':'Max '+phase.sessionMax+' a sitting · '+fmtGapH(gapH)+' gaps';
+        $('ghNote').textContent='The clock starts at the first hit';
         return;
       }
       $('ghLbl').textContent='Since';
@@ -9618,21 +9379,18 @@ try{
       var since=Date.now()-last.getTime();
       var dh=thDurHTML(since);
       if(dh!==lastDH){lastDH=dh;$('ghSince').innerHTML=dh;}
-      // seconds ride on their own line under the big units
+      // seconds ride small beside the big units
       var gs=$('ghSub'), sec=pad(Math.floor(since/1000)%60)+'s';
       if(gs){if(gs.textContent!==sec)gs.textContent=sec;if(gs.hidden)gs.hidden=false;}
       if(count>=cap){
         wrap.classList.add('open','done');
-        $('ghNote').innerHTML=count>cap?'<b>Over the cap</b><br>the day is done':'<b>At the cap</b><br>done for today';
-        $('ghRule').textContent=count>cap?'This still counts — let it run':'This gap runs into tomorrow';
+        $('ghNote').innerHTML=(count>cap?'<b>Over the cap</b>':'<b>At the cap</b>')+'<br>done for today';
         return;
       }
       if(phase.single){
-        wrap.classList.add('open');
-        $('ghNote').innerHTML='<b>One evening session</b><br>tonight, only';
-        // the dial already draws the long wait — a fourth line here runs the
-        // centre readout into the arc labels at the bottom of the ring
-        $('ghRule').textContent='';
+        var nxS=thNextWindow(count,Date.now(),thDayBounds(today)[1]);
+        $('ghNote').innerHTML=nxS?'Tonight’s sitting <b>'+fmtTime(new Date(nxS))+'</b>':'<b>One evening sitting</b> tonight';
+        if(!nxS||nxS<=Date.now())wrap.classList.add('open');
         return;
       }
       var si=sessionInfo();
@@ -9644,12 +9402,12 @@ try{
       var sittingRoom=si&&si.inSession<phase.sessionMax&&(Date.now()-si.last.getTime())<=SESSION_GAP;
       var diff=openTs-Date.now();
       if(diff>0){
-        var tmTot=Math.ceil(diff/60000),h=Math.floor(tmTot/60),m=tmTot%60;
-        $('ghNote').innerHTML='Next <b>~'+fmtTime(new Date(openTs))+'</b><br>'+(h?h+'h ':'')+m+'m to go';
-        if(sittingRoom)$('ghRule').textContent='Still '+(phase.sessionMax-si.inSession)+' of '+phase.sessionMax+' this sitting';
+        $('ghNote').innerHTML=sittingRoom
+          ?'Sitting open · <b>'+(phase.sessionMax-si.inSession)+'</b> more'
+          :'Next window <b>'+fmtTime(new Date(openTs))+'</b>';
       }else{
         wrap.classList.add('open');
-        $('ghNote').innerHTML=gapOpenMsg(Math.floor(-diff/60000));
+        $('ghNote').innerHTML='<b>Window open</b>';
         // the note already says the window is open; the rule line would be a
         // fifth line in the centre, and it runs into the ring's arc labels
         $('ghRule').textContent='';
