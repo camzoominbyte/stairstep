@@ -1324,19 +1324,62 @@
   .px-pick{margin-top:10px;padding:12px;border-radius:var(--r-md);background:var(--s2);animation:fade-in var(--d-base) var(--e-enter) both}
   .px-pick p{font-size:13px;line-height:1.4;color:var(--ink-2);margin:0 0 10px}
   .px-pick .px-sc{background:var(--s1)}
-  /* today, and each earlier day: a time, the gap, the next time — "the time
-     between" sits between the stamps it measures */
-  .px-today{padding:16px 16px 14px}
-  .px-today h3{margin:0 0 4px}
-  .px-hint{font-size:12.5px;line-height:1.4;color:var(--ink-3);margin:12px 0 0}
-  .px-dp{margin-top:10px}
-  .px-chain{display:flex;align-items:flex-start}
-  /* a pill's name leads its row at a fixed width, so the times line up down
-     the day; the day's mg sits under it, the pair as tall as a time chip */
-  .px-chain .px-lbl{flex:0 0 88px;min-width:0;min-height:30px;margin-right:6px;display:flex;flex-direction:column;justify-content:center}
-  .px-chain .px-lbl b{font-weight:650;line-height:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .px-chain .px-lbl small{font-size:11.5px;font-weight:600;line-height:14px;color:var(--ink-3);font-variant-numeric:tabular-nums;white-space:nowrap}
-  .px-row{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:6px 0}
+  /* ---- what's been taken: a week across the top, the chosen day under it.
+     One row a pill: a capsule per dose with its mg on it (the count), the
+     day's total beside the name, and the week as seven bars with the chosen
+     day lit and the rest held back. ---- */
+  .px-taken{padding:12px 16px 4px}
+  .px-wk{display:flex;align-items:stretch;gap:3px;margin:0 -4px}
+  .px-wd{flex:1;min-width:0;height:60px;padding:0;border:0;border-radius:17px;cursor:pointer;background:none;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-family:var(--f-ui);
+    -webkit-tap-highlight-color:transparent;touch-action:manipulation}
+  .px-wd span{font-size:11.5px;font-weight:650;line-height:1;color:var(--ink-3)}
+  .px-wd b{font-family:var(--f-round);font-size:16px;font-weight:700;line-height:1.1;color:var(--ink);font-variant-numeric:tabular-nums}
+  .px-wd i{width:5px;height:5px;border-radius:50%;background:transparent}
+  .px-wd.has i{background:var(--ghost)}
+  .px-wd.now:not(.on){box-shadow:inset 0 0 0 1.5px var(--line-2)}
+  .px-wd.on{background:var(--acc)}
+  .px-wd.on span,.px-wd.on b{color:var(--on-acc)}
+  .px-wd.on.has i{background:var(--on-acc)}
+  .px-wkn{flex:none;width:26px;padding:0;border:0;border-radius:13px;cursor:pointer;background:none;color:var(--ink-2);display:grid;place-items:center}
+  .px-wkn .ic{width:16px;height:16px;stroke-width:2.4}
+  .px-wkn.back .ic{transform:rotate(180deg)}
+  .px-wkn[disabled]{opacity:.25;cursor:default}
+  .px-wd:focus-visible,.px-wkn:focus-visible,.px-rb:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
+  .px-dh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:14px 0 0}
+  .px-dh h3{margin:0}
+  .px-dh small{font-size:13px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  .px-taken .px-none{margin:8px 0 14px}
+  .px-r{border-top:1px solid var(--line)}
+  .px-dh+.px-r{border-top:0}
+  .px-rb{display:block;width:100%;padding:13px 0 14px;border:0;border-radius:var(--r-sm);background:none;text-align:left;cursor:pointer;
+    color:var(--ink);font-family:var(--f-ui);-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+  .px-rh{display:flex;align-items:baseline;gap:8px}
+  .px-rh>b{flex:1;min-width:0;font-size:15px;font-weight:650;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .px-rt{flex:none;font-family:var(--f-round);font-size:23px;font-weight:700;letter-spacing:-.03em;line-height:1;
+    font-variant-numeric:tabular-nums;white-space:nowrap;transform-origin:100% 80%}
+  .px-rt small{margin-left:3px;font-family:var(--f-ui);font-size:12.5px;font-weight:650;letter-spacing:0;color:var(--ink-2)}
+  .px-rt.new{animation:px-bump 460ms var(--snap) both}
+  @keyframes px-bump{0%{transform:scale(1)}35%{transform:scale(1.16)}100%{transform:scale(1)}}
+  .px-rh .ic{flex:none;align-self:center;width:14px;height:14px;stroke-width:2.6;color:var(--ink-3);transform:rotate(90deg);
+    transition:transform var(--d-fast) var(--e-move)}
+  .px-r.open .px-rh .ic{transform:rotate(-90deg)}
+  .px-rg{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-top:10px}
+  .px-caps{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:5px}
+  /* a dose: a capsule, its mg pressed into it */
+  .px-cap{min-width:36px;height:24px;padding:0 9px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;
+    background:var(--acc);color:var(--on-acc);font:700 12.5px/1 var(--f-round);font-style:normal;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+  .px-cap.new{animation:popin 420ms var(--snap) both}
+  /* the week: columns off one baseline, the chosen day in the accent */
+  .px-spark{flex:none;display:flex;align-items:flex-end;gap:3px;height:26px}
+  .px-spark i{width:9px;border-radius:3px 3px 0 0;background:var(--ghost);opacity:.45}
+  .px-spark i.z{height:2px;border-radius:1px;background:var(--line-2);opacity:1}
+  .px-spark i.on{background:var(--acc);opacity:1}
+  .px-spark i.on.z{background:var(--acc);opacity:.5}
+  /* a row, opened: a time, the gap, the next time — "the time between" sits
+     between the stamps it measures */
+  .px-rd{padding:0 0 14px;animation:fade-in var(--d-base) var(--e-enter) both}
+  .px-chain{display:flex;flex-wrap:wrap;align-items:center;gap:6px 0}
   .px-t{height:30px;padding:0 11px;border-radius:15px;border:0;display:inline-flex;align-items:center;cursor:pointer;
     background:var(--s2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line);
     font-family:var(--f-round);font-size:14px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -1380,13 +1423,6 @@
   .px-form .btn.go{background:var(--acc);color:var(--on-acc);box-shadow:none}
   .px-form .msg{font-size:12.5px;color:var(--over-t);margin:0}
   .px-form .msg:empty{display:none}
-  /* earlier days */
-  .px-hist>.px-hint{margin:0 0 2px}
-  .px-day{padding:12px 0 2px;border-top:1px solid var(--line);margin-top:12px}
-  .px-day:first-child{padding-top:2px;border-top:0;margin-top:0}
-  .px-dh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:13px;font-weight:650;color:var(--ink);margin:0}
-  .px-dh small{font-size:12px;font-weight:550;color:var(--ink-2)}
-  .px-all{margin-top:12px;width:100%}
   /* the list */
   .px-mrow{display:flex;align-items:center;gap:12px;padding:12px 2px;border-top:1px solid var(--line)}
   .px-mrow:first-child{border-top:0}
@@ -3082,8 +3118,8 @@
     .cz-overlay,html.no-vt .detail-overlay{transition:opacity .15s linear!important}
     .cz-overlay:not(.show),html.no-vt .detail-overlay:not(.show){transform:none}
     /* pills: the new dose lands without the pop; the toast fades, never slides */
-    .px-t.new,.px-in,.px-pick,.px-tile.new .px-ts .ic,.px-sc.new .ic{animation:none!important}
-    .px-bar i,.px-tile,.px-sc,.px-mg,.px-stp,.px-opt{transition:none!important}
+    .px-t.new,.px-in,.px-pick,.px-rd,.px-cap.new,.px-rt.new,.px-tile.new .px-ts .ic,.px-sc.new .ic{animation:none!important}
+    .px-bar i,.px-tile,.px-sc,.px-mg,.px-stp,.px-opt,.px-rh .ic{transition:none!important}
     .px-sheet{transition:opacity .15s linear!important}
     .px-sheet>.px-shp{transform:none!important;transition:none!important}
     .toast{transform:none!important;transition:opacity .15s linear!important}
@@ -3427,18 +3463,15 @@ try{
 </main>
 
 <!-- PILLS (PL): a dose log that sits beside the taper and never feeds it.
-     The board leads: every pill is a button and a press logs a dose. Then
-     today's doses with the gap between each, earlier days, and the list.
-     #pillBoard, #pillToday and the fold bodies are rebuilt by renderPills;
-     the folds themselves are static so the accordion and fold-memory wiring
-     find them at boot. -->
+     The board leads: every pill is a button and a press logs a dose. Under it,
+     what's been taken: a week of days across the top and the chosen day's
+     pills as capsules and totals. Then the list.
+     #pillBoard, #pillTaken and the fold's body are rebuilt by renderPills;
+     the fold itself is static so the accordion and fold-memory wiring find it
+     at boot. -->
 <main class="view" id="vPills">
   <section class="card px-board" id="pillBoard" aria-label="Your pills. Press one to log a dose."></section>
-  <section class="card px-today" id="pillToday" aria-label="Today’s doses" hidden></section>
-  <details class="fold" id="pillHistFold" hidden>
-    <summary><span class="fold-ic" aria-hidden="true"><svg class="ic"><use href="#i-cal"/></svg></span><span class="fold-t">Earlier days</span><span class="fold-live" id="pillHistLive"></span></summary>
-    <div class="fold-body px-hist" id="pillHist"></div>
-  </details>
+  <section class="card px-taken" id="pillTaken" aria-label="What’s been taken, by day" hidden></section>
   <details class="fold px-manage" id="pillManage">
     <summary><span class="fold-ic" aria-hidden="true"><svg class="ic"><use href="#i-edit"/></svg></span><span class="fold-t">Your pills</span><span class="fold-live" id="pillManageLive"></span></summary>
     <div class="fold-body" id="pillManageBody"></div>
@@ -12106,10 +12139,12 @@ try{
      toward the evening it belongs to. */
   var PILL_GAPS=[1,2,3,4,5,6,8,10,12,24];
   /* what has to survive a repaint: the open panel, the form being filled in,
-     whether the supplement list is open, and whether every earlier day shows.
+     whether the supplement list is open, and where "what's been taken" is
+     looking — the week (wk back from this one), the day in it (null is the
+     newest) and the pill whose times are open.
      panel is {kind:'early',id} or {kind:'dose',id,t}. The mg sheet keeps its
      own state in pillSh. */
-  var pillUI={panel:null,edit:null,adding:false,draft:{},msg:'',histAll:false,pick:false};
+  var pillUI={panel:null,edit:null,adding:false,draft:{},msg:'',pick:false,wk:0,day:null,open:null};
   var pillNewT=null,pillNewId=null;   // the dose just logged, so its check and its chip pop in once
   function pillsOn(){return data.pills.list.filter(function(p){return !p.off;});}
   function pillOf(id){
@@ -12132,15 +12167,6 @@ try{
   function pillTodayTimes(id){
     var now=Date.now();
     return pillTimes(id).filter(function(t){return t<=now&&pillDay(t)===todayKey;});
-  }
-  // the same, with the mg each dose was logged at
-  function pillTodayDoses(id){
-    var now=Date.now(),o=[];
-    data.pills.log.forEach(function(x){
-      var t=Date.parse(x.t);
-      if(x.id===id&&t<=now&&pillDay(t)===todayKey)o.push({t:t,mg:x.mg});
-    });
-    return o;
   }
   function fmtMg(v){return String(+(+v).toFixed(3));}
   // what the pill is at: its mg, or a dose typed in before there was an mg
@@ -12273,28 +12299,96 @@ try{
      between them is the thing being tracked, so it sits between the stamps it
      measures. Each gap rides with the dose it leads to, so a wrap never
      strands a dash. */
-  function pillChainHTML(id,doses,label){
-    if(!doses.length)return '';
-    var times=doses.map(function(x){return x.t;}),sum=0,all=true;
-    doses.forEach(function(x){if(x.mg)sum+=x.mg;else all=false;});
-    var pn=pillUI.panel,open=!!pn&&pn.kind==='dose'&&pn.id===id&&times.indexOf(pn.t)>=0;
-    // the day's mg sits under the name — said only when every dose has one
-    var h='<div class="px-chain"><span class="px-lbl"><b>'+esc(label)+'</b>'+(all?'<small>'+fmtMg(sum)+' mg</small>':'')+'</span><span class="px-row">';
-    times.forEach(function(t,i){
-      var chip='<button class="px-t'+(t===pillNewT&&id===pillNewId?' new':'')+(open&&pn.t===t?' sel':'')+
-        '" data-pact="dose" data-id="'+esc(id)+'" data-t="'+t+'" aria-label="'+esc(label)+(doses[i].mg?' '+fmtMg(doses[i].mg)+' mg':'')+', '+
-        esc(pillWhenFull(t))+'. Press to move or remove it.">'+fmtClk(new Date(t))+'</button>';
-      h+=i?'<span class="px-pair"><span class="px-gv">'+fmtDur(t-times[i-1])+'</span>'+chip+'</span>':chip;
+  function pillChainHTML(p,doses){
+    var id=esc(p.id),pn=pillUI.panel,at=-1;
+    var h='<div class="px-chain">';
+    doses.forEach(function(x,i){
+      var sel=!!pn&&pn.kind==='dose'&&pn.id===p.id&&pn.t===x.t;
+      if(sel)at=i;
+      var chip='<button class="px-t'+(x.t===pillNewT&&p.id===pillNewId?' new':'')+(sel?' sel':'')+
+        '" data-pact="dose" data-id="'+id+'" data-t="'+x.t+'" aria-label="'+esc(p.name)+(x.mg?' '+fmtMg(x.mg)+' mg':'')+', '+
+        esc(pillWhenFull(x.t))+'. Press to move or remove it.">'+fmtClk(new Date(x.t))+'</button>';
+      h+=i?'<span class="px-pair"><span class="px-gv">'+fmtDur(x.t-doses[i-1].t)+'</span>'+chip+'</span>':chip;
     });
-    return h+'</span></div>'+(open?pillDoseHTML(id,pn.t):'');
+    return h+'</div>'+(at>=0?pillDoseHTML(p.id,doses[at].t):'');
   }
-  function pillTodayHTML(){
-    var rows='';
-    data.pills.list.forEach(function(p){
-      var tt=pillTodayDoses(p.id);
-      if(tt.length)rows+='<div class="px-dp">'+pillChainHTML(p.id,tt,p.name)+'</div>';
+  /* ---- what's been taken ----
+     A week of days across the top, the chosen day under it. Each pill taken
+     that day is one row, and the row is a picture before it is a sentence: a
+     capsule per dose with its mg on it, the day's total beside the name, and
+     the week as seven bars off one baseline — the chosen day in the accent,
+     the others held back, so a dose coming down shows as the bars do.
+     Pressing a day reads that day; pressing a row opens its times. */
+  var PILL_WK=7;
+  function pillWeekKeys(){
+    var end=addDays(today,-PILL_WK*pillUI.wk),o=[];
+    for(var i=PILL_WK-1;i>=0;i--)o.push(dkeyOf(addDays(end,-i)));
+    return o;
+  }
+  function pillDayName(k){
+    var d=dateOf(k);
+    return k===todayKey?'Today':k===ydayKey()?'Yesterday':WEEKDAYS[d.getDay()]+', '+fmtShort(d);
+  }
+  function pillDosesTxt(n){return n+' dose'+(n===1?'':'s');}
+  function pillRowHTML(p,ds,keys,by,sel){
+    /* the bars measure mg when every dose of this pill in the week has one,
+       and doses when they don't — never a mix of the two on one baseline */
+    var inMg=true,vals=keys.map(function(k){
+      var a=(by[k]&&by[k][p.id])||[],v=0;
+      a.forEach(function(x){if(x.mg)v+=x.mg;else inMg=false;});
+      return {mg:v,n:a.length};
     });
-    return rows?'<h3>Today</h3>'+rows+'<p class="px-hint">Press a time to move or remove it.</p>':'';
+    var max=0;
+    vals.forEach(function(v){max=Math.max(max,inMg?v.mg:v.n);});
+    var sum=0,all=true;
+    ds.forEach(function(x){if(x.mg)sum+=x.mg;else all=false;});
+    var pn=pillUI.panel;
+    var open=pillUI.open===p.id||(!!pn&&pn.kind==='dose'&&pn.id===p.id&&ds.some(function(x){return x.t===pn.t;}));
+    var fresh=p.id===pillNewId;
+    return '<div class="px-r'+(open?' open':'')+'">'+
+      '<button class="px-rb" data-pact="row" data-id="'+esc(p.id)+'" aria-expanded="'+(open?'true':'false')+'" aria-label="'+
+        esc(p.name)+', '+esc(pillDayName(sel))+': '+pillDosesTxt(ds.length)+(all?', '+fmtMg(sum)+' mg in all':'')+'. Press for the times.">'+
+      '<span class="px-rh"><b>'+esc(p.name)+'</b>'+
+        '<span class="px-rt'+(fresh?' new':'')+'">'+(all?fmtMg(sum)+'<small>mg</small>':ds.length+'<small>'+(ds.length===1?'dose':'doses')+'</small>')+'</span>'+
+        icon('chev')+'</span>'+
+      '<span class="px-rg"><span class="px-caps" aria-hidden="true">'+ds.map(function(x){
+          return '<i class="px-cap'+(fresh&&x.t===pillNewT?' new':'')+'">'+(x.mg?fmtMg(x.mg):'')+'</i>';
+        }).join('')+'</span>'+
+        '<span class="px-spark" aria-hidden="true">'+vals.map(function(v,i){
+          var n=inMg?v.mg:v.n,on=keys[i]===sel;
+          return n?'<i'+(on?' class="on"':'')+' style="height:'+Math.max(3,Math.round(n/max*26))+'px"></i>':'<i class="z'+(on?' on':'')+'"></i>';
+        }).join('')+'</span></span>'+
+      '</button>'+(open?'<div class="px-rd">'+pillChainHTML(p,ds)+'</div>':'')+'</div>';
+  }
+  function pillTakenHTML(){
+    if(!data.pills.log.length)return '';
+    var keys=pillWeekKeys(),first=keys[0],last=keys[keys.length-1],by={},older=false,now=Date.now();
+    data.pills.log.forEach(function(x){
+      var t=Date.parse(x.t);if(t>now)return;
+      var k=pillDay(t);
+      if(k<first){older=true;return;}
+      if(k>last)return;
+      var d=by[k]||(by[k]={n:0});
+      (d[x.id]||(d[x.id]=[])).push({t:t,mg:x.mg});d.n++;
+    });
+    var sel=keys.indexOf(pillUI.day)>=0?pillUI.day:last,pager=older||pillUI.wk>0;
+    var h='<div class="px-wk" role="group" aria-label="Day">'+
+      (pager?'<button class="px-wkn back" data-pact="wk" data-d="1"'+(older?'':' disabled')+' aria-label="The week before">'+icon('chev')+'</button>':'')+
+      keys.map(function(k){
+        var d=dateOf(k),n=by[k]?by[k].n:0;
+        return '<button class="px-wd'+(k===sel?' on':'')+(n?' has':'')+(k===todayKey?' now':'')+'" data-pact="day" data-k="'+k+
+          '" aria-pressed="'+(k===sel?'true':'false')+'" aria-label="'+esc(pillDayName(k))+', '+(n?pillDosesTxt(n):'nothing logged')+'">'+
+          '<span>'+WEEKDAYS[d.getDay()].charAt(0)+'</span><b>'+d.getDate()+'</b><i></i></button>';
+      }).join('')+
+      (pager?'<button class="px-wkn" data-pact="wk" data-d="-1"'+(pillUI.wk>0?'':' disabled')+' aria-label="The week after">'+icon('chev')+'</button>':'')+
+      '</div>';
+    var day=by[sel]||{n:0},rows='';
+    data.pills.list.forEach(function(p){
+      if(day[p.id])rows+=pillRowHTML(p,day[p.id],keys,by,sel);
+    });
+    // today's count is already in the header line; an earlier day's is said here
+    h+='<div class="px-dh"><h3>'+esc(pillDayName(sel))+'</h3>'+(day.n&&sel!==todayKey?'<small>'+pillDosesTxt(day.n)+'</small>':'')+'</div>';
+    return h+(rows||'<p class="px-none">Nothing logged.</p>');
   }
   function pillFormHTML(p){
     var dr=pillUI.draft||{};
@@ -12318,33 +12412,6 @@ try{
       '<button class="btn ghost" data-pact="cancelform">Cancel</button></div>'+
       (p?'<button class="btn sm ghost px-rm" data-pact="retire" data-id="'+esc(p.id)+'">Take off the board</button>':'')+
       '</div>';
-  }
-  /* the earlier days, newest first; null when there are none. The hint is
-     Today's to give — it is only said here on a day with nothing logged yet */
-  function pillHistBuild(hint){
-    var byDay={},keys=[];
-    data.pills.log.forEach(function(x){
-      var t=Date.parse(x.t),k=pillDay(t);
-      if(k>=todayKey)return;
-      if(!byDay[k]){byDay[k]={n:0};keys.push(k);}
-      (byDay[k][x.id]=byDay[k][x.id]||[]).push({t:t,mg:x.mg});
-      byDay[k].n++;
-    });
-    if(!keys.length)return null;
-    keys.sort().reverse();
-    function dayName(k){var d=dateOf(k);return k===ydayKey()?'Yesterday':WEEKDAYS[d.getDay()].slice(0,3)+' '+fmtShort(d);}
-    function doses(n){return n+' dose'+(n===1?'':'s');}
-    var lim=pillUI.histAll?keys.length:Math.min(keys.length,3);
-    var h=hint?'<p class="px-hint">Press a time to move or remove it.</p>':'';
-    for(var i=0;i<lim;i++){
-      var k=keys[i],day=byDay[k],body='';
-      data.pills.list.forEach(function(p){
-        if(day[p.id])body+='<div class="px-dp">'+pillChainHTML(p.id,day[p.id],p.name)+'</div>';
-      });
-      h+='<div class="px-day"><p class="px-dh"><span>'+dayName(k)+'</span><small>'+doses(day.n)+'</small></p>'+body+'</div>';
-    }
-    if(keys.length>lim)h+='<button class="btn sm ghost px-all" data-pact="histall">Show all '+keys.length+' days</button>';
-    return {html:h,live:dayName(keys[0])+' · '+doses(byDay[keys[0]].n)};
   }
   function pillManageHTML(){
     var h='';
@@ -12378,12 +12445,8 @@ try{
     if(!force&&ae&&ae.closest&&ae.closest('#vPills')&&/^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName)){pillsTick();return;}
     renderPillsSub();
     host.innerHTML=pillBoardHTML();
-    var th=pillTodayHTML(),tc=$('pillToday');
-    tc.hidden=!th;tc.innerHTML=th;
-    var hs=pillHistBuild(!th);
-    $('pillHistFold').hidden=!hs;
-    $('pillHistLive').textContent=hs?hs.live:'';
-    $('pillHist').innerHTML=hs?hs.html:'';
+    var tk=pillTakenHTML(),tc=$('pillTaken');
+    tc.hidden=!tk;tc.innerHTML=tk;
     var on=pillsOn(),ns=on.filter(function(p){return p.k==='s';}).length,nm=on.length-ns;
     $('pillManageLive').textContent=nm+' pill'+(nm===1?'':'s')+(ns?' · '+ns+' supplement'+(ns===1?'':'s'):'');
     $('pillManageBody').innerHTML=pillManageHTML();
@@ -12436,6 +12499,8 @@ try{
     if(p.mg)e.mg=p.mg;
     data.pills.log.push(e);pillSortLog();
     pillUI.panel=null;pillNewT=Date.parse(iso);pillNewId=id;
+    // a dose lands on the day it was taken — bring that day back into view
+    pillUI.wk=0;pillUI.day=null;
     save();renderPills(true);
     if(navigator.vibrate)navigator.vibrate(8);
     toast(esc(p.name)+(p.mg?' '+fmtMg(p.mg)+' mg':'')+' logged<small>'+pillWhenFull(Date.parse(iso))+'</small>','Undo',function(){pillDrop(id,Date.parse(iso));});
@@ -12552,6 +12617,7 @@ try{
     else if(a==='dose'){
       var t=+b.dataset.t,pn=pillUI.panel;
       pillUI.panel=pn&&pn.kind==='dose'&&pn.id===id&&pn.t===t?null:{kind:'dose',id:id,t:t};
+      pillUI.open=id;
       renderPills(true);
     }
     else if(a==='nudge'){pillNudge(+b.dataset.d);}
@@ -12559,7 +12625,19 @@ try{
     else if(a==='dosemg'){var dm=pillUI.panel;if(dm&&dm.kind==='dose')pillSheetOpen('dose',dm.id,dm.t);}
     else if(a==='dosedrop'){var dp=pillUI.panel;if(dp&&dp.kind==='dose')pillRemove(dp.id,dp.t);}
     else if(a==='close'){pillUI.panel=null;renderPills(true);}
-    else if(a==='histall'){pillUI.histAll=true;renderPills(true);}
+    else if(a==='day'||a==='wk'){
+      if(a==='wk'){pillUI.wk=Math.max(0,pillUI.wk+(+b.dataset.d||0));pillUI.day=null;}
+      else pillUI.day=b.dataset.k||null;
+      pillUI.open=null;
+      if(pillUI.panel&&pillUI.panel.kind==='dose')pillUI.panel=null;
+      renderPills(true);
+    }
+    else if(a==='row'){
+      var shut=!!b.closest('.px-r.open');
+      pillUI.open=shut?null:id;
+      if(pillUI.panel&&pillUI.panel.kind==='dose'&&(shut||pillUI.panel.id!==id))pillUI.panel=null;
+      renderPills(true);
+    }
     else if(a==='add'){
       pillUI.adding=true;pillUI.edit=null;pillUI.draft={};pillUI.msg='';
       renderPills(true);pillFocus('#pillManageBody [data-pin="name"]');
