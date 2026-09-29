@@ -259,6 +259,8 @@
   }
   .icon-btn .ic{width:20px;height:20px}
   .icon-btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+  /* More lives here now; lit while its view is open, the way a tab would be */
+  .icon-btn.on{color:var(--acc-t);background:var(--acc-bg);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--acc) 45%,transparent)}
   #viewTitle{margin-top:12px}
   .countdown{
     font-size:14px;font-weight:500;line-height:1.35;color:var(--ink-2);
@@ -294,7 +296,12 @@
   .view{display:none}
   body:not([data-view]) #vToday{display:block}
   body[data-view="today"] #vToday,body[data-view="journey"] #vJourney,
-  body[data-view="plan"] #vPlan,body[data-view="more"] #vMore{display:block}
+  body[data-view="plan"] #vPlan,body[data-view="more"] #vMore,
+  body[data-view="pills"] #vPills{display:block}
+  /* the header's data line belongs to the taper; Pills writes its own */
+  #pillsSub{display:none}
+  body[data-view="pills"] #countdown{display:none}
+  body[data-view="pills"] #pillsSub{display:block}
   /* no View Transitions (or reduced motion): a plain CSS fade instead */
   html.no-vt .view{animation:fade-in var(--d-base) var(--e-enter) both}
   .section{position:relative;margin-bottom:36px}
@@ -337,6 +344,8 @@
     transition:transform var(--d-slow) var(--snap);
   }
   .tabbar.no-anim .tab-ind{transition:none}
+  /* on More (a header button, not a tab) no tab is current, so no pill */
+  .tabbar.no-ind .tab-ind{opacity:0}
   .tab-log{
     position:relative;z-index:2;   /* the sliding pill passes under the disc */
     justify-self:center;width:74px;height:100%;display:grid;place-items:center;
@@ -764,6 +773,7 @@
   .th-left:has(#stSession.time) #stSession{order:2}
   .th-left b{color:var(--ink);font-family:var(--f-round);font-weight:700;font-variant-numeric:tabular-nums}
   .th-left .th-nil{display:none}
+  .th-left .th-lft{display:none}
 
   /* ---- hold-to-log: the one saturated control ---- */
   .tally-btns{display:flex;gap:10px;margin-top:14px;align-items:stretch}
@@ -950,7 +960,7 @@
   /* Everything on Today around the hero: the banners, the fifth move, the
      ritual, yesterday vs today, the check-in, the ladder, the backup nudge.
      Selectors are ids or TC-only prefixes (tc-, lo-, rit-, ck-, cm-, yd-,
-     lg2-, yt-, yr-, vh-, vs, yz-, yg-, lg-line) so nothing leaks. */
+     lg2-, yr-, vh-, vs, yz-, yg-, lg-line) so nothing leaks. */
 
   /* ---- banners (afterglow §4.11 on the F .banner base) ----
      Visibility is the .show class (JS contract), not [hidden]. Each banner
@@ -991,9 +1001,16 @@
   /* ---- the fifth move (#landCard) + its offer body (.lo, also inside Plan) ---- */
   .tc-land{box-shadow:var(--shadow-card),inset 0 0 0 1.5px color-mix(in srgb,var(--adjust) 32%,transparent)}
   .tc-land-h{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-  .tc-land-h h3{flex:1;min-width:0;font-size:18px;font-weight:700;letter-spacing:-.02em;margin:0}
   .tc-land-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;background:var(--adjust-bg);color:var(--adjust-t)}
   .tc-land-ic .ic{width:19px;height:19px}
+  /* the offer as one line that opens in place (the card is the frame) */
+  details.tc-offer{background:transparent;box-shadow:none;border-radius:0;margin:0}
+  .tc-offer>summary.tc-land-h{padding:0;margin:0;gap:12px}
+  .tc-offer>summary::after{background:var(--adjust-t)}
+  .tc-offer-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .tc-offer-t b{font-family:var(--f-round);font-size:17px;font-weight:700;letter-spacing:-.015em;line-height:1.25;color:var(--ink)}
+  .tc-offer-t small{font-size:13px;font-weight:500;line-height:1.35;color:var(--ink-2)}
+  .tc-offer-b{padding-top:14px;margin-top:14px;border-top:1px solid var(--line)}
   .lo{font-size:14px;line-height:1.45;color:var(--ink-2)}
   .lo b{color:var(--ink);font-weight:650}
   .lo-lede{font-size:15px;line-height:1.4;color:var(--ink-2);margin:0 0 12px}
@@ -1049,8 +1066,7 @@
 
   /* ---- yesterday vs today ---- */
   .yd-hr{display:flex;align-items:center;min-height:22px}
-  .yd-spark{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--ink-2)}
-  .yd-spark svg{display:block;overflow:visible}
+  .yd-hr-l{font-size:12.5px;font-weight:600;color:var(--ink-2)}
   /* 1. the lead: longest gap */
   .lg2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
   .lg2-c{min-width:0;display:flex;flex-direction:column;align-items:flex-start}
@@ -1062,46 +1078,12 @@
   .lg2-n small{font-size:16px;font-weight:650;color:var(--ink-2);letter-spacing:0;margin-left:1px}
   .lg2-e .nw,.lg-line .nw{white-space:nowrap}
   .lg2-e{font-size:12px;font-weight:550;color:var(--ink-2);margin-top:7px;font-variant-numeric:tabular-nums;line-height:1.3}
-  .lg2-bars{margin-top:16px;display:grid;gap:8px}
-  .lg2-b{display:grid;grid-template-columns:50px minmax(0,1fr) 56px;align-items:center;gap:10px;font-size:12px;font-weight:600;color:var(--ink-2)}
-  .lg2-bl{white-space:nowrap}
-  .lg2-tr{position:relative;height:10px;border-radius:5px;background:var(--s3)}
-  .lg2-fl{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--ghost);transform-origin:left center}
-  .lg2-b.yb .lg2-fl{background:var(--ink-3)}
-  .lg2-b.yb.best .lg2-fl{background:var(--under)}
-  .lg2-b.tb .lg2-fl{background:linear-gradient(90deg,var(--acc),var(--acc-2));box-shadow:0 0 12px -3px var(--acc-glow)}
-  .lg2-rule{position:absolute;top:-4px;bottom:-4px;width:2px;margin-left:-1px;border-radius:1px;background:var(--ink)}
-  .lg2-v{text-align:right;font-family:var(--f-round);font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap}
-  .lg2-b.tb .lg2-bl,.lg2-b.tb .lg2-v{color:var(--ink)}
-  .yd-grow .lg2-fl{animation:grow-x 700ms var(--settle) both}
-  .yd-grow .lg2-b:nth-child(2) .lg2-fl{animation-delay:80ms}
-  .yd-grow .lg2-b:nth-child(3) .lg2-fl{animation-delay:160ms}
-  /* 2. the tape */
-  .yd-tape{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
-  .yd-tape-svg{display:block;width:100%;height:auto;overflow:visible}
-  .yd-tape-svg text{font-family:var(--f-round);font-variant-numeric:tabular-nums}
-  .yt-ax{font-size:10.5px;font-weight:600;fill:var(--ink-3)}
-  .yt-rl{font-size:11px;font-weight:650;fill:var(--ink-2)}
-  .yt-rl.t{fill:var(--ink)}
-  .yt-n{font-family:var(--f-mono)!important;font-size:10.5px;font-weight:600;fill:var(--ink-2)}
-  .yt-lg{fill:var(--ink-2)}
-  .yt-lg.t{fill:var(--acc)}
-  .yt-lgt{font-family:var(--f-mono)!important;font-size:10px;font-weight:700;fill:var(--s1)}
-  .yt-lgt.t{fill:var(--on-acc)}
-  .yt-notch{fill:var(--s1)}
-  .yt-run{fill:var(--acc)}
-  .yt-next{fill:none;stroke:var(--acc);stroke-width:1.5;stroke-dasharray:2.5 2}
-  .yd-leg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:12px;font-weight:550;color:var(--ink-2)}
-  .yd-leg span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-  .yd-leg i{display:inline-block;flex:none}
-  .yd-leg .k-sit{width:4px;height:12px;border-radius:1.5px;background:var(--ink)}
-  .yd-leg .k-lg{width:16px;height:8px;border-radius:4px;background:var(--acc)}
-  .yd-leg .k-run{width:16px;height:4px;border-radius:2px;background:var(--acc)}
-  .yd-leg .k-nx{width:9px;height:12px;border-radius:3px;box-shadow:inset 0 0 0 1.5px var(--acc)}
-  /* 3. the twin rails, in a flat fold inside the card */
+  /* 2. the twin rails, in a flat fold inside the card */
   details.yd-sits{margin:16px 0 0;background:var(--s2);box-shadow:none;border-radius:var(--r-md)}
   details.yd-sits[hidden]{display:none}
   .yd-sits>summary{padding:11px 12px}
+  /* the summary carries yesterday's stamps, so it wraps rather than cuts one off */
+  .yd-sits .fold-live{white-space:normal;overflow:visible;line-height:1.35}
   .yd-sits .fold-ic{background:var(--s1)}
   .yd-sits .fold-body{padding:0 12px 14px}
   .vs-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;padding:4px 0 12px;border-bottom:1px solid var(--line)}
@@ -1138,7 +1120,7 @@
   .yr-g .chip{height:20px;font-size:11px;padding:0 7px;gap:4px}
   .yr-g .chip .tri{width:8px;height:8px}
   .yd-none{font-size:13px;color:var(--ink-2);padding-top:12px}
-  /* 4. the day pages */
+  /* 3. the day pages */
   .yd-foot{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
   .yd-open{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;padding:6px 10px 6px 14px;
     border:0;border-radius:16px;background:var(--s2);color:var(--ink-3);cursor:pointer;text-align:left;font-family:var(--f-ui)}
@@ -1213,8 +1195,16 @@
   .ck-dot:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .ck-ends{display:flex;justify-content:space-between;gap:8px;margin-top:11px;font-size:11.5px;font-weight:550;color:var(--ink-2)}
   .ck-note{font-size:12.5px;line-height:1.4;color:var(--ink-2);margin:16px 0 0;padding-top:12px;border-top:1px solid var(--line)}
+  .ck-note:empty{display:none}
   .ck-note.done{display:flex;align-items:center;gap:8px;color:var(--under-t);font-weight:600}
+  .ck-note.done b{font-family:var(--f-round);font-weight:700;color:var(--ink)}
   .ck-note .ic{flex:none}
+  /* folded: the three answers on one line, the dots and the lede put away */
+  #checkinCard.done:not(.open) #ckRows,#checkinCard.done:not(.open) #ckLede{display:none}
+  #checkinCard.done:not(.open) .ck-note{margin-top:0;padding-top:0;border-top:0;font-size:13.5px}
+  .ck-edit{margin-left:auto;flex:none;height:34px;padding:0 14px;border-radius:17px;border:0;cursor:pointer;
+    background:var(--s2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line);font:600 13.5px var(--f-ui)}
+  .ck-edit:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
   /* ---- the ladder (zero era) ---- */
   #cmChip[hidden]{display:none}
@@ -1260,6 +1250,144 @@
 
 
 
+  /* ==== [PL] PILLS ==== */
+  /* One card per pill: name, the time since the last dose (the one big
+     number), an optional spacing bar, today's doses with the gap between
+     each, and one tap to log. Accent means what it means everywhere: time
+     and the log action. Under-green only says a spacing the person set has
+     been kept — never "take one". The saturated capsule stays Today's alone. */
+  .px-card{padding:16px 16px 14px}
+  .px-h{display:flex;align-items:center;gap:12px}
+  .px-ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none;background:var(--acc-bg);color:var(--acc-t)}
+  .px-ic .ic{width:21px;height:21px}
+  .px-nm{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+  .px-nm b{font-family:var(--f-round);font-size:18px;font-weight:700;letter-spacing:-.015em;line-height:1.2;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .px-nm small{font-size:13px;font-weight:550;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .px-h .chip{flex:none}
+  .px-since{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;margin-top:16px}
+  .px-big{font-family:var(--f-round);font-size:36px;font-weight:700;letter-spacing:-.035em;line-height:1;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .px-big .u{font-size:.5em;font-weight:650;letter-spacing:0;color:var(--ink-2);margin:0 2px 0 1px}
+  .px-big.none{font-size:24px;letter-spacing:-.02em;color:var(--ink-2)}
+  .px-sub{font-size:13.5px;font-weight:550;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  .px-sub b{color:var(--ink);font-weight:650}
+  /* the spacing the person set, filling toward "clear" */
+  .px-gap{margin-top:14px}
+  .px-bar{position:relative;height:6px;border-radius:3px;background:var(--s3);overflow:hidden}
+  .px-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--acc);transition:width var(--d-slow) var(--settle)}
+  .px-gap.clear .px-bar i{background:var(--under)}
+  .px-gapln{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:7px;font-size:12.5px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  .px-gapln b{color:var(--acc-t);font-weight:700}
+  .px-gap.clear .px-gapln b{color:var(--under-t);display:inline-flex;align-items:center;gap:4px}
+  .px-gap.clear .px-gapln .ic{width:14px;height:14px;stroke-width:2.6}
+  /* today's doses: a time, the gap, the next time — "the time between" */
+  .px-chain{display:flex;align-items:flex-start;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+  .px-lbl{flex:none;font-size:12.5px;font-weight:650;line-height:30px;color:var(--ink-2);margin-right:10px}
+  .px-row{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:6px 0}
+  .px-t{height:30px;padding:0 11px;border-radius:15px;border:0;display:inline-flex;align-items:center;cursor:pointer;
+    background:var(--s2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line);
+    font-family:var(--f-round);font-size:14px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .px-t:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+  .px-t.new{animation:popin 420ms var(--snap) both}
+  .px-pair{display:inline-flex;align-items:center;white-space:nowrap}
+  .px-gv{display:inline-flex;align-items:center;gap:5px;padding:0 5px;font-size:12px;font-weight:650;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .px-gv::before,.px-gv::after{content:"";width:7px;height:1.5px;border-radius:1px;background:var(--line-2)}
+  /* log */
+  .px-acts{display:flex;gap:8px;margin-top:14px}
+  .px-take{flex:1;min-width:0;height:50px;border-radius:25px;border:0;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    background:var(--acc-bg);color:var(--acc-t);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--acc) 38%,transparent);
+    font-family:var(--f-ui);font-size:16px;font-weight:700;letter-spacing:-.01em}
+  .px-take .ic{width:19px;height:19px;stroke-width:2.4}
+  /* inside the spacing the person set: still a button (logging is never
+     gated), but it stops asking to be pressed */
+  .px-take.wait{background:var(--s2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+  .px-take:focus-visible,.px-more:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+  .px-more{flex:none;height:50px;padding:0 16px;border-radius:25px;border:0;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+    background:var(--s2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line);font-family:var(--f-ui);font-size:14.5px;font-weight:600}
+  .px-more .ic{width:18px;height:18px}
+  /* the inline panel: "log it anyway?", or a time for a dose taken earlier */
+  .px-in{margin-top:14px;padding:12px;border-radius:var(--r-md);background:var(--s2);animation:fade-in var(--d-base) var(--e-enter) both}
+  .px-in p{font-size:14px;line-height:1.4;color:var(--ink-2);margin:0 0 10px}
+  .px-in p b{color:var(--ink);font-weight:650}
+  .px-in .btn-row{flex-wrap:wrap}
+  .px-in .btn{height:44px;border-radius:22px}
+  .px-in .btn.go{background:var(--acc);color:var(--on-acc);box-shadow:none}
+  .px-in input[type=time]{flex:1;min-width:0;height:44px;padding:0 12px;border-radius:12px;border:0;
+    background:var(--s1);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-2);font:600 16px var(--f-round);font-variant-numeric:tabular-nums}
+  .px-in .row{display:flex;gap:8px;align-items:center}
+  .px-in .msg{font-size:12.5px;color:var(--over-t);margin:8px 0 0}
+  .px-in .msg:empty{display:none}
+  /* first run */
+  .px-empty{text-align:left}
+  .px-empty .px-ic{width:48px;height:48px;border-radius:14px}
+  .px-empty .px-ic .ic{width:25px;height:25px}
+  .px-empty h2{margin:14px 0 6px}
+  .px-empty>p{font-size:14.5px;line-height:1.45;color:var(--ink-2);margin:0 0 16px}
+  /* the add / edit form */
+  .px-form{display:grid;gap:12px}
+  .px-f{display:grid;gap:6px}
+  .px-f>span:not(.hint){font-size:13px;font-weight:650;color:var(--ink-2)}
+  .px-f>span small{font-weight:500;color:var(--ink-3)}
+  .px-f input,.px-f select{width:100%;height:46px;padding:0 13px;border-radius:13px;border:0;
+    background:var(--s2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-2);
+    font:500 16px var(--f-ui);-webkit-user-select:text;user-select:text;-webkit-appearance:none;appearance:none}
+  .px-f select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238A92A2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6.5 9.5 12 15l5.5-5.5'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 12px center;background-size:18px;padding-right:38px}
+  .px-f input:focus,.px-f select:focus{outline:none;box-shadow:inset 0 0 0 2px var(--acc)}
+  .px-f .hint{font-size:12px;font-weight:500;line-height:1.4;color:var(--ink-3)}
+  .px-form .btn-row{margin-top:2px}
+  .px-form .btn.go{background:var(--acc);color:var(--on-acc);box-shadow:none}
+  .px-form .msg{font-size:12.5px;color:var(--over-t);margin:0}
+  .px-form .msg:empty{display:none}
+  /* earlier days */
+  .px-hist h3{margin:0 0 4px}
+  .px-hist>p{font-size:12.5px;color:var(--ink-2);margin:0}
+  .px-day{padding:12px 0 2px;border-top:1px solid var(--line);margin-top:12px}
+  .px-day:first-of-type{margin-top:10px}
+  .px-dh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:13px;font-weight:650;color:var(--ink)}
+  .px-dh small{font-size:12px;font-weight:550;color:var(--ink-2)}
+  .px-dp{margin-top:8px}
+  .px-dp .px-chain{margin-top:0;padding-top:0;border-top:0}
+  /* a pill's name leads its row at a fixed width, so the times line up down the day */
+  .px-dp .px-lbl{flex:0 0 84px;min-width:0;margin-right:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .px-all{margin-top:12px;width:100%}
+  /* the list */
+  .px-mrow{display:flex;align-items:center;gap:12px;padding:12px 2px;border-top:1px solid var(--line)}
+  .px-mrow:first-child{border-top:0}
+  .px-mtx{flex:1;min-width:0;display:flex;flex-direction:column}
+  .px-mtx b{font-size:15px;font-weight:650;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .px-mtx small{font-size:12.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .px-medit{padding:4px 2px 14px;border-top:1px solid var(--line)}
+  .px-medit:first-child{border-top:0}
+  .px-add{margin-top:8px;width:100%}
+  .px-rm{margin-top:4px}
+  .px-foot{font-size:12px;line-height:1.4;color:var(--ink-3);text-align:center;margin:16px 12px 0}
+
+  /* ---- the toast: one line above the tab bar, inverted like a system sheet ---- */
+  .toast{
+    position:fixed;z-index:75;
+    left:max(var(--gutter),calc(50% - 224px));right:max(var(--gutter),calc(50% - 224px));
+    bottom:calc(var(--tab-h) + var(--tab-lift) + env(safe-area-inset-bottom) + 10px);
+    display:flex;align-items:center;gap:8px;min-height:52px;padding:6px 6px 6px 18px;border-radius:26px;
+    background:var(--ink);color:var(--ink-inv);box-shadow:var(--shadow-float);
+    font-size:14.5px;font-weight:600;line-height:1.3;
+    opacity:0;transform:translateY(14px);pointer-events:none;
+    transition:opacity var(--d-fast) var(--e-move),transform var(--d-base) var(--snap)}
+  .toast[hidden]{display:none}
+  .toast.show{opacity:1;transform:none;pointer-events:auto}
+  .toast-tx{flex:1;min-width:0}
+  .toast-tx small{display:block;font-size:12.5px;font-weight:500;opacity:.72}
+  .toast-act{flex:none;height:40px;padding:0 16px;border-radius:20px;border:0;cursor:pointer;
+    background:color-mix(in srgb,var(--ink-inv) 16%,transparent);color:var(--ink-inv);font:700 14.5px var(--f-ui)}
+  .toast-act.warn{background:var(--over);color:#fff}
+  .toast-act[hidden]{display:none}
+  .toast-x{flex:none;width:40px;height:40px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;background:none;color:var(--ink-inv);opacity:.7}
+  .toast-act:focus-visible,.toast-x:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+  /* ==== [/PL] ==== */
+
+
+
   /* ==== [J] JOURNEY ==== */
   /* Journey: headline (by this hour) → descent contour → longest-gap trend →
      day by day rows → the story. Everything scoped to #vJourney ids or jn-/
@@ -1291,9 +1419,7 @@
   .jn-key .jk-ramp{background:linear-gradient(90deg,var(--r-ember),var(--r-honey),var(--r-citrine),var(--r-jade))}
   .jn-key .jk-clean{height:6px;border-radius:3px;background:var(--clean)}
   .jn-key .jk-room{background:transparent;box-shadow:none;border:1.3px dashed var(--acc)}
-  .jn-key .jk-line{height:3px;border-radius:2px;background:var(--acc)}
   .jn-key .jk-dash{height:0;border-radius:0;border-top:2px dashed var(--ghost)}
-  .jn-key .jk-dot{height:0;border-radius:0;border-top:2px dotted var(--ink-3)}
   .jn-key .jk-rule{height:2px;border-radius:1px;background:var(--ink-2)}
 
   /* ---- headline: vs yesterday by this hour ---- */
@@ -1311,16 +1437,6 @@
   .jh-facts{font-size:13.5px;color:var(--ink-2);font-weight:550;margin-top:6px;line-height:1.35;font-variant-numeric:tabular-nums}
   .jh-facts b{color:var(--ink);font-weight:650}
   .jh-foot{margin-top:12px;display:flex;flex-wrap:wrap;gap:6px}
-  .jh-chart{margin-top:14px}
-  .jh-grid{stroke:var(--line);stroke-width:1}
-  .jh-cap{stroke:var(--ink-3);stroke-width:1.3;stroke-dasharray:1.5 4;stroke-linecap:round}
-  .jh-yday{fill:none;stroke:var(--ghost);stroke-width:1.7;stroke-dasharray:4 3.5}
-  .jh-today{fill:none;stroke:var(--acc);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
-  .jh-now{stroke:var(--acc);stroke-width:1.2;stroke-opacity:.55;stroke-dasharray:2 3}
-  .jh-ydot{fill:var(--s1);stroke:var(--ghost);stroke-width:1.8}
-  .jh-tdot{fill:var(--acc);stroke:var(--s1);stroke-width:2.2}
-  .jh-yl{fill:var(--ink-2);font-weight:650;paint-order:stroke;stroke:var(--s1);stroke-width:3px}
-  .jh-tl{fill:var(--acc-t)}
 
   /* ---- the descent contour ---- */
   .jn-descent .jn-svg{margin-top:12px}
@@ -1375,12 +1491,6 @@
   .jr-top{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;line-height:1.1}
   .jr-n{font-family:var(--f-round);font-size:22px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ink)}
   .jr-of{font-size:13px;font-weight:600;color:var(--ink-3)}
-  .jr-pips{display:flex;gap:2px;margin:7px 0 6px}
-  .jr-pips i{flex:1;min-width:2px;max-width:14px;height:6px;border-radius:2px;background:var(--s3)}
-  .jr-pips i.u{background:var(--under)}
-  .jr-pips i.a{background:var(--atcap)}
-  .jr-pips i.o{background:var(--over)}
-  .jr-pips b{flex:none;width:3px}
   .jr-times{font-family:var(--f-round);font-size:12.5px;font-weight:600;line-height:1.55;color:var(--ink-3);font-variant-numeric:tabular-nums}
   .jr-times b{color:var(--ink);font-weight:650;white-space:nowrap}
   .jr-times b i{font-style:normal;color:var(--ink-3);font-weight:600;margin-left:1px}
@@ -2859,6 +2969,10 @@
     .cz-body circle,details[open] .d-body,.cz-body{animation:none!important}
     .cz-overlay,html.no-vt .detail-overlay{transition:opacity .15s linear!important}
     .cz-overlay:not(.show),html.no-vt .detail-overlay:not(.show){transform:none}
+    /* pills: the new dose lands without the pop; the toast fades, never slides */
+    .px-t.new,.px-in{animation:none!important}
+    .px-bar i{transition:none!important}
+    .toast{transform:none!important;transition:opacity .15s linear!important}
   }
 </style>
 <script>
@@ -2909,6 +3023,8 @@ try{
 <symbol id="i-medal" viewBox="0 0 24 24"><circle cx="12" cy="15" r="5.5"/><path d="M8.7 10.6 6 3.5h4l2 4.2 2-4.2h4l-2.7 7.1"/></symbol>
 <symbol id="i-book" viewBox="0 0 24 24"><path d="M5 18.5V6a2.5 2.5 0 0 1 2.5-2.5H19v13H7.5A2.5 2.5 0 0 0 5 19a2.5 2.5 0 0 0 2.5 2.5H19"/></symbol>
 <symbol id="i-archive" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="4.5" rx="1.5"/><path d="M5 9v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9M10 13h4"/></symbol>
+<symbol id="i-pill" viewBox="0 0 24 24"><rect x="2.6" y="8.2" width="18.8" height="7.6" rx="3.8" transform="rotate(-40 12 12)"/><path d="M9.56 9.09 14.44 14.91"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M14.5 5.5l4 4M4.5 19.5l1-4.2L15.8 5a1.9 1.9 0 0 1 2.7 0l.5.5a1.9 1.9 0 0 1 0 2.7L8.7 18.5z"/></symbol>
 </defs></svg>
 <div id="safeTop" aria-hidden="true"></div>
 
@@ -2964,11 +3080,15 @@ try{
   <div class="hdr-row">
     <p class="wordmark"><i aria-hidden="true"></i><span>Taper to <em>zero</em></span></p>
     <div class="hdr-actions">
+      <!-- More left the tab bar when Pills joined it: reference and backup are
+           visited, not lived in, and the + stays centred between two tabs a side -->
+      <button class="icon-btn more-btn" id="moreBtn" aria-label="More — rules, guide and backup"><svg class="ic" aria-hidden="true"><use href="#i-more"/></svg></button>
       <button class="icon-btn theme-btn" id="themeBtn" aria-label="Theme: auto — tap to change"><svg class="ic" aria-hidden="true"><use href="#i-auto"/></svg></button>
     </div>
   </div>
   <h1 id="viewTitle">Today</h1>
   <p class="countdown" id="countdown"></p>
+  <p class="countdown" id="pillsSub"></p>
 </header>
 
 <main class="view" id="vToday">
@@ -3004,13 +3124,18 @@ try{
      counter — assumes the quit is proceeding, and this one exists for the
      morning that assumption broke. The same offer renders on the Plan tab's
      schedule card; hidden everywhere outside its narrow moment. -->
+<!-- Each offer leads as ONE line — what it is and why it's here — and opens
+     in place to the whole choice. Laid out in full they stacked a screen and
+     a half of prose above the hold control on exactly the mornings it was
+     needed most. The full offer is unchanged inside, and on Change plan. -->
 <div class="card tc-land" id="landCard" hidden>
-  <div class="tc-land-h">
-    <span class="tc-land-ic"><svg class="ic" aria-hidden="true"><use href="#i-plan"/></svg></span>
-    <h3>The fifth move</h3>
-    <span class="chip sm adjust">Offered once</span>
-  </div>
-  <div id="landCardBody"></div>
+  <details class="tc-offer">
+    <summary class="tc-land-h">
+      <span class="tc-land-ic"><svg class="ic" aria-hidden="true"><use href="#i-plan"/></svg></span>
+      <span class="tc-offer-t"><b>Split the last step</b><small>Zero didn’t hold. The last drop can come in two smaller steps.</small></span>
+    </summary>
+    <div class="tc-offer-b" id="landCardBody"></div>
+  </details>
 </div>
 
 <!-- the seventh, sixth and eighth moves lead Today for the same reason the fifth
@@ -3018,30 +3143,33 @@ try{
      describing the days, and each exists for the morning that stopped being
      true. The same offers live on the Plan tab's Change plan pane. -->
 <div class="card tc-land tc-move" id="restartCard" hidden>
-  <div class="tc-land-h">
-    <span class="tc-land-ic"><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg></span>
-    <h3>The seventh move</h3>
-    <span class="chip sm adjust">Start again</span>
-  </div>
-  <div id="restartCardBody"></div>
+  <details class="tc-offer">
+    <summary class="tc-land-h">
+      <span class="tc-land-ic"><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg></span>
+      <span class="tc-offer-t"><b>Start the ladder again</b><small>If you’re using again, the descent can pick up from where your days are.</small></span>
+    </summary>
+    <div class="tc-offer-b" id="restartCardBody"></div>
+  </details>
 </div>
 
 <div class="card tc-land tc-move" id="finishCard" hidden>
-  <div class="tc-land-h">
-    <span class="tc-land-ic"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span>
-    <h3>The sixth move</h3>
-    <span class="chip sm adjust">Finish early</span>
-  </div>
-  <div id="finishCardBody"></div>
+  <details class="tc-offer">
+    <summary class="tc-land-h">
+      <span class="tc-land-ic"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span>
+      <span class="tc-offer-t"><b>Finish early</b><small>A full day at zero is already on the record. Zero can move back to meet it.</small></span>
+    </summary>
+    <div class="tc-offer-b" id="finishCardBody"></div>
+  </details>
 </div>
 
 <div class="card tc-land tc-move" id="rebuildCard" hidden>
-  <div class="tc-land-h">
-    <span class="tc-land-ic"><svg class="ic" aria-hidden="true"><use href="#i-plan"/></svg></span>
-    <h3>The eighth move</h3>
-    <span class="chip sm adjust">Rebuild</span>
-  </div>
-  <div id="rebuildCardBody"></div>
+  <details class="tc-offer">
+    <summary class="tc-land-h">
+      <span class="tc-land-ic"><svg class="ic" aria-hidden="true"><use href="#i-plan"/></svg></span>
+      <span class="tc-offer-t"><b>Rebuild this descent</b><small>Your days keep landing above the ceiling. The ladder can be rebuilt to fit them.</small></span>
+    </summary>
+    <div class="tc-offer-b" id="rebuildCardBody"></div>
+  </details>
 </div>
 
 <div class="card ritual" id="ritualCard" hidden>
@@ -3102,7 +3230,9 @@ try{
   <div class="bar th-bar" aria-hidden="true"><div id="barFill"></div></div>
   <div class="th-meta" id="statRow">
     <span class="th-sits" id="thSits"></span>
-    <span class="th-left"><span><b id="stLeft">–</b> left</span><span class="th-sep" aria-hidden="true">·</span><span id="stSessionLbl">next</span><b id="stSession">–</b></span>
+    <!-- "N left" stays in the DOM (renderToday writes it) but not on screen:
+         "1 of 3" and the pips already say it twice -->
+    <span class="th-left"><span class="th-lft"><b id="stLeft">–</b> left</span><span class="th-sep th-lft" aria-hidden="true">·</span><span id="stSessionLbl">next</span><b id="stSession">–</b></span>
   </div>
   <div class="tally-btns" id="tallyBtns">
     <button class="hold-log" id="holdLog" aria-label="Press and hold to log a hit, or press Enter">
@@ -3143,8 +3273,7 @@ try{
     <span class="yd-hr" id="ydHead"></span>
   </div>
   <div id="ydLead"></div>
-  <div id="ydTape"></div>
-  <details class="fold yd-sits" id="ydSits" open>
+  <details class="fold yd-sits" id="ydSits">
     <summary><span class="fold-ic"><svg class="ic" aria-hidden="true"><use href="#i-timer"/></svg></span><span class="fold-t">Sitting by sitting</span><span class="fold-live" id="ydSitsLive"></span></summary>
     <div class="fold-body"><div class="yd-cols" id="ydCols"></div></div>
   </details>
@@ -3181,6 +3310,21 @@ try{
 </div>
 
 <div class="tc-nudge" id="backupNudge" hidden></div>
+</main>
+
+<!-- PILLS (PL): a dose log that sits beside the taper and never feeds it.
+     One card per pill (time since the last dose, today's doses with the gap
+     between each, one tap to log), then earlier days, then the list itself.
+     #pillCards and #pillHist are rebuilt by renderPills; the fold is static so
+     the accordion and fold-memory wiring find it at boot. -->
+<main class="view" id="vPills">
+  <div id="pillCards"></div>
+  <section class="card px-hist" id="pillHist" aria-label="Earlier days" hidden></section>
+  <details class="fold px-manage" id="pillManage" hidden>
+    <summary><span class="fold-ic" aria-hidden="true"><svg class="ic"><use href="#i-edit"/></svg></span><span class="fold-t">Your pills</span><span class="fold-live" id="pillManageLive"></span></summary>
+    <div class="fold-body" id="pillManageBody"></div>
+  </details>
+  <p class="px-foot">Doses stay on this phone with everything else, and go out in the same backup.</p>
 </main>
 
 <main class="view" id="vJourney">
@@ -3385,13 +3529,20 @@ try{
 <nav class="tabbar" id="tabbar" aria-label="App sections">
   <span class="tab-ind" aria-hidden="true"></span>
   <button class="tab on" data-view="today" aria-label="Today"><svg class="ic" aria-hidden="true"><use href="#i-today"/></svg><span>Today</span></button>
-  <button class="tab" data-view="journey" aria-label="Journey — progress and history"><svg class="ic" aria-hidden="true"><use href="#i-journey"/></svg><span>Journey</span></button>
+  <button class="tab" data-view="pills" aria-label="Pills — log a dose"><svg class="ic" aria-hidden="true"><use href="#i-pill"/></svg><span>Pills</span></button>
   <button class="tab-log" id="tabLog" aria-label="Jump to today and log">
     <span class="tl-circle" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></span>
   </button>
+  <button class="tab" data-view="journey" aria-label="Journey — progress and history"><svg class="ic" aria-hidden="true"><use href="#i-journey"/></svg><span>Journey</span></button>
   <button class="tab" data-view="plan" aria-label="Plan — the step-down"><svg class="ic" aria-hidden="true"><use href="#i-plan"/></svg><span>Plan</span></button>
-  <button class="tab" data-view="more" aria-label="More — rules, guide and backup"><svg class="ic" aria-hidden="true"><use href="#i-more"/></svg><span>More</span></button>
 </nav>
+
+<!-- one line of feedback above the tab bar: "logged · Undo", "remove this dose?" -->
+<div class="toast" id="toast" role="status" aria-live="polite" hidden>
+  <span class="toast-tx" id="toastTx"></span>
+  <button class="toast-act" id="toastAct" hidden></button>
+  <button class="toast-x" id="toastX" aria-label="Dismiss"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-close"/></svg></button>
+</div>
 
 <div class="cz-overlay" id="czOverlay" role="dialog" aria-modal="true" aria-labelledby="czTitle" hidden>
   <div class="sheet">
@@ -4378,6 +4529,31 @@ try{
     // only against positive evidence it happened — otherwise a relapse the
     // user stops logging reads as an unbroken clean streak and pays for it.
     d.cm.seen=d.cm.seen||{};
+    /* pills: additive like plans and cm — a backup that predates them imports
+       clean and starts empty. The dose log sits beside the taper and nothing
+       in the schedule reads it.
+       list : {id,name,dose?,gapH?,off?} — `off` retires a pill without erasing
+              the doses already logged against it, so history keeps its name
+       log  : {id,t} per dose, t an ISO stamp, kept oldest first
+       gapH is a spacing the person typed in themselves; the app only reads it
+       back to them. Anything unreadable is dropped rather than guessed at, and
+       a dose whose pill is gone has nothing to name it, so it goes too. */
+    if(!d.pills||typeof d.pills!=='object'||d.pills instanceof Array)d.pills={};
+    var plIds={};
+    d.pills.list=(d.pills.list instanceof Array?d.pills.list:[]).filter(function(p){
+      if(!p||typeof p!=='object'||typeof p.id!=='string'||!p.id||plIds[p.id])return false;
+      if(typeof p.name!=='string'||!p.name.trim())return false;
+      p.name=p.name.trim().slice(0,40);
+      if(p.dose!==undefined){if(typeof p.dose==='string'&&p.dose.trim())p.dose=p.dose.trim().slice(0,24);else delete p.dose;}
+      if(p.gapH!==undefined){var pg=Number(p.gapH);if(isFinite(pg)&&pg>0&&pg<=72)p.gapH=pg;else delete p.gapH;}
+      if(p.off!==undefined&&p.off!==true)delete p.off;
+      plIds[p.id]=1;
+      return true;
+    });
+    d.pills.log=(d.pills.log instanceof Array?d.pills.log:[]).filter(function(x){
+      return !!x&&typeof x==='object'&&!!plIds[x.id]&&typeof x.t==='string'&&!isNaN(Date.parse(x.t));
+    }).map(function(x){return {id:x.id,t:new Date(Date.parse(x.t)).toISOString()};});
+    d.pills.log.sort(function(a,b){return a.t<b.t?-1:a.t>b.t?1:0;});
     /* money settings. spendPerWeek is what the user actually typed;
        costPerHit is the derived unit every money surface multiplies by. A
        stored weekly figure always wins, so a hand-edited backup can't leave
@@ -4595,7 +4771,7 @@ try{
     }catch(e){
       if(!saveFailed){
         saveFailed=true;
-        try{alert('Heads up — this device is refusing to save right now, so new logs may not survive closing the app. Copy a backup from The system → Backup & data as soon as you can.');}catch(e2){}
+        try{alert('Heads up — this device is refusing to save right now, so new logs may not survive closing the app. Copy a backup from ⋯ (top right) → Backup & restore as soon as you can.');}catch(e2){}
       }
     }
   }
@@ -5516,7 +5692,7 @@ try{
     if(e.animationName==='thrIn'&&t&&t.classList&&t.classList.contains('thr-in'))t.classList.remove('thr-in');
   },true);
   // stagger the top-level cards of a view in, once per session per view
-  var VIEW_EL={today:'vToday',journey:'vJourney',plan:'vPlan',more:'vMore'};
+  var VIEW_EL={today:'vToday',pills:'vPills',journey:'vJourney',plan:'vPlan',more:'vMore'};
   function staggerView(v){
     var host=$(VIEW_EL[v]);
     if(!host||!motionOK)return;
@@ -5898,10 +6074,13 @@ try{
       $('countdown').innerHTML=head+
         (zs&&zs.slips?' · '+zs.clean+' clean · best run '+zs.best:' · zero was '+wd(z));
     }else{
+      /* the date, the zero date, the distance. "Day N of M" came off: it
+         counts from the first taper's day one, so on a restarted descent it
+         read "Day 80 of 80" the day before a zero that was still ahead. The
+         step-down card on Plan keeps its own day count. */
       var tp=taperProgress(), left=tp.daysToZero, start=schedule()[0].start;
-      var where=today<start?'starts '+wd(start):'Day '+tp.dayN+' of '+tp.totalD;
-      $('countdown').innerHTML=wd(today)+' · '+where+' · zero <strong>'+wd(z)+
-        '</strong> · '+left+' day'+(left===1?'':'s');
+      $('countdown').innerHTML=wd(today)+(today<start?' · starts '+wd(start):'')+' · zero <strong>'+wd(z)+
+        '</strong> · '+left+' day'+(left===1?'':'s')+' to go';
     }
   }
 
@@ -7455,9 +7634,11 @@ try{
     $('tallyBtns').hidden=false;
     $('statRow').hidden=false;
     $('btnEarlier').hidden=false;
-    // header: the score and its verdict as one chip, then the streak
+    /* header: the streak only. The score chip was a second verdict on a card
+       whose ring and status chip already give one; it still leads the
+       landscape cockpit, where a dashboard is the point. */
     var sc=scoreToday(), sch0=$('thScore');
-    sch0.hidden=false;
+    sch0.hidden=true;
     setNum('heroScore',sc.total,!booted);
     var hg=$('heroGrade');
     hg.textContent=sc.label;
@@ -7587,13 +7768,14 @@ try{
   }
 
   /* ================= yesterday vs today, on the Today screen =================
-     The same two clocks read four ways, most important first:
-       1. the lead — the longest stretch, today so far vs yesterday vs the
-          day before, each with its endpoints and yesterday's mark to beat;
-       2. the 32h tape — yesterday over today, aligned by clock time;
-       3. the twin rails — sitting by sitting, raw minute stamps, per-gap
+     The same two clocks read three ways, most important first:
+       1. the lead — the longest stretch, today so far vs yesterday, each
+          with its endpoints, and yesterday's mark to beat;
+       2. the twin rails — sitting by sitting, raw minute stamps, per-gap
           deltas against yesterday's matching gap (a fold);
-       4. the two day pages (#ydOpen / #tdOpen).
+       3. the two day pages (#ydOpen / #tdOpen).
+     A 32h tape and a 5-day sparkline used to sit between 1 and 2, drawing the
+     same stamps the rails spell out; they went in the Sep 29 declutter.
      After zero the card is the clean/slip tiles and the grid of every day
      since zero. Every number is dayMetrics'/zeroStats'; the renders only
      read. The 30s tick rebuilds it all, the 20s gap tick the lead only. */
@@ -7642,160 +7824,32 @@ try{
     }
     return r;
   }
-  /* ---- 1. the lead: longest gap, three days, one mark to beat ---- */
+  /* ---- 1. the lead: the longest gap, today against yesterday, and the mark
+     to beat. It used to read three days four ways (two big numbers, a chip on
+     each, three bars on one scale, a 5-day sparkline); the two numbers and the
+     one chip that tells you what to do next are the part anyone looked at. */
   function ydLeadHTML(m,tm){
     var tb=ydTodayBest(tm), ym=m.gapMaxMs;
-    var pm=m.vs?dayMetrics(m.vs.key):null;
-    if(pm&&(pm.isZ!==m.isZ||pm.gapMaxMs===null))pm=null;
     if(ym===null&&!tb)return '';
-    var tChip='',yChip='';
+    var tChip='';
     if(tb&&ym!==null){
       var d=tb.ms-ym;
       tChip=d>=60000
         ?'<span class="chip sm under">'+icon('up')+fmtDur(d)+' past</span>'
         :'<span class="chip sm acc">'+icon('timer')+(-d<60000?'under 1m':fmtDur(-d))+' to beat</span>';
     }
-    if(pm&&ym!==null){
-      var dy=ym-pm.gapMaxMs, pct=Math.round(Math.abs(dy)/pm.gapMaxMs*100);
-      // a closed day's shorter stretch is a fact, not a failure — neutral
-      yChip=dy>=300000
-        ?'<span class="chip sm under">'+icon('up')+fmtDur(dy)+' · +'+pct+'%</span>'
-        :dy<=-300000
-        ?'<span class="chip sm ghost">'+icon('down')+fmtDur(-dy)+' · −'+pct+'%</span>'
-        :'<span class="chip sm ghost">level with '+ydWk(pm.date)+'</span>';
-    }
     var tEnds=tb?(tb.running?ydEnds(tb.from,null):ydEnds(tb.from,tb.to)):'no gap yet';
     var yEnds=m.gapMax?ydEnds(m.gapMax.from,m.gapMax.to)
       :(m.sessions.length?'one sitting — no gap':'no timed hits');
-    var h='<div class="lg2">'+
+    return '<div class="lg2">'+
       '<div class="lg2-c"><span class="lg2-k">Today so far'+(tb&&tb.running?' <span class="lg2-run">running</span>':'')+'</span>'+
         '<span class="lg2-n">'+(tb?ydDurBig(tb.ms):'–')+'</span>'+tChip+
         '<span class="lg2-e">'+tEnds+'</span></div>'+
       '<div class="lg2-c"><span class="lg2-k">Yesterday · '+ydWk(m.date)+'</span>'+
-        '<span class="lg2-n">'+(ym!==null?ydDurBig(ym):'–')+'</span>'+yChip+
+        '<span class="lg2-n">'+(ym!==null?ydDurBig(ym):'–')+'</span>'+
         '<span class="lg2-e">'+yEnds+'</span></div></div>';
-    // the three bars on one scale, yesterday's value ruled across today's track
-    var rows=[];
-    if(pm)rows.push({l:ydWk(pm.date)+' '+pm.date.getDate(),ms:pm.gapMaxMs,c:'pb'});
-    if(ym!==null)rows.push({l:ydWk(m.date)+' '+m.date.getDate(),ms:ym,c:(pm&&ym>pm.gapMaxMs)?'yb best':'yb'});
-    rows.push({l:'Today',ms:tb?tb.ms:0,c:'tb'+(tb&&tb.running?' run':''),rule:ym});
-    var mx=1;rows.forEach(function(r){if(r.ms>mx)mx=r.ms;});
-    h+='<div class="lg2-bars">'+rows.map(function(r){
-      var w=Math.max(r.ms?2:0,Math.round(r.ms/mx*1000)/10);
-      return '<div class="lg2-b '+r.c+'"><span class="lg2-bl">'+r.l+'</span>'+
-        '<span class="lg2-tr"><span class="lg2-fl" style="width:'+w+'%"></span>'+
-        (r.rule!==undefined&&r.rule!==null?'<span class="lg2-rule" style="left:'+(Math.round(r.rule/mx*1000)/10)+'%" title="Yesterday’s mark"></span>':'')+
-        '</span><span class="lg2-v">'+(r.ms?fmtDur(r.ms):'–')+'</span></div>';
-    }).join('')+'</div>';
-    return h;
   }
-  /* the header's 5-day longest-gap sparkline (today = so far, running counted) */
-  function ydSparkHTML(tm){
-    var vals=[],i,n=0;
-    for(i=4;i>=1;i--){
-      var dm=dayMetrics(dkeyOf(addDays(today,-i)));
-      vals.push(dm.isZ?null:dm.gapMaxMs);
-    }
-    var tb=ydTodayBest(tm);vals.push(tb?tb.ms:null);
-    vals.forEach(function(v){if(v!==null)n++;});
-    if(n<3)return '';
-    var mx=1;vals.forEach(function(v){if(v>mx)mx=v;});
-    var W=58,H=20,pts=[];
-    vals.forEach(function(v,j){if(v!==null)pts.push([3+j*(W-6)/4,H-3-(v/mx)*(H-6)]);});
-    var p=pts.map(function(q){return q[0].toFixed(1)+','+q[1].toFixed(1);}).join(' ');
-    var last=pts[pts.length-1];
-    return '<span class="yd-spark" title="Longest gap, last 5 days"><svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" aria-hidden="true">'+
-      '<polyline points="'+p+'" fill="none" stroke="var(--ink-3)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'+
-      pts.slice(0,-1).map(function(q){return '<circle cx="'+q[0].toFixed(1)+'" cy="'+q[1].toFixed(1)+'" r="1.8" fill="var(--ink-3)"/>';}).join('')+
-      '<circle cx="'+last[0].toFixed(1)+'" cy="'+last[1].toFixed(1)+'" r="3" fill="var(--acc)" stroke="var(--s1)" stroke-width="1.5"/></svg>'+
-      '<span>5-day</span></span>';
-  }
-  /* ---- 2. the 32h tape: 6 PM the evening before → 2 AM after, per row ---- */
-  function ydTapeHTML(m,tm){
-    var W=325,H=114,TW=22,SPAN=32;
-    var yY=16,tY=70;                       // track tops
-    function X(t,base){var h=(t-base)/3600000+6;return Math.max(0,Math.min(W,h/SPAN*W));}
-    function mid(y){return y+TW/2;}
-    var s='<svg class="yd-tape-svg" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Yesterday and today on one clock, 6 PM the evening before to 2 AM after">'+
-      '<defs><pattern id="ydHatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="var(--s3)"/><line x1="0" y1="0" x2="0" y2="6" stroke="var(--line-2)" stroke-width="2.4"/></pattern></defs>';
-    // axis labels between the tracks
-    ['6p','12a','6a','12p','6p','12a'].forEach(function(l,i){
-      var x=i*6/SPAN*W;
-      s+='<text class="yt-ax" x="'+(i?x:1).toFixed(1)+'" y="'+(yY+TW+19)+'" text-anchor="'+(i?'middle':'start')+'">'+l+'</text>';
-    });
-    var runBest=null;
-    function row(mm,y,isT){
-      var d=mm.date, base=new Date(d.getFullYear(),d.getMonth(),d.getDate());
-      var r='<rect x="0" y="'+y+'" width="'+W+'" height="'+TW+'" rx="6" fill="var(--s3)"/>';
-      for(var h=0;h<=SPAN;h+=6){
-        var hx=h/SPAN*W;
-        if(h>0&&h<SPAN)r+='<rect x="'+(hx-.5).toFixed(1)+'" y="'+y+'" width="1" height="'+TW+'" fill="var(--ghost)" opacity=".45"/>';
-      }
-      var nowX=null;
-      if(isT){
-        nowX=X(new Date(),base);
-        if(nowX<W)r+='<rect x="'+nowX.toFixed(1)+'" y="'+y+'" width="'+(W-nowX).toFixed(1)+'" height="'+TW+'" fill="url(#ydHatch)" opacity=".9"/>';
-      }
-      // gaps: dotted, the longest filled with its duration inside
-      var tb=isT?ydTodayBest(mm):null, runWins=!!(tb&&tb.running);
-      mm.gapSpans.forEach(function(g,gi){
-        var x1=X(g.from,base),x2=X(g.to,base);
-        if(x2-x1<1)return;
-        var isMax=gi===mm.gapMaxIdx&&!runWins;
-        if(isMax){
-          r+='<rect class="yt-lg'+(isT?' t':'')+'" x="'+x1.toFixed(1)+'" y="'+(mid(y)-7)+'" width="'+(x2-x1).toFixed(1)+'" height="14" rx="7"/>';
-          if(x2-x1>=50)r+='<text class="yt-lgt'+(isT?' t':'')+'" x="'+((x1+x2)/2).toFixed(1)+'" y="'+(mid(y)+3.6)+'" text-anchor="middle">'+fmtDur(g.ms)+'</text>';
-          if(g.from<new Date(base.getTime()-6*3600000))r+='<path class="yt-notch'+(isT?' t':'')+'" d="M0 '+mid(y)+' l5 -5 v10 z"/>';
-        }else{
-          r+='<line x1="'+x1.toFixed(1)+'" y1="'+mid(y)+'" x2="'+x2.toFixed(1)+'" y2="'+mid(y)+'" stroke="var(--ink-3)" stroke-width="1.5" stroke-dasharray="1 3" stroke-linecap="round"/>';
-        }
-      });
-      // today: the stretch still running, then the next window, then now
-      if(isT){
-        var last=lastHitEver();
-        if(last&&Date.now()-last.getTime()<48*3600000){
-          var lx=X(last,base);
-          if(nowX-lx>=1){
-            if(runWins){
-              r+='<rect class="yt-lg t" x="'+lx.toFixed(1)+'" y="'+(mid(y)-7)+'" width="'+(nowX-lx).toFixed(1)+'" height="14" rx="7"/>';
-              if(nowX-lx>=50)r+='<text class="yt-lgt t" x="'+((lx+nowX)/2).toFixed(1)+'" y="'+(mid(y)+3.6)+'" text-anchor="middle">'+fmtDur(tb.ms)+'</text>';
-              if(last<new Date(base.getTime()-6*3600000))r+='<path class="yt-notch t" d="M0 '+mid(y)+' l5 -5 v10 z"/>';
-            }else r+='<rect class="yt-run" x="'+lx.toFixed(1)+'" y="'+(mid(y)-3)+'" width="'+(nowX-lx).toFixed(1)+'" height="6" rx="3"/>';
-            runBest=Date.now()-last.getTime();
-          }
-        }
-        var si=sessionInfo();
-        if(si&&si.nextOpen&&si.nextOpen.getTime()>Date.now()){
-          var nx=X(si.nextOpen,base);
-          if(nx<W-2)r+='<rect class="yt-next" x="'+(nx-1).toFixed(1)+'" y="'+(y+2)+'" width="12" height="'+(TW-4)+'" rx="3"/>';
-        }
-      }
-      // sittings: an ink block from first to last hit, ×n beside the track
-      var lastLx=-99;
-      mm.sessions.forEach(function(sess){
-        var a=X(sess[0],base),b=X(sess[sess.length-1],base),w=Math.max(3.5,b-a);
-        r+='<rect x="'+(a-(w===3.5?1.75:0)).toFixed(1)+'" y="'+(mid(y)-8)+'" width="'+w.toFixed(1)+'" height="16" rx="1.6" fill="var(--ink)"/>';
-        var lx=(a+b)/2;
-        if(sess.length>1&&lx-lastLx>=21&&lx>=(isT?44:34)){
-          r+='<text class="yt-n" x="'+lx.toFixed(1)+'" y="'+(isT?y+TW+13:y-5)+'" text-anchor="middle">×'+sess.length+'</text>';
-          lastLx=lx;
-        }
-      });
-      if(isT&&nowX!==null&&nowX<W)r+='<rect x="'+(nowX-1).toFixed(1)+'" y="'+(y-3)+'" width="2" height="'+(TW+6)+'" rx="1" fill="var(--ink)"/>';
-      return r;
-    }
-    // row names ride the outer edges, where the ×n labels leave room
-    s+=row(m,yY,false)+row(tm,tY,true)+
-      '<text class="yt-rl" x="0" y="'+(yY-5)+'">'+ydWk(m.date)+'</text>'+
-      '<text class="yt-rl t" x="0" y="'+(tY+TW+14)+'">Today</text></svg>';
-    var si2=sessionInfo();
-    var leg='<span><i class="k-sit"></i>sitting</span><span><i class="k-lg"></i>longest</span>';
-    if(runBest!==null)leg+='<span><i class="k-run"></i>running · '+fmtDur(runBest)+'</span>';
-    if(si2&&si2.nextOpen&&si2.nextOpen.getTime()>Date.now())leg+='<span><i class="k-nx"></i>next ~'+fmtClk(si2.nextOpen)+'</span>';
-    return '<div class="yd-tape">'+s+
-      '<div class="yd-leg">'+leg+'</div></div>';
-  }
-  /* ---- 3. the twin rails: sitting by sitting ---- */
+  /* ---- 2. the twin rails: sitting by sitting ---- */
   function ydRailHTML(mm,isT,ref){
     var h='', tb=isT?ydTodayBest(mm):null, runWins=!!(tb&&tb.running);
     var refOn=ref?ref.gapSpans.filter(function(g){return g.on;}):[];
@@ -7914,7 +7968,6 @@ try{
     }
     return h+ydGridHTML();
   }
-  var ydGrew=false;
   function renderYday(){
     var card=$('ydayCard');
     if(!card)return;
@@ -7942,29 +7995,21 @@ try{
         ?'<span class="chip sm slip"><span class="dot"></span>Slip '+((tm.eff>0)?'today':'yesterday')+'</span>'
         :'<span class="chip sm clean"><span class="dot"></span>'+nClean+' of 2 clean</span>';
       $('ydLead').innerHTML=ydZeroHTML(m,tm);
-      $('ydTape').innerHTML='';
       sits.hidden=true;
       return;
     }
     sits.hidden=false;
-    $('ydHead').innerHTML=ydSparkHTML(tm);
-    var lead=$('ydLead');
-    lead.innerHTML=ydLeadHTML(m,tm);
-    // the bars grow once per session, never on the 20/30s re-renders
-    if(!ydGrew&&motionOK&&lead.innerHTML){
-      ydGrew=true;lead.classList.add('yd-grow');
-      setTimeout(function(){lead.classList.remove('yd-grow');},1300);
-    }
-    $('ydTape').innerHTML=(m.sessions.length||tm.sessions.length)?ydTapeHTML(m,tm):'';
+    // the lead's two numbers are longest gaps; the header says so once
+    $('ydHead').innerHTML='<span class="yd-hr-l">longest gap</span>';
+    $('ydLead').innerHTML=ydLeadHTML(m,tm);
     $('ydCols').innerHTML='<div class="vs-head">'+ydHeadHTML(m,false)+ydHeadHTML(tm,true)+'</div>'+
       '<div class="vs"><div class="vs-c">'+ydRailHTML(m,false,null)+'</div><div class="vs-c">'+ydRailHTML(tm,true,m)+'</div></div>';
     // the fold's one line of data: sittings then → now, first hit earlier/later
-    var live=m.sessN+' → '+tm.sessN+' so far';
-    if(m.firstMin!==null&&tm.firstMin!==null){
-      var df=tm.firstMin-m.firstMin;
-      live+=' · first hit '+(df===0?'same time':fmtDur(Math.abs(df)*60000)+(df<0?' earlier':' later'));
-    }
-    $('ydSitsLive').textContent=live;
+    /* the fold's line of data is yesterday's clock itself — every sitting's
+       stamp, readable without opening anything (today's already sit under
+       the hero's pips). The rails inside add the gaps and their deltas. */
+    var yt=m.sessions.map(function(s){return fmtClk(s[0])+(s.length>1?' ×'+s.length:'');});
+    $('ydSitsLive').textContent=yt.length?'Yesterday · '+yt.join(' · '):'Nothing timed yesterday';
   }
   /* the 20s gap tick: only the lead moves between full renders (the running
      stretch grows), so it alone is rebuilt */
@@ -8233,82 +8278,12 @@ try{
     var ref=pv&&yM.eff!==null?yM.eff:cap, bp=Math.round((ref-BASELINE)/BASELINE*100);
     var side='<span class="jh-side"><span class="n-md">'+(bp<0?'−':'+')+Math.abs(bp)+'<span class="unit">%</span></span>'+
       '<small>'+(pv&&yM.eff!==null?'yesterday':'today’s cap')+' vs<br>the old ~'+BASELINE+'/day</small></span>';
+    /* the headline and its facts, no chart: an hour-by-hour step line of the
+       same two counts sat under this, a graph restating the sentence above
+       it. The descent below is the one chart this tab leads with. */
     el.innerHTML='<p class="label">'+label+'</p>'+
       '<div class="jh-row">'+num+side+'</div>'+
-      '<p class="jh-facts">'+facts+'</p>'+jnPaceSVG(yM,pv);
-  }
-  /* by this hour: today's running count as a solid step line from 4am to
-     now, yesterday's whole day dashed beneath it on the same clock, the cap
-     dotted across, a now line with both counts called out on it */
-  function jnPaceSVG(yM,pv){
-    var W=325,H=124,top=16,base=100;
-    var d4=jnDay4(today), now=Date.now();
-    var nowH=Math.max(0,Math.min(24,(now-d4)/3600000));
-    function hrs(key,dd){
-      var e=data.days[key], a4=jnDay4(dd);
-      return ((e&&e.hits)||[]).map(function(h){return (new Date(h).getTime()-a4)/3600000;})
-        .filter(function(h){return isFinite(h);}).sort(function(a,b){return a-b;})
-        .map(function(h){return Math.max(0,Math.min(24,h));});
-    }
-    var tc=countOf(todayKey)||0, th=hrs(todayKey,today);
-    var tAdj=Math.max(0,tc-th.length);
-    var yOn=!!(pv&&yM.eff!==null), yh=yOn?hrs(yM.key,yM.date):[], yAdj=yOn?Math.max(0,yM.eff-yh.length):0;
-    var maxV=Math.max(cap,tc,yOn?yM.eff:0,2)*1.08;
-    function yv(v){return base-(v/maxV)*(base-top);}
-    function xh(h){return h/24*W;}
-    function step(times,c0,endH){
-      var c=c0, p='M0 '+yv(c).toFixed(1);
-      times.forEach(function(h){if(h>endH)return;p+=' H'+xh(h).toFixed(1)+' V'+yv(++c).toFixed(1);});
-      return {d:p+' H'+xh(endH).toFixed(1),c:c};
-    }
-    var s='<svg class="jn-svg jh-chart" viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Hits by this hour: '+tc+' today'+
-      (yOn?', '+pv.y+' yesterday by now, '+yM.eff+' by the end of yesterday':'')+'; cap '+cap+'.">';
-    s+='<defs><linearGradient id="jhFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--acc)" stop-opacity=".22"/><stop offset="1" stop-color="var(--acc)" stop-opacity="0"/></linearGradient></defs>';
-    // hour grid: a hairline per 4 hours, labelled below
-    var nowT=fmtClk(new Date(now)), nowW=nowT.length*6.3+4, nlx=Math.min(W-nowW/2,Math.max(nowW/2,xh(nowH)));
-    [[4,'8a'],[8,'12p'],[12,'4p'],[16,'8p'],[20,'12a']].forEach(function(g){
-      var x=xh(g[0]);
-      s+='<line x1="'+x.toFixed(1)+'" y1="'+top+'" x2="'+x.toFixed(1)+'" y2="'+base+'" class="jh-grid"/>';
-      if(Math.abs(x-nlx)>nowW/2+g[1].length*3.2+4)s+=jnT(x,H-6,'jn-ax',g[1],'middle');
-    });
-    s+='<line x1="0" y1="'+base+'" x2="'+W+'" y2="'+base+'" class="jn-floor"/>';
-    // the cap
-    var cy=yv(cap);
-    s+='<line x1="0" y1="'+cy.toFixed(1)+'" x2="'+W+'" y2="'+cy.toFixed(1)+'" class="jh-cap"/>'+
-      jnT(W,cy-5,'jn-ax','cap '+cap,'end');
-    // yesterday, the whole day, dashed
-    if(yOn){
-      var yp=step(yh,yAdj,24);
-      s+='<path d="'+yp.d+'" class="jh-yday"/>';
-    }
-    // today so far, solid, with a soft fill under it
-    var tp=step(th,tAdj,nowH);
-    s+='<path d="'+tp.d+' V'+base+' H0 Z" fill="url(#jhFill)" stroke="none"/>'+
-      '<path d="'+tp.d+'" class="jh-today"/>';
-    // now
-    var nx=xh(nowH);
-    s+='<line x1="'+nx.toFixed(1)+'" y1="'+(top-6)+'" x2="'+nx.toFixed(1)+'" y2="'+base+'" class="jh-now"/>'+
-      jnT(nlx,H-6,'jn-ax jn-ax-today',nowT,'middle');
-    var left=nx>W-80, ty=yv(tc), lx=left?nx-9:nx+9, la=left?'end':'start';
-    if(yOn){
-      var yy=yv(pv.y);
-      s+='<circle cx="'+nx.toFixed(1)+'" cy="'+yy.toFixed(1)+'" r="3.6" class="jh-ydot"/>';
-    }
-    s+='<circle cx="'+nx.toFixed(1)+'" cy="'+ty.toFixed(1)+'" r="4.4" class="jh-tdot"/>';
-    // the call-outs: one when the counts match, stacked above when they sit close
-    if(yOn&&pv.y===tc){
-      s+=jnT(lx,ty-7,'jn-vl jh-tl',tc+' · even with yday',la);
-    }else if(yOn&&Math.abs(yy-ty)<14){
-      var hi=Math.min(yy,ty)-7, tTop=ty<yy;
-      s+=jnT(lx,tTop?hi:hi-13,'jn-ax jh-yl',pv.y+' yday',la)+jnT(lx,tTop?hi-13:hi,'jn-vl jh-tl',tc+' today',la);
-    }else{
-      if(yOn)s+=jnT(lx,yy+4,'jn-ax jh-yl',pv.y+' yday',la);
-      s+=jnT(lx,ty-7,'jn-vl jh-tl',tc+' today',la);
-    }
-    s+='</svg>';
-    s+='<div class="jn-key"><span><i class="jk-line"></i>Today</span>'+(yOn?'<span><i class="jk-dash"></i>Yesterday</span>':'')+
-      '<span><i class="jk-dot"></i>Cap</span></div>';
-    return s;
+      '<p class="jh-facts">'+facts+'</p>';
   }
 
   /* a plain-words description of the day's clock, for screen readers and for
@@ -8417,7 +8392,7 @@ try{
 
   /* ================= the journey deck =================
      The deck of day tiles used to sit above the day rows and say the same
-     thing twice. The rows below carry every day now (sitting times, pips,
+     thing twice. The rows below carry every day now (sitting times, status,
      deltas), so the deck stays parked: #journey hidden, #jdeck empty, its
      tap contract (.jday[data-jd] → day page) kept for anything that builds
      tiles into it. */
@@ -8474,20 +8449,14 @@ try{
 
   /* ================= Day by day =================
      One row per day, newest first, each read against the day before it (the
-     engine's vs — the previous LOGGED day): the date block, "15 of 16" over
-     mini-pips, every sitting's raw clock time (wrapping, never cut), the
+     engine's vs — the previous LOGGED day): the date block, "15 of 16"
+     (the status chip carries the verdict, so no pips restate it), every
+     sitting's raw clock time (wrapping, never cut), the
      longest stretch with its delta, and on the right the status in words and
      the count delta. The main page builds the newest JN_ROWS; the full
      record is built only once the card is opened (.expanded). Zero-era days
      read as clean or slip and are never graded across the zero line. */
   var JN_ROWS=5;
-  function jnPips(m){
-    var eff=m.eff||0, c=m.cap, h='';
-    var on=eff>=c?'a':'u';
-    for(var i=0;i<c;i++)h+='<i'+(i<eff?' class="'+on+'"':'')+'></i>';
-    if(eff>c){h+='<b></b>';for(var j=c;j<eff;j++)h+='<i class="o"></i>';}
-    return '<span class="jr-pips" aria-hidden="true">'+h+'</span>';
-  }
   function jnSittings(m){
     var out=m.sessions.map(function(s){
       return '<b>'+fmtClk(s[0])+(s.length>1?'<i>×'+s.length+'</i>':'')+'</b>';
@@ -8553,7 +8522,6 @@ try{
       var eff=m.eff||0, sits=jnSittings(m), nx=jnNextOpen(m);
       if(nx)sits.push(nx);
       mid='<p class="jr-top"><span class="jr-n">'+eff+'</span><span class="jr-of">of '+esc(m.capText)+(m.isToday?' so far':'')+'</span></p>'+
-        jnPips(m)+
         (sits.length?'<p class="jr-times">'+sits.join(' <span class="jr-sep">·</span> ')+'</p>'
           :'<p class="jr-soft jr-line">Nothing logged yet today</p>')+
         jnLongest(m);
@@ -8689,8 +8657,13 @@ try{
         }
         s+='<rect x="'+x.toFixed(1)+'" y="'+(base-bh).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="'+Math.min(8,bw/2).toFixed(1)+
           '" class="gt-bar gt-'+kind+'" style="--dl:'+(260+i*60)+'ms"/>';
-        var ly=(m.isToday&&best&&!todayBest)?Math.min(yt,yh(best.g)):yt;
-        s+=jnT(cx,ly-7,'jn-vl gt-v gt-v-'+kind,jnDurTight(g),'middle');
+        /* values ride only on the two bars the card is about — today and the
+           best. Every other day's figure is in its Day by day row below, and
+           seven labels over seven bars read as a table, not a trend. */
+        if(kind!=='past'){
+          var ly=(m.isToday&&best&&!todayBest)?Math.min(yt,yh(best.g)):yt;
+          s+=jnT(cx,ly-7,'jn-vl gt-v gt-v-'+kind,jnDurTight(g),'middle');
+        }
       }
       if(m.reqGapH>0){
         var ry=yh(m.reqGapH*3600000);
@@ -8771,20 +8744,18 @@ try{
        the hero bar note already carries. Slack is finite and the date can be
        locked, so an over-cap day can be recorded while moving nothing, and
        this banner would then contradict the schedule card on the same screen. */
+    /* One sentence and the date it leaves. The why (two hard days ease the
+       next step; a spent budget holds the date on purpose) lives on the
+       schedule card and in the guide, where it can be read at leisure. */
     var moved=dayHeldTheStep(yKey);
     if(moved){
-      $('holdText').innerHTML='<b>Yesterday ran '+yCount+' of '+BASE_PHASES[yIdx].cap+', so the schedule adjusted itself.</b> '+
-        'This cap runs one day longer, and every later step moved back to match. '+
-        'If a cap takes two hard days, the next step eases by an extra day too. Under the cap is all today asks.'+
-        '<span class="tc-moved"><span class="chip sm adjust">'+icon('plus','ic-xs')+'Cap '+yCapT+' · 1 more day</span>'+
-        '<span class="chip sm ghost">'+icon('cal','ic-xs')+'Zero now '+zTxt+'</span></span>';
+      $('holdText').innerHTML='<b>Yesterday ran '+yCount+' of '+BASE_PHASES[yIdx].cap+'.</b> Cap '+yCapT+' runs one more day, and the rest moves back to match.'+
+        '<span class="tc-moved"><span class="chip sm ghost">'+icon('cal','ic-xs')+'Zero now '+zTxt+'</span></span>';
     }else{
       var yc=null,cz=schedule().causes||[];
       for(var ci=0;ci<cz.length;ci++)if(cz[ci].key===yKey){yc=cz[ci];break;}
-      $('holdText').innerHTML='<b>Yesterday ran '+yCount+' of '+BASE_PHASES[yIdx].cap+', and the dates did not move.</b> '+
-        (yc&&yc.locked?'The date is locked, so the day is on the record and zero stays put. '
-                      :'There are no extension days left, so the day is on the record and zero stays put. ')+
-        'That is the design, not a failure — a date that keeps receding spends the part of this with evidence behind it. Under the cap is all today asks.'+
+      $('holdText').innerHTML='<b>Yesterday ran '+yCount+' of '+BASE_PHASES[yIdx].cap+'.</b> '+
+        (yc&&yc.locked?'The date is locked, so it holds.':'No extension days are left, so the date holds.')+
         '<span class="tc-moved"><span class="chip sm ghost">'+icon((yc&&yc.locked)?'lock':'cal','ic-xs')+'Zero stays '+zTxt+'</span></span>';
     }
     $('btnKeep').hidden=!moved;
@@ -8843,7 +8814,7 @@ try{
         // honest, not celebratory: the step-down didn't take, so the day rode
         // the old cap and the whole descent moved back a day with it
         title='Step-down deferred';
-        body='Yesterday ran past the <b>'+BASE_PHASES[yIdx+1].capText+'</b> step, so it rode at <b>'+yCap+'</b> instead — logged <b>'+c+' of '+yCap+'</b>, and the zero date moved back a day to match.';
+        body='Yesterday ran past the <b>'+BASE_PHASES[yIdx+1].capText+'</b> step, so it stayed at <b>'+yCap+'</b> and zero moved back a day.';
         ic='cal';okTxt='Got it';
       }else{
         title='Day held';
@@ -8859,12 +8830,9 @@ try{
           dropOK=true;
           /* ending the step early takes ONE day off it, so the next cap
              starts on what is currently the phase's last day — not
-             necessarily tomorrow. With two or more days still to run,
-             "Tomorrow drops to..." was simply the wrong date. */
-          var when=(dkeyOf(pend)===todayKey)?'Today'
-            :(dkeyOf(pend)===dkeyOf(addDays(today,1)))?'Tomorrow'
-            :fmtShort(pend);
-          body+=' And '+c+' is already at or under the <em>next</em> cap of <b>'+nxt.capText+'</b> — if it felt solid, you can end this step a day early. '+when+' drops to '+nxt.capText+' and the zero date moves a day closer.';
+             necessarily tomorrow. The line names no day for that reason;
+             the step card on Plan shows the dates once it's taken. */
+          body+=' That’s already within the next cap of <b>'+nxt.capText+'</b> — if it felt solid, step down a day early and zero moves a day closer.';
         }
       }
     }
@@ -9052,13 +9020,28 @@ try{
         '<div class="ck-dots" data-k="'+m.k+'">'+dots+'</div>'+
         '<div class="ck-ends"><span>1 · '+(ends[0]||'')+'</span><span>'+(ends[1]||'')+' · 5</span></div></div>';
     }).join('');
-    var chip=$('ckChip'),note=$('ckNote'),done=ckComplete(e);
+    var chip=$('ckChip'),note=$('ckNote'),done=ckComplete(e),open=!done||ckEditKey===todayKey;
     chip.className='chip sm '+(done?'under':'ghost');
     chip.innerHTML=done?icon('check')+'Logged tonight':nSet+' of '+CK_METRICS.length;
     card.classList.toggle('done',done);
-    if(done){note.className='ck-note done';note.innerHTML=icon('check','ic-sm')+'<span>Logged for tonight — tap any dot to adjust.</span>';}
-    else{note.className='ck-note';note.textContent='More dots, more of it: 5 is solid sleep, steady mood, loud cravings.';}
+    /* a finished reading folds to its three numbers — fifteen buttons stay on
+       screen only while there's something left to answer, or on request */
+    card.classList.toggle('open',open);
+    if(done&&!open){
+      note.className='ck-note done';
+      note.innerHTML=icon('check','ic-sm')+'<span>'+CK_METRICS.map(function(m){return m.t+' <b>'+e[m.k]+'</b>';}).join(' · ')+'</span>'+
+        '<button class="ck-edit" data-ck="edit">Edit</button>';
+    }else if(done){
+      note.className='ck-note done';
+      note.innerHTML=icon('check','ic-sm')+'<span>Logged for tonight — tap any dot to adjust.</span><button class="ck-edit" data-ck="close">Done</button>';
+    }else{note.className='ck-note';note.textContent='';}
   }
+  var ckEditKey=null;   // the day the finished check-in was reopened on
+  $('ckNote').addEventListener('click',function(ev){
+    var b=ev.target.closest('[data-ck]');if(!b)return;
+    ckEditKey=b.dataset.ck==='edit'?todayKey:null;
+    renderCheckin();
+  });
   function ckSeries(){return rc('ck',function(){
     var ks=Object.keys(data.checkins||{}).sort(),out=[];
     ks.forEach(function(k){
@@ -11928,6 +11911,414 @@ try{
       '<p class="sc-note">Escalating reinforcement with a reset on lapse is the schedule the contingency-management trials used, and it is the best-evidenced treatment for cannabis use disorder. One difference matters and is worth saying plainly: those trials verified abstinence with urine screens. A ladder you pay yourself on your own word is the weak form. Naming someone who holds the money and asks makes it closer to the thing that was actually tested.</p>';
   }
 
+  /* ================= pills (owner PL) =================
+     A dose log beside the taper: the pills you take, one tap per dose, and the
+     time between doses read straight off the stamps. Nothing here reaches the
+     schedule engine and the engine reaches nothing here — logging a dose saves
+     and repaints this view alone.
+     Doses file by the same 4am day as everything else, so a 1am dose counts
+     toward the evening it belongs to. */
+  var PILL_GAPS=[1,2,3,4,5,6,8,10,12,24];
+  /* what has to survive a repaint: the open panel (with the time being typed),
+     the form being filled in, and whether every earlier day is showing */
+  var pillUI={panel:null,edit:null,adding:false,draft:{},msg:'',histAll:false};
+  var pillNewT=null;   // the stamp just logged, so its chip pops in once
+  function pillsOn(){return data.pills.list.filter(function(p){return !p.off;});}
+  function pillOf(id){
+    var l=data.pills.list;
+    for(var i=0;i<l.length;i++)if(l[i].id===id)return l[i];
+    return null;
+  }
+  function pillDay(ms){return dkeyOf(new Date(ms-DAY_CUTOFF_H*3600000));}
+  // one pill's doses as ms, oldest first (the log is kept sorted)
+  function pillTimes(id){
+    var o=[];
+    data.pills.log.forEach(function(x){if(x.id===id)o.push(Date.parse(x.t));});
+    return o;
+  }
+  function pillLast(id){
+    var ts=pillTimes(id),now=Date.now(),l=null;
+    for(var i=0;i<ts.length;i++)if(ts[i]<=now)l=ts[i];
+    return l;
+  }
+  function pillTodayTimes(id){
+    var now=Date.now();
+    return pillTimes(id).filter(function(t){return t<=now&&pillDay(t)===todayKey;});
+  }
+  function pillMeta(p){
+    var b=[];
+    if(p.dose)b.push(esc(p.dose));
+    if(p.gapH)b.push(fmtGapH(p.gapH)+' apart');
+    return b.join(' · ');
+  }
+  // the big number: "3h 04m", "2d 5h", "Just now"
+  function pillAgoHTML(ms){
+    var m=Math.max(0,Math.floor(ms/60000));
+    if(m<1)return 'Just now';
+    var h=Math.floor(m/60),d=Math.floor(h/24);
+    if(d)return d+'<span class="u">d</span>'+(h%24)+'<span class="u">h</span>';
+    if(h)return h+'<span class="u">h</span>'+pad(m%60)+'<span class="u">m</span>';
+    return m+'<span class="u">m</span>';
+  }
+  /* the clock time beside it. The elapsed figure already says how long ago,
+     so the stamp only needs a day when the time alone could be misread */
+  function pillWhen(ms){
+    var d=new Date(ms),ago=Date.now()-ms;
+    if(ago<20*3600000)return fmtTime(d);
+    if(ago<6*MS_DAY)return WEEKDAYS[d.getDay()].slice(0,3)+' '+fmtTime(d);
+    return fmtShort(d)+', '+fmtTime(d);
+  }
+  // "since 1:44 PM" under an elapsed figure; "at 1:44 PM" under "Just now"
+  function pillSinceHTML(ms){
+    return (Date.now()-ms<60000?'at':'since')+' <b>'+pillWhen(ms)+'</b>';
+  }
+  function pillWhenFull(ms){
+    var d=new Date(ms),k=pillDay(ms);
+    return (k===todayKey?'Today':k===ydayKey()?'Yesterday':WEEKDAYS[d.getDay()].slice(0,3)+' '+fmtShort(d))+', '+fmtTime(d);
+  }
+  // how far into the spacing the person set; null when none is set
+  function pillGapState(p,last){
+    if(!p||!p.gapH||last===null)return null;
+    var need=p.gapH*3600000,since=Date.now()-last;
+    return {pct:Math.max(0,Math.min(100,since/need*100)),clear:since>=need,at:last+need};
+  }
+  // the spacing is already named in the card's header — the bar only says where it stands
+  function pillGapHTML(p,gs){
+    return '<div class="px-gap'+(gs.clear?' clear':'')+'" data-pv="gap">'+
+      '<div class="px-bar" aria-hidden="true"><i style="width:'+gs.pct.toFixed(1)+'%"></i></div>'+
+      '<div class="px-gapln">'+
+      (gs.clear?'<b>'+icon('check')+fmtGapH(p.gapH)+' have passed</b>':'<b>Clear at '+fmtTime(new Date(gs.at))+'</b>')+'</div></div>';
+  }
+  /* a day's doses: a time, the gap, the next time — the time between them is
+     the thing being tracked, so it sits between the stamps it measures. Each
+     gap rides with the dose it leads to, so a wrap never strands a dash. */
+  function pillChainHTML(id,times,label){
+    if(!times.length)return '';
+    var h='<div class="px-chain">'+(label?'<span class="px-lbl">'+esc(label)+'</span>':'')+'<span class="px-row">';
+    times.forEach(function(t,i){
+      var chip='<button class="px-t'+(t===pillNewT?' new':'')+'" data-pact="dose" data-id="'+esc(id)+'" data-t="'+t+'" aria-label="Dose at '+
+        esc(pillWhenFull(t))+'. Tap to remove.">'+fmtClk(new Date(t))+'</button>';
+      h+=i?'<span class="px-pair"><span class="px-gv">'+fmtDur(t-times[i-1])+'</span>'+chip+'</span>':chip;
+    });
+    return h+'</span></div>';
+  }
+  function pillPanelHTML(p){
+    var pn=pillUI.panel;
+    if(!pn||pn.id!==p.id)return '';
+    var id=esc(p.id);
+    if(pn.kind==='early'){
+      var last=pillLast(p.id);
+      if(last===null)return '';
+      /* a check, not a gate: neither answer is the lit one, because the app
+         has no business leaning either way on a dose */
+      var el=Date.now()-last;
+      return '<div class="px-in" role="group" aria-label="Log a dose inside your spacing?">'+
+        '<p>It’s been <b>'+(el<60000?'under a minute':fmtDur(el))+'</b> since the last one, and you set <b>'+fmtGapH(p.gapH)+'</b> between doses. Log another now?</p>'+
+        '<div class="btn-row"><button class="btn" data-pact="takeyes" data-id="'+id+'">Log it anyway</button>'+
+        '<button class="btn ghost" data-pact="close">Not now</button></div></div>';
+    }
+    if(pn.kind==='earlier'){
+      return '<div class="px-in" role="group" aria-label="Log a dose taken earlier today">'+
+        '<p>What time did you take it?</p>'+
+        '<div class="row"><input type="time" data-pin="time" value="'+esc(pn.v||'')+'" aria-label="Time of the dose">'+
+        '<button class="btn go" data-pact="earlieradd" data-id="'+id+'">Add</button>'+
+        '<button class="btn ghost" data-pact="close" aria-label="Cancel">'+icon('close','ic-sm')+'</button></div>'+
+        '<p class="msg" role="status">'+esc(pn.msg||'')+'</p></div>';
+    }
+    return '';
+  }
+  function pillCardHTML(p){
+    var last=pillLast(p.id),tt=pillTodayTimes(p.id),n=tt.length,gs=pillGapState(p,last),meta=pillMeta(p);
+    var h='<section class="card px-card" data-pid="'+esc(p.id)+'" aria-label="'+esc(p.name)+'">'+
+      '<div class="px-h"><span class="px-ic" aria-hidden="true">'+icon('pill')+'</span>'+
+      '<span class="px-nm"><b>'+esc(p.name)+'</b>'+(meta?'<small>'+meta+'</small>':'')+'</span>'+
+      '<span class="chip sm '+(n?'acc':'ghost')+'">'+(n?n+' today':'None today')+'</span></div>';
+    h+='<div class="px-since">'+(last===null
+      ?'<span class="px-big none">No doses yet</span>'
+      :'<span class="px-big" data-pv="ago">'+pillAgoHTML(Date.now()-last)+'</span>'+
+       '<span class="px-sub" data-pv="when">'+pillSinceHTML(last)+'</span>')+'</div>';
+    if(gs)h+=pillGapHTML(p,gs);
+    h+=pillChainHTML(p.id,tt,'Today');
+    h+=pillPanelHTML(p)||
+      '<div class="px-acts"><button class="px-take'+(gs&&!gs.clear?' wait':'')+'" data-pact="take" data-id="'+esc(p.id)+'">'+icon('check')+'Log a dose</button>'+
+      '<button class="px-more" data-pact="earlier" data-id="'+esc(p.id)+'" aria-label="Log a dose of '+esc(p.name)+' taken earlier today">'+icon('earlier')+'Earlier</button></div>';
+    return h+'</section>';
+  }
+  function pillFormHTML(p,bare){
+    var dr=pillUI.draft||{};
+    var name=dr.name!==undefined?dr.name:(p?p.name:'');
+    var dose=dr.dose!==undefined?dr.dose:(p&&p.dose?p.dose:'');
+    var gap=dr.gap!==undefined?dr.gap:(p&&p.gapH?String(p.gapH):'');
+    var opts='<option value="">No minimum</option>'+PILL_GAPS.map(function(g){
+      return '<option value="'+g+'"'+(String(g)===gap?' selected':'')+'>'+g+' hour'+(g===1?'':'s')+'</option>';
+    }).join('');
+    // a spacing typed into a backup by hand still shows, rather than silently becoming "none"
+    if(gap&&PILL_GAPS.indexOf(+gap)<0)opts+='<option value="'+esc(gap)+'" selected>'+esc(gap)+' hours</option>';
+    return '<div class="px-form" data-pform="'+(p?esc(p.id):'new')+'">'+
+      '<label class="px-f"><span>Name</span><input data-pin="name" type="text" maxlength="40" autocomplete="off" autocapitalize="words" enterkeyhint="next" placeholder="What it’s called" value="'+esc(name)+'"></label>'+
+      '<label class="px-f"><span>Dose <small>· optional</small></span><input data-pin="dose" type="text" maxlength="24" autocomplete="off" enterkeyhint="done" placeholder="e.g. 200 mg, 1 tablet" value="'+esc(dose)+'"></label>'+
+      '<label class="px-f"><span>Time between doses <small>· optional</small></span><select data-pin="gap">'+opts+'</select>'+
+        '<span class="hint">Take it from the label or your prescriber. The app shows it back to you, and asks before logging a dose that comes sooner.</span></label>'+
+      '<p class="msg" role="status">'+esc(pillUI.msg||'')+'</p>'+
+      '<div class="btn-row"><button class="btn go" data-pact="save">'+(p?'Save':'Add pill')+'</button>'+
+      (bare?'':'<button class="btn ghost" data-pact="cancelform">Cancel</button>')+'</div>'+
+      (p?'<button class="btn sm ghost px-rm" data-pact="retire" data-id="'+esc(p.id)+'">Remove from the list</button>':'')+
+      '</div>';
+  }
+  function pillHistHTML(){
+    var byDay={},keys=[],seen={},nIds=0;
+    data.pills.log.forEach(function(x){
+      var t=Date.parse(x.t),k=pillDay(t);
+      if(!seen[x.id]){seen[x.id]=1;nIds++;}
+      if(k>=todayKey)return;
+      if(!byDay[k]){byDay[k]={};keys.push(k);}
+      (byDay[k][x.id]=byDay[k][x.id]||[]).push(t);
+    });
+    if(!keys.length)return '';
+    keys.sort().reverse();
+    var lim=pillUI.histAll?keys.length:Math.min(keys.length,3);
+    var h='<h3>Earlier days</h3><p>Tap a time to remove it.</p>';
+    for(var i=0;i<lim;i++){
+      var k=keys[i],d=dateOf(k),day=byDay[k],tot=0,body='';
+      data.pills.list.forEach(function(p){
+        var ts=day[p.id];if(!ts)return;
+        tot+=ts.length;
+        // the pill's name leads its row the way "Today" leads the card's
+        body+='<div class="px-dp">'+pillChainHTML(p.id,ts,nIds>1?p.name:'')+'</div>';
+      });
+      h+='<div class="px-day"><p class="px-dh"><span>'+(k===ydayKey()?'Yesterday':WEEKDAYS[d.getDay()].slice(0,3)+' '+fmtShort(d))+'</span>'+
+        '<small>'+tot+' dose'+(tot===1?'':'s')+'</small></p>'+body+'</div>';
+    }
+    if(keys.length>lim)h+='<button class="btn sm ghost px-all" data-pact="histall">Show all '+keys.length+' days</button>';
+    return h;
+  }
+  function pillManageHTML(){
+    var h='';
+    pillsOn().forEach(function(p){
+      if(pillUI.edit===p.id){h+='<div class="px-medit">'+pillFormHTML(p)+'</div>';return;}
+      h+='<div class="px-mrow"><span class="px-mtx"><b>'+esc(p.name)+'</b><small>'+(pillMeta(p)||'No dose or spacing set')+'</small></span>'+
+        '<button class="btn sm ghost" data-pact="edit" data-id="'+esc(p.id)+'">Edit</button></div>';
+    });
+    h+=pillUI.adding?'<div class="px-medit">'+pillFormHTML(null)+'</div>'
+      :'<button class="btn acc px-add" data-pact="add">'+icon('plus')+'Add a pill</button>';
+    return h;
+  }
+  function renderPillsSub(){
+    var el=$('pillsSub');if(!el)return;
+    var n=0,now=Date.now();
+    data.pills.log.forEach(function(x){var t=Date.parse(x.t);if(t<=now&&pillDay(t)===todayKey)n++;});
+    var wd=WEEKDAYS[today.getDay()].slice(0,3)+' '+fmtShort(today);
+    el.innerHTML=wd+(pillsOn().length?' · '+(n?'<strong>'+n+'</strong> dose'+(n===1?'':'s')+' today':'nothing logged yet today'):'');
+  }
+  /* The full build. A repaint that arrives from elsewhere (renderAll after a
+     hit, the storage event) must never rebuild a field out from under someone
+     typing in it — then only the live numbers move. Handlers pass force. */
+  function renderPills(force){
+    var host=$('pillCards');if(!host)return;
+    var ae=document.activeElement;
+    if(!force&&ae&&ae.closest&&ae.closest('#vPills')&&/^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName)){pillsTick();return;}
+    var on=pillsOn();
+    renderPillsSub();
+    if(!on.length){
+      host.innerHTML='<section class="card px-empty"><span class="px-ic" aria-hidden="true">'+icon('pill')+'</span>'+
+        '<h2>Log the pills you take</h2>'+
+        '<p>Add each one once. After that, one tap logs a dose, and the time between doses is kept for you.</p>'+
+        pillFormHTML(null,true)+'</section>';
+      $('pillManage').hidden=true;
+    }else{
+      host.innerHTML=on.map(pillCardHTML).join('');
+      $('pillManage').hidden=false;
+      $('pillManageLive').textContent=on.map(function(p){return p.name;}).join(' · ');
+      $('pillManageBody').innerHTML=pillManageHTML();
+    }
+    var hh=pillHistHTML(),hc=$('pillHist');
+    hc.hidden=!hh;hc.innerHTML=hh;
+    pillNewT=null;
+  }
+  RENDER_HOOKS.push(renderPills);
+  /* the 30s tick: only what time moves — the elapsed figure, its stamp, the
+     spacing bar and the button's resting state. No field is ever rebuilt. */
+  function pillsTick(){
+    var cards=document.querySelectorAll('#pillCards .px-card');
+    Array.prototype.forEach.call(cards,function(card){
+      var p=pillOf(card.dataset.pid);if(!p)return;
+      var last=pillLast(p.id);if(last===null)return;
+      var ago=card.querySelector('[data-pv="ago"]'),wh=card.querySelector('[data-pv="when"]');
+      if(ago)ago.innerHTML=pillAgoHTML(Date.now()-last);
+      if(wh)wh.innerHTML=pillSinceHTML(last);
+      var gs=pillGapState(p,last),g=card.querySelector('[data-pv="gap"]');
+      if(gs&&g)g.outerHTML=pillGapHTML(p,gs);
+      var tk=card.querySelector('.px-take');
+      if(tk)tk.classList.toggle('wait',!!(gs&&!gs.clear));
+    });
+    renderPillsSub();
+  }
+  TICK_HOOKS.push(pillsTick);
+
+  /* ---- the toast: "logged · Undo", "remove this dose?" ---- */
+  var toastT=null,toastFn=null;
+  function toast(html,actTxt,fn,kind){
+    var el=$('toast');if(!el)return;
+    clearTimeout(toastT);
+    $('toastTx').innerHTML=html;
+    var a=$('toastAct');
+    a.hidden=!actTxt;a.textContent=actTxt||'';a.className='toast-act'+(kind?' '+kind:'');
+    toastFn=fn||null;
+    el.hidden=false;void el.offsetWidth;el.classList.add('show');
+    toastT=setTimeout(hideToast,kind==='warn'?8000:6000);
+  }
+  function hideToast(){
+    var el=$('toast');if(!el)return;
+    clearTimeout(toastT);toastFn=null;
+    el.classList.remove('show');
+    setTimeout(function(){if(!el.classList.contains('show'))el.hidden=true;},320);
+  }
+  $('toastAct').addEventListener('click',function(){var f=toastFn;hideToast();if(f)f();});
+  $('toastX').addEventListener('click',hideToast);
+
+  /* ---- pill actions ---- */
+  function pillSortLog(){data.pills.log.sort(function(a,b){return a.t<b.t?-1:a.t>b.t?1:0;});}
+  function pillLog(id,ts){
+    var p=pillOf(id);if(!p)return;
+    var iso=new Date(ts).toISOString();
+    data.pills.log.push({id:id,t:iso});pillSortLog();
+    pillUI.panel=null;pillNewT=Date.parse(iso);
+    save();renderPills(true);
+    if(navigator.vibrate)navigator.vibrate(8);
+    toast(esc(p.name)+' logged<small>'+pillWhenFull(Date.parse(iso))+'</small>','Undo',function(){pillDrop(id,Date.parse(iso));});
+  }
+  function pillDrop(id,t){
+    var l=data.pills.log;
+    for(var i=l.length-1;i>=0;i--)if(l[i].id===id&&Date.parse(l[i].t)===t){l.splice(i,1);break;}
+    save();renderPills(true);
+  }
+  function pillAskDrop(id,t){
+    var p=pillOf(id);if(!p)return;
+    toast('Remove this dose?<small>'+esc(p.name)+' · '+esc(pillWhenFull(t))+'</small>','Remove',function(){
+      pillDrop(id,t);
+      toast('Dose removed<small>'+esc(p.name)+' · '+esc(pillWhenFull(t))+'</small>','Undo',function(){
+        data.pills.log.push({id:id,t:new Date(t).toISOString()});pillSortLog();
+        save();renderPills(true);
+      });
+    },'warn');
+  }
+  function pillFocus(sel){
+    setTimeout(function(){var el=document.querySelector(sel);if(el)try{el.focus();}catch(e){}},30);
+  }
+  function pillSave(form){
+    if(!form)return;
+    var pid=form.dataset.pform,p=pid==='new'?null:pillOf(pid);
+    var name=(form.querySelector('[data-pin="name"]').value||'').trim().slice(0,40);
+    var dose=(form.querySelector('[data-pin="dose"]').value||'').trim().slice(0,24);
+    var gap=form.querySelector('[data-pin="gap"]').value;
+    function fail(m){
+      pillUI.msg=m;pillUI.draft={name:name,dose:dose,gap:gap};
+      renderPills(true);pillFocus('[data-pform] [data-pin="name"]');
+    }
+    if(!name)return fail('Give it a name first.');
+    var lc=name.toLowerCase();
+    if(pillsOn().some(function(q){return q!==p&&q.name.toLowerCase()===lc;}))return fail('There’s already a pill called '+name+'.');
+    var back=false;
+    if(!p){
+      // a name that was on the list before comes back with its history attached
+      data.pills.list.forEach(function(q){if(!p&&q.off&&q.name.toLowerCase()===lc){p=q;back=true;}});
+      if(p)delete p.off;
+      else{p={id:'p'+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36),name:name};data.pills.list.push(p);}
+    }
+    p.name=name;
+    // a pill coming back keeps what it had, unless the form says otherwise
+    if(dose)p.dose=dose;else if(!back)delete p.dose;
+    var g=Number(gap);
+    if(gap&&isFinite(g)&&g>0)p.gapH=g;else if(!back)delete p.gapH;
+    pillUI.edit=null;pillUI.adding=false;pillUI.draft={};pillUI.msg='';
+    save();renderPills(true);
+    toast(esc(name)+(pid!=='new'?' saved':back?' is back, with its history':' added'));
+  }
+  function pillRetire(id){
+    var p=pillOf(id);if(!p)return;
+    toast('Remove '+esc(p.name)+' from the list?<small>Its logged doses stay in your history.</small>','Remove',function(){
+      p.off=true;pillUI.edit=null;pillUI.draft={};pillUI.msg='';
+      if(pillUI.panel&&pillUI.panel.id===id)pillUI.panel=null;
+      save();renderPills(true);
+      toast(esc(p.name)+' removed','Undo',function(){delete p.off;save();renderPills(true);});
+    },'warn');
+  }
+  function pillAddEarlier(id){
+    var pn=pillUI.panel;if(!pn||pn.id!==id)return;
+    var v=pn.v||'';
+    function fail(m){pn.msg=m;renderPills(true);}
+    if(!/^\d{1,2}:\d{2}$/.test(v))return fail('Pick a time first.');
+    var hm=v.split(':');
+    // before the 4am cutoff belongs to tonight, the same rule hits use
+    var shift=(+hm[0]<DAY_CUTOFF_H)?1:0;
+    var ts=new Date(today.getFullYear(),today.getMonth(),today.getDate()+shift,+hm[0],+hm[1]).getTime();
+    if(ts>Date.now())return fail('That time hasn’t happened yet today.');
+    pillLog(id,ts);
+  }
+  $('vPills').addEventListener('click',function(ev){
+    var b=ev.target.closest('[data-pact]');if(!b)return;
+    var a=b.dataset.pact,id=b.dataset.id||'',p=id?pillOf(id):null;
+    /* Safari leaves focus in a field when a button is tapped; let it go so
+       the repaint below isn't mistaken for one arriving mid-typing */
+    var form=b.closest('[data-pform]');
+    if(a!=='save'){var ae=document.activeElement;if(ae&&ae.blur&&ae!==document.body&&ae.closest&&ae.closest('#vPills'))ae.blur();}
+    if(a==='take'){
+      if(!p)return;
+      var gs=pillGapState(p,pillLast(id));
+      if(gs&&!gs.clear){pillUI.panel={id:id,kind:'early'};renderPills(true);return;}
+      pillLog(id,Date.now());
+    }else if(a==='takeyes'){if(p)pillLog(id,Date.now());}
+    else if(a==='earlier'){
+      var n=new Date();
+      pillUI.panel={id:id,kind:'earlier',v:pad(n.getHours())+':'+pad(n.getMinutes()),msg:''};
+      renderPills(true);pillFocus('#vPills .px-in input[type=time]');
+    }
+    else if(a==='earlieradd'){pillAddEarlier(id);}
+    else if(a==='close'){pillUI.panel=null;renderPills(true);}
+    else if(a==='dose'){pillAskDrop(id,+b.dataset.t);}
+    else if(a==='histall'){pillUI.histAll=true;renderPills(true);}
+    else if(a==='add'){
+      pillUI.adding=true;pillUI.edit=null;pillUI.draft={};pillUI.msg='';
+      renderPills(true);pillFocus('#pillManageBody [data-pin="name"]');
+    }
+    else if(a==='edit'){pillUI.edit=id;pillUI.adding=false;pillUI.draft={};pillUI.msg='';renderPills(true);}
+    else if(a==='cancelform'){pillUI.edit=null;pillUI.adding=false;pillUI.draft={};pillUI.msg='';renderPills(true);}
+    else if(a==='save'){var ae2=document.activeElement;if(ae2&&ae2.blur)ae2.blur();pillSave(form);}
+    else if(a==='retire'){pillRetire(id);}
+  });
+  function pillInput(ev){
+    var f=ev.target.dataset&&ev.target.dataset.pin;if(!f)return;
+    // a message about what was wrong stops being true the moment it's being fixed
+    var box=ev.target.closest('[data-pform],.px-in'),m=box&&box.querySelector('.msg');
+    if(m)m.textContent='';
+    if(f==='time'){if(pillUI.panel){pillUI.panel.v=ev.target.value;pillUI.panel.msg='';}return;}
+    pillUI.draft=pillUI.draft||{};pillUI.draft[f]=ev.target.value;pillUI.msg='';
+  }
+  $('vPills').addEventListener('input',pillInput);
+  $('vPills').addEventListener('change',pillInput);
+  // Enter in a form field saves it; Enter in the time field adds the dose
+  $('vPills').addEventListener('keydown',function(ev){
+    if(ev.key!=='Enter')return;
+    var t=ev.target;if(!t.dataset||!t.dataset.pin)return;
+    if(t.dataset.pin==='time'){
+      ev.preventDefault();
+      var add=t.closest('.px-card')&&t.closest('.px-card').querySelector('[data-pact="earlieradd"]');
+      if(add)add.click();
+      return;
+    }
+    if(t.dataset.pin==='name'){
+      ev.preventDefault();
+      var nx=t.closest('[data-pform]').querySelector('[data-pin="dose"]');
+      if(nx)nx.focus();
+      return;
+    }
+    if(t.dataset.pin==='dose'){
+      ev.preventDefault();
+      var sv=t.closest('[data-pform]').querySelector('[data-pact="save"]');
+      if(sv)sv.click();
+    }
+  });
+
   function safe(fn){try{fn();}catch(e){try{console.error(e);}catch(e2){}}}
   function renderAll(){
     rcClear();
@@ -12414,10 +12805,10 @@ try{
   });
 
   /* backup */
-  // the nudge's "Copy one now" → the More tab, backup section open and in view
+  // the nudge's "Copy one now" → the More view, backup section open and in view
   document.addEventListener('click',function(ev){
     if(!ev.target.closest('#backupGo'))return;
-    var t=document.querySelector('.tab[data-view="more"]');
+    var t=$('moreBtn');
     if(t)t.click();
     var det=$('backupDetails');
     if(det){
@@ -12635,11 +13026,13 @@ try{
 
   /* ---- bottom tabs: one focused view at a time ---- */
   (function(){
-    var VIEW_KEY='ttz-view', ORDER=['today','journey','plan','more'];
-    var TITLES={today:'Today',journey:'Journey',plan:'Plan',more:'More'};
+    var VIEW_KEY='ttz-view', ORDER=['today','pills','journey','plan','more'];
+    var TITLES={today:'Today',pills:'Pills',journey:'Journey',plan:'Plan',more:'More'};
     // slide the accent pill behind the active tab's glyph (transform only)
     function moveInd(animate){
       var bar=$('tabbar'),ind=bar&&bar.querySelector('.tab-ind'),on=bar&&bar.querySelector('.tab.on');
+      // More is a header button, so on More no tab is current and the pill hides
+      if(bar)bar.classList.toggle('no-ind',!on);
       if(!ind||!on||!on.offsetWidth)return;
       var still=!animate||!motionOK;
       if(still)bar.classList.add('no-anim');
@@ -12656,8 +13049,13 @@ try{
           t.classList.toggle('on',t.dataset.view===v);
           t.setAttribute('aria-current',t.dataset.view===v?'page':'false');
         });
+        var mb=$('moreBtn');
+        if(mb){mb.classList.toggle('on',v==='more');mb.setAttribute('aria-current',v==='more'?'page':'false');}
         if($('viewTitle'))$('viewTitle').textContent=TITLES[v]||'';
         moveInd(!first);
+        // the elapsed figures only move on the 30s tick — arrive to fresh ones
+        // (not at boot: renderAll paints the view right after, with today set)
+        if(v==='pills'&&!first)safe(pillsTick);
         // a tab tap is intent to look — unfold the section it leads to
         // a tab tap is intent to look: on Plan, land on the pane that has a
         // decision waiting rather than wherever you were last
@@ -12666,6 +13064,8 @@ try{
         if(!first)window.scrollTo({top:0,behavior:'instant'});
       }
       try{localStorage.setItem(VIEW_KEY,v);}catch(e){}
+      // a toast is about the view it was raised on
+      if(!first&&prev!==v)hideToast();
       /* tab View Transition: never on first render, never while a sheet or
          the card→detail transition owns the screen (a new VT would abort
          the card's) */
@@ -12696,6 +13096,7 @@ try{
     document.querySelectorAll('.tab').forEach(function(t){
       t.addEventListener('click',function(){setView(t.dataset.view);});
     });
+    $('moreBtn').addEventListener('click',function(){setView('more');});
     // center "+": jump to today and spotlight the hold-to-log button —
     // logging itself keeps its hold friction on purpose
     $('tabLog').addEventListener('click',function(){
@@ -12722,7 +13123,7 @@ try{
     });
     var saved=null;
     try{saved=localStorage.getItem(VIEW_KEY);}catch(e){}
-    setView(/^(today|journey|plan|more)$/.test(saved||'')?saved:'today',true);
+    setView(/^(today|pills|journey|plan|more)$/.test(saved||'')?saved:'today',true);
   })();
 
   /* ---- pull down to dismiss the detail page ---- */
