@@ -1251,86 +1251,20 @@
 
 
   /* ==== [PL] PILLS ==== */
-  /* The board is the page: every pill is a button, and pressing it logs a
-     dose at this minute. Main pills are tiles; supplements are the smaller
-     chips under them, and each tile carries the mg the pill is at — the one
-     thing on it that opens something. Accent means what it means everywhere:
-     time, and here "logged today". Under-green only says a spacing the person set has been
-     kept — never "take one". The saturated capsule stays Today's alone. */
-  .px-board{padding:14px}
-  .px-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
-  /* an odd one out takes the row rather than sitting orphaned */
-  .px-grid>.px-tile:last-child:nth-child(odd){grid-column:1/-1}
-  .px-tile{position:relative;min-width:0;min-height:76px;padding:13px 14px 12px;border-radius:var(--r-md);
-    display:flex;flex-direction:column;justify-content:flex-start;align-items:flex-start;gap:8px;text-align:left;
-    background:var(--s2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line);
-    font-family:var(--f-ui);transition:transform var(--d-press) var(--e-move)}
-  /* the press is a button laid under everything the tile says */
-  .px-tap{position:absolute;inset:0;padding:0;border:0;border-radius:inherit;background:none;cursor:pointer;
-    -webkit-tap-highlight-color:transparent;touch-action:manipulation}
-  .px-tile>span{position:relative;align-self:stretch;pointer-events:none}
-  .px-tile:has(.px-tap:active){transform:scale(.965)}
-  .px-tap:focus-visible,.px-sc:focus-visible,.px-mg:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-  .px-tile.on{background:var(--acc-bg);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--acc) 38%,transparent)}
-  /* the name always wins the line: a dose that doesn't fit beside it drops under it */
-  .px-tn{display:flex;flex-wrap:wrap;align-items:baseline;gap:1px 6px;min-width:0}
-  .px-tn b{min-width:0;max-width:100%;font-family:var(--f-round);font-size:17px;font-weight:700;letter-spacing:-.015em;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  /* the mg the pill is at. A 30px chip with a 44px target around it. */
-  .px-mg{position:relative;z-index:1;display:inline-flex;align-items:center;gap:3px;height:30px;padding:0 8px 0 11px;border:0;border-radius:15px;cursor:pointer;
-    background:var(--s1);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-2);
-    font-family:var(--f-round);font-size:15px;font-weight:700;letter-spacing:-.01em;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap;
-    -webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform var(--d-press) var(--e-move)}
-  .px-mg::after{content:"";position:absolute;inset:-7px -8px}
-  .px-mg:active{transform:scale(.94)}
-  .px-mg small{font-family:var(--f-ui);font-size:12px;font-weight:600;letter-spacing:0;color:var(--ink-2)}
-  .px-mg .ic{width:13px;height:13px;stroke-width:2.6;color:var(--ink-3);transform:rotate(90deg);margin-left:1px}
-  .px-mg.unset{padding:0 11px 0 8px;gap:4px;background:transparent;color:var(--ink-2);box-shadow:inset 0 0 0 1.5px var(--line-2);
-    font-family:var(--f-ui);font-size:13px;font-weight:600;letter-spacing:0}
-  .px-mg.unset .ic{transform:none;margin:0;stroke-width:2.4}
-  /* the time since the last dose; the check is today's */
-  .px-ts{display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:18px;
-    font-size:13px;font-weight:600;line-height:1.2;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
-  .px-tile.on .px-ts{color:var(--acc-t)}
-  .px-ts .ic{width:17px;height:17px;stroke-width:2.6;flex:none}
-  .px-ts{margin-top:1px}
-  .px-tile.new .px-ts .ic,.px-sc.new .ic{animation:popin 420ms var(--snap) both}
-  /* only on a pill whose spacing the person set: where it stands, over a bar filling toward clear */
-  .px-gap{display:block;margin-top:-3px;font-size:12px;font-weight:650;line-height:1.2;color:var(--acc-t);font-variant-numeric:tabular-nums;white-space:nowrap}
-  .px-gap.clear{color:var(--under-t)}
-  .px-bar{display:block;position:relative;height:4px;border-radius:2px;margin-top:7px;background:var(--s3);overflow:hidden}
-  .px-tile.on .px-bar{background:color-mix(in srgb,var(--acc) 16%,transparent)}
-  .px-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:var(--acc);transition:width var(--d-slow) var(--settle)}
-  .px-gap.clear .px-bar i{background:var(--under)}
-  @media (max-width:350px){
-    .px-tile{padding:12px 12px 11px}
-    .px-tn b{font-size:16px}
-  }
-  .px-none{font-size:14px;line-height:1.45;color:var(--ink-2);margin:4px 2px 0}
-  .px-none b{color:var(--ink);font-weight:650}
-  /* supplements: the same press, a quieter button */
-  .px-sup{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
-  .px-lbl{display:block;font-size:12.5px;font-weight:650;color:var(--ink-2)}
-  .px-sup>.px-lbl,.px-off>.px-lbl{margin:0 2px 9px}
-  .px-scs{display:flex;flex-wrap:wrap;gap:8px}
-  .px-sc{height:40px;padding:0 14px;border-radius:20px;border:0;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
-    background:var(--s2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line);
-    font-family:var(--f-ui);font-size:14.5px;font-weight:600;white-space:nowrap;
-    -webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform var(--d-press) var(--e-move)}
-  .px-sc:active{transform:scale(.95)}
-  .px-sc .ic{width:15px;height:15px;stroke-width:2.5;flex:none}
-  .px-sc.on{background:var(--acc-bg);color:var(--acc-t);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--acc) 38%,transparent)}
-  .px-sc.more{background:transparent;color:var(--ink-2);box-shadow:inset 0 0 0 1.5px var(--line-2)}
-  .px-sc.add .ic{color:var(--ink-3)}
-  .px-pick{margin-top:10px;padding:12px;border-radius:var(--r-md);background:var(--s2);animation:fade-in var(--d-base) var(--e-enter) both}
-  .px-pick p{font-size:13px;line-height:1.4;color:var(--ink-2);margin:0 0 10px}
-  .px-pick .px-sc{background:var(--s1)}
-  /* ---- what's been taken: a week across the top, the chosen day under it.
-     One row a pill: a capsule per dose with its mg on it (the count), the
-     day's total beside the name, and the week as seven bars with the chosen
-     day lit and the rest held back. ---- */
-  .px-taken{padding:12px 16px 4px}
-  .px-wk{display:flex;align-items:stretch;gap:3px;margin:0 -4px}
-  .px-wd{flex:1;min-width:0;height:60px;padding:0;border:0;border-radius:17px;cursor:pointer;background:none;
+  /* One card, read by day. Across the top, the week; under it one row a pill.
+     A row's first line is the pill — its name, the mg it is at (the chip is
+     the one thing on the row that opens something), the week as seven bars,
+     and the day's total. Its second line is the day as a chain: a capsule
+     per dose with its clock time on it, the time between on the link, and
+     on today the link runs on to a + carrying the time since the last dose.
+     Pressing the row logs; the + is where that press lands.
+     Accent means what it means everywhere: time, and here "taken". Under-
+     green only says a spacing the person set has been kept — never "take
+     one". The saturated capsule stays Today's alone. */
+  .px-board{padding:12px 16px 6px}
+  /* the week: press a day to read it, ‹ pages back a week */
+  .px-wk{display:flex;align-items:stretch;gap:3px;margin:0 -4px 4px}
+  .px-wd{flex:1;min-width:0;height:58px;padding:0;border:0;border-radius:17px;cursor:pointer;background:none;
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-family:var(--f-ui);
     -webkit-tap-highlight-color:transparent;touch-action:manipulation}
   .px-wd span{font-size:11.5px;font-weight:650;line-height:1;color:var(--ink-3)}
@@ -1345,50 +1279,118 @@
   .px-wkn .ic{width:16px;height:16px;stroke-width:2.4}
   .px-wkn.back .ic{transform:rotate(180deg)}
   .px-wkn[disabled]{opacity:.25;cursor:default}
-  .px-wd:focus-visible,.px-wkn:focus-visible,.px-rb:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
-  .px-dh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:14px 0 0}
-  .px-dh h3{margin:0}
-  .px-dh small{font-size:13px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums}
-  .px-taken .px-none{margin:8px 0 14px}
-  .px-r{border-top:1px solid var(--line)}
-  .px-dh+.px-r{border-top:0}
-  .px-rb{display:block;width:100%;padding:13px 0 14px;border:0;border-radius:var(--r-sm);background:none;text-align:left;cursor:pointer;
-    color:var(--ink);font-family:var(--f-ui);-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-  .px-rh{display:flex;align-items:baseline;gap:8px}
-  .px-rh>b{flex:1;min-width:0;font-size:15px;font-weight:650;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .px-rt{flex:none;font-family:var(--f-round);font-size:23px;font-weight:700;letter-spacing:-.03em;line-height:1;
-    font-variant-numeric:tabular-nums;white-space:nowrap;transform-origin:100% 80%}
-  .px-rt small{margin-left:3px;font-family:var(--f-ui);font-size:12.5px;font-weight:650;letter-spacing:0;color:var(--ink-2)}
-  .px-rt.new{animation:px-bump 460ms var(--snap) both}
-  @keyframes px-bump{0%{transform:scale(1)}35%{transform:scale(1.16)}100%{transform:scale(1)}}
-  .px-rh .ic{flex:none;align-self:center;width:14px;height:14px;stroke-width:2.6;color:var(--ink-3);transform:rotate(90deg);
-    transition:transform var(--d-fast) var(--e-move)}
-  .px-r.open .px-rh .ic{transform:rotate(-90deg)}
-  .px-rg{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-top:10px}
-  .px-caps{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:5px}
-  /* a dose: a capsule, its mg pressed into it */
-  .px-cap{min-width:36px;height:24px;padding:0 9px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;
-    background:var(--acc);color:var(--on-acc);font:700 12.5px/1 var(--f-round);font-style:normal;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
-  .px-cap.new{animation:popin 420ms var(--snap) both}
-  /* the week: columns off one baseline, the chosen day in the accent */
-  .px-spark{flex:none;display:flex;align-items:flex-end;gap:3px;height:26px}
-  .px-spark i{width:9px;border-radius:3px 3px 0 0;background:var(--ghost);opacity:.45}
+  .px-wd:focus-visible,.px-wkn:focus-visible,.px-tap:focus-visible,.px-sc:focus-visible,.px-mg:focus-visible,.px-cap:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
+  .px-mg:focus-visible,.px-cap:focus-visible,.px-sc:focus-visible{outline-offset:2px}
+  /* an earlier day: its name, its count, and the way back */
+  .px-dh{display:flex;align-items:center;gap:10px;margin:10px 0 0;padding-bottom:4px}
+  .px-dh h3{flex:1;min-width:0;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .px-dh small{flex:none;font-size:13px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  .px-dh .btn.sm{flex:none;background:var(--s2)}
+  .px-none{font-size:14px;line-height:1.45;color:var(--ink-2);margin:12px 2px 10px}
+  .px-none b{color:var(--ink);font-weight:650}
+  /* ---- a row ---- */
+  .px-row{position:relative;padding:13px 0 14px;border-top:1px solid var(--line)}
+  .px-wk+.px-row,.px-dh+.px-row,.px-lbl+.px-row{border-top:0}
+  /* the press is a button laid under everything the row says; what the row
+     says sits above it and lets the press through, and the buttons on the
+     row (the mg chip, the capsules) sit above that */
+  .px-tap{position:absolute;inset:0 -8px;padding:0;border:0;border-radius:var(--r-md);background:none;cursor:pointer;
+    -webkit-tap-highlight-color:transparent;touch-action:manipulation}
+  .px-row>span{position:relative;pointer-events:none}
+  .px-row .px-mg,.px-row .px-cap{pointer-events:auto}
+  .px-row>.px-in{position:relative;z-index:1}
+  .px-row:has(.px-tap:active) .px-plus{transform:scale(.88);background:var(--acc);color:var(--on-acc)}
+  .px-row:has(.px-tap:active) .px-tap{background:color-mix(in srgb,var(--acc) 7%,transparent)}
+  .px-rh{display:flex;align-items:center;gap:8px;min-width:0}
+  .px-rh>b{flex:1;min-width:0;font-family:var(--f-round);font-size:17px;font-weight:700;letter-spacing:-.015em;line-height:1.2;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* the mg the pill is at. A 30px chip with a 44px target around it. */
+  .px-mg{position:relative;z-index:1;flex:none;display:inline-flex;align-items:center;gap:2px;height:30px;padding:0 7px 0 10px;border:0;border-radius:15px;cursor:pointer;
+    background:var(--s2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-2);
+    font-family:var(--f-round);font-size:14.5px;font-weight:700;letter-spacing:-.01em;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap;
+    -webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform var(--d-press) var(--e-move)}
+  .px-mg::after{content:"";position:absolute;inset:-7px -6px}
+  .px-mg:active{transform:scale(.94)}
+  .px-mg small{font-family:var(--f-ui);font-size:11.5px;font-weight:600;letter-spacing:0;color:var(--ink-2);margin-left:2px}
+  .px-mg .ic{width:13px;height:13px;stroke-width:2.6;color:var(--ink-3);transform:rotate(90deg)}
+  .px-mg.unset{padding:0 10px 0 8px;gap:4px;background:transparent;color:var(--ink-2);box-shadow:inset 0 0 0 1.5px var(--line-2);
+    font-family:var(--f-ui);font-size:13px;font-weight:600;letter-spacing:0}
+  .px-mg.unset .ic{transform:none;margin:0;stroke-width:2.4}
+  /* the week as seven bars off one baseline, the chosen day in the accent */
+  .px-spark{flex:none;display:flex;align-items:flex-end;gap:3px;height:22px;margin-left:4px}
+  .px-spark i{width:7px;border-radius:2.5px 2.5px 0 0;background:var(--ghost);opacity:.4}
   .px-spark i.z{height:2px;border-radius:1px;background:var(--line-2);opacity:1}
   .px-spark i.on{background:var(--acc);opacity:1}
   .px-spark i.on.z{background:var(--acc);opacity:.5}
-  /* a row, opened: a time, the gap, the next time — "the time between" sits
-     between the stamps it measures */
-  .px-rd{padding:0 0 14px;animation:fade-in var(--d-base) var(--e-enter) both}
-  .px-chain{display:flex;flex-wrap:wrap;align-items:center;gap:6px 0}
-  .px-t{height:30px;padding:0 11px;border-radius:15px;border:0;display:inline-flex;align-items:center;cursor:pointer;
+  /* the day's total */
+  .px-tot{flex:none;min-width:52px;text-align:right;font-family:var(--f-round);font-size:22px;font-weight:700;letter-spacing:-.03em;line-height:1;
+    font-variant-numeric:tabular-nums;white-space:nowrap;transform-origin:100% 80%}
+  .px-tot small{margin-left:3px;font-family:var(--f-ui);font-size:12px;font-weight:650;letter-spacing:0;color:var(--ink-2)}
+  .px-tot.new{animation:px-bump 460ms var(--snap) both}
+  @keyframes px-bump{0%{transform:scale(1)}35%{transform:scale(1.16)}100%{transform:scale(1)}}
+  /* the chain: a capsule a dose, the time between on the link, the + at the end */
+  .px-chain{display:flex;flex-wrap:wrap;align-items:center;gap:7px 0;margin-top:10px;min-height:34px}
+  .px-cap{position:relative;z-index:1;flex:none;height:30px;padding:0 10px;border:0;border-radius:15px;cursor:pointer;display:inline-flex;align-items:center;
+    background:var(--acc);color:var(--on-acc);font-family:var(--f-round);font-size:13.5px;font-weight:700;letter-spacing:-.01em;
+    font-variant-numeric:tabular-nums;white-space:nowrap;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
+    transition:transform var(--d-press) var(--e-move)}
+  .px-cap:active{transform:scale(.94)}
+  .px-cap small{margin-left:5px;font-family:var(--f-ui);font-size:11px;font-weight:650;opacity:.85}
+  .px-cap.new{animation:popin 420ms var(--snap) both}
+  .px-cap.sel{box-shadow:0 0 0 2px var(--s1),0 0 0 4px var(--acc)}
+  /* the last dose before the day began: it heads the chain so the time since
+     it still reads, but it belongs to its own day */
+  .px-cap.ghost{background:transparent;color:var(--ink-2);box-shadow:inset 0 0 0 1.5px var(--line-2);font-weight:650}
+  .px-cap.ghost.sel{box-shadow:inset 0 0 0 1.5px var(--line-2),0 0 0 2px var(--s1),0 0 0 4px var(--acc)}
+  .px-gv{display:inline-flex;align-items:center;gap:4px;padding:0 3px;font-size:11.5px;font-weight:650;line-height:1;color:var(--ink-2);
+    font-variant-numeric:tabular-nums;white-space:nowrap}
+  .px-gv::before,.px-gv::after{content:"";width:8px;height:1.5px;border-radius:1px;background:var(--line-2)}
+  /* the link that is still running: it stretches to the + and carries the time since */
+  /* the running link and the + are one flex item: it never shrinks below the
+     link's words, so when it doesn't fit it wraps whole, and then takes the line */
+  .px-end{flex:1 0 auto;min-width:0;display:inline-flex;align-items:center}
+  .px-gv.live{flex:1 1 auto;min-width:0;color:var(--acc-t)}
+  .px-gv.live::before,.px-gv.live::after{flex:1;min-width:8px;background:color-mix(in srgb,var(--acc) 35%,transparent)}
+  .px-nd{flex:1 1 auto;min-width:0;font-size:12.5px;font-weight:600;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .px-plus{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--s3);color:var(--ink);
+    transition:transform var(--d-press) var(--e-move),background var(--d-press) var(--e-move)}
+  .px-plus .ic{width:17px;height:17px;stroke-width:2.6}
+  .px-row.new .px-plus{animation:popin 420ms var(--snap) both}
+  /* only on a pill whose spacing the person set: where it stands, over a bar filling toward clear */
+  .px-gap{display:block;margin-top:8px;font-size:12px;font-weight:650;line-height:1.2;color:var(--acc-t);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .px-gap.clear{color:var(--under-t)}
+  .px-bar{display:block;position:relative;height:4px;border-radius:2px;margin-top:6px;background:var(--s3);overflow:hidden}
+  .px-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:var(--acc);transition:width var(--d-slow) var(--settle)}
+  .px-gap.clear .px-bar i{background:var(--under)}
+  /* a supplement: the same row, one line, nothing to set on it */
+  .px-row.s{display:flex;align-items:center;gap:10px;padding:9px 0 10px}
+  .px-row.s .px-rh{flex:none;max-width:46%}
+  .px-row.s .px-rh>b{font-family:var(--f-ui);font-size:15px;font-weight:650;letter-spacing:0}
+  .px-row.s .px-chain{flex:1;min-width:0;margin:0;min-height:30px}
+  .px-row.s .px-plus{width:30px;height:30px}
+  .px-row.s .px-plus .ic{width:15px;height:15px}
+  .px-row.s .px-cap{height:28px;font-size:13px}
+  .px-lbl{display:block;font-size:12.5px;font-weight:650;color:var(--ink-2)}
+  .px-lbl.sup{margin:12px 0 2px;padding-top:12px;border-top:1px solid var(--line)}
+  .px-off>.px-lbl{margin:0 2px 9px}
+  @media (max-width:350px){
+    .px-rh>b{font-size:16px}
+    .px-spark{display:none}
+  }
+  /* supplements not on the row yet: a chip to press, and the list behind it */
+  .px-scs{display:flex;flex-wrap:wrap;gap:8px}
+  .px-more{margin:8px 0 6px}
+  .px-sc{height:40px;padding:0 14px;border-radius:20px;border:0;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
     background:var(--s2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line);
-    font-family:var(--f-round);font-size:14px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums;white-space:nowrap}
-  .px-t:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-  .px-t.new{animation:popin 420ms var(--snap) both}
-  .px-t.sel{background:var(--acc-bg);color:var(--acc-t);box-shadow:inset 0 0 0 2px var(--acc)}
-  .px-pair{display:inline-flex;align-items:center;white-space:nowrap}
-  .px-gv{display:inline-flex;align-items:center;gap:5px;padding:0 5px;font-size:12px;font-weight:650;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
-  .px-gv::before,.px-gv::after{content:"";width:7px;height:1.5px;border-radius:1px;background:var(--line-2)}
+    font-family:var(--f-ui);font-size:14.5px;font-weight:600;white-space:nowrap;
+    -webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform var(--d-press) var(--e-move)}
+  .px-sc:active{transform:scale(.95)}
+  .px-sc .ic{width:15px;height:15px;stroke-width:2.5;flex:none}
+  .px-sc.more{height:36px;padding:0 13px;font-size:14px;background:transparent;color:var(--ink-2);box-shadow:inset 0 0 0 1.5px var(--line-2)}
+  .px-sc.add .ic{color:var(--ink-3)}
+  .px-pick{margin:0 0 8px;padding:12px;border-radius:var(--r-md);background:var(--s2);animation:fade-in var(--d-base) var(--e-enter) both}
+  .px-pick p{font-size:13px;line-height:1.4;color:var(--ink-2);margin:0 0 10px}
+  .px-pick .px-sc{background:var(--s1)}
   /* the inline panel: "log it anyway?", or a logged dose being moved */
   .px-in{margin-top:12px;padding:12px;border-radius:var(--r-md);background:var(--s2);animation:fade-in var(--d-base) var(--e-enter) both}
   .px-in p{font-size:14px;line-height:1.4;color:var(--ink-2);margin:0 0 10px}
@@ -3118,8 +3120,8 @@
     .cz-overlay,html.no-vt .detail-overlay{transition:opacity .15s linear!important}
     .cz-overlay:not(.show),html.no-vt .detail-overlay:not(.show){transform:none}
     /* pills: the new dose lands without the pop; the toast fades, never slides */
-    .px-t.new,.px-in,.px-pick,.px-rd,.px-cap.new,.px-rt.new,.px-tile.new .px-ts .ic,.px-sc.new .ic{animation:none!important}
-    .px-bar i,.px-tile,.px-sc,.px-mg,.px-stp,.px-opt,.px-rh .ic{transition:none!important}
+    .px-in,.px-pick,.px-cap.new,.px-tot.new,.px-row.new .px-plus{animation:none!important}
+    .px-bar i,.px-tap,.px-plus,.px-sc,.px-mg,.px-cap,.px-stp,.px-opt{transition:none!important}
     .px-sheet{transition:opacity .15s linear!important}
     .px-sheet>.px-shp{transform:none!important;transition:none!important}
     .toast{transform:none!important;transition:opacity .15s linear!important}
@@ -3466,12 +3468,11 @@ try{
      The board leads: every pill is a button and a press logs a dose. Under it,
      what's been taken: a week of days across the top and the chosen day's
      pills as capsules and totals. Then the list.
-     #pillBoard, #pillTaken and the fold's body are rebuilt by renderPills;
+     #pillBoard and the fold's body are rebuilt by renderPills;
      the fold itself is static so the accordion and fold-memory wiring find it
      at boot. -->
 <main class="view" id="vPills">
-  <section class="card px-board" id="pillBoard" aria-label="Your pills. Press one to log a dose."></section>
-  <section class="card px-taken" id="pillTaken" aria-label="What’s been taken, by day" hidden></section>
+  <section class="card px-board" id="pillBoard" aria-label="Your pills, by day. Press one to log a dose."></section>
   <details class="fold px-manage" id="pillManage">
     <summary><span class="fold-ic" aria-hidden="true"><svg class="ic"><use href="#i-edit"/></svg></span><span class="fold-t">Your pills</span><span class="fold-live" id="pillManageLive"></span></summary>
     <div class="fold-body" id="pillManageBody"></div>
@@ -12139,12 +12140,11 @@ try{
      toward the evening it belongs to. */
   var PILL_GAPS=[1,2,3,4,5,6,8,10,12,24];
   /* what has to survive a repaint: the open panel, the form being filled in,
-     whether the supplement list is open, and where "what's been taken" is
-     looking — the week (wk back from this one), the day in it (null is the
-     newest) and the pill whose times are open.
+     whether the supplement list is open, and which day the card is reading —
+     the week (wk back from this one) and the day in it (null is the newest).
      panel is {kind:'early',id} or {kind:'dose',id,t}. The mg sheet keeps its
      own state in pillSh. */
-  var pillUI={panel:null,edit:null,adding:false,draft:{},msg:'',pick:false,wk:0,day:null,open:null};
+  var pillUI={panel:null,edit:null,adding:false,draft:{},msg:'',pick:false,wk:0,day:null};
   var pillNewT=null,pillNewId=null;   // the dose just logged, so its check and its chip pop in once
   function pillsOn(){return data.pills.list.filter(function(p){return !p.off;});}
   function pillOf(id){
@@ -12224,32 +12224,15 @@ try{
     return '<button class="px-mg" data-pact="'+act+'" data-id="'+id+'" aria-label="'+esc(p.name)+' is at '+esc(d)+'. Press to change it.">'+
       (p.mg?fmtMg(p.mg)+'<small>mg</small>':esc(d))+icon('chev')+'</button>';
   }
-  /* a main pill: its name, the mg it is at, the time since the last dose, a
-     check once it has been taken today. The whole tile logs; only the mg
-     chip on it does something else. */
-  function pillTileHTML(p){
-    var last=pillLast(p.id),n=pillTodayTimes(p.id).length,gs=pillGapState(p,last),id=esc(p.id);
-    return '<div class="px-tile'+(n?' on':'')+(pillNewId===p.id?' new':'')+'" data-id="'+id+'">'+
-      '<button class="px-tap" data-pact="take" data-id="'+id+'" aria-label="Log '+esc(p.name)+(p.mg?', '+fmtMg(p.mg)+' mg':'')+', now"></button>'+
-      '<span class="px-tn"><b>'+esc(p.name)+'</b></span>'+
-      pillMgHTML(p,'mg')+
-      '<span class="px-ts"><span data-pv="ago">'+pillAgo(last)+'</span>'+(n?icon('check'):'')+'</span>'+
-      (gs?pillGapHTML(p,gs):'')+'</div>';
-  }
-  function pillChipHTML(p){
-    var n=pillTodayTimes(p.id).length;
-    return '<button class="px-sc'+(n?' on':'')+(pillNewId===p.id?' new':'')+'" data-pact="take" data-id="'+esc(p.id)+'">'+
-      (n?icon('check'):'')+esc(p.name)+'</button>';
-  }
-  // the supplements not on the board yet
+  // the supplements not on the row yet
   function pillPickList(){
     var on={};
     pillsOn().forEach(function(p){on[p.name.toLowerCase()]=1;});
     return PILL_SUPPS.filter(function(nm){return !on[nm.toLowerCase()];});
   }
-  function pillAskHTML(){
-    var pn=pillUI.panel,p=pn&&pn.kind==='early'?pillOf(pn.id):null;
-    if(!p||p.off)return '';
+  function pillAskHTML(p){
+    var pn=pillUI.panel;
+    if(!pn||pn.kind!=='early'||pn.id!==p.id||p.off)return '';
     var last=pillLast(p.id);
     if(last===null)return '';
     /* a check, not a gate: neither answer is the lit one, because the app
@@ -12260,19 +12243,162 @@ try{
       '<div class="btn-row"><button class="btn" data-pact="takeyes" data-id="'+esc(p.id)+'">Log it anyway</button>'+
       '<button class="btn ghost" data-pact="close">Not now</button></div></div>';
   }
+  /* ---- the card: a week across the top, one row a pill under it ----
+     Each row is a picture before it is a sentence: the day's doses as a
+     chain of capsules with the clock time on each, the time between them on
+     the links, the day's total beside the name, and the week as seven bars
+     off one baseline — the chosen day in the accent, the rest held back, so
+     a dose coming down shows as the bars do. On today the chain runs on to
+     a +, with the time since the last dose on the link that leads to it:
+     pressing the row logs there. Pressing a capsule opens that dose. */
+  var PILL_WK=7;
+  function pillWeekKeys(){
+    var end=addDays(today,-PILL_WK*pillUI.wk),o=[];
+    for(var i=PILL_WK-1;i>=0;i--)o.push(dkeyOf(addDays(end,-i)));
+    return o;
+  }
+  // the week's doses filed by day, then by pill; `older` says there is a week before it
+  function pillWeekMap(keys){
+    var first=keys[0],last=keys[keys.length-1],by={},older=false,now=Date.now();
+    data.pills.log.forEach(function(x){
+      var t=Date.parse(x.t);if(t>now)return;
+      var k=pillDay(t);
+      if(k<first){older=true;return;}
+      if(k>last)return;
+      var d=by[k]||(by[k]={n:0});
+      (d[x.id]||(d[x.id]=[])).push({t:t,mg:x.mg});d.n++;
+    });
+    return {by:by,older:older};
+  }
+  // the last dose of a pill before a day began, or null
+  function pillBefore(id,k){
+    var l=data.pills.log,o=null;
+    for(var i=0;i<l.length;i++){
+      if(l[i].id!==id)continue;
+      var t=Date.parse(l[i].t);
+      if(pillDay(t)>=k)break;
+      o={t:t,mg:l[i].mg};
+    }
+    return o;
+  }
+  function pillDayName(k){
+    var d=dateOf(k);
+    return k===todayKey?'Today':k===ydayKey()?'Yesterday':WEEKDAYS[d.getDay()]+', '+fmtShort(d);
+  }
+  // a dose from another day, short: "Yest 10:15p", "Mon 9:00a", "Sep 20 9:00a"
+  function pillWhenShort(ms){
+    var d=new Date(ms),k=pillDay(ms),age=Math.round((today-dateOf(k))/864e5);
+    return (k===ydayKey()?'Yest':age<7?WEEKDAYS[d.getDay()].slice(0,3):fmtShort(d))+' '+fmtClk(d);
+  }
+  // time since, with days once there is one: "19h 36m", "2d 5h"
+  function pillSince(ms){
+    var h=Math.floor(ms/3600000);
+    return h>=24?Math.floor(h/24)+'d '+(h%24)+'h':fmtDur(ms);
+  }
+  function pillDosesTxt(n){return n+' dose'+(n===1?'':'s');}
+  /* a dose on the chain: its clock time, and its mg only where that isn't
+     the mg the pill is at — a dose from before a change shows what it was */
+  function pillCapHTML(p,x){
+    var pn=pillUI.panel,sel=!!pn&&pn.kind==='dose'&&pn.id===p.id&&pn.t===x.t;
+    var odd=!!x.mg&&x.mg!==p.mg;
+    return '<button class="px-cap'+(x.ghost?' ghost':'')+(sel?' sel':'')+(x.t===pillNewT&&p.id===pillNewId?' new':'')+
+      '" data-pact="dose" data-id="'+esc(p.id)+'" data-t="'+x.t+'" aria-label="'+esc(p.name)+(x.mg?' '+fmtMg(x.mg)+' mg':'')+', '+
+      esc(pillWhenFull(x.t))+'. Press to move or remove it.">'+(x.ghost?pillWhenShort(x.t):fmtClk(new Date(x.t)))+
+      (odd?'<small>'+fmtMg(x.mg)+'</small>':'')+'</button>';
+  }
+  function pillChainHTML(p,ds,live){
+    var list=ds.slice(),h='';
+    // nothing yet today: the last dose there was heads the chain, so the time since it still reads
+    if(live&&!list.length){var b=pillBefore(p.id,todayKey);if(b){b.ghost=true;list.push(b);}}
+    list.forEach(function(x,i){
+      if(i)h+='<span class="px-gv">'+fmtDur(x.t-list[i-1].t)+'</span>';
+      h+=pillCapHTML(p,x);
+    });
+    if(live){
+      // the running link and the + travel as one, so a wrap never strands the +
+      var last=list.length?list[list.length-1].t:null;
+      h+='<span class="px-end">'+(last!==null?'<span class="px-gv live" data-pv="ago" data-t="'+last+'">'+pillSince(Date.now()-last)+'</span>'
+        :'<span class="px-nd">No doses yet</span>')+
+        '<span class="px-plus" aria-hidden="true">'+icon('plus')+'</span></span>';
+    }
+    var pn=pillUI.panel,at=null;
+    if(pn&&pn.kind==='dose'&&pn.id===p.id)list.forEach(function(x){if(x.t===pn.t)at=x.t;});
+    return '<span class="px-chain">'+h+'</span>'+(at!==null?pillDoseHTML(p.id,at):'');
+  }
+  function pillSparkHTML(p,keys,by,sel){
+    /* the bars measure mg when every dose of this pill in the week has one,
+       and doses when they don't — never a mix of the two on one baseline */
+    var inMg=true,vals=keys.map(function(k){
+      var a=(by[k]&&by[k][p.id])||[],v=0;
+      a.forEach(function(x){if(x.mg)v+=x.mg;else inMg=false;});
+      return {mg:v,n:a.length};
+    });
+    var max=0;
+    vals.forEach(function(v){max=Math.max(max,inMg?v.mg:v.n);});
+    // a week with nothing in it draws nothing
+    if(!max)return '';
+    return '<span class="px-spark" aria-hidden="true">'+vals.map(function(v,i){
+      var n=inMg?v.mg:v.n,on=keys[i]===sel;
+      return n?'<i'+(on?' class="on"':'')+' style="height:'+Math.max(3,Math.round(n/max*22))+'px"></i>':'<i class="z'+(on?' on':'')+'"></i>';
+    }).join('')+'</span>';
+  }
+  function pillRowHTML(p,ds,keys,by,sel,live){
+    var sup=p.k==='s',id=esc(p.id),n=ds.length,fresh=p.id===pillNewId;
+    var sum=0,all=true;
+    ds.forEach(function(x){if(x.mg)sum+=x.mg;else all=false;});
+    var h='<div class="px-row'+(sup?' s':'')+(fresh?' new':'')+'" data-id="'+id+'">';
+    if(live)h+='<button class="px-tap" data-pact="take" data-id="'+id+'" aria-label="Log '+esc(p.name)+(p.mg?', '+fmtMg(p.mg)+' mg':'')+', now"></button>';
+    h+='<span class="px-rh"><b>'+esc(p.name)+'</b>'+
+      /* the day's total, once there is one to add up: a single dose already
+         says its mg on the chip (or on its capsule, where that differs) */
+      (sup?'':pillMgHTML(p,'mg')+pillSparkHTML(p,keys,by,sel)+
+        (n>1?'<span class="px-tot'+(fresh?' new':'')+'" aria-label="'+esc(pillDayName(sel))+': '+pillDosesTxt(n)+(all?', '+fmtMg(sum)+' mg in all':'')+'">'+
+          (all?fmtMg(sum)+'<small>mg</small>':n+'<small>'+(n===1?'dose':'doses')+'</small>')+'</span>':''))+'</span>';
+    h+=pillChainHTML(p,ds,live);
+    if(live){
+      var gs=pillGapState(p,pillLast(p.id));
+      if(gs)h+=pillGapHTML(p,gs);
+      h+=pillAskHTML(p);
+    }
+    return h+'</div>';
+  }
   function pillBoardHTML(){
-    var on=pillsOn(),main=on.filter(function(p){return p.k!=='s';}),sup=on.filter(function(p){return p.k==='s';});
-    var left=pillPickList(),open=pillUI.pick&&left.length;
-    var h=main.length?'<div class="px-grid">'+main.map(pillTileHTML).join('')+'</div>'
-      :'<p class="px-none">No pills on the board. Bring one back under <b>Your pills</b>, below.</p>';
-    h+=pillAskHTML();
-    if(sup.length||left.length){
-      h+='<div class="px-sup"><span class="px-lbl">Supplements</span><div class="px-scs">'+sup.map(pillChipHTML).join('')+
-        (left.length?'<button class="px-sc more" data-pact="picktoggle" aria-expanded="'+(open?'true':'false')+'">'+
-          icon(open?'close':'plus')+(open?'Done':sup.length?'More':'Add')+'</button>':'')+'</div>'+
-        (open?'<div class="px-pick"><p>Press one to log it. It stays on your row after that.</p><div class="px-scs">'+
+    var keys=pillWeekKeys(),wm=pillWeekMap(keys),by=wm.by,last=keys[keys.length-1];
+    var sel=keys.indexOf(pillUI.day)>=0?pillUI.day:last,live=sel===todayKey,pager=wm.older||pillUI.wk>0;
+    var h='<div class="px-wk" role="group" aria-label="Day">'+
+      (pager?'<button class="px-wkn back" data-pact="wk" data-d="1"'+(wm.older?'':' disabled')+' aria-label="The week before">'+icon('chev')+'</button>':'')+
+      keys.map(function(k){
+        var d=dateOf(k),n=by[k]?by[k].n:0;
+        return '<button class="px-wd'+(k===sel?' on':'')+(n?' has':'')+(k===todayKey?' now':'')+'" data-pact="day" data-k="'+k+
+          '" aria-pressed="'+(k===sel?'true':'false')+'" aria-label="'+esc(pillDayName(k))+', '+(n?pillDosesTxt(n):'nothing logged')+'">'+
+          '<span>'+WEEKDAYS[d.getDay()].charAt(0)+'</span><b>'+d.getDate()+'</b><i></i></button>';
+      }).join('')+
+      (pager?'<button class="px-wkn" data-pact="wk" data-d="-1"'+(pillUI.wk>0?'':' disabled')+' aria-label="The week after">'+icon('chev')+'</button>':'')+
+      '</div>';
+    var day=by[sel]||{n:0};
+    // today's count is already in the header line; an earlier day says its own, and the way back
+    if(!live)h+='<div class="px-dh"><h3>'+esc(pillDayName(sel))+'</h3>'+(day.n?'<small>'+pillDosesTxt(day.n)+'</small>':'')+
+      '<button class="btn sm ghost" data-pact="today">Today</button></div>';
+    /* today: every pill on the board, main ones then supplements, each a
+       press. An earlier day: only what was taken */
+    var main='',sup='';
+    (live?pillsOn():data.pills.list).forEach(function(p){
+      var ds=day[p.id]||[];
+      if(!live&&!ds.length)return;
+      var r=pillRowHTML(p,ds,keys,by,sel,live);
+      if(p.k==='s')sup+=r;else main+=r;
+    });
+    if(main)h+=main;
+    else if(live)h+='<p class="px-none">No pills on the board. Bring one back under <b>Your pills</b>, below.</p>';
+    else if(!sup)h+='<p class="px-none">Nothing logged.</p>';
+    var left=live?pillPickList():[],open=pillUI.pick&&left.length;
+    if(sup||left.length){
+      h+='<span class="px-lbl sup">Supplements</span>'+sup;
+      if(left.length)h+='<div class="px-more"><button class="px-sc more" data-pact="picktoggle" aria-expanded="'+(open?'true':'false')+'">'+
+        icon(open?'close':'plus')+(open?'Done':sup?'More':'Add one')+'</button></div>'+
+        (open?'<div class="px-pick"><p>Press one to log it. It stays on your list after that.</p><div class="px-scs">'+
           left.map(function(nm){return '<button class="px-sc add" data-pact="pick" data-nm="'+esc(nm)+'">'+icon('plus')+esc(nm)+'</button>';}).join('')+
-          '</div></div>':'')+'</div>';
+          '</div></div>':'');
     }
     return h;
   }
@@ -12287,108 +12413,13 @@ try{
       return '<button class="btn" data-pact="nudge" data-d="'+d+'"'+(ok?'':' disabled')+' aria-label="'+lbl+'">'+txt+'</button>';
     }
     return '<div class="px-in px-mv" role="group" aria-label="Move or remove this dose">'+
-      '<div class="px-mvh"><p><b>'+esc(p.name)+'</b> at <b>'+fmtTime(new Date(t))+'</b></p>'+
+      '<div class="px-mvh"><p><b>'+esc(p.name)+'</b> at <b>'+(day===todayKey?'':esc(pillDayName(day))+', ')+fmtTime(new Date(t))+'</b></p>'+
         '<button class="px-mg'+(mg?'':' unset')+'" data-pact="dosemg" aria-label="'+(mg?'Logged at '+fmtMg(mg)+' mg. Press to change it.':'Set the mg this dose was')+'">'+
         (mg?fmtMg(mg)+'<small>mg</small>'+icon('chev'):icon('plus')+'Set mg')+'</button></div>'+
       '<div class="btn-row">'+nb(-3600000,'−1h','One hour earlier')+nb(-900000,'−15m','15 minutes earlier')+
         nb(-300000,'−5m','5 minutes earlier')+nb(300000,'+5m','5 minutes later')+'</div>'+
       '<div class="btn-row"><button class="btn ghost" data-pact="dosedrop">Remove</button>'+
       '<button class="btn go" data-pact="close">Done</button></div></div>';
-  }
-  /* a day's doses of one pill: a time, the gap, the next time — the time
-     between them is the thing being tracked, so it sits between the stamps it
-     measures. Each gap rides with the dose it leads to, so a wrap never
-     strands a dash. */
-  function pillChainHTML(p,doses){
-    var id=esc(p.id),pn=pillUI.panel,at=-1;
-    var h='<div class="px-chain">';
-    doses.forEach(function(x,i){
-      var sel=!!pn&&pn.kind==='dose'&&pn.id===p.id&&pn.t===x.t;
-      if(sel)at=i;
-      var chip='<button class="px-t'+(x.t===pillNewT&&p.id===pillNewId?' new':'')+(sel?' sel':'')+
-        '" data-pact="dose" data-id="'+id+'" data-t="'+x.t+'" aria-label="'+esc(p.name)+(x.mg?' '+fmtMg(x.mg)+' mg':'')+', '+
-        esc(pillWhenFull(x.t))+'. Press to move or remove it.">'+fmtClk(new Date(x.t))+'</button>';
-      h+=i?'<span class="px-pair"><span class="px-gv">'+fmtDur(x.t-doses[i-1].t)+'</span>'+chip+'</span>':chip;
-    });
-    return h+'</div>'+(at>=0?pillDoseHTML(p.id,doses[at].t):'');
-  }
-  /* ---- what's been taken ----
-     A week of days across the top, the chosen day under it. Each pill taken
-     that day is one row, and the row is a picture before it is a sentence: a
-     capsule per dose with its mg on it, the day's total beside the name, and
-     the week as seven bars off one baseline — the chosen day in the accent,
-     the others held back, so a dose coming down shows as the bars do.
-     Pressing a day reads that day; pressing a row opens its times. */
-  var PILL_WK=7;
-  function pillWeekKeys(){
-    var end=addDays(today,-PILL_WK*pillUI.wk),o=[];
-    for(var i=PILL_WK-1;i>=0;i--)o.push(dkeyOf(addDays(end,-i)));
-    return o;
-  }
-  function pillDayName(k){
-    var d=dateOf(k);
-    return k===todayKey?'Today':k===ydayKey()?'Yesterday':WEEKDAYS[d.getDay()]+', '+fmtShort(d);
-  }
-  function pillDosesTxt(n){return n+' dose'+(n===1?'':'s');}
-  function pillRowHTML(p,ds,keys,by,sel){
-    /* the bars measure mg when every dose of this pill in the week has one,
-       and doses when they don't — never a mix of the two on one baseline */
-    var inMg=true,vals=keys.map(function(k){
-      var a=(by[k]&&by[k][p.id])||[],v=0;
-      a.forEach(function(x){if(x.mg)v+=x.mg;else inMg=false;});
-      return {mg:v,n:a.length};
-    });
-    var max=0;
-    vals.forEach(function(v){max=Math.max(max,inMg?v.mg:v.n);});
-    var sum=0,all=true;
-    ds.forEach(function(x){if(x.mg)sum+=x.mg;else all=false;});
-    var pn=pillUI.panel;
-    var open=pillUI.open===p.id||(!!pn&&pn.kind==='dose'&&pn.id===p.id&&ds.some(function(x){return x.t===pn.t;}));
-    var fresh=p.id===pillNewId;
-    return '<div class="px-r'+(open?' open':'')+'">'+
-      '<button class="px-rb" data-pact="row" data-id="'+esc(p.id)+'" aria-expanded="'+(open?'true':'false')+'" aria-label="'+
-        esc(p.name)+', '+esc(pillDayName(sel))+': '+pillDosesTxt(ds.length)+(all?', '+fmtMg(sum)+' mg in all':'')+'. Press for the times.">'+
-      '<span class="px-rh"><b>'+esc(p.name)+'</b>'+
-        '<span class="px-rt'+(fresh?' new':'')+'">'+(all?fmtMg(sum)+'<small>mg</small>':ds.length+'<small>'+(ds.length===1?'dose':'doses')+'</small>')+'</span>'+
-        icon('chev')+'</span>'+
-      '<span class="px-rg"><span class="px-caps" aria-hidden="true">'+ds.map(function(x){
-          return '<i class="px-cap'+(fresh&&x.t===pillNewT?' new':'')+'">'+(x.mg?fmtMg(x.mg):'')+'</i>';
-        }).join('')+'</span>'+
-        '<span class="px-spark" aria-hidden="true">'+vals.map(function(v,i){
-          var n=inMg?v.mg:v.n,on=keys[i]===sel;
-          return n?'<i'+(on?' class="on"':'')+' style="height:'+Math.max(3,Math.round(n/max*26))+'px"></i>':'<i class="z'+(on?' on':'')+'"></i>';
-        }).join('')+'</span></span>'+
-      '</button>'+(open?'<div class="px-rd">'+pillChainHTML(p,ds)+'</div>':'')+'</div>';
-  }
-  function pillTakenHTML(){
-    if(!data.pills.log.length)return '';
-    var keys=pillWeekKeys(),first=keys[0],last=keys[keys.length-1],by={},older=false,now=Date.now();
-    data.pills.log.forEach(function(x){
-      var t=Date.parse(x.t);if(t>now)return;
-      var k=pillDay(t);
-      if(k<first){older=true;return;}
-      if(k>last)return;
-      var d=by[k]||(by[k]={n:0});
-      (d[x.id]||(d[x.id]=[])).push({t:t,mg:x.mg});d.n++;
-    });
-    var sel=keys.indexOf(pillUI.day)>=0?pillUI.day:last,pager=older||pillUI.wk>0;
-    var h='<div class="px-wk" role="group" aria-label="Day">'+
-      (pager?'<button class="px-wkn back" data-pact="wk" data-d="1"'+(older?'':' disabled')+' aria-label="The week before">'+icon('chev')+'</button>':'')+
-      keys.map(function(k){
-        var d=dateOf(k),n=by[k]?by[k].n:0;
-        return '<button class="px-wd'+(k===sel?' on':'')+(n?' has':'')+(k===todayKey?' now':'')+'" data-pact="day" data-k="'+k+
-          '" aria-pressed="'+(k===sel?'true':'false')+'" aria-label="'+esc(pillDayName(k))+', '+(n?pillDosesTxt(n):'nothing logged')+'">'+
-          '<span>'+WEEKDAYS[d.getDay()].charAt(0)+'</span><b>'+d.getDate()+'</b><i></i></button>';
-      }).join('')+
-      (pager?'<button class="px-wkn" data-pact="wk" data-d="-1"'+(pillUI.wk>0?'':' disabled')+' aria-label="The week after">'+icon('chev')+'</button>':'')+
-      '</div>';
-    var day=by[sel]||{n:0},rows='';
-    data.pills.list.forEach(function(p){
-      if(day[p.id])rows+=pillRowHTML(p,day[p.id],keys,by,sel);
-    });
-    // today's count is already in the header line; an earlier day's is said here
-    h+='<div class="px-dh"><h3>'+esc(pillDayName(sel))+'</h3>'+(day.n&&sel!==todayKey?'<small>'+pillDosesTxt(day.n)+'</small>':'')+'</div>';
-    return h+(rows||'<p class="px-none">Nothing logged.</p>');
   }
   function pillFormHTML(p){
     var dr=pillUI.draft||{};
@@ -12445,25 +12476,23 @@ try{
     if(!force&&ae&&ae.closest&&ae.closest('#vPills')&&/^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName)){pillsTick();return;}
     renderPillsSub();
     host.innerHTML=pillBoardHTML();
-    var tk=pillTakenHTML(),tc=$('pillTaken');
-    tc.hidden=!tk;tc.innerHTML=tk;
     var on=pillsOn(),ns=on.filter(function(p){return p.k==='s';}).length,nm=on.length-ns;
     $('pillManageLive').textContent=nm+' pill'+(nm===1?'':'s')+(ns?' · '+ns+' supplement'+(ns===1?'':'s'):'');
     $('pillManageBody').innerHTML=pillManageHTML();
     pillNewT=null;pillNewId=null;
   }
   RENDER_HOOKS.push(renderPills);
-  /* the 30s tick: only what time moves — each tile's elapsed line and, where
-     a spacing is set, where it stands. No field is ever rebuilt. */
+  /* the 30s tick: only what time moves — the link running to each +, and
+     where a spacing is set, where it stands. No field is ever rebuilt. */
   function pillsTick(){
-    var tiles=document.querySelectorAll('#pillBoard .px-tile');
-    Array.prototype.forEach.call(tiles,function(tile){
-      var p=pillOf(tile.dataset.id);if(!p)return;
-      var last=pillLast(p.id);if(last===null)return;
-      var ago=tile.querySelector('[data-pv="ago"]');
-      if(ago)ago.textContent=pillAgo(last);
-      var gs=pillGapState(p,last),g=tile.querySelector('[data-pv="gap"]');
-      if(gs&&g)g.outerHTML=pillGapHTML(p,gs);
+    var now=Date.now();
+    Array.prototype.forEach.call(document.querySelectorAll('#pillBoard [data-pv="ago"]'),function(el){
+      el.textContent=pillSince(now-(+el.dataset.t));
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('#pillBoard [data-pv="gap"]'),function(g){
+      var row=g.closest('.px-row'),p=row&&pillOf(row.dataset.id);if(!p)return;
+      var gs=pillGapState(p,pillLast(p.id));
+      if(gs)g.outerHTML=pillGapHTML(p,gs);
     });
     renderPillsSub();
   }
@@ -12617,7 +12646,6 @@ try{
     else if(a==='dose'){
       var t=+b.dataset.t,pn=pillUI.panel;
       pillUI.panel=pn&&pn.kind==='dose'&&pn.id===id&&pn.t===t?null:{kind:'dose',id:id,t:t};
-      pillUI.open=id;
       renderPills(true);
     }
     else if(a==='nudge'){pillNudge(+b.dataset.d);}
@@ -12625,17 +12653,11 @@ try{
     else if(a==='dosemg'){var dm=pillUI.panel;if(dm&&dm.kind==='dose')pillSheetOpen('dose',dm.id,dm.t);}
     else if(a==='dosedrop'){var dp=pillUI.panel;if(dp&&dp.kind==='dose')pillRemove(dp.id,dp.t);}
     else if(a==='close'){pillUI.panel=null;renderPills(true);}
-    else if(a==='day'||a==='wk'){
+    else if(a==='day'||a==='wk'||a==='today'){
       if(a==='wk'){pillUI.wk=Math.max(0,pillUI.wk+(+b.dataset.d||0));pillUI.day=null;}
+      else if(a==='today'){pillUI.wk=0;pillUI.day=null;}
       else pillUI.day=b.dataset.k||null;
-      pillUI.open=null;
       if(pillUI.panel&&pillUI.panel.kind==='dose')pillUI.panel=null;
-      renderPills(true);
-    }
-    else if(a==='row'){
-      var shut=!!b.closest('.px-r.open');
-      pillUI.open=shut?null:id;
-      if(pillUI.panel&&pillUI.panel.kind==='dose'&&(shut||pillUI.panel.id!==id))pillUI.panel=null;
       renderPills(true);
     }
     else if(a==='add'){
