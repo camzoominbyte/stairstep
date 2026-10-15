@@ -2186,6 +2186,12 @@
     background:var(--adjust);color:var(--ink-inv);font:650 15px/1.2 var(--f-ui);padding:12px 16px;
   }
   .r2-undo{font-size:12.5px;color:var(--ink-2);margin:10px 0 0;line-height:1.45}
+  /* one week to zero: the week written out, a row a day */
+  .wk-days{margin-top:10px}
+  .wk-days .sc-row{grid-template-columns:76px minmax(0,1fr);padding:8px 0}
+  .wk-days .sc-k{flex-wrap:nowrap;gap:10px}
+  .wk-days .sc-n{min-width:28px}
+  .wk-days .sc-w{flex-basis:auto}
   .sc-why{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
   .sc-why>summary{list-style:none;cursor:pointer;font-size:13px;font-weight:650;color:var(--adjust-t);min-height:32px;display:flex;align-items:center}
   .sc-why>summary::-webkit-details-marker{display:none}
@@ -4307,12 +4313,73 @@ try{
     {hold:3,name:'Three days a rung',
      note:'A day of margin at every ceiling — enough for one rough day inside a step without the step itself failing.'},
     {hold:4,name:'Four days a rung',
-     note:'Close to the gentle pace. Each ceiling gets most of a week to become ordinary before the next cut.'}
+     note:'Close to the gentle pace. Each ceiling gets most of a week to become ordinary before the next cut.'},
+    {hold:1,name:'One week',
+     note:'A step a day, fewer steps, and the date locked — zero lands inside seven days whatever a day does. The shortest plan, and the steepest.'}
   ];
   function r2Pace(h){
     for(var i=0;i<R2_PACES.length;i++)if(R2_PACES[i].hold===h)return R2_PACES[i];
     return R2_PACES[0];
   }
+  // how a pace reads in a sentence — "1 days a rung" is not one
+  function r2PaceText(h){return h===1?'one step a day, a week to zero':h+' days a rung';}
+  /* ================= one week to zero =================
+     The paces above trade days-per-rung against the calendar, and all of them
+     are long: from 10, two days a rung is sixteen days and four is over a
+     month. This record re-entered the ladder seven times between August and
+     October, at 10–14 every time, and the days stayed there — a descent paced
+     in weeks gave the days weeks to settle where they were.
+     So the short plan: seven days, one step a day, zero on the eighth, with
+     the date locked so an over-cap day is recorded and tomorrow is still
+     tomorrow's number. Reduce-to-quit and abrupt quitting reach zero with the
+     same odds or better (Cochrane; Lindson-Hawley 2016) — the slow paces buy
+     comfort on the way down, and this one buys a date.
+     A week can't walk every rung below 10, so it walks the ones that keep the
+     cuts closest to one size: least squared log-ratio between neighbours, the
+     evenest percentage descent the ladder's own rungs can make, ending on the
+     landing (2, then 1) because the last step is the one every attempt here
+     came apart on. 7 stays out of the pool — its copy is written as "8, one
+     hit lighter", and a week that has to skip steps skips that one first. */
+  var WEEK_DAYS=7;
+  function weekRungs(c){
+    var pool=descentPool().filter(function(q){return q.cap<c&&q.cap!==7;});
+    if(pool.length+1<=WEEK_DAYS)return pool;
+    var caps=[c].concat(pool.map(function(q){return q.cap;})), last=caps.length-1, memo={};
+    // cheapest way from caps[i] to the bottom rung using exactly k more rungs
+    function walk(i,k){
+      if(k===0)return i===last?{c:0,p:[]}:null;
+      var key=i+':'+k;if(key in memo)return memo[key];
+      var best=null;
+      for(var j=i+1;j<=last&&last-j>=k-1;j++){
+        var r=walk(j,k-1);if(!r)continue;
+        var lr=Math.log(caps[i]/caps[j]), v=lr*lr+r.c;
+        if(!best||v<best.c)best={c:v,p:[j].concat(r.p)};
+      }
+      return (memo[key]=best);
+    }
+    var w=walk(0,WEEK_DAYS-1);
+    return w?w.p.map(function(j){return pool[j-1];}):pool;
+  }
+  // the rungs a rebuilt second descent walks below its entry, in descent order
+  function r2TailRungs(c,hold){
+    if(hold===1)return weekRungs(c);
+    return descentPool().filter(function(q){return q.cap<c;});
+  }
+  /* The 2–3 rung was written as the last night before zero — "tonight the
+     stash goes". A rebuilt second descent always walks the landing (2, then 1)
+     below it, so its copy there told someone to throw the stash out two
+     evenings before the plan stopped asking them to use it. The ritual
+     belongs to the 1 rung, whose last night is the eve. */
+  var R2_LOW3={
+    desc:"One evening sitting, and the daytime is already at zero. The evening is the last thing left to shrink, and it shrinks from here.",
+    goals:["Evening only — 2–3 in one sitting. The daytime is already at zero; what is left is the size of the evening."],
+    plans:[
+      {w:['8:30p'],
+       note:'One evening sitting — 2–3 hits, then done. The daytime schedule is already at zero.',
+       do:['Nothing all day. You’re functionally quit from wake to dinner — today proves it.',
+           'Keep the sitting small and deliberate: 2–3 hits, one window, closed.',
+           'Bring nothing new into the house. What is there now is what the last evenings run on.']}]
+  };
   /* A rebuilt-restart rung keeps rs set as well as r2: every guard in the walk
      that exempts the restarted descent from the first descent's anchors
      (`!p.rs`) has to keep exempting these, and holdKey reads r2 first so a
@@ -4324,22 +4391,28 @@ try{
     var q={},k;for(k in p)q[k]=p[k];
     q.days=Math.max(1,hold||2);q.rs=true;q.r2=true;q.r2i=gen||0;
     delete q.rb;delete q.ld;
+    if(p.cap===3&&p.single){q.desc=R2_LOW3.desc;q.goals=R2_LOW3.goals;q.plans=R2_LOW3.plans;}
     return q;
   }
   function r2Entry(c,hold,gen){
     var src=r2RungAt(c);if(!src)return null;
     var q=r2Clone(src,hold,gen);
+    if(hold===1){
+      q.desc="Day one of the week. One step a day from here, the date locked, and zero at the end of it — a day that runs over is recorded, and the next day is still the next number.";
+      q.goals=[q.capText+" today, and a step lower every day after. Seven days, then zero."];
+      return q;
+    }
     q.desc="The second descent, rebuilt. The restart re-entered where the days were on its first night; this re-enters where they have actually been landing since — and gives every step below it more room than the last ladder did.";
     q.goals=["Back at "+q.capText+", on a ladder paced for the days in your log rather than the day you restarted on. Land under it and the schedule is describing something real again."];
     return q;
   }
   // the caps a rebuilt second descent walks below its entry, in descent order
-  function r2Tail(c){return tailCaps(descentPool(),c);}
+  function r2Tail(c,hold){
+    return r2TailRungs(c,hold).map(function(q){return q.capText;});
+  }
   // calendar length of a second descent rebuilt from cap c — mirrors buildLadder
   function r2Len(c,hold){
-    var n=1,pool=descentPool();
-    for(var i=0;i<pool.length;i++)if(pool[i].cap<c)n++;
-    return n*Math.max(1,hold||2);
+    return (1+r2TailRungs(c,hold).length)*Math.max(1,hold||2);
   }
   /* Every rebuild the restarted descent has taken, oldest first. Stored as a
      LIST rather than the single object this shipped with, and that is the whole
@@ -4481,14 +4554,14 @@ try{
        days keep the ceiling they were lived under (the walk hands dates to the
        ones the rebuild stepped past, and no days), then the re-entry and its
        tail, then the same zero object the rest of the app compares against. */
-    var rbs=rebuildsOf(d), g, r2, r2e, pool=descentPool();
+    var rbs=rebuildsOf(d), g, r2, r2e, tail;
     for(g=0;g<rbs.length;g++){
       r2=rbs[g];
       r2e=r2Entry(r2.cap,r2.hold,g);
       if(!r2e)continue;
       out.push(r2e);
-      for(i=0;i<pool.length;i++)
-        if(pool[i].cap<r2.cap)out.push(r2Clone(pool[i],r2.hold,g));
+      tail=r2TailRungs(r2.cap,r2.hold);
+      for(i=0;i<tail.length;i++)out.push(r2Clone(tail[i],r2.hold,g));
     }
     out.push(zero);
     return out;
@@ -6365,12 +6438,21 @@ try{
     if(!steps.length){box.innerHTML='';return;}
     var W=stWidth(), units=0,topCap=30;
     steps.forEach(function(st){units+=st.u;topCap=Math.max(topCap,st.p.cap);});
-    var dayPx=Math.max(W/units,22), CW=Math.round(units*dayPx);
+    var dayPx=Math.max(W/units,22);
+    /* a one-day tread at 22px is narrower than its own number, so a run of
+       them — the week plan's 4 · 2–3 · 2 — printed as one string. Each tread
+       is at least as wide as its label; time inside it is spread to match. */
+    var CW=0;
+    steps.forEach(function(st){
+      var lw=st.p.capText.length*(st.i===idx?15.6:11.5)+8;
+      st.w=Math.max(st.u*dayPx,lw);st.dpx=st.w/st.u;CW+=st.w;
+    });
+    CW=Math.round(CW);
     var H=200, yTop=30, base=152, k=(base-4-yTop)/topCap;
     function yv(v){return base-4-Math.min(v,topCap+2)*k;}
     function f1(v){return Math.round(v*10)/10;}
     var x=0;
-    steps.forEach(function(st){st.x0=x;x+=st.u*dayPx;st.x1=x;st.y=yv(st.p.cap);st.cx=(st.x0+st.x1)/2;});
+    steps.forEach(function(st){st.x0=x;x+=st.w;st.x1=x;st.y=yv(st.p.cap);st.cx=(st.x0+st.x1)/2;});
     // where today sits: inside its rung, by day
     var cur=null, hereX=0, zeroEra=isZeroEra;
     steps.forEach(function(st){if(st.i===idx)cur=st;});
@@ -6378,7 +6460,7 @@ try{
       if(zeroEra)hereX=cur.cx;
       else{
         var off=Math.round((today-cur.s.start)/MS_DAY);
-        hereX=cur.x0+Math.min(cur.u,Math.max(0,off)+.5)*dayPx;
+        hereX=cur.x0+Math.min(cur.u,Math.max(0,off)+.5)*cur.dpx;
       }
     }
     var cut=zeroEra?CW:hereX;
@@ -6436,7 +6518,7 @@ try{
           var ov=c>st.p.cap;
           nums.push('<tspan class="'+(ov?'ov':c===st.p.cap?'at':'un')+'">'+c+'</tspan>');
           if(ov){
-            var tx=st.x0+(j+.5)*dayPx;
+            var tx=st.x0+(j+.5)*st.dpx;
             ticks+='<line class="st-tick" x1="'+f1(tx-5)+'" x2="'+f1(tx+5)+'" y1="'+f1(yv(c))+'" y2="'+f1(yv(c))+'"/>';
           }
         }
@@ -6982,8 +7064,10 @@ try{
     var rsRung=rungAtCap(sug.rsCap), rsText=rsRung?rsRung.capText:sug.rsCap;
     var entryCap=(r2SelCap&&r2RungAt(r2SelCap))?r2SelCap:sug.cap;
     var entryRung=r2RungAt(entryCap)||{capText:String(entryCap)};
-    var chain=capChain(entryRung.capText,r2Tail(entryCap));
     var sel=r2Pace(r2Sel).hold, selZ=addDays(today,r2Len(entryCap,sel));
+    // the week walks fewer rungs than the other paces, so each option carries its own chain
+    function chainFor(h){return capChain(entryRung.capText,r2Tail(entryCap,h));}
+    var chain=chainFor(sel);
     var picks=r2ManualRungs(sug.cap);
     var lede=manual
       ? '<p class="sc-note" style="font-size:13px;color:var(--ink)"><b>Pick a ceiling you can actually hold.</b> '+
@@ -7010,7 +7094,7 @@ try{
         return '<button class="r2-opt'+(p.hold===sel?' on':'')+'" data-sc="r2pick" data-hold="'+p.hold+'">'+
           '<span class="r2-opt-h"><span class="r2-opt-n">'+p.name+'</span>'+
           '<span class="r2-opt-z">'+len+' days · zero '+fmtShort(z)+'</span></span>'+
-          '<span class="r2-opt-l">'+chain+'</span>'+
+          '<span class="r2-opt-l">'+chainFor(p.hold)+'</span>'+
           '<span class="r2-opt-w">'+p.note+'</span></button>';
       }).join('')+'</div>'+
       '<button class="r2-go" data-sc="r2" data-cap="'+entryCap+'" data-hold="'+sel+'">'+
@@ -7020,9 +7104,59 @@ try{
       '<details class="sc-why"><summary>Why this, and what it changes</summary>'+
       '<p class="sc-note">This descent re-entered at <b>'+rsText+'</b> on '+fmtShort(dateOf(sug.since))+
       '. Holding a step for one more day cannot close a gap of whole rungs, and it cannot lower a ceiling that is simply too high a bar — that is what this move is for, and it can be taken as often as the ladder needs it.</p>'+
-      '<p class="sc-note">The tail runs <b>'+chain+'</b>. Below the daytime cut it steps one hit at a time — 8, 7, 6, 5, 4, 3, then the evenings — because that is the stretch where every attempt on this record has actually come apart, and the same percentage down there is a smaller and smaller number of hits to hold onto. The extension budget refills, so the new ladder has its own five days of give.</p>'+
-      '<p class="sc-note">For daily use of this length the evidence leans slower: gradual reduction “over weeks”, and slower the heavier and longer the use. <a class="dlink" href="guide.html#taper">Why →</a></p>'+
+      (sel===1?weekWhyHTML(chain)
+      :'<p class="sc-note">The tail runs <b>'+chain+'</b>. Below the daytime cut it steps one hit at a time — 8, 7, 6, 5, 4, 3, then the evenings — because that is the stretch where every attempt on this record has actually come apart, and the same percentage down there is a smaller and smaller number of hits to hold onto. The extension budget refills, so the new ladder has its own five days of give.</p>'+
+      '<p class="sc-note">For daily use of this length the evidence leans slower: gradual reduction “over weeks”, and slower the heavier and longer the use. <a class="dlink" href="guide.html#taper">Why →</a></p>')+
       '</details></div>';
+  }
+  /* ---- one week to zero: the door, and the week written out ----
+     Its own door rather than only a fourth row in the pace picker, because
+     the picker opens from "this ceiling is too high" and this is the opposite
+     sentence: the ladder is too long. Transient like r2Open — nothing is
+     chosen until the commit, which writes an ordinary rebuild entry (hold 1)
+     and locks the date from today. */
+  var wkOpen=false;
+  function weekWhyHTML(chain){
+    return '<p class="sc-note">The week runs <b>'+chain+'</b> — fewer steps than the ladder has, picked so each cut is close to the same size, and always ending on 2 and then 1, so the last step is a single hit wide.</p>'+
+      '<p class="sc-note">The date is locked from the first day. A day that runs over is recorded, and tomorrow is still tomorrow\'s number — the date is the plan. "Let it move" on the lock gives back five days of give if you decide you want them.</p>'+
+      '<p class="sc-note">Tapering down eases withdrawal; it does not change the odds of staying stopped, and quitting on a fixed date does as well or better than a slow taper. The weeks after zero are where it is decided — sleep settles last, and a fixed wake time is what settles it. <a class="dlink" href="guide.html#taper">Why →</a></p>';
+  }
+  // where the week starts: what the log reads, never under today's own count
+  function weekEntry(){
+    var sug=r2Suggest();
+    var c=sug?sug.cap:cap;
+    var rung=r2RungAt(c)||{capText:String(c)};
+    return {cap:c,capText:rung.capText,last:sug?sug.last:null};
+  }
+  function weekDoorHTML(){
+    var e=weekEntry(), z=addDays(today,r2Len(e.cap,1));
+    if(!wkOpen){
+      return '<div class="sc-fine"><p class="sc-note"><b>Done in a week?</b> '+
+        'This ladder lands zero <b>'+scDate(zeroDate())+'</b>. One step a day from <b>'+e.capText+'</b> lands it <b>'+scDate(z)+'</b>, with the date locked.</p>'+
+        '<div class="sc-hand"><button class="pri" data-sc="wkopen">See the week</button></div></div>';
+    }
+    var tail=r2TailRungs(e.cap,1), rungs=[r2RungAt(e.cap)||{cap:e.cap,capText:e.capText}].concat(tail);
+    var total=0, rows='';
+    rungs.forEach(function(q,j){
+      var d=addDays(today,j);
+      total+=q.cap;
+      rows+='<div class="sc-row"><span class="sc-d">'+scDate(d)+'</span>'+
+        '<span class="sc-k"><span class="sc-n">'+q.capText+'</span>'+
+        '<span class="sc-w">'+(q.single?'evening only · one sitting':'up to '+q.sessionMax+' a sitting')+'</span></span></div>';
+    });
+    rows+='<div class="sc-row wk-zero"><span class="sc-d">'+scDate(z)+'</span>'+
+      '<span class="sc-k"><span class="sc-n">0</span><span class="sc-w">zero</span></span></div>';
+    var chain=capChain(e.capText,r2Tail(e.cap,1));
+    return '<div class="sc-fine">'+
+      '<p class="sc-note" style="font-size:13px;color:var(--ink)"><b>Seven days, one step a day, then zero.</b> '+
+      (e.last?'Your last three full days were <b>'+e.last.join(', ')+'</b>, so the week starts at <b>'+e.capText+'</b>. ':'')+
+      'The whole week is <b>'+total+'</b> hits at most.</p>'+
+      '<div class="wk-days">'+rows+'</div>'+
+      '<button class="r2-go" data-sc="r2" data-cap="'+e.cap+'" data-hold="1">'+
+        'Start the week — zero '+WEEKDAYS[z.getDay()]+', '+fmtShort(z)+'</button>'+
+      '<p class="r2-undo">Nothing is erased, and you can undo it for the rest of today. '+
+        '<button class="sc-act" data-sc="wkclose">Never mind</button></p>'+
+      '<details class="sc-why"><summary>Why a week, and what it changes</summary>'+weekWhyHTML(chain)+'</details></div>';
   }
   /* mini contour for a move: the current plan as a ghost, the move's descent in
      the accent, both from today to the later of the two zero dates. segs are
@@ -7264,7 +7398,7 @@ try{
     else if(sch.rebuilt===todayKey){
       var r2r=landRungAt(sch.r2Cap);
       r2='<div class="sc-fine"><p class="sc-note">This descent was rebuilt today, re-entering at <b>'+
-        (r2r?r2r.capText:sch.r2Cap)+'</b> at <b>'+sch.r2Hold+' days a rung</b>. '+
+        (r2r?r2r.capText:sch.r2Cap)+'</b>, <b>'+r2PaceText(sch.r2Hold)+'</b>. '+
         'It can still go back to the restarted ladder as it stood — tomorrow the rebuilt steps will have logged days against them.</p>'+
         '<div class="sc-hand"><button data-sc="unr2">Undo — back to the ladder as it stood</button></div></div>';
     }
@@ -7322,7 +7456,7 @@ try{
         ?'The budget refilled at the '+(sch.restarted&&!sch.rebuilt?'restart':'rebuild')+' — slack exists to stop drift, and a dated choice is the opposite of drift. '
         :'')+'When they are gone the schedule stops moving zero and the choice becomes yours.';
     else slackLine='<b>Slack spent.</b> An over-cap day now gets recorded and the date holds. That is the design, not a failure: tapering eases withdrawal, it does not improve the odds of stopping, and a date that keeps moving spends the part that does.';
-    var sub=sch.rebuilt?'rebuilt '+fmtShort(dateOf(sch.rebuilt))+' · re-entered at '+(landRungAt(sch.r2Cap)?landRungAt(sch.r2Cap).capText:sch.r2Cap)+', '+sch.r2Hold+' days a step'
+    var sub=sch.rebuilt?'rebuilt '+fmtShort(dateOf(sch.rebuilt))+' · re-entered at '+(landRungAt(sch.r2Cap)?landRungAt(sch.r2Cap).capText:sch.r2Cap)+', '+r2PaceText(sch.r2Hold)
       :sch.restarted?'restarted '+fmtShort(dateOf(sch.restarted))+' · re-entered at '+(rungAtCap(sch.rsCap)?rungAtCap(sch.rsCap).capText:sch.rsCap)
       :sch.finished?'finished early '+fmtShort(dateOf(sch.finished))+' · the day after the last hit'
       :sch.landed?'landing rebuilt '+fmtShort(dateOf(sch.landed))+' · re-entered at '+(landRungAt(sch.ldCap)?landRungAt(sch.ldCap).capText:sch.ldCap)
@@ -7352,7 +7486,15 @@ try{
        live offers lead the card, the moves follow, and the record folds in
        behind them. The record opens by itself only when it is short and
        nothing is waiting to be decided. */
-    var lead=rst+fin+r2+reb+land;
+    /* the week door sits beside the manual one, on a restarted descent whose
+       ladder still runs past a week. Not while the automatic offer is up — its
+       pace picker already carries the week as a row — and not once the
+       newest rebuild is a week, which is the door already walked through. */
+    var wk='';
+    if(!r2g&&sch.restarted&&!isZeroEra&&idx>=0&&idx<BASE_PHASES.length-1&&
+       sch.rebuilt!==todayKey&&sch.r2Hold!==1&&
+       r2Len(weekEntry().cap,1)<daysToZero())wk=weekDoorHTML();
+    var lead=rst+fin+wk+r2+reb+land;
     /* What the Plan tab's dot is for. Only a live OFFER counts — the same
        strings also carry the same-day undo of a move already taken, and a
        receipt is not something to decide. */
@@ -13135,14 +13277,21 @@ try{
     else if(act==='r2cap'){r2SelCap=+b.dataset.cap||null;renderAll();return;}
     else if(act==='r2open'){r2Open=true;r2SelCap=null;renderAll();return;}
     else if(act==='r2close'){r2Open=false;r2SelCap=null;renderAll();return;}
+    else if(act==='wkopen'){wkOpen=true;renderAll();return;}
+    else if(act==='wkclose'){wkOpen=false;renderAll();return;}
     else if(act==='r2'){
       if(data.replan.restart){
         var rsO=data.replan.restart;
         if(!rsO.rebuilds)rsO.rebuilds=rsO.rebuild?[rsO.rebuild]:[];
         delete rsO.rebuild;                       // the list is the record now
-        rsO.rebuilds.push({at:todayKey,cap:+b.dataset.cap,hold:+b.dataset.hold||2});
+        var hd=+b.dataset.hold||2;
+        rsO.rebuilds.push({at:todayKey,cap:+b.dataset.cap,hold:hd});
         delete data.replan.lockFrom;
-        r2Open=false;r2SelCap=null;
+        /* the week locks its date from its own first day. Today is safe to
+           include, unlike the lock button's: nothing has been charged against
+           a tail that starts this morning, so there is no extension to refund */
+        if(hd===1)data.replan.lockFrom=todayKey;
+        r2Open=false;r2SelCap=null;wkOpen=false;
         relader();
       }
     }
@@ -13155,7 +13304,9 @@ try{
       if(rsU){
         if(!rsU.rebuilds)rsU.rebuilds=rsU.rebuild?[rsU.rebuild]:[];
         delete rsU.rebuild;
-        rsU.rebuilds.pop();
+        var popped=rsU.rebuilds.pop();
+        // the week's own lock goes with it; a lock set by hand since stays
+        if(popped&&popped.hold===1&&data.replan.lockFrom===popped.at)delete data.replan.lockFrom;
         if(!rsU.rebuilds.length)delete rsU.rebuilds;
       }
       relader();
