@@ -4394,9 +4394,15 @@ try{
     if(p.cap===3&&p.single){q.desc=R2_LOW3.desc;q.goals=R2_LOW3.goals;q.plans=R2_LOW3.plans;}
     return q;
   }
-  function r2Entry(c,hold,gen){
+  function r2Entry(c,hold,gen,eve){
     var src=r2RungAt(c);if(!src)return null;
     var q=r2Clone(src,hold,gen);
+    // the day before a week that was written in to start tomorrow
+    if(eve){
+      q.desc="The day before the week. A looser ceiling on purpose — the change came quickly, and the week starts tomorrow at 10.";
+      q.goals=["Up to "+q.capText+" today, and that is the plan, not a slip. Tomorrow 10, then a step lower every day to zero."];
+      return q;
+    }
     if(hold===1){
       q.desc="Day one of the week. One step a day from here, the date locked, and zero at the end of it — a day that runs over is recorded, and the next day is still the next number.";
       q.goals=[q.capText+" today, and a step lower every day after. Seven days, then zero."];
@@ -4557,7 +4563,7 @@ try{
     var rbs=rebuildsOf(d), g, r2, r2e, tail;
     for(g=0;g<rbs.length;g++){
       r2=rbs[g];
-      r2e=r2Entry(r2.cap,r2.hold,g);
+      r2e=r2Entry(r2.cap,r2.hold,g,r2.eve);
       if(!r2e)continue;
       out.push(r2e);
       tail=r2TailRungs(r2.cap,r2.hold);
@@ -5006,6 +5012,31 @@ try{
     // old encoding, flip it into place
     for(k in d.checkins){c=d.checkins[k];
       if(c&&c.craving){c.crave=6-c.craving;delete c.craving;}}
+    /* A plan written in from here, once, rather than chosen on the phone.
+       Oct 15 2026: the week moves to start tomorrow, with a looser day first —
+       the change came quickly, and asking for a selection was one more thing
+       to do. Today re-enters at 14 (the ladder's nearest step inside the
+       12–15 asked for, floored at whatever the day has already logged), the
+       week walks from 10 on Oct 16, zero lands Fri Oct 23, and the date locks
+       from the week's first day.
+       It runs once (the marker), only on the record it was written for (the
+       restart it rebuilds), and only while nothing has been rebuilt past
+       Oct 15 since — a later choice made on the phone outranks a plan written
+       from here. A week started from the door on Oct 15 is replaced: this is
+       the same week, moved a day. */
+    d.prescribed=(d.prescribed&&typeof d.prescribed==='object'&&!(d.prescribed instanceof Array))?d.prescribed:{};
+    var rsP=d.replan.restart, PS={eve:'2026-10-15',at:'2026-10-16',eveCap:14,cap:10};
+    if(!d.prescribed[PS.at]&&rsP&&rsP.at==='2026-08-18'&&
+       !(rsP.rebuilds||[]).some(function(r){return r.at>PS.eve;})){
+      var eDay=d.days[PS.eve], eCnt=eDay?Math.max(0,(eDay.hits?eDay.hits.length:0)+(eDay.adj||0)):0;
+      var eNeed=Math.max(PS.eveCap,eCnt), eCap=COARSE_RUNGS[0].cap;
+      descentPool().slice().reverse().some(function(q){if(q.cap>=eNeed){eCap=q.cap;return true;}});
+      rsP.rebuilds=(rsP.rebuilds||[]).filter(function(r){return r.at<PS.eve;});
+      rsP.rebuilds.push({at:PS.eve,cap:eCap,hold:2,eve:1},{at:PS.at,cap:PS.cap,hold:1});
+      d.replan.lockFrom=PS.at;
+      d.prescribed[PS.at]=1;
+      prescribedNow=true;
+    }
     // the one place every data-replacing path funnels through, so the ladder
     // can never be left describing the previous save's descent
     BASE_PHASES=buildLadder(d);
@@ -5039,6 +5070,7 @@ try{
     var k=holdKey(i);if(!k)return;
     if(v)data.holds[k]=v;else delete data.holds[k];
   }
+  var prescribedNow=false;   // set by normData when it writes the Oct 16 week in
   var data=normData(loadData());
   var saveFailed=false;
   /* per-paint memo: heavy analytics (day scans, session grouping) compute
@@ -5060,6 +5092,8 @@ try{
       }
     }
   }
+  // a plan normData wrote in is a change to the record — keep it
+  if(prescribedNow){prescribedNow=false;save();}
   // ask the browser to protect this origin's storage from eviction
   try{
     if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(function(){});
@@ -7456,7 +7490,8 @@ try{
         ?'The budget refilled at the '+(sch.restarted&&!sch.rebuilt?'restart':'rebuild')+' — slack exists to stop drift, and a dated choice is the opposite of drift. '
         :'')+'When they are gone the schedule stops moving zero and the choice becomes yours.';
     else slackLine='<b>Slack spent.</b> An over-cap day now gets recorded and the date holds. That is the design, not a failure: tapering eases withdrawal, it does not improve the odds of stopping, and a date that keeps moving spends the part that does.';
-    var sub=sch.rebuilt?'rebuilt '+fmtShort(dateOf(sch.rebuilt))+' · re-entered at '+(landRungAt(sch.r2Cap)?landRungAt(sch.r2Cap).capText:sch.r2Cap)+', '+r2PaceText(sch.r2Hold)
+    var sub=sch.rebuilt&&sch.rebuilt>todayKey?'the week starts '+scDate(dateOf(sch.rebuilt))+' at '+sch.r2Cap+', one step a day'
+      :sch.rebuilt?'rebuilt '+fmtShort(dateOf(sch.rebuilt))+' · re-entered at '+(landRungAt(sch.r2Cap)?landRungAt(sch.r2Cap).capText:sch.r2Cap)+', '+r2PaceText(sch.r2Hold)
       :sch.restarted?'restarted '+fmtShort(dateOf(sch.restarted))+' · re-entered at '+(rungAtCap(sch.rsCap)?rungAtCap(sch.rsCap).capText:sch.rsCap)
       :sch.finished?'finished early '+fmtShort(dateOf(sch.finished))+' · the day after the last hit'
       :sch.landed?'landing rebuilt '+fmtShort(dateOf(sch.landed))+' · re-entered at '+(landRungAt(sch.ldCap)?landRungAt(sch.ldCap).capText:sch.ldCap)
