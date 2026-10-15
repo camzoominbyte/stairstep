@@ -1263,6 +1263,23 @@
      one". The saturated capsule stays Today's alone. */
   .px-board{padding:12px 16px 6px}
   /* the week: press a day to read it, ‹ pages back a week */
+  /* the week strip on Today */
+  .wks{margin:0 0 12px;padding:10px 10px 8px;border-radius:var(--r-md);background:var(--s1);box-shadow:var(--shadow-card)}
+  .wks-kick{margin:0 4px 7px;font-size:11.5px;font-weight:650;letter-spacing:.02em;text-transform:uppercase;color:var(--ink-3)}
+  .wks-kick b{color:var(--ink);font-weight:700;text-transform:none;letter-spacing:0}
+  .wks-row{display:flex;gap:3px}
+  .wks-d{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0 6px;border-radius:12px;font-family:var(--f-ui)}
+  .wks-d span{font-size:10.5px;font-weight:650;line-height:1;color:var(--ink-3)}
+  .wks-d b{font-family:var(--f-round);font-size:18px;font-weight:700;line-height:1.1;color:var(--ink);font-variant-numeric:tabular-nums}
+  .wks-d i{font-style:normal;font-size:9.5px;line-height:1;color:var(--ink-3)}
+  .wks-d.now{background:var(--acc)}
+  .wks-d.now span,.wks-d.now b,.wks-d.now i{color:var(--on-acc)}
+  .wks-d.past.under b{color:var(--under)}
+  .wks-d.past.at b{color:var(--atcap)}
+  .wks-d.past.over b{color:var(--over)}
+  .wks-d.past.nolog b{color:var(--ghost)}
+  .wks-d.zero b{color:var(--under)}
+  .wks-d.zero{box-shadow:inset 0 0 0 1.5px var(--under-bg)}
   .px-wk{display:flex;align-items:stretch;gap:3px;margin:0 -4px 4px}
   .px-wd{flex:1;min-width:0;height:58px;padding:0;border:0;border-radius:17px;cursor:pointer;background:none;
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-family:var(--f-ui);
@@ -3348,6 +3365,8 @@ try{
      the zero era) → short note lines. #heroCard lives inside #todayCard so
      openDetail's move carries the whole hero; plusOne()/sparks() measure
      against #todayCard, which stays position:relative and never clips. -->
+<!-- the week, read at a glance: one cell a day, the ceiling ahead and what each past day did -->
+<div class="wks" id="weekStrip" hidden></div>
 <div class="today openable" id="todayCard" data-title="Today">
   <button class="xopen" data-target="todayCard" data-title="Today" aria-label="Open today in detail"><svg class="ic" aria-hidden="true"><use href="#i-open"/></svg></button>
   <div class="th-head">
@@ -4341,9 +4360,10 @@ try{
      came apart on. 7 stays out of the pool — its copy is written as "8, one
      hit lighter", and a week that has to skip steps skips that one first. */
   var WEEK_DAYS=7;
-  function weekRungs(c){
+  function weekRungs(c,n){
+    n=n||WEEK_DAYS;   // days in the week, zero on the day after
     var pool=descentPool().filter(function(q){return q.cap<c&&q.cap!==7;});
-    if(pool.length+1<=WEEK_DAYS)return pool;
+    if(pool.length+1<=n)return pool;
     var caps=[c].concat(pool.map(function(q){return q.cap;})), last=caps.length-1, memo={};
     // cheapest way from caps[i] to the bottom rung using exactly k more rungs
     function walk(i,k){
@@ -4357,12 +4377,12 @@ try{
       }
       return (memo[key]=best);
     }
-    var w=walk(0,WEEK_DAYS-1);
+    var w=walk(0,n-1);
     return w?w.p.map(function(j){return pool[j-1];}):pool;
   }
   // the rungs a rebuilt second descent walks below its entry, in descent order
-  function r2TailRungs(c,hold){
-    if(hold===1)return weekRungs(c);
+  function r2TailRungs(c,hold,len){
+    if(hold===1)return weekRungs(c,len);
     return descentPool().filter(function(q){return q.cap<c;});
   }
   /* The 2–3 rung was written as the last night before zero — "tonight the
@@ -4413,12 +4433,12 @@ try{
     return q;
   }
   // the caps a rebuilt second descent walks below its entry, in descent order
-  function r2Tail(c,hold){
-    return r2TailRungs(c,hold).map(function(q){return q.capText;});
+  function r2Tail(c,hold,len){
+    return r2TailRungs(c,hold,len).map(function(q){return q.capText;});
   }
   // calendar length of a second descent rebuilt from cap c — mirrors buildLadder
-  function r2Len(c,hold){
-    return (1+r2TailRungs(c,hold).length)*Math.max(1,hold||2);
+  function r2Len(c,hold,len){
+    return (1+r2TailRungs(c,hold,len).length)*Math.max(1,hold||2);
   }
   /* Every rebuild the restarted descent has taken, oldest first. Stored as a
      LIST rather than the single object this shipped with, and that is the whole
@@ -4566,7 +4586,7 @@ try{
       r2e=r2Entry(r2.cap,r2.hold,g,r2.eve);
       if(!r2e)continue;
       out.push(r2e);
-      tail=r2TailRungs(r2.cap,r2.hold);
+      tail=r2TailRungs(r2.cap,r2.hold,r2.len);
       for(i=0;i<tail.length;i++)out.push(r2Clone(tail[i],r2.hold,g));
     }
     out.push(zero);
@@ -4958,6 +4978,8 @@ try{
                  qz.at>prevAt&&
                  typeof qz.cap==='number'&&!!r2RungAt(qz.cap)&&
                  typeof qz.hold==='number'&&r2Pace(qz.hold).hold===qz.hold))break;
+            // len: a shorter week (days in it), only meaningful at hold 1
+            if(qz.len!==undefined&&!(qz.hold===1&&typeof qz.len==='number'&&qz.len>=2&&qz.len<=WEEK_DAYS))delete qz.len;
             okList.push(qz);prevAt=qz.at;
           }
           if(okList.length)rsN.rebuilds=okList;else delete rsN.rebuilds;
@@ -5035,6 +5057,17 @@ try{
       rsP.rebuilds.push({at:PS.eve,cap:eCap,hold:2,eve:1},{at:PS.at,cap:PS.cap,hold:1});
       d.replan.lockFrom=PS.at;
       d.prescribed[PS.at]=1;
+      prescribedNow=true;
+    }
+    /* Later on Oct 15: "done for sure within a week or less". A week from the
+       day it was asked is Thu Oct 22, so the week above loses one rung — six
+       steps from 10, then zero on the seventh day. Patches the week whether it
+       was just written or already sits on the phone from the morning, and
+       only while nothing has been rebuilt past it on the phone. */
+    var wkP=((rsP&&rsP.rebuilds)||[]).filter(function(r){return r.at===PS.at&&r.hold===1;})[0];
+    if(wkP&&wkP.len!==6&&!rsP.rebuilds.some(function(r){return r.at>PS.at;})){
+      wkP.len=6;
+      d.replan.lockFrom=PS.at;
       prescribedNow=true;
     }
     // the one place every data-replacing path funnels through, so the ladder
@@ -7916,9 +7949,35 @@ try{
     for(var e=0;e<empty;e++)h+='<i class="tp'+(e<plan?' pl':'')+((e===0&&cnt>0)||(e===plan&&plan>0)?' g':'')+'"></i>';
     return h;
   }
+  /* The one-step-a-day week, if the descent is on one: the newest rebuild at
+     hold 1. Shown on Today as a row of days so the whole objective is in view
+     every time the app opens — the ceiling for each day ahead, what each day
+     behind actually did, zero at the end. */
+  function weekPlan(){
+    var rbs=rebuildsOf(data);
+    if(!rbs.length)return null;
+    var w=rbs[rbs.length-1];
+    return w.hold===1?w:null;
+  }
+  function renderWeekStrip(){
+    var el=$('weekStrip'), w=isZeroEra?null:weekPlan();
+    if(!w){el.hidden=true;return;}
+    var z=zeroDate(), start=dateOf(w.at), zk=dkeyOf(z), html='', d, k, m, past, isT, isZ, cls, n, sub;
+    for(d=new Date(start);d<=z;d=addDays(d,1)){
+      k=dkeyOf(d); m=dayMetrics(k); past=d<today; isT=k===todayKey; isZ=k===zk;
+      cls='wks-d'+(isT?' now':'')+(past?' past '+m.cls:'')+(isZ?' zero':'');
+      if(past&&m.eff!==null){n=m.eff;sub='of '+(isZ?'0':m.capText);}
+      else{n=isZ?'0':m.capText;sub=isZ?'zero':isT?'today':past?'no log':'cap';}
+      html+='<span class="'+cls+'"><span>'+WEEKDAYS[d.getDay()].slice(0,3)+'</span><b>'+n+'</b><i>'+sub+'</i></span>';
+    }
+    el.hidden=false;
+    el.innerHTML='<p class="wks-kick">'+(today<start?'<b>Starts '+WEEKDAYS[start.getDay()]+'</b> · ':'')+'a step a day to zero</p>'+
+      '<div class="wks-row">'+html+'</div>';
+  }
   function renderToday(){
     var card=$('todayCard');
     var count=countOf(todayKey)||0;
+    renderWeekStrip();
     $('heroCard').hidden=false;
     if(isZeroEra){
       card.classList.add('free');
