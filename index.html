@@ -4381,10 +4381,15 @@ try{
     return w?w.p.map(function(j){return pool[j-1];}):pool;
   }
   // the rungs a rebuilt second descent walks below its entry, in descent order
-  function r2TailRungs(c,hold,len){
+  /* rungs: the week's caps written in by hand, below the entry, in descent
+     order — outranks the even-ratio walk, which drops whichever step costs
+     least and once dropped the 8 from a week the plan still promised at 8. */
+  function r2TailRungs(c,hold,len,rungs){
+    if(hold===1&&rungs&&rungs.length)return rungs.map(r2RungAt).filter(Boolean);
     if(hold===1)return weekRungs(c,len);
     return descentPool().filter(function(q){return q.cap<c;});
   }
+  var WEEK_WORDS=['','One','Two','Three','Four','Five','Six','Seven'];
   /* The 2–3 rung was written as the last night before zero — "tonight the
      stash goes". A rebuilt second descent always walks the landing (2, then 1)
      below it, so its copy there told someone to throw the stash out two
@@ -4414,7 +4419,7 @@ try{
     if(p.cap===3&&p.single){q.desc=R2_LOW3.desc;q.goals=R2_LOW3.goals;q.plans=R2_LOW3.plans;}
     return q;
   }
-  function r2Entry(c,hold,gen,eve){
+  function r2Entry(c,hold,gen,eve,n){
     var src=r2RungAt(c);if(!src)return null;
     var q=r2Clone(src,hold,gen);
     // the day before a week that was written in to start tomorrow
@@ -4425,7 +4430,7 @@ try{
     }
     if(hold===1){
       q.desc="Day one of the week. One step a day from here, the date locked, and zero at the end of it — a day that runs over is recorded, and the next day is still the next number.";
-      q.goals=[q.capText+" today, and a step lower every day after. Seven days, then zero."];
+      q.goals=[q.capText+" today, and a step lower every day after. "+(WEEK_WORDS[n]||'Seven')+" days, then zero."];
       return q;
     }
     q.desc="The second descent, rebuilt. The restart re-entered where the days were on its first night; this re-enters where they have actually been landing since — and gives every step below it more room than the last ladder did.";
@@ -4583,10 +4588,10 @@ try{
     var rbs=rebuildsOf(d), g, r2, r2e, tail;
     for(g=0;g<rbs.length;g++){
       r2=rbs[g];
-      r2e=r2Entry(r2.cap,r2.hold,g,r2.eve);
+      tail=r2TailRungs(r2.cap,r2.hold,r2.len,r2.rungs);
+      r2e=r2Entry(r2.cap,r2.hold,g,r2.eve,r2.hold===1?1+tail.length:0);
       if(!r2e)continue;
       out.push(r2e);
-      tail=r2TailRungs(r2.cap,r2.hold,r2.len);
       for(i=0;i<tail.length;i++)out.push(r2Clone(tail[i],r2.hold,g));
     }
     out.push(zero);
@@ -4980,6 +4985,9 @@ try{
                  typeof qz.hold==='number'&&r2Pace(qz.hold).hold===qz.hold))break;
             // len: a shorter week (days in it), only meaningful at hold 1
             if(qz.len!==undefined&&!(qz.hold===1&&typeof qz.len==='number'&&qz.len>=2&&qz.len<=WEEK_DAYS))delete qz.len;
+            // rungs: the week's caps pinned by hand — descending, all below the entry, all real rungs
+            if(qz.rungs!==undefined&&!(qz.hold===1&&qz.rungs instanceof Array&&qz.rungs.length>=1&&qz.rungs.length<WEEK_DAYS&&
+                 qz.rungs.every(function(r,ri){return typeof r==='number'&&r>0&&r<(ri?qz.rungs[ri-1]:qz.cap)&&!!r2RungAt(r);})))delete qz.rungs;
             okList.push(qz);prevAt=qz.at;
           }
           if(okList.length)rsN.rebuilds=okList;else delete rsN.rebuilds;
@@ -5067,6 +5075,17 @@ try{
     var wkP=((rsP&&rsP.rebuilds)||[]).filter(function(r){return r.at===PS.at&&r.hold===1;})[0];
     if(wkP&&wkP.len!==6&&!rsP.rebuilds.some(function(r){return r.at>PS.at;})){
       wkP.len=6;
+      d.replan.lockFrom=PS.at;
+      prescribedNow=true;
+    }
+    /* Oct 17: the six-day walk had dropped the 8, so day two read 6 where the
+       plan had promised 8. The week's caps are pinned by hand instead —
+       10, 8, 6, 4, 2, 1, zero still Thu Oct 22 — and the steep step moves to
+       the end, where the landing was always going to be. Same guard: only
+       while nothing on the phone has been rebuilt past the week. */
+    var PR=[8,6,4,2,1];
+    if(wkP&&wkP.len===6&&String(wkP.rungs||'')!==String(PR)&&!rsP.rebuilds.some(function(r){return r.at>PS.at;})){
+      wkP.rungs=PR.slice();
       d.replan.lockFrom=PS.at;
       prescribedNow=true;
     }
