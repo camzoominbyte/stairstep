@@ -3217,6 +3217,21 @@
     html{overflow:hidden}
   }
 
+  /* ---- contrast (light theme) and motion fixes from the audit ---- */
+  :root{--ghost:#7C8493}
+  html.dark{--ghost:#6B7389}
+  html:not(.dark) .hold-log{background:var(--acc)}          /* white label ≥4.5:1 */
+  html:not(.dark) .ck-dot.on{background:var(--acc)}
+  .px-cap small{opacity:1}
+  .wks-d.past.under b{color:var(--under-t)}
+  .wks-d.past.at b{color:var(--atcap-t)}
+  .cz-dot::before{opacity:.8}
+  .px-spark i{opacity:.7}
+  .pseg-dot{animation:none}                                 /* one moving thing a screen */
+  @media (prefers-reduced-motion:reduce){
+    .tc-medal.pop,#dpBody{animation:none!important}
+  }
+
   /* ---- Plan: the simple page (ps-) ---- */
   .ps-card{padding:18px}
   .ps-top{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -3308,8 +3323,9 @@
   /* ==== [/R] ==== */
 </style>
 <script>
+var __t=null;
+try{__t=localStorage.getItem('ttz-theme');}catch(e){}   // blocked storage still gets the system theme
 try{
-  var __t=localStorage.getItem('ttz-theme');
   if(__t==='dark'||(__t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches)){
     document.documentElement.classList.add('dark');
   }
@@ -3648,7 +3664,7 @@ try{
 </main>
 
 <main class="view" id="vJourney">
-<section class="card jn-card jn-head" id="jHead" aria-label="Today against yesterday, hour by hour">
+<section class="card jn-card jn-head" id="jHead" aria-label="Today against yesterday, by this hour">
   <div class="dd-sum" id="ddSum"></div>
 </section>
 
@@ -5107,6 +5123,21 @@ try{
       }catch(e){}
       loadWarning='Your saved data was unreadable and no snapshot existed to restore. A copy of the damaged data was preserved. Starting fresh — sorry.';
     }
+    /* a MISSING record gets the same protection a damaged one does: if the
+       daily snapshot holds days, that is the record — an empty start here
+       would be saved over it on the first paint */
+    if(!raw){
+      try{
+        var snap0=JSON.parse(localStorage.getItem('ttz2-snap')||'null');
+        if(snap0&&snap0.raw){
+          var sd0=JSON.parse(snap0.raw);
+          if(validShape(sd0)&&Object.keys(sd0.days).length){
+            loadWarning='Your saved data was missing, so the automatic snapshot from '+snap0.t+' was restored. Anything logged after that snapshot is gone.';
+            return sd0;
+          }
+        }
+      }catch(e){}
+    }
     // migrate v1 (per-day count keys, unpadded)
     var d={days:{},holds:{},holdPrompts:{},urgeStart:null};
     try{
@@ -5290,8 +5321,8 @@ try{
       if(!(fz&&typeof fz==='object'&&!(fz instanceof Array)&&
            typeof fz.at==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(fz.at)&&
            fz.at>dkeyOf(TAPER_START)&&
-           !(d.replan.rebase&&fz.at<=d.replan.rebase.at)&&
-           !(d.replan.landing&&fz.at<=d.replan.landing.at)))delete d.replan.finish;
+           !(d.replan.rebase&&fz.at<d.replan.rebase.at)&&
+           !(d.replan.landing&&fz.at<d.replan.landing.at)))delete d.replan.finish;
       else if(typeof fz.on!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(fz.on))delete fz.on;
     }
     /* replan.restart {at:'YYYY-MM-DD',cap:N}: from `at`, the first quit's zero
@@ -5343,7 +5374,7 @@ try{
             var qz=rsN.rebuilds[qi];
             if(!(qz&&typeof qz==='object'&&!(qz instanceof Array)&&
                  typeof qz.at==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(qz.at)&&
-                 qz.at>prevAt&&
+                 (qi?qz.at>prevAt:qz.at>=prevAt)&&
                  typeof qz.cap==='number'&&!!r2RungAt(qz.cap)&&
                  typeof qz.hold==='number'&&
                  (r2Pace(qz.hold).hold===qz.hold||(qz.tail!==undefined&&qz.hold>=1&&qz.hold<=7&&qz.hold===Math.round(qz.hold)))))break;
@@ -5534,13 +5565,21 @@ try{
     if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(function(){});
   }catch(e){}
   // automatic once-a-day snapshot, taken before today's changes touch it
-  try{
-    var __snapKey=dkeyOf(new Date(Date.now()-DAY_CUTOFF_H*3600000));
-    var __snap=JSON.parse(localStorage.getItem('ttz2-snap')||'null');
-    if(!__snap||__snap.t!==__snapKey){
-      localStorage.setItem('ttz2-snap',JSON.stringify({t:__snapKey,raw:JSON.stringify(data)}));
-    }
-  }catch(e){}
+  /* Also taken when the day rolls over in a running app — a PWA resumed from
+     memory for days never cold-starts, and its "daily" snapshot went stale.
+     Never replaces a snapshot that has days with a record that has none. */
+  function dailySnap(){
+    try{
+      var sk=dkeyOf(logicalNow());
+      var sn=JSON.parse(localStorage.getItem('ttz2-snap')||'null');
+      if(sn&&sn.t===sk)return;
+      if(sn&&sn.raw&&!Object.keys(data.days).length){
+        try{if(Object.keys(JSON.parse(sn.raw).days||{}).length)return;}catch(e){}
+      }
+      localStorage.setItem('ttz2-snap',JSON.stringify({t:sk,raw:JSON.stringify(data)}));
+    }catch(e){}
+  }
+  dailySnap();
   if(loadWarning){
     setTimeout(function(){try{alert(loadWarning);}catch(e){}},600);
   }
@@ -6098,8 +6137,8 @@ try{
     return p.capText+' hits · max '+p.sessionMax+' per session · '+fmtGapH(spacingHOn(d,di))+' between';
   }
   function fmtGapH(h){
-    var w=Math.floor(h);
-    return (h%1?(w?w:'')+'½':w)+'h';
+    var m=Math.round(h*60), w=Math.floor(m/60), r=m%60;
+    return r===0?w+'h':r===30?(w?w:'')+'½h':(w?w+'h ':'')+r+'m';
   }
 
   /* ================= how the day may feel =================
@@ -6628,14 +6667,15 @@ try{
     }
     var claimed=0;
     for(var k in data.cm.claimed){
+      if(k<dkeyOf(z))continue;   // a claim from an earlier quit is not owed against this one
       var v=Number(data.cm.claimed[k]);
       if(isFinite(v)&&v>0)claimed+=v;
     }
     var todayClean=(countOf(todayKey)||0)===0;
     var displayRun=run+(todayClean?1:0);
     var tp=taperProgress();
-    return {run:run,displayRun:displayRun,earned:Math.round(earned),claimed:Math.round(claimed),
-            owed:Math.max(0,Math.round(earned-claimed)),resets:resets,unaccounted:unaccounted,
+    return {run:run,displayRun:displayRun,earned:Math.round(earned*100)/100,claimed:Math.round(claimed*100)/100,
+            owed:Math.max(0,Math.round((earned-claimed)*100)/100),resets:resets,unaccounted:unaccounted,
             todayClean:todayClean,pending:todayClean?cmValueOn(run+1):0,
             next:cmValueOn(displayRun+1),
             toBonus:displayRun>0?(CM_EVERY-(displayRun%CM_EVERY))%CM_EVERY:CM_EVERY,
@@ -6645,10 +6685,13 @@ try{
   // cmObserved reads back. Written straight to storage; no re-render needed.
   function markSeenToday(){
     if(!isZeroEra){
-      // a late-logged eve can hold the last rung a day: the stamp must follow
-      if(data.zeroAt&&data.zeroAt>=todayKey){delete data.zeroAt;save();}
+      // a late-logged eve can hold the last rung a day: the stamp must follow.
+      // Outside the zero era a stamp is always stale — the live date is the date.
+      if(data.zeroAt){delete data.zeroAt;save();}
       return;
     }
+    // nothing has ever been logged: there is no quit to stamp
+    if(!data.zeroAt&&!Object.keys(data.days).length)return;
     var dirty=false;
     // freeze the zero anchor the first time we render past it (H12)
     if(!data.zeroAt){data.zeroAt=dkeyOf(zeroDate());dirty=true;}
@@ -6756,7 +6799,7 @@ try{
               full:Math.floor(h/24),last:last,i:i};
     return null;
   }
-  function zeroTimelineNote(n,cd){
+  function zeroTimelineNote(n,cd,noClock){
     // cd = calendar days since zero, passed only by today's call sites.
     // A slip resets n (the run) but not the physiology — once the
     // adjustment window has closed by the calendar, a young run must not
@@ -6795,7 +6838,7 @@ try{
        "peak" by one hit is exactly the thing that copy exists to refuse. */
     // after a lapse the hours run from the lapse, not from the quit — the one
     // clock these rows must never be given
-    var aw=slipped?null:acuteWindow();
+    var aw=(slipped||noClock)?null:acuteWindow();   // only today may read the live clock
     if(aw&&n<=21){
       var hh=Math.floor(aw.h);
       // plain text only: one of this function's two call sites writes it into
@@ -7224,7 +7267,7 @@ try{
     if(!((countOf(dkeyOf(z))||0)>0||(countOf(dkeyOf(addDays(z,1)))||0)>0))return null;
     var run=0,best=0,dd=new Date(z);
     while(dkeyOf(dd)<todayKey){
-      if(countOf(dkeyOf(dd))===0){run++;best=Math.max(best,run);}else run=0;
+      if(!countOf(dkeyOf(dd))){run++;best=Math.max(best,run);}else run=0;   // no entry is a clean day too
       dd=addDays(dd,1);
     }
     if(best>=2)return null;
@@ -7372,6 +7415,7 @@ try{
       if(data.replan.restart.at===todayKey||(rbz.length&&rbz[rbz.length-1].at===todayKey))return null;
     }
     var zb=dkeyOf(zeroDay());
+    if(todayKey===zb)return null;   // zero day itself: one hit is a lapse, not a relapse
     /* Only the CURRENT run of using days: walk back from yesterday and stop at
        the first clean one. Reaching further crosses the stretch the quit
        actually held and starts picking up days from the taper before it, which
@@ -8448,6 +8492,9 @@ try{
     el.innerHTML='<p class="wks-kick">'+(today<start?'<b>Starts '+WEEKDAYS[start.getDay()]+'</b> · ':'')+'a step a day to zero</p>'+
       '<div class="wks-row">'+html+'</div>';
   }
+  /* An offer's markup is rebuilt on every 30-second tick; writing it only
+     when it changed keeps an opened fold inside it open. */
+  function setHTML(el,html){if(el.__h!==html){el.__h=html;el.innerHTML=html;}}
   function renderToday(){
     var card=$('todayCard');
     var count=countOf(todayKey)||0;
@@ -8468,14 +8515,14 @@ try{
       // the fifth move, surfaced where the boundary is actually being lived
       var lo=landSuggest();
       $('landCard').hidden=!lo;
-      if(lo)$('landCardBody').innerHTML=landOfferHTML(lo);
+      if(lo)setHTML($('landCardBody'),landOfferHTML(lo));
       $('finishCard').hidden=true;   // its whole condition is a taper still running
       $('rebuildCard').hidden=true;  // likewise — it rebuilds a descent still being walked
       /* the seventh move leads Today only on a pattern — a single night is the
          counter's business, and the cards below already say so kindly */
       var rso=restartSuggest();
       $('restartCard').hidden=!(rso&&rso.pattern);
-      if(rso&&rso.pattern)$('restartCardBody').innerHTML=restartOfferHTML(rso);
+      if(rso&&rso.pattern)setHTML($('restartCardBody'),restartOfferHTML(rso));
       // "Day", not "Days off" — the ordinal being lived; the exact elapsed
       // beside it says how far into it you are
       $('todayEyebrow').textContent='Day';
@@ -8545,10 +8592,10 @@ try{
     $('restartCard').hidden=true;
     var fo=finishSuggest();
     $('finishCard').hidden=!fo;
-    if(fo)$('finishCardBody').innerHTML=finishOfferHTML(fo);
+    if(fo)setHTML($('finishCardBody'),finishOfferHTML(fo));
     var r2o=restart2Suggest();
     $('rebuildCard').hidden=!r2o;
-    if(r2o)$('rebuildCardBody').innerHTML=restart2OfferHTML(r2o);
+    if(r2o)setHTML($('rebuildCardBody'),restart2OfferHTML(r2o));
     var ggt=$('ghGains');if(ggt)ggt.hidden=true;
     $('thPhase').hidden=true;
     $('thMedal').hidden=true;
@@ -9063,6 +9110,7 @@ try{
     // the days, as bars in their status colour
     var firstLogged=-1;
     days.forEach(function(m,i){if(firstLogged<0&&m.eff!==null&&m.eff>0&&!m.isZ)firstLogged=i;});
+    renderTrend._sx=-99;
     days.forEach(function(m,i){
       if(m.eff===null||m.eff<=0)return;
       var cx=i*sw+sw/2, x=cx-bw/2, yt=yv(m.eff), h=Math.max(2.5,base-yt);
@@ -9070,6 +9118,10 @@ try{
         '" fill="'+(JN_BAR[m.cls]||'var(--ghost)')+'" class="jn-bar" style="--dl:'+Math.min(900,120+i*(700/n)).toFixed(0)+'ms"/>';
       var show=wide||m.isToday||i===firstLogged||m.cls==='slip';
       if(!show)return;
+      if(!wide&&m.cls==='slip'&&!m.isToday&&i!==firstLogged){
+        if(cx-(renderTrend._sx||-99)<14)return;   // one label a cluster
+        renderTrend._sx=cx;
+      }
       var inside=wide&&h>=19&&m.cls!=='at'&&!m.isToday;
       // today's figure steps aside when yesterday's by-now tick sits on it
       if(m.isToday&&ghY!==null&&ghY<base-h+2&&base-h-9-ghY<11){
@@ -9460,7 +9512,7 @@ try{
             :'<span class="delta '+(pv.t<pv.y?'good':'bad')+'">'+icon(pv.t<pv.y?'down':'up')+Math.abs(pv.t-pv.y)+'</span>';
           rt+='<small>by now<br>vs '+pv.y+'</small>';
         }
-      }else if(m.vs){
+      }else if(m.vs&&!dayMetrics(m.vs.key).isZ){
         rt+=hitsPill(m)+'<small>vs '+m.vs.prevEff+'</small>';
       }else if(eff<BASELINE){
         rt+='<span class="delta good">'+icon('down')+(BASELINE-eff)+'</span><small>vs ~'+BASELINE+'<br>baseline</small>';
@@ -9516,6 +9568,7 @@ try{
      with a dashed box up to the mark to beat. Taper era only — at zero the
      gap is the whole day. Rides the 30s tick, so today's bar keeps growing. */
   var GT_DAYS=7;
+  function gtDay(dt){return (today-dt)/MS_DAY<7?jnWk(dt):fmtShort(dt);}
   function renderGapTrend(){
     var card=$('gapTrend');if(!card)return;
     var start=schedule()[0].start;
@@ -9540,20 +9593,20 @@ try{
     if(todayBest){
       lbl='Longest gap · a new best, today';
       if(best){chip='<span class="chip under">'+icon('up')+fmtDur(hg-best.g)+' past it</span>';
-        vs='vs '+jnWk(best.m.date)+' '+fmtDur(best.g);}
+        vs='vs '+gtDay(best.m.date)+' '+fmtDur(best.g);}
     }else{
       lbl='Longest gap · best so far';
       var pm=hm.vs?dayMetrics(hm.vs.key):null;
       if(pm&&!pm.isZ&&pm.gapMaxMs){
         var df=hg-pm.gapMaxMs, pc=Math.round(df/pm.gapMaxMs*100);
         if(df>=60000)chip='<span class="chip under">'+icon('up')+fmtDur(df)+' · +'+pc+'%</span>';
-        vs='vs '+jnWk(pm.date)+' '+fmtDur(pm.gapMaxMs);
+        vs='vs '+gtDay(pm.date)+' '+fmtDur(pm.gapMaxMs);
       }
     }
     var hh=Math.floor(hg/3600000), mm=Math.floor(hg%3600000/60000);
     var head='<div class="jn-h gt-h"><div class="jn-ht"><p class="label">'+lbl+'</p>'+
       '<p class="n-lg gt-num">'+(hh?hh+'<span class="unit">h</span> ':'')+mm+'<span class="unit">m</span>'+
-      '<span class="gt-when">'+(hm.isToday?'today':jnWk(hm.date))+'</span></p></div>'+
+      '<span class="gt-when">'+(hm.isToday?'today':gtDay(hm.date))+'</span></p></div>'+
       ((chip||vs)?'<div class="gt-side">'+chip+(vs?'<small>'+vs+'</small>':'')+'</div>':'')+'</div>';
     // the bars: the last GT_DAYS taper days, today last
     var win=all.slice(-GT_DAYS), n=win.length;
@@ -10246,6 +10299,7 @@ try{
       wrap.hidden=true;$('gapNote').hidden=true;bell.style.display='none';
       var lastG='';
       var zTick=function(){
+        if(document.hidden)return;
         safe(thDialTick);
         var ex=$('thExact'), gg=$('ghGains'), aw=acuteWindow();
         if(!aw||(countOf(todayKey)||0)>0){if(gg&&!gg.hidden)gg.hidden=true;return;}
@@ -10276,6 +10330,7 @@ try{
        second cadence. Writes are guarded on change. */
     var beat=0, lastDH='';
     function tick(){
+      if(document.hidden)return;
       if(beat%20===0){renderGlassWin();safe(ydLiveTick);}
       beat++;
       safe(thDialTick);
@@ -10434,6 +10489,7 @@ try{
   function gapAnalytics(){return rc('ga',function(){
     var recs=[],best=null;
     taperProgress().days.forEach(function(m){
+      if(m.isZ)return;   // no rule after zero: those spans don't belong in a taper's averages
       m.gapSpans.forEach(function(g){
         var gapH=g.ms/3600000;
         // a zero-era day has no gap rule, so its spans are unscored (null), not passes
@@ -10542,6 +10598,8 @@ try{
     // every pace surface into its empty state the morning after a clean day.
     if(yM.eff===null)return null;
     var ye=data.days[yM.key];
+    // untimed hits yesterday can't be placed before "now": no honest comparison
+    if(ye&&(ye.adj||0)>0)return null;
     var yCut=Date.now()-MS_DAY,yCount=0;
     ((ye&&ye.hits)||[]).forEach(function(iso){if(new Date(iso).getTime()<=yCut)yCount++;});
     return {y:yCount,t:countOf(todayKey)||0};
@@ -10774,7 +10832,8 @@ try{
     var d=new Date(sch[0].start);
     while(d<=today){
       var c=countOf(dkeyOf(d));
-      if(c!==null)cum+=Math.max(0,BASELINE-c);
+      if(dkeyOf(d)===todayKey){}   // today is credited once it has closed
+      else if(c!==null)cum+=Math.max(0,BASELINE-c);
       else if(isZeroRungAt(phaseIndexFor(d)))cum+=BASELINE; // clean zero day
       pts.push(cum);
       d=addDays(d,1);
@@ -11059,7 +11118,8 @@ try{
     var sch=schedule(),pts=[],cum=0,d=new Date(sch[0].start);
     while(d<=today){
       var c=countOf(dkeyOf(d));
-      if(c!==null)cum+=Math.max(0,BASELINE-c);
+      if(dkeyOf(d)===todayKey){}
+      else if(c!==null)cum+=Math.max(0,BASELINE-c);
       else if(isZeroRungAt(phaseIndexFor(d)))cum+=BASELINE;
       pts.push({d:new Date(d),v:cum});
       d=addDays(d,1);
@@ -11218,7 +11278,10 @@ try{
   function bigGapsHTML(){
     var g=gapAnalytics();
     if(!g)return '<p class="chart-note">No session gaps logged yet — they appear once a day has two sessions, or a first hit the day after a logged one.</p>';
-    var recs=g.recs,n=recs.length;
+    var gCut=dkeyOf(addDays(today,-44)), recs=g.recs.filter(function(r){return r.k>=gCut;});
+    var gTrim=recs.length<g.recs.length;
+    if(!recs.length){recs=g.recs.slice(-60);}
+    var n=recs.length;
     var maxH=1;
     recs.forEach(function(r){maxH=Math.max(maxH,r.h,r.req);});
     maxH*=1.12;
@@ -11269,7 +11332,7 @@ try{
     });
     svg+='</svg>';
     var col=g.adherence>=70?'var(--sage)':g.adherence>=50?'var(--amber)':'var(--clay)';
-    return czWrap('gaps',roChart(svg,'Slide to read each gap — tap to open its day.')+
+    return czWrap('gaps',roChart(svg,'Slide to read each gap — tap to open its day.'+(gTrim?' The last 45 days.':''))+
       cvLegend([['dot','var(--under)','Met the rule'],['dot','var(--over)','Came up short'],['ring','var(--ink-2)','Overnight'],
         ['ring','var(--acc)','Day’s longest'],['dash','var(--ink-2)','That day’s required gap'],
         recs.some(function(r){return r.ok===null;})?['dot','var(--ghost)','No rule that day']:null])+
@@ -11296,7 +11359,8 @@ try{
     var def=BIG_CHARTS[key];
     if(!def)return;
     var ov=$('czOverlay');
-    var wasOpen=!ov.hidden;
+    if(czCloseT){clearTimeout(czCloseT);czCloseT=null;}
+    var wasOpen=!ov.hidden&&ov.classList.contains('show');
     // a live re-render of the same chart keeps the user's pan position
     var keepSc=null;
     if(wasOpen&&czKey===key){
@@ -11332,10 +11396,12 @@ try{
       try{$('czBack').focus({preventScroll:true});}catch(e){}
     },80);
   }
+  var czCloseT=null, dpCloseT=null;
   function closeChartZoom(){
     var ov=$('czOverlay');
     ov.classList.remove('show');
-    setTimeout(function(){ov.hidden=true;},280);
+    if(czCloseT)clearTimeout(czCloseT);
+    czCloseT=setTimeout(function(){czCloseT=null;ov.hidden=true;},280);
     if(czReturnFocus&&czReturnFocus.focus){
       try{czReturnFocus.focus({preventScroll:true});}catch(e){}
     }
@@ -11593,8 +11659,10 @@ try{
       '<span class="dp-card-s">The day before, this day, the day after</span></div>'+dayTimelinesHTML(key)+'</section>';
     var P=BASE_PHASES[di];
     if(m.isZ&&!m.future){
-      var off2=Math.max(1,Math.round((d-zeroDate())/MS_DAY)+1);
-      var tn=dkeyOf(d)===todayKey?zeroTimelineNote(Math.max(1,daysFree()),zeroCalDay()):zeroTimelineNote(off2);
+      // counted from the start of the zero stretch this day belongs to
+      var zst=(m.di>=0&&schedule()[m.di].start)||zeroDate();
+      var off2=Math.max(1,Math.round((d-zst)/MS_DAY)+1);
+      var tn=dkeyOf(d)===todayKey?zeroTimelineNote(Math.max(1,daysFree()),zeroCalDay()):zeroTimelineNote(off2,0,true);
       html+=dpFold('zline','wave','The timeline','Day '+off2+' since zero',
         '<p class="dp-note">'+tn+'</p>'+(d>=today?feelHTML(d,m.di,true):''),m.isToday);
     }else if(m.future||m.isToday){
@@ -11628,7 +11696,9 @@ try{
     $('dpPrev').disabled=i<=0;
     $('dpNext').disabled=i>=ks.length-1;
     var body=$('dpBody');
+    var tin0=dpEditOpen&&keepScroll?body.querySelector('input[type=time]'):null, tkeep=tin0?tin0.value:null;
     body.innerHTML=dpPageHTML(key);
+    if(tkeep){var tin1=body.querySelector('input[type=time]');if(tin1&&!fixMsg)tin1.value=tkeep;}
     // the bars grow only when a page is first shown or turned — never on the
     // live re-renders (renderAll, the 30s tick, the editor)
     if(!keepScroll&&motionOK){
@@ -11642,7 +11712,8 @@ try{
   function openDayPage(key,dir){
     if(dpKeys().indexOf(key)<0)return;
     var ov=$('dpOverlay');
-    var wasOpen=!ov.hidden;
+    if(dpCloseT){clearTimeout(dpCloseT);dpCloseT=null;}
+    var wasOpen=!ov.hidden&&ov.classList.contains('show');
     if(dpKey!==key){dpEditOpen=false;fixMsg='';}
     if(!wasOpen)dpFoldOpen={};
     dpKey=key;
@@ -11667,7 +11738,8 @@ try{
     var ov=$('dpOverlay');
     if(ov.hidden)return;
     ov.classList.remove('show');
-    setTimeout(function(){ov.hidden=true;},280);
+    if(dpCloseT)clearTimeout(dpCloseT);
+    dpCloseT=setTimeout(function(){dpCloseT=null;ov.hidden=true;},280);
     if(dpReturnFocus&&dpReturnFocus.focus){
       try{dpReturnFocus.focus({preventScroll:true});}catch(e){}
     }
@@ -11696,6 +11768,7 @@ try{
       var shift=(+hm[0]<DAY_CUTOFF_H)?1:0;
       var ts=new Date(bd.getFullYear(),bd.getMonth(),bd.getDate()+shift,+hm[0],+hm[1]);
       if(ts>new Date()){fixMsg='That time hasn’t happened yet.';dpRender(key,true);return;}
+      if(data.urgeStart&&ts.getTime()>=data.urgeStart&&ts.getTime()<data.urgeStart+URGE_MS)data.urgeStart=null;
       entryFor(key,true).hits.push(ts.toISOString());
       countChanged(key);
       lastFixTime=v;fixMsg='';
@@ -11838,6 +11911,7 @@ try{
     // baseline — clean time keeps paying, and a slip pays less, never more
     t.avoided=0;
     days.forEach(function(m){
+      if(m.isToday)return;   // credited once the day has closed, so the figure never falls
       if(m.count!==null)t.avoided+=Math.max(0,BASELINE-m.count);
       else if(m.isZ)t.avoided+=BASELINE;
     });
@@ -12099,7 +12173,7 @@ try{
       $('dhStats').innerHTML=ds(Math.max(0,cap-c),'left today')+
         ds(sessTxt,phase.single?'session':'left in session')+
         ds(siH?fmtTime(siH.last):'–','last hit');
-      $('dhNote').textContent=c>cap?'Over the cap — the schedule just adjusted: this step runs a day longer, zero moved a day back.':c===cap?'At the cap. Done for today.':(cap-c)+' left · under is always fine.';
+      $('dhNote').textContent=c>cap?(dayHeldTheStep(todayKey)?'Over the cap — the schedule just adjusted: this step runs a day longer, zero moved a day back.':'Over the cap — recorded; the dates stayed where they were.'):c===cap?'At the cap. Done for today.':(cap-c)+' left · under is always fine.';
     }
     var sc=scoreToday();
     var lab=sc.label.split(' — ');
@@ -12140,9 +12214,10 @@ try{
           $('dhWin').innerHTML=cd?cd+'<small>d</small> '+ch+'<small>h</small>':ch+'<small>h</small> '+(cm%60)+'<small>m</small>';
           $('dhWinSub').textContent='since '+WEEKDAYS[lh.getDay()].slice(0,3)+' '+fmtShort(lh)+', '+fmtTime(lh);
         }else{
+          var capped=!isZeroEra&&idx>=0&&c>=cap;
           $('dhWinLbl').textContent=isZeroEra?'Windows':'Window';
-          $('dhWin').textContent=isZeroEra?'None':'open';
-          $('dhWinSub').textContent=isZeroEra?'No more windows to wait on.':(phase.single?'Evening only tonight.':'Nothing on the clock.');
+          $('dhWin').textContent=isZeroEra?'None':capped?'closed':'open';
+          $('dhWinSub').textContent=isZeroEra?'No more windows to wait on.':capped?'Done for today.':(phase.single?'Evening only tonight.':'Nothing on the clock.');
         }
         if(wt){wt.classList.add('none');wt.classList.remove('open');}
       }
@@ -12820,8 +12895,8 @@ try{
     });
     if(!html)html='<p class="sc-sum">No plans yet, and not enough logged hits to suggest cue windows from your own record. Add one by hand below.</p>';
     html+='<div class="pl-edit" id="plEdit" hidden>'+
-      '<input id="plCue" placeholder="If … (a time, a place, a feeling)">'+
-      '<input id="plThen" placeholder="then … (one concrete thing)">'+
+      '<input id="plCue" aria-label="If — the cue: a time, a place, a feeling" placeholder="If … (a time, a place, a feeling)">'+
+      '<input id="plThen" aria-label="Then — one concrete thing to do instead" placeholder="then … (one concrete thing)">'+
       '<button class="btn sm acc pl-save" data-pl="save">Save</button></div>'+
       '<div class="sc-hand"><button class="btn sm ghost" data-pl="new">'+icon('plus')+'Add a plan by hand</button></div>'+
       '<p class="sc-note">The effect comes from the cue being specific. "If I feel like it" is not a cue; "if it\'s 4pm and I\'ve just closed the laptop" is.</p>';
@@ -12993,13 +13068,14 @@ try{
   }
   // the week's doses filed by day, then by pill; `older` says there is a week before it
   function pillWeekMap(keys){
-    var first=keys[0],last=keys[keys.length-1],by={},older=false,now=Date.now();
+    var first=keys[0],last=keys[keys.length-1],by=Object.create(null),older=false,now=Date.now();
     data.pills.log.forEach(function(x){
       var t=Date.parse(x.t);if(t>now)return;
       var k=pillDay(t);
       if(k<first){older=true;return;}
       if(k>last)return;
-      var d=by[k]||(by[k]={n:0});
+      var d=by[k];
+      if(!d){d=by[k]=Object.create(null);d.n=0;}
       (d[x.id]||(d[x.id]=[])).push({t:t,mg:x.mg});d.n++;
     });
     return {by:by,older:older};
@@ -13116,10 +13192,10 @@ try{
     /* today: every pill on the board, main ones then supplements, each a
        press. An earlier day: only what was taken */
     var main='',sup='';
-    (live?pillsOn():data.pills.list).forEach(function(p){
+    data.pills.list.forEach(function(p){
       var ds=day[p.id]||[];
-      if(!live&&!ds.length)return;
-      var r=pillRowHTML(p,ds,keys,by,sel,live);
+      if(!ds.length&&(!live||p.off))return;
+      var r=pillRowHTML(p,ds,keys,by,sel,live&&!p.off);
       if(p.k==='s')sup+=r;else main+=r;
     });
     if(main)h+=main;
@@ -13143,7 +13219,7 @@ try{
     var p=pillOf(id),k=pillIndex(id,t);if(!p||k<0)return '';
     var now=Date.now(),day=pillDay(t),mg=data.pills.log[k].mg;
     function nb(d,txt,lbl){
-      var n=t+d,ok=n<=now&&pillDay(n)===day;
+      var n=t+d,ok=n<=now;
       return '<button class="btn" data-pact="nudge" data-d="'+d+'"'+(ok?'':' disabled')+' aria-label="'+lbl+'">'+txt+'</button>';
     }
     return '<div class="px-in px-mv" role="group" aria-label="Move or remove this dose">'+
@@ -13270,6 +13346,7 @@ try{
   }
   /* a press on a pill. Inside a spacing the person set themselves it asks
      once first; everywhere else the press is the log. */
+  var pillTakeAt={id:null,t:0};
   function pillTake(id){
     var p=pillOf(id);if(!p)return;
     var gs=pillGapState(p,pillLast(id));
@@ -13301,9 +13378,11 @@ try{
     var pn=pillUI.panel;if(!pn||pn.kind!=='dose'||!isFinite(d))return;
     var i=pillIndex(pn.id,pn.t),nt=pn.t+d;
     if(i<0){pillUI.panel=null;renderPills(true);return;}
-    if(nt>Date.now()||pillDay(nt)!==pillDay(pn.t))return;
+    if(nt>Date.now())return;
     data.pills.log[i].t=new Date(nt).toISOString();pillSortLog();
+    if(pillDay(nt)!==pillDay(pn.t)){var nd=pillDay(nt);pillUI.day=nd===todayKey?null:nd;pillUI.wk=0;}
     pn.t=nt;
+    hideToast();   // its Undo was holding the old timestamp
     save();renderPills(true);
   }
   // a supplement pressed off the list: it joins the row, and the press is its first dose
@@ -13373,7 +13452,12 @@ try{
        the repaint below isn't mistaken for one arriving mid-typing */
     var form=b.closest('[data-pform]');
     if(a!=='save'&&a!=='kind'){var ae=document.activeElement;if(ae&&ae.blur&&ae!==document.body&&ae.closest&&ae.closest('#vPills'))ae.blur();}
-    if(a==='take'){pillTake(id);}
+    if(a==='take'){
+      var tkNow=Date.now();
+      if(pillTakeAt.id===id&&tkNow-pillTakeAt.t<700)return;
+      pillTakeAt={id:id,t:tkNow};
+      pillTake(id);
+    }
     else if(a==='takeyes'){pillLog(id,Date.now());}
     else if(a==='pick'){pillPick(b.dataset.nm||'');}
     else if(a==='picktoggle'){pillUI.pick=!pillUI.pick;renderPills(true);}
@@ -13520,7 +13604,7 @@ try{
     if(!pillSh||PILL_STEPS.indexOf(st)<0||st===pillSh.step)return;
     // the value holds as near as the new ticks allow
     var v=pillShVal();
-    pillSh.step=st;pillSh.i=Math.round(v/st);pillSh.n=Math.max(200,pillSh.i+60);
+    pillSh.step=st;pillSh.i=Math.round(v/st);pillSh.n=Math.max(480,pillSh.i+120);
     pillSheetPaint();pillRulerGo(pillSh.i);
   }
   function pillSheetOpen(mode,id,t){
@@ -13538,10 +13622,10 @@ try{
         if(Math.abs(q-Math.round(q))<1e-6){st=PILL_STEPS[j];i=Math.round(q);}
       }
     }
-    pillSh={mode:mode,view:pillMgs(p).length?'list':'ruler',id:id,t:t,was:was,step:st,i:i,n:Math.max(200,i+60)};
+    pillSh={mode:mode,view:pillMgs(p).length?'list':'ruler',id:id,t:t,was:was,step:st,i:i,n:Math.max(480,i+120)};
     var ov=$('pillSheet');
     pillSheetPaint();
-    if(ov.hidden){
+    if(ov.hidden||!ov.classList.contains('show')){
       pillShFocus=document.activeElement;
       pillShOvf=document.body.style.overflow;document.body.style.overflow='hidden';
       ov.hidden=false;
@@ -13549,6 +13633,8 @@ try{
       // rAF for the smooth case, timeout as the guarantee (rAF pauses when hidden)
       requestAnimationFrame(function(){ov.classList.add('show');});
       setTimeout(function(){ov.classList.add('show');},80);
+      // a dialog takes the focus it claims
+      setTimeout(function(){var fb=$('pillShP').querySelector('button');if(fb&&pillSh)try{fb.focus({preventScroll:true});}catch(e){}},140);
     }
     hideToast();
     if(pillSh.view==='ruler')pillRulerGo(i);
@@ -13733,6 +13819,8 @@ try{
     btn.addEventListener('pointerup',cancel);
     btn.addEventListener('pointercancel',cancel);
     btn.addEventListener('contextmenu',function(e){e.preventDefault();});
+    // VoiceOver's double-tap arrives as a click with no pointer behind it
+    btn.addEventListener('click',function(e){if(e.detail===0&&!busy&&!holding)start(HOLD*0.5);});
     btn.addEventListener('keydown',function(e){
       if((e.key==='Enter'||e.key===' ')&&!busy&&!holding&&!e.repeat){
         e.preventDefault();
@@ -13741,14 +13829,17 @@ try{
     });
   })();
   $('btnMinus').addEventListener('click',function(){
+    computeToday();
     var n=countOf(todayKey)||0;
     if(n>0){setCount(todayKey,n-1);renderAll();}
   });
   $('btnSlipUndo').addEventListener('click',function(){
+    computeToday();
     var n=countOf(todayKey)||0;
     if(n>0){setCount(todayKey,n-1);renderAll();}
   });
   $('btnSlip').addEventListener('click',function(){
+    computeToday();
     /* This used to DECREMENT whenever today already had a hit, so the Today
        card could record exactly one slip per day and a second tap deleted
        the first — flipping the day back to clean. A slip evening is rarely
@@ -13775,6 +13866,8 @@ try{
      already derives from, so one save() re-adjusts the entire app. Bound to
      the schedule card and to the Today plan card: the landing offer renders
      on both, because the boundary it answers is lived on Today. */
+  // a hold belongs to the rungs it was set on; when a move is undone they go with it
+  function dropHolds(re){for(var k in data.holds)if(re.test(k))delete data.holds[k];}
   function handleSchedAct(ev){
     var b=ev.target.closest('[data-sc]');if(!b)return;
     computeToday();
@@ -13799,7 +13892,7 @@ try{
        off with it — it froze the OLD descent's dates, and carrying it forward
        would freeze the new ones from birth (the card can re-lock). */
     else if(act==='reb'){data.replan.rebase={at:todayKey,cap:+b.dataset.cap};delete data.replan.lockFrom;relader();}
-    else if(act==='unreb'){delete data.replan.rebase;relader();}
+    else if(act==='unreb'){delete data.replan.rebase;dropHolds(/^r\d+$/);relader();}
     /* the landing: anchor today, re-enter at the offered cap. The frozen zero
        comes off with it — the boundary is un-crossed, and markSeenToday will
        stamp the real one when it is actually reached. The lock comes off for
@@ -13812,7 +13905,7 @@ try{
     }
     /* undo restores the zero era; the anchor restamps itself on the next
        zero-era paint, to the same date the schedule still derives */
-    else if(act==='unland'){delete data.replan.landing;relader();}
+    else if(act==='unland'){delete data.replan.landing;dropHolds(/^l\d+$/);relader();}
     /* the finish: zero lands on the day after the last logged hit, and the
        capped rungs from there close unwalked. Two pieces of housekeeping the
        back-date makes necessary.
@@ -13850,7 +13943,7 @@ try{
       delete data.replan.lockFrom;
       relader();
     }
-    else if(act==='unrestart'){delete data.replan.restart;delete data.zeroAt;relader();}
+    else if(act==='unrestart'){delete data.replan.restart;delete data.zeroAt;dropHolds(/^s\d+$/);relader();}
     else if(act==='rzcap'){rzCap=+b.dataset.cap||null;renderAll();return;}
     else if(act==='rzpace'){rzSel=b.dataset.p||'rec';renderAll();return;}
     /* back on a ladder after a later zero: a dated rebuild marked z, so the
@@ -13966,6 +14059,7 @@ try{
     $('earlierMsg').textContent='';$('earlierMsg').hidden=true;
   });
   $('btnAddEarlier').addEventListener('click',function(){
+    computeToday();
     var v=$('earlierTime').value;
     if(!v){$('earlierMsg').textContent='Pick a time first.';$('earlierMsg').hidden=false;return;}
     var hm=v.split(':');
@@ -14000,6 +14094,7 @@ try{
   $('ckRows').addEventListener('click',function(ev){
     var d=ev.target.closest('.ck-dot');
     if(!d)return;
+    computeToday();
     var k=d.parentNode.dataset.k,v=+d.dataset.v;
     var e=data.checkins[todayKey]=data.checkins[todayKey]||{};
     var was=ckComplete(e);
@@ -14016,6 +14111,7 @@ try{
     var b=ev.target.closest('[data-pl]');if(!b)return;
     var act=b.dataset.pl,ed=$('plEdit');
     if(act==='del'){
+      if(!confirm('Remove this plan?'))return;
       data.plans.splice(+b.dataset.i,1);save();renderAll();return;
     }
     if(act==='add'||act==='new'){
@@ -14034,6 +14130,7 @@ try{
   });
   $('cmBox').addEventListener('click',function(ev){
     var b=ev.target.closest('[data-cm]');if(!b)return;
+    computeToday();
     if(b.dataset.cm==='claim'){
       var L=cmLadder();
       if(!L||L.owed<=0)return;
@@ -14071,7 +14168,7 @@ try{
     var cur=data.spendPerWeek||(data.costPerHit?Math.round(data.costPerHit*BASELINE*7):'');
     var v=prompt('About how much did a normal week cost you, in dollars? Rough is fine — e.g. 120. Leave blank to stop tracking.',cur);
     if(v===null)return;
-    var n=parseFloat(v);
+    var n=parseFloat(String(v).replace(/[^0-9.]/g,''));
     if(String(v).trim()===''){delete data.costPerHit;delete data.spendPerWeek;}
     else if(n>0){data.spendPerWeek=n;data.costPerHit=n/7/BASELINE;}
     else return;
@@ -14125,7 +14222,7 @@ try{
     if(Notification.permission==='granted'){data.notifyWindows=true;save();renderGap();return;}
     if(Notification.permission==='denied'){
       var line=$('ghNote');
-      if(line){line.textContent='Notifications are blocked in your browser settings.';setTimeout(renderGap,3000);}
+      if(line){if(gapTick){clearInterval(gapTick);gapTick=null;}line.textContent='Notifications are blocked in your browser settings.';setTimeout(renderGap,3000);}
       return;
     }
     Notification.requestPermission().then(function(p){
@@ -14209,8 +14306,15 @@ try{
         return;
       }
     }catch(e){}
-    navigator.share({title:'Taper backup',text:json}).then(done).catch(function(){});
+    navigator.share({title:'Taper backup',text:json}).then(done).catch(function(e){
+      if(!e||e.name!=='AbortError')setDataMsg('Sharing didn’t work here — use Copy instead.','err');
+    });
   });
+  function stashCurrent(json){
+    try{localStorage.removeItem('ttz2-preimport');}catch(e){}
+    try{localStorage.setItem('ttz2-preimport',json||JSON.stringify(data));return true;}catch(e){return false;}
+  }
+  var STASH_NO=' (This phone was too full to stash the data it replaced — there is no undo for this one.)';
   $('btnImport').addEventListener('click',function(){
     var raw=$('dataBox').value.trim();
     if(!raw){setDataMsg('Paste a backup into the box first.','err');return;}
@@ -14219,12 +14323,12 @@ try{
       if(!validShape(d))throw new Error('bad');
       if(!confirm('Replace everything on this device with the pasted backup?'))return;
       // stash what's being replaced, so a wrong import is recoverable
-      try{localStorage.setItem('ttz2-preimport',JSON.stringify(data));}catch(e2){}
+      var stOk=stashCurrent();
       var rep=repairDays(d);
       data=normData(d);
       data.lastBackupAt=Date.now(); // the pasted copy IS a live backup
       save();dpEditOpen=false;renderAll();
-      setDataMsg('Backup restored. (The data it replaced was stashed, just in case.)'+
+      setDataMsg('Backup restored.'+(stOk?' (The data it replaced was stashed, just in case.)':STASH_NO)+
         (rep.dropped?' '+rep.dropped+' unreadable day'+(rep.dropped>1?'s were':' was')+' dropped.':'')+
         (rep.fixed?' '+rep.fixed+' day'+(rep.fixed>1?'s':'')+' had damaged entries repaired.':''),'ok');
     }catch(e){relader();rcClear();renderAll();setDataMsg('That doesn’t look like a valid backup.','err');}
@@ -14250,9 +14354,9 @@ try{
     var cur=JSON.stringify(data);
     repairDays(pd);
     data=normData(pd);save();
-    try{localStorage.setItem('ttz2-preimport',cur);}catch(e){} // so the undo is itself undoable
+    var stOk2=stashCurrent(cur); // so the undo is itself undoable
     dpEditOpen=false;renderAll();renderUndoRestore();
-    setDataMsg('Put back. (What it replaced is now the stashed copy — tap again to swap back.)','ok');
+    setDataMsg('Put back.'+(stOk2?' (What it replaced is now the stashed copy — tap again to swap back.)':STASH_NO),'ok');
   });
   $('btnSnap').addEventListener('click',function(){
     var snap=null;
@@ -14262,10 +14366,10 @@ try{
     try{sd=JSON.parse(snap.raw);}catch(e){}
     if(!validShape(sd)){setDataMsg('The snapshot on this device is unreadable.','err');return;}
     if(!confirm('Replace current data with the automatic snapshot from '+snap.t+'? Anything logged since that snapshot is lost.'))return;
-    try{localStorage.setItem('ttz2-preimport',JSON.stringify(data));}catch(e){}
+    var stOk3=stashCurrent();
     repairDays(sd);
     data=normData(sd);save();dpEditOpen=false;renderAll();
-    setDataMsg('Snapshot from '+snap.t+' restored. (The data it replaced was stashed.)','ok');
+    setDataMsg('Snapshot from '+snap.t+' restored.'+(stOk3?' (The data it replaced was stashed.)':STASH_NO),'ok');
   });
 
   /* ================= the Plan tab's panes =================
@@ -14276,18 +14380,20 @@ try{
   var planPane='today';
   var planDecision=false;   // set by renderSchedCtl: is a move actually on offer
   function planSegBtn(n){return document.querySelector('.pseg-b[data-pane="'+n+'"]');}
-  function setPlanPane(n){
+  function setPlanPane(n,soft){
     if(PANES.indexOf(n)<0)n='today';
-    var b=planSegBtn(n);
+    var want=n, b=planSegBtn(n);
     if(!b||b.hidden)n='today';           // never land on a segment that isn't there
-    planPane=n;
+    /* soft (boot): the After zero segment is un-hidden by the first render,
+       so the saved choice is kept as the intent and not overwritten here */
+    planPane=soft?want:n;
     document.querySelectorAll('.ppane').forEach(function(p){
       p.hidden=p.dataset.pane!==n;
     });
     document.querySelectorAll('.pseg-b').forEach(function(t){
       t.setAttribute('aria-selected',t.dataset.pane===n?'true':'false');
     });
-    try{localStorage.setItem(PANE_KEY,n);}catch(e){}
+    if(!soft)try{localStorage.setItem(PANE_KEY,n);}catch(e){}
     // the chosen segment scrolls itself into view when the control overflows
     var cur=planSegBtn(n);
     if(cur&&cur.scrollIntoView)try{cur.scrollIntoView({block:'nearest',inline:'nearest'});}catch(e){}
@@ -14301,7 +14407,7 @@ try{
     var saved=null;
     try{saved=localStorage.getItem(PANE_KEY);}catch(e){}
     planPane=PANES.indexOf(saved)>=0?saved:'today';
-    setPlanPane(planPane);
+    setPlanPane(planPane,true);
   })();
   document.getElementById('planSeg').addEventListener('click',function(ev){
     var b=ev.target.closest('.pseg-b');
@@ -14416,7 +14522,9 @@ try{
   // today card (if it is on screen at all), elsewhere the header
   window.addEventListener('scroll',function(){
     var tc=$('todayCard'), ref=(document.body.dataset.view==='today'&&tc&&tc.getClientRects().length)?tc:$('hero');
-    $('glassBar').classList.toggle('show', ref.getBoundingClientRect().bottom<0);
+    var gbOn=ref.getBoundingClientRect().bottom<0;
+    $('glassBar').classList.toggle('show',gbOn);
+    $('glassBar').tabIndex=gbOn?0:-1;   // not a tab stop while it is invisible
   },{passive:true});
   $('glassBar').addEventListener('click',function(){
     window.scrollTo({top:0,behavior:motionOK?'smooth':'auto'});
@@ -14527,16 +14635,21 @@ try{
   /* ---- pull down to dismiss the detail page ---- */
   (function(){
     var ov=$('detailOverlay'), sh=ov.querySelector('.sheet')||ov;
-    var startY=0,dy=0,armed=false,dragging=false;
+    var startY=0,startX=0,dy=0,armed=false,dragging=false;
     ov.addEventListener('touchstart',function(e){
       if(detailBusy||ov.scrollTop>2){armed=false;return;}
-      startY=e.touches[0].clientY;
+      startY=e.touches[0].clientY;startX=e.touches[0].clientX;
       armed=true;dragging=false;dy=0;
     },{passive:true});
     ov.addEventListener('touchmove',function(e){
       if(!armed)return;
       dy=e.touches[0].clientY-startY;
       if(dy<=0&&!dragging){armed=false;return;}
+      if(!dragging){
+        var dx=Math.abs(e.touches[0].clientX-startX);
+        if(dx>dy){armed=false;return;}   // a sideways swipe belongs to the strip under it
+        if(dy<9)return;
+      }
       if(ov.scrollTop>0&&!dragging){armed=false;return;}
       dragging=true;
       e.preventDefault();
@@ -14841,6 +14954,8 @@ try{
     if(adoptNewerRecord())rcClear();
     renderAll();
   });
+  // a page restored from the back-forward cache never fires visibilitychange
+  window.addEventListener('pageshow',function(e){if(e.persisted){if(adoptNewerRecord())rcClear();renderAll();}});
   /* Reconciliation used to live only in visibilitychange, which fires on a
      hidden→visible transition. Two contexts BOTH visible — the installed
      PWA beside the same page in a Safari tab, or iPad Split View — never
@@ -14869,7 +14984,7 @@ try{
   setInterval(function(){
     if(document.hidden)return;
     computeToday();
-    if(todayKey!==tickKey){tickKey=todayKey;renderAll();return;}
+    if(todayKey!==tickKey){tickKey=todayKey;dailySnap();renderAll();return;}
     safe(renderToday);
     safe(renderDayHead);
     safe(renderYday);

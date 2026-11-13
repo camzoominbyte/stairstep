@@ -1,6 +1,6 @@
 /* Taper to Zero — offline cache.
    Bump CACHE on any deploy so installed phones pick up the new version. */
-var CACHE = 'ttz-v10.1.0';
+var CACHE = 'ttz-v10.2.0';
 var SHELL = './index.html';
 var ASSETS = [
   './index.html',
@@ -81,7 +81,10 @@ self.addEventListener('fetch', function (e) {
     // network-first for pages, each cached under its OWN key — a guide
     // visit must never overwrite the app shell with guide markup
     var key = /guide\.html$/.test(url.pathname) ? './guide.html' : SHELL;
-    e.respondWith(
+    /* Network-first, but never wait on a dead connection with a good copy
+       in hand: after 2.5s the cached page answers, and the fetch carries on
+       in the background to refresh the cache for next time. */
+    var net =
       fetch(req).then(function (res) {
         if (worthCaching(res)) { put(key, res); return res; }
         // reachable but wrong (portal, 404, redirect): prefer the last good copy
@@ -98,8 +101,20 @@ self.addEventListener('fetch', function (e) {
             );
           });
         });
-      })
-    );
+      });
+    e.waitUntil(net.catch(function () {}));
+    e.respondWith(new Promise(function (resolve) {
+      var done = false;
+      var timer = setTimeout(function () {
+        caches.match(key).then(function (hit) {
+          if (hit && !done) { done = true; resolve(hit); }
+        });
+      }, 2500);
+      net.then(function (res) {
+        clearTimeout(timer);
+        if (!done) { done = true; resolve(res); }
+      });
+    }));
   } else {
     // cache-first for fonts/icons/manifest
     e.respondWith(
