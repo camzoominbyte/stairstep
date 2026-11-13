@@ -960,7 +960,7 @@
   /* Everything on Today around the hero: the banners, the fifth move, the
      ritual, yesterday vs today, the check-in, the ladder, the backup nudge.
      Selectors are ids or TC-only prefixes (tc-, lo-, rit-, ck-, cm-, yd-,
-     lg2-, yr-, vh-, vs, yz-, yg-, lg-line) so nothing leaks. */
+     lg2-, yr-, vh-, vs, yg-, lg-line) so nothing leaks. */
 
   /* ---- banners (afterglow §4.11 on the F .banner base) ----
      Visibility is the .show class (JS contract), not [hidden]. Each banner
@@ -1078,27 +1078,28 @@
   .lg2-n small{font-size:16px;font-weight:650;color:var(--ink-2);letter-spacing:0;margin-left:1px}
   .lg2-e .nw,.lg-line .nw{white-space:nowrap}
   .lg2-e{font-size:12px;font-weight:550;color:var(--ink-2);margin-top:7px;font-variant-numeric:tabular-nums;line-height:1.3}
-  /* 2. the twin rails, in a flat fold inside the card */
-  details.yd-sits{margin:16px 0 0;background:var(--s2);box-shadow:none;border-radius:var(--r-md)}
-  details.yd-sits[hidden]{display:none}
-  .yd-sits>summary{padding:11px 12px}
-  /* the summary carries yesterday's stamps, so it wraps rather than cuts one off */
-  .yd-sits .fold-live{white-space:normal;overflow:visible;line-height:1.35}
-  .yd-sits .fold-ic{background:var(--s1)}
-  .yd-sits .fold-body{padding:0 12px 14px}
-  .vs-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;padding:4px 0 12px;border-bottom:1px solid var(--line)}
-  .vh{min-width:0;display:flex;flex-direction:column;align-items:flex-start}
+  /* 2. the twin rails: on the card itself and always open. Each column's
+     head is a tile that opens that day. */
+  .yd-cols{margin-top:16px}
+  #ydLead:empty+.yd-cols{margin-top:0}
+  .vs-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+  .vh{position:relative;min-width:0;min-height:48px;display:flex;flex-direction:column;align-items:flex-start;
+    padding:10px 12px 12px;border:0;border-radius:var(--r-md);background:var(--s2);color:inherit;
+    font-family:var(--f-ui);text-align:left;cursor:pointer}
+  .vh:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+  .vh>.ic{position:absolute;right:9px;bottom:14px;color:var(--ink-3)}
   .vh-d{font-size:12.5px;font-weight:650;color:var(--ink-2);white-space:nowrap}
+  /* a narrow phone has no room for the word: the right-hand column is today */
+  @media (max-width:380px){.vh-t{display:none}}
   .vh-n{font-family:var(--f-round);font-size:24px;font-weight:700;letter-spacing:-.02em;color:var(--ink);margin:3px 0 6px;font-variant-numeric:tabular-nums}
   .vh-n span{font-size:13px;font-weight:600;color:var(--ink-3);letter-spacing:0}
-  .vs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:12px;position:relative}
-  .vs::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--line)}
-  .vs-c{min-width:0;padding-bottom:2px}
-  .vs-c+.vs-c{padding-left:2px}
+  .vs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:8px;position:relative;margin-top:2px}
+  .vs::before{content:"";position:absolute;left:50%;top:12px;bottom:0;width:1px;background:var(--line)}
+  .vs-c{min-width:0;padding:0 0 2px 12px}
   .yr-sit{display:grid;grid-template-columns:14px minmax(0,1fr);column-gap:9px;padding-top:12px}
-  .yr-n{width:12px;height:12px;border-radius:50%;margin:5px 0 0 1px;background:var(--ink);box-shadow:0 0 0 3px var(--s2),0 0 0 4.5px var(--line-2)}
+  .yr-n{width:12px;height:12px;border-radius:50%;margin:5px 0 0 1px;background:var(--ink);box-shadow:0 0 0 3px var(--s1),0 0 0 4.5px var(--line-2)}
   .yr-sit.y .yr-n{background:var(--ghost)}
-  .yr-sit.nx .yr-n{background:transparent;box-shadow:0 0 0 3px var(--s2),inset 0 0 0 2px var(--acc)}
+  .yr-sit.nx .yr-n{background:transparent;box-shadow:0 0 0 3px var(--s1),inset 0 0 0 2px var(--acc)}
   .yr-sit.hol .yr-n{background:transparent;box-shadow:inset 0 0 0 1.5px var(--ghost)}
   .yr-tm{font-family:var(--f-round);font-size:19px;font-weight:700;letter-spacing:-.02em;line-height:1.2;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
   .yr-tm small{font-size:11.5px;font-weight:650;color:var(--ink-2);letter-spacing:0;margin-left:1px}
@@ -1120,32 +1121,7 @@
   .yr-g .chip{height:20px;font-size:11px;padding:0 7px;gap:4px}
   .yr-g .chip .tri{width:8px;height:8px}
   .yd-none{font-size:13px;color:var(--ink-2);padding-top:12px}
-  /* 3. the day pages */
-  .yd-foot{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
-  .yd-open{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;padding:6px 10px 6px 14px;
-    border:0;border-radius:16px;background:var(--s2);color:var(--ink-3);cursor:pointer;text-align:left;font-family:var(--f-ui)}
-  .yd-open:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-  .yd-ot{display:flex;flex-direction:column;min-width:0}
-  .yd-when{font-size:12px;font-weight:600;color:var(--ink-2)}
-  .yd-count{font-family:var(--f-round);font-size:15px;font-weight:700;letter-spacing:-.01em;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  /* zero era: two tiles, the run facts, the grid since zero */
-  .yz{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
-  .yz2{margin-top:10px}
-  .yz-t{min-width:0;background:var(--s2);border-radius:var(--r-md);padding:13px 14px 13px;display:flex;flex-direction:column;align-items:flex-start}
-  .yz-t.now{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--acc) 55%,transparent);background:linear-gradient(160deg,var(--acc-bg),transparent 70%),var(--s2)}
-  .yz-t.now.sl{box-shadow:inset 0 0 0 1.5px var(--line-2);background:var(--s2)}
-  .yz-d{font-size:12.5px;font-weight:650;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-  .yz-ck{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;margin:9px 0 8px}
-  .yz-ck .ic{width:19px;height:19px;stroke-width:2.4}
-  .yz-ck.c{background:var(--clean-bg);color:var(--clean-t)}
-  .yz-ck.s{background:var(--slip-bg);color:var(--slip-t)}
-  .yz-ck.g{background:var(--s3);color:var(--ink-2)}
-  .yz-v{font-family:var(--f-round);font-size:20px;font-weight:700;letter-spacing:-.02em;color:var(--ink);line-height:1.15;font-variant-numeric:tabular-nums}
-  .yz-v small{font-size:13px;font-weight:600;color:var(--ink-3);letter-spacing:0}
-  .yz-n{font-family:var(--f-round);font-size:28px;font-weight:700;letter-spacing:-.03em;color:var(--ink);line-height:1.1;margin-top:6px;font-variant-numeric:tabular-nums;white-space:nowrap}
-  .yz-n small{font-size:14px;font-weight:650;color:var(--ink-2);letter-spacing:0}
-  .yz-f{font-size:12.5px;line-height:1.35;color:var(--ink-2);margin-top:4px;font-variant-numeric:tabular-nums}
-  .yz-f .chip{margin-top:2px}
+  /* the grid of every day since zero */
   .yg{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
   .yg-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
   .yg-h .label b{font-size:14px;font-weight:650;color:var(--ink)}
@@ -3204,7 +3180,6 @@
   /* ---- Today: the ring, the count, the button. The rest is a tap away ---- */
   #todayCard>.xopen{display:none}
   #gapBell{display:none}
-  #ydSits{display:none}                      /* sitting-by-sitting lives on the day page */
   #ckLede,.ck-ends{display:none}
   .tc-land{background:var(--s1)}
   .xopen::after{content:"";position:absolute;inset:-6px}
@@ -3276,9 +3251,6 @@
   .jf-b{padding:0 18px 18px}
   #gapFold:has(> #gapTrend[hidden]),#cmFold:has(> #cmCard[hidden]){display:none}
   #cmFold .card-h .label{display:none}
-  /* after zero the hero already says clean / slipped and since when — the
-     yesterday card only restated it */
-  html[data-era="zero"] #ydayCard{display:none}
 
   /* ---- the record: re-entry offer + Journey card (prefixes rz-, rm-, rc-) ---- */
   .rz{display:flex;flex-direction:column;gap:12px}
@@ -3623,14 +3595,9 @@ try{
     <span class="yd-hr" id="ydHead"></span>
   </div>
   <div id="ydLead"></div>
-  <details class="fold yd-sits" id="ydSits">
-    <summary><span class="fold-ic"><svg class="ic" aria-hidden="true"><use href="#i-timer"/></svg></span><span class="fold-t">Sitting by sitting</span><span class="fold-live" id="ydSitsLive"></span></summary>
-    <div class="fold-body"><div class="yd-cols" id="ydCols"></div></div>
-  </details>
-  <div class="yd-foot">
-    <button class="yd-open" id="ydOpen"><span class="yd-ot"><span class="yd-when" id="ydWhen"></span><span class="yd-count" id="ydCount"></span></span><svg class="ic ic-sm" aria-hidden="true"><use href="#i-chev"/></svg></button>
-    <button class="yd-open" id="tdOpen"><span class="yd-ot"><span class="yd-when" id="tdWhen"></span><span class="yd-count" id="tdCount"></span></span><svg class="ic ic-sm" aria-hidden="true"><use href="#i-chev"/></svg></button>
-  </div>
+  <!-- the two days side by side, always on the page — never a fold. Each
+       column's head is the way into that day (renderYday builds both). -->
+  <div class="yd-cols" id="ydCols"></div>
 </div>
 
 <div class="card checkin" id="checkinCard" hidden>
@@ -8742,16 +8709,21 @@ try{
   }
 
   /* ================= yesterday vs today, on the Today screen =================
-     The same two clocks read three ways, most important first:
-       1. the lead — the longest stretch, today so far vs yesterday, each
-          with its endpoints, and yesterday's mark to beat;
+     The same two clocks, yesterday on the left and today on the right all
+     the way down the card:
+       1. the lead — the longest stretch, yesterday's mark and today so far
+          against it, each with its endpoints (taper era only: after zero
+          the hero's clean clock is that number);
        2. the twin rails — sitting by sitting, raw minute stamps, per-gap
-          deltas against yesterday's matching gap (a fold);
-       3. the two day pages (#ydOpen / #tdOpen).
+          deltas against yesterday's matching gap. Always on the page: they
+          were a fold, then (Nov 12) hidden outright, and the side-by-side
+          was the part being looked for. Each column's head opens that day,
+          which is what the two buttons under the fold used to do.
      A 32h tape and a 5-day sparkline used to sit between 1 and 2, drawing the
      same stamps the rails spell out; they went in the Sep 29 declutter.
-     After zero the card is the clean/slip tiles and the grid of every day
-     since zero. Every number is dayMetrics'/zeroStats'; the renders only
+     The card shows whenever either day has anything on its clock, in either
+     era; two clean days after zero have no timeline to draw and the hero
+     already says they held. Every number is dayMetrics'; the renders only
      read. The 30s tick rebuilds it all, the 20s gap tick the lead only. */
   function ydayKey(){return dkeyOf(addDays(today,-1));}
   function ydWk(d){return WEEKDAYS[d.getDay()].slice(0,3);}
@@ -8815,13 +8787,14 @@ try{
     var tEnds=tb?(tb.running?ydEnds(tb.from,null):ydEnds(tb.from,tb.to)):'no gap yet';
     var yEnds=m.gapMax?ydEnds(m.gapMax.from,m.gapMax.to)
       :(m.sessions.length?'one sitting — no gap':'no timed hits');
+    // yesterday left, today right — the same order as the rails under it
     return '<div class="lg2">'+
-      '<div class="lg2-c"><span class="lg2-k">Today so far'+(tb&&tb.running?' <span class="lg2-run">running</span>':'')+'</span>'+
-        '<span class="lg2-n">'+(tb?ydDurBig(tb.ms):'–')+'</span>'+tChip+
-        '<span class="lg2-e">'+tEnds+'</span></div>'+
       '<div class="lg2-c"><span class="lg2-k">Yesterday · '+ydWk(m.date)+'</span>'+
         '<span class="lg2-n">'+(ym!==null?ydDurBig(ym):'–')+'</span>'+
-        '<span class="lg2-e">'+yEnds+'</span></div></div>';
+        '<span class="lg2-e">'+yEnds+'</span></div>'+
+      '<div class="lg2-c"><span class="lg2-k">Today so far'+(tb&&tb.running?' <span class="lg2-run">running</span>':'')+'</span>'+
+        '<span class="lg2-n">'+(tb?ydDurBig(tb.ms):'–')+'</span>'+tChip+
+        '<span class="lg2-e">'+tEnds+'</span></div></div>';
   }
   /* ---- 2. the twin rails: sitting by sitting ---- */
   function ydRailHTML(mm,isT,ref){
@@ -8865,36 +8838,15 @@ try{
     if(!h)h='<p class="yd-none">'+(isT?'Nothing on the clock yet.':'Nothing on the clock.')+'</p>';
     return h;
   }
+  /* a column's head: the day, its count and its status — and the way into
+     that day's page (the click is delegated on #ydCols) */
   function ydHeadHTML(mm,isT){
     var n=mm.isZ?(mm.eff>0?mm.eff+'<span> hit'+(mm.eff===1?'':'s')+'</span>':'0<span> hits</span>')
       :(mm.eff||0)+'<span> of '+mm.cap+(isT?' so far':'')+'</span>';
-    return '<div class="vh"><span class="vh-d">'+ydWk(mm.date)+' · '+fmtShort(mm.date)+(isT?' · today':'')+'</span>'+
-      '<span class="vh-n">'+n+'</span>'+ydStatChip(mm,isT)+'</div>';
-  }
-  /* ---- zero era: two tiles, then the grid of every day since zero ---- */
-  function ydUrgesOn(k){
-    var n=0;(data.urges||[]).forEach(function(iso){
-      var t=new Date(iso);if(!isNaN(t)&&dkeyOf(new Date(t.getTime()-DAY_CUTOFF_H*3600000))===k)n++;});
-    return n;
-  }
-  function ydHitTimes(mm){
-    var t=[];mm.sessions.forEach(function(s){s.forEach(function(h){t.push(fmtClk(h));});});
-    return t.length?(t.length>4?t.slice(0,4).join(', ')+' …':t.join(', ')):'';
-  }
-  function ydZTile(mm,isT){
-    var h='<div class="yz-t'+(isT?' now':'')+(isT&&mm.eff>0?' sl':'')+'"><span class="yz-d">'+ydWk(mm.date)+' · '+fmtShort(mm.date)+(isT?' · today':'')+'</span>';
-    if(mm.isZ&&!(mm.eff>0)){
-      var into=Math.max(0,Date.now()-new Date(today.getFullYear(),today.getMonth(),today.getDate(),DAY_CUTOFF_H).getTime());
-      h+='<span class="yz-ck c">'+icon('check')+'</span><span class="yz-v">'+(isT?'Clean so far':'Clean')+'</span>'+
-        '<span class="yz-f">'+(isT?'Nothing logged · '+fmtDur(into)+' into the day':'Nothing logged — a whole day at zero')+'</span>';
-    }else if(mm.isZ){
-      h+='<span class="yz-ck s">'+icon('slip')+'</span><span class="yz-v">Slip · '+mm.eff+' hit'+(mm.eff===1?'':'s')+'</span>'+
-        '<span class="yz-f">'+(ydHitTimes(mm)||'logged without times')+'</span>';
-    }else{
-      h+='<span class="yz-ck g">'+icon('plan')+'</span><span class="yz-v">'+(mm.eff||0)+' <small>of '+mm.capText+'</small></span>'+
-        '<span class="yz-f">'+ydStatChip(mm,isT)+'</span>';
-    }
-    return h+'</div>';
+    return '<button class="vh" type="button" data-day="'+mm.key+'" aria-label="'+(isT?'Today':'Yesterday')+', '+fmtShort(mm.date)+', '+
+        n.replace(/<[^>]+>/g,'')+' — open in full">'+
+      '<span class="vh-d">'+ydWk(mm.date)+' · '+fmtShort(mm.date)+(isT?'<span class="vh-t"> · today</span>':'')+'</span>'+
+      '<span class="vh-n">'+n+'</span>'+ydStatChip(mm,isT)+icon('chev','ic-sm')+'</button>';
   }
   function ydGridHTML(){
     var z=zeroDay(), n=Math.round((today-z)/MS_DAY)+1;
@@ -8922,68 +8874,30 @@ try{
         (n>WIN?'<span>last 12 weeks</span>':'<span><i class="f"></i>ahead</span>')+'</div>'+
       (slipTxt?'<div class="yg-slips">'+slipTxt+'</div>':'')+'</div>';
   }
-  function ydZeroHTML(m,tm){
-    var h='<div class="yz">'+ydZTile(m,false)+ydZTile(tm,true)+'</div>';
-    var last=lastHitEver(), us=data.urges&&data.urges.length;
-    if(last||us){
-      h+='<div class="yz yz2">';
-      if(last){
-        var ms=Date.now()-last.getTime(), dd=Math.floor(ms/MS_DAY);
-        h+='<div class="yz-t"><span class="yz-d">Since the last hit</span><span class="yz-n">'+
-          (dd>=2?dd+'<small> days</small>':ydDurBig(ms))+'</span>'+
-          '<span class="yz-f">'+ydWk(last)+' '+fmtShort(last)+', '+fmtTime(last)+'</span></div>';
-      }
-      if(us){
-        var ut=ydUrgesOn(todayKey), uy=ydUrgesOn(ydayKey());
-        h+='<div class="yz-t"><span class="yz-d">Urges outlasted</span><span class="yz-n">'+ut+'<small> today</small></span>'+
-          '<span class="yz-f">'+uy+' yesterday · '+data.urges.length+' in all</span></div>';
-      }
-      h+='</div>';
-    }
-    return h;   // the grid of every day since zero lives on Journey now
-  }
   function renderYday(){
     var card=$('ydayCard');
     if(!card)return;
     var yd=addDays(today,-1);
     if(yd<schedule()[0].start){card.hidden=true;return;}
     var k=ydayKey(), m=dayMetrics(k), tm=dayMetrics(todayKey);
-    /* a clean zero-era day is all zeroes by design — sessions [], adj 0,
-       eff 0 — so the card must not hide on it: at zero its whole job is to
-       say the day held. Before zero, no clock at all means no card. */
-    if(!isZeroEra&&!(m.isZ&&!m.future)&&!m.sessions.length&&!m.adj&&!m.eff){card.hidden=true;return;}
+    /* the card is the two clocks side by side, so it is there whenever
+       either day has anything on its clock — in either era. Nothing on
+       both (two clean days after zero, or a day nothing was logged before
+       today's first hit) leaves no timeline to draw. */
+    function clocked(x){return !!(x.sessions.length||x.adj);}
+    if(!clocked(m)&&!clocked(tm)){card.hidden=true;return;}
     card.hidden=false;
     card.classList.toggle('zero',isZeroEra);
-    // the openers: the aria-labels read the same text the buttons show
-    $('ydWhen').textContent='Yesterday';
-    $('ydCount').textContent=m.isZ?(m.eff>0?m.eff+' · slip':'clean'):((m.eff||0)+' of '+(m.capText||m.cap));
-    $('ydOpen').setAttribute('aria-label','Yesterday, '+fmtShort(yd)+', '+$('ydCount').textContent+' — open in full');
-    $('tdWhen').textContent='Today';
-    $('tdCount').textContent=tm.isZ?(tm.eff>0?tm.eff+' · slip':'clean so far'):((tm.eff||0)+' so far');
-    $('tdOpen').setAttribute('aria-label','Today, '+fmtShort(today)+', '+$('tdCount').textContent+' — open in full');
-    var sits=$('ydSits');
-    if(isZeroEra){
-      var nClean=(m.isZ&&!(m.eff>0)?1:0)+(tm.isZ&&!(tm.eff>0)?1:0);
-      var anySlip=(m.isZ&&m.eff>0)||(tm.isZ&&tm.eff>0);
-      $('ydHead').innerHTML=anySlip
-        ?'<span class="chip sm slip"><span class="dot"></span>Slip '+((tm.eff>0)?'today':'yesterday')+'</span>'
-        :'<span class="chip sm clean"><span class="dot"></span>'+nClean+' of 2 clean</span>';
-      $('ydLead').innerHTML=ydZeroHTML(m,tm);
-      sits.hidden=true;
-      return;
-    }
-    sits.hidden=false;
-    // the lead's two numbers are longest gaps; the header says so once
-    $('ydHead').innerHTML='<span class="yd-hr-l">longest gap</span>';
-    $('ydLead').innerHTML=ydLeadHTML(m,tm);
-    $('ydCols').innerHTML='<div class="vs-head">'+ydHeadHTML(m,false)+ydHeadHTML(tm,true)+'</div>'+
+    /* the lead's two numbers are longest gaps; the header says so once.
+       After zero the stretch that matters is the hero's clean clock, so
+       the lead steps aside and the rails are the whole card. */
+    $('ydHead').innerHTML=isZeroEra?'':'<span class="yd-hr-l">longest gap</span>';
+    $('ydLead').innerHTML=isZeroEra?'':ydLeadHTML(m,tm);
+    /* rebuilt only when it reads differently: the 30s tick lands here, and
+       swapping the heads out from under a finger would eat the tap */
+    var cols=$('ydCols'), html='<div class="vs-head">'+ydHeadHTML(m,false)+ydHeadHTML(tm,true)+'</div>'+
       '<div class="vs"><div class="vs-c">'+ydRailHTML(m,false,null)+'</div><div class="vs-c">'+ydRailHTML(tm,true,m)+'</div></div>';
-    // the fold's one line of data: sittings then → now, first hit earlier/later
-    /* the fold's line of data is yesterday's clock itself — every sitting's
-       stamp, readable without opening anything (today's already sit under
-       the hero's pips). The rails inside add the gaps and their deltas. */
-    var yt=m.sessions.map(function(s){return fmtClk(s[0])+(s.length>1?' ×'+s.length:'');});
-    $('ydSitsLive').textContent=yt.length?'Yesterday · '+yt.join(' · '):'Nothing timed yesterday';
+    if(cols._h!==html){cols.innerHTML=html;cols._h=html;}
   }
   /* the 20s gap tick: only the lead moves between full renders (the running
      stretch grows), so it alone is rebuilt */
@@ -8992,8 +8906,10 @@ try{
     if(!card||!el||card.hidden||isZeroEra)return;
     el.innerHTML=ydLeadHTML(dayMetrics(ydayKey()),dayMetrics(todayKey));
   }
-  $('ydOpen').addEventListener('click',function(){openDayPage(ydayKey());});
-  $('tdOpen').addEventListener('click',function(){openDayPage(todayKey);});
+  $('ydCols').addEventListener('click',function(ev){
+    var b=ev.target.closest('.vh[data-day]');
+    if(b)openDayPage(b.dataset.day);
+  });
 
   /* ================= Journey (owner J) =================
      Small shared pieces for the Journey tab's cards. Status always ships with
