@@ -3150,52 +3150,120 @@
     .toast{transform:none!important;transition:opacity .15s linear!important}
   }
 
-  /* ==== [R] CALM — the Nov 2026 pass ==== */
+  /* ==== [R] SIMPLE — the Nov 2026 redesign ==== */
   /* One layer over the rest, so it can be read (and reverted) as a whole.
-     Fewer surfaces competing: cards sit flat on the page with a hairline
-     instead of a lit edge and a drop shadow, the aura is a hint rather than a
-     glow, and one type scale does the hierarchy. Nothing here changes what is
-     shown — only how loudly. */
+     The look: plain surfaces on a plain page. No aura, no glow, no glass, no
+     outlines — a card is a filled shape and nothing else. One title row with
+     the two buttons on it. A flat four-tab bar. The accent appears on the
+     thing you press and the thing that is "now", and nowhere else. */
   :root{
-    --r-lg:22px; --r-md:16px; --pad:18px;
-    --shadow-card:0 0 0 1px var(--line);
-    --glass:rgba(255,255,255,.82);
+    --r-lg:20px; --r-md:14px; --pad:18px;
+    --tab-h:58px; --tab-lift:0px;
+    --bg:#F2F2F7; --bg-2:#F2F2F7; --s1:#FFFFFF; --s2:#F2F2F7; --s3:#E5E5EA;
+    --line:rgba(13,16,23,.09);
+    --shadow-card:none; --shadow-float:none; --glass-hi:none;
+    --glass:rgba(249,249,251,.96); --veil:rgba(242,242,247,.9);
   }
   html.dark{
-    --s1:#12151C; --s2:#191D26; --s3:#222733;
-    --line:rgba(255,255,255,.08);
-    --shadow-card:0 0 0 1px var(--line);
-    --glass:rgba(18,21,28,.82);
+    --bg:#000000; --bg-2:#000000; --s1:#141416; --s2:#1E1E22; --s3:#2A2A2F;
+    --line:rgba(255,255,255,.10);
+    --shadow-card:none; --shadow-float:none; --glass-hi:none;
+    --glass:rgba(10,10,12,.96); --veil:rgba(0,0,0,.9);
+    --dial-track:#232328;
   }
   /* sticky needs a clip, not a hidden overflow: hidden made body the
      scroller, and the Plan segmented control scrolled away with the page */
   html,body{overflow-x:clip}
-  body::before{opacity:.55}
-  .card{margin-bottom:14px}
+  body::before{display:none}                 /* the aura */
+  .th-bloom{display:none}                    /* the glow behind the ring */
+  .card{margin-bottom:12px;box-shadow:none}
   .card-h{margin-bottom:14px}
   .card-h .label,.card-h .label b{font-size:15px;font-weight:650;color:var(--ink)}
-  h1{font-size:32px}
-  .countdown{color:var(--ink-2)}
-  /* chips: quieter, so status words read before their fills */
-  .chip{font-weight:600}
-  /* tab bar: labels readable, and the glass less milky */
+
+  /* ---- header: one row — the title, and the two buttons on it ---- */
+  #hero{padding:2px 2px 14px}
+  .wordmark{display:none}
+  .hdr-row{position:absolute;top:2px;right:0;min-height:0}
+  #viewTitle{margin-top:0;font-size:30px;line-height:44px}
+  .countdown{margin-top:0;color:var(--ink-2)}
+  .icon-btn{width:44px;height:44px;background:var(--s1);box-shadow:none}
+
+  /* ---- tab bar: flat, edge to edge, four tabs ---- */
+  .tabbar{
+    left:0;right:0;bottom:0;height:calc(var(--tab-h) + env(safe-area-inset-bottom));
+    padding-bottom:env(safe-area-inset-bottom);
+    border-radius:0;grid-template-columns:repeat(4,1fr);
+    max-width:none;background:var(--glass);
+    box-shadow:0 -1px 0 var(--line);
+  }
+  .tab-log,.tab-ind{display:none}
+  .tab{font-size:11px;gap:4px}
+  .tab.on{color:var(--acc-t)}
   .tab span,.tab small{font-size:11px}
-  .tabbar{box-shadow:0 0 0 1px var(--glass-line),0 12px 30px -18px rgba(0,0,0,.6)}
-  /* header buttons reach 44pt */
-  .icon-btn{width:44px;height:44px}
+
+  /* ---- Today: the ring, the count, the button. The rest is a tap away ---- */
+  #todayCard>.xopen{display:none}
+  #gapBell{display:none}
+  #ydSits{display:none}                      /* sitting-by-sitting lives on the day page */
+  #ckLede,.ck-ends{display:none}
+  .tc-land{background:var(--s1)}
   .xopen::after{content:"";position:absolute;inset:-6px}
   .px-cap{position:relative}
   .px-cap::after{content:"";position:absolute;inset:-7px -4px}
   .wks-d i{font-size:11px}
   .hold-sub{opacity:1}
   #dataBox{font-size:16px}
-  /* landscape: the cockpit is the whole screen, so the aura goes and the page can't scroll under it */
   @media (orientation:landscape) and (max-height:560px){
-    body::before{display:none}
     html{overflow:hidden}
   }
-  /* offers on Today: one calm row, the accent only on the icon */
-  .tc-land{background:var(--s1)}
+
+  /* ---- Plan: the simple page (ps-) ---- */
+  .ps-card{padding:18px}
+  .ps-top{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .ps-f{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .ps-k{font-size:13px;font-weight:600;color:var(--ink-2)}
+  .ps-n{font-family:var(--f-round);font-weight:700;font-size:34px;line-height:1.1;letter-spacing:-.03em;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .ps-n small{font-size:15px;font-weight:600;letter-spacing:0;color:var(--ink-2)}
+  .ps-s{font-size:13px;color:var(--ink-2)}
+  .ps-rule{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);font-size:15px;line-height:1.5;color:var(--ink)}
+  .ps-rule span{color:var(--ink-2);font-family:var(--f-mono);font-size:13px}
+  .ps-h{font-size:15px;font-weight:650;color:var(--ink);margin-bottom:6px}
+  .ps-row{display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--line)}
+  .ps-row:first-child{border-top:0}
+  .ps-cap{font-family:var(--f-round);font-weight:700;font-size:22px;letter-spacing:-.02em;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  .ps-when{font-size:15px;color:var(--ink-2)}
+  .ps-days{font-size:13px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+  .ps-row.now .ps-cap{color:var(--acc-t)}
+  .ps-row.now .ps-when{color:var(--ink);font-weight:650}
+  .ps-row.zero .ps-cap,.ps-row.zero .ps-days{color:var(--under-t)}
+  .ps-row.zero .ps-when{color:var(--ink);font-weight:650}
+  .ps-acts{display:flex;flex-direction:column;gap:8px;margin:4px 0 20px}
+  .ps-btn{width:100%;min-height:48px;justify-content:center;font-size:15px}
+  .ps-more{margin-bottom:12px}
+  .ps-more>summary{
+    list-style:none;display:flex;align-items:center;justify-content:space-between;cursor:pointer;
+    padding:14px 4px;font-size:15px;font-weight:600;color:var(--ink-2);border-top:1px solid var(--line);
+  }
+  .ps-more>summary::-webkit-details-marker{display:none}
+  .ps-more .pseg{margin-top:4px}
+
+  /* ---- Journey folds (jfold) ---- */
+  .jfold{padding:0}
+  .jfold>summary{
+    list-style:none;display:flex;align-items:center;gap:10px;cursor:pointer;
+    padding:16px 18px;min-height:52px;
+  }
+  .jfold>summary::-webkit-details-marker{display:none}
+  .jf-t{font-size:15px;font-weight:650;color:var(--ink);flex:none}
+  .jf-s{font-size:13px;color:var(--ink-2);margin-left:auto;text-align:right}
+  .jfold>summary .jf-t:only-child{margin-right:auto}
+  .jfold>summary::after{margin-left:0;flex:none}
+  .jf-b{padding:0 18px 18px}
+  #gapFold:has(> #gapTrend[hidden]),#cmFold:has(> #cmCard[hidden]){display:none}
+  #cmFold .card-h .label{display:none}
+  /* after zero the hero already says clean / slipped and since when — the
+     yesterday card only restated it */
+  html[data-era="zero"] #ydayCard{display:none}
 
   /* ---- the record: re-entry offer + Journey card (prefixes rz-, rm-, rc-) ---- */
   .rz{display:flex;flex-direction:column;gap:12px}
@@ -3588,10 +3656,18 @@ try{
   <div id="trendChart"></div>
 </section>
 
-<section class="card jn-card jn-record" id="recordCard" aria-label="What your record says" hidden></section>
+<details class="card jn-card jfold" id="recordFold" hidden>
+  <summary><span class="jf-t">What your record says</span><span class="jf-s" id="recordSum"></span></summary>
+  <div class="jf-b" id="recordCard"></div>
+</details>
 
-<section class="card jn-card jn-gaps" id="gapTrend" aria-label="Longest gap, day by day" hidden></section>
-<div class="card ladder" id="cmCard" hidden>
+<details class="card jn-card jfold" id="gapFold">
+  <summary><span class="jf-t">Longest gap, day by day</span></summary>
+  <section class="jn-gaps jf-b" id="gapTrend" aria-label="Longest gap, day by day" hidden></section>
+</details>
+<details class="card jn-card jfold" id="cmFold">
+  <summary><span class="jf-t">Reward ladder</span><span class="jf-s" id="cmFoldSum"></span></summary>
+<div class="ladder jf-b" id="cmCard" hidden>
   <div class="card-h tc-h">
     <p class="label"><b>The ladder</b></p>
     <span class="chip sm acc" id="cmChip" hidden></span>
@@ -3606,6 +3682,7 @@ try{
   <div class="cm-figs" id="cmFigs"></div>
   <p class="cm-note" id="cmNote"></p>
 </div>
+</details>
 
 <div class="history openable card jn-days" id="dayCard" data-title="Day by day">
   <button class="xopen" data-target="dayCard" data-title="Day by day" aria-label="Open day by day in detail"><svg class="ic" aria-hidden="true"><use href="#i-open"/></svg></button>
@@ -3631,6 +3708,12 @@ try{
      happens after zero. Each gets a pane, and the segmented control says out
      loud that the other three exist (a pulsing dot on Change plan when a move
      is actually on offer). -->
+<!-- Nov 2026: the tab opens on ONE page — today's limit, the date, and the
+     steps still to come. Everything the four panes held is still here, behind
+     "All the detail", and "Change the plan" opens straight onto its pane. -->
+<div class="ps" id="planSimple"></div>
+<details class="ps-more" id="planMore">
+<summary><span>All the detail</span></summary>
 <nav class="pseg" id="planSeg" role="tablist" aria-label="Plan sections">
   <button class="pseg-b" data-pane="today" role="tab" aria-selected="false">Today</button>
   <button class="pseg-b" data-pane="ladder" role="tab" aria-selected="false">Ladder</button>
@@ -3681,6 +3764,7 @@ try{
   <p class="d-evid">Honest footnote: the reward ladder follows contingency-management design, which is the best-evidenced treatment for cannabis use disorder; the trials verified abstinence externally, and paying yourself on your own word is the weaker form of it. <a class="dlink" href="guide.html#after">The evidence →</a></p>
 </div>
 </div>
+</details>
 </main>
 
 <main class="view" id="vMore">
@@ -4693,10 +4777,14 @@ try{
      at it — with the breakdown point named, then each zero and how long it
      held. Colour carries its word, like everywhere else. */
   function renderRecordCard(){
-    var card=$('recordCard');if(!card)return;
+    var card=$('recordCard'), fold=$('recordFold');if(!card||!fold)return;
     var m=recordModel();
-    if(!m.ok){card.hidden=true;return;}
-    card.hidden=false;
+    if(!m.ok){fold.hidden=true;return;}
+    fold.hidden=false;
+    // the limit with the most days behind a ≥75% hold rate
+    var best=null;
+    m.caps.forEach(function(c){var b=m.by[c];if(b.n>=MODEL_N&&b.held/b.n>=0.75&&(!best||b.n>m.by[best].n))best=c;});
+    $('recordSum').textContent=(best?'holds at '+best:'')+(best&&m.breakdown?' · ':'')+(m.breakdown?'breaks at '+m.breakdown:'');
     var rows=m.caps.filter(function(c){return m.by[c].n>=2;}).map(function(c){
       var b=m.by[c], r=b.held/b.n, tone=r>=0.75?'under':r>=MODEL_BREAK?'atcap':'over';
       var word=r>=0.75?'holds':r>=MODEL_BREAK?'mixed':'breaks';
@@ -4709,13 +4797,10 @@ try{
       return '<span class="rc-z'+(l.broke?'':' on')+'"><b>'+l.held+'</b> day'+(l.held===1?'':'s')+'<small>'+fmtShort(dateOf(l.at))+(l.broke?'':' · running')+'</small></span>';
     }).join('');
     var nxt='';
-    if(!isZeroEra&&idx>=0&&cap>0){
-      nxt='<p class="rc-k">From today\'s ceiling, paced by this record</p>'+modelChainHTML(cap);
-    }else if(isZeroEra&&m.demo){
+    if(isZeroEra&&m.demo){
       nxt='<p class="rc-k">If you ever need the ladder again, it would start near <b>'+rungAbove(m.demo).capText+'</b></p>';
     }
-    card.innerHTML='<div class="card-h"><p class="label"><b>What your record says</b></p><span class="chip sm ghost">'+m.logged+' days</span></div>'+
-      '<p class="rc-k">How often your days held at each ceiling</p><div class="rc-rows">'+rows+'</div>'+
+    card.innerHTML='<p class="rc-k">How often your days held at each limit · '+m.logged+' days</p><div class="rc-rows">'+rows+'</div>'+
       (m.breakdown?'<p class="rc-note">From <b>'+m.breakdown+'</b> down is where descents have come apart, so a ladder rebuilt from this record takes smaller steps there and holds each one at least four days.</p>':'')+
       (zs?'<p class="rc-k">Each zero, and how long it held</p><div class="rc-zs">'+zs+'</div>':'')+nxt;
   }
@@ -12629,6 +12714,7 @@ try{
     var L=cmLadder();
     if(!L||!isZeroEra){card.hidden=true;return;}
     card.hidden=false;
+    var fs=$('cmFoldSum');if(fs)fs.textContent=money(L.earned)+' banked';
     var chip=$('cmChip');
     chip.hidden=!L.displayRun;
     // a slip today ends the run: the chip says so in ink, not in the accent
@@ -14230,6 +14316,60 @@ try{
      makes the second half untrue — the gaps widen up to a line the person
      drew — and a footer insisting otherwise is the app arguing with a setting
      it offers. The first half never stops being true. */
+  /* The Plan tab's front page: what today allows, when zero is, and the steps
+     still to come — nothing else. Past steps are Journey's; every control is
+     one tap away behind "Change the plan". */
+  function psDay(d){return WEEKDAYS[d.getDay()].slice(0,3)+' '+fmtShort(d);}
+  function renderPlanSimple(){
+    var box=$('planSimple');if(!box)return;
+    if(idx<0){box.innerHTML='';return;}
+    var sch=schedule(), html='';
+    if(isZeroEra){
+      var n=Math.max(0,daysFree()), zs=zeroStats(), rs=restartSuggest();
+      html='<div class="card ps-card"><div class="ps-top">'+
+        '<div class="ps-f"><span class="ps-k">Clean run</span><span class="ps-n">'+n+'<small> day'+(n===1?'':'s')+'</small></span></div>'+
+        '<div class="ps-f"><span class="ps-k">Zero since</span><span class="ps-n">'+fmtShort(zeroDay())+'</span></div></div>'+
+        '<p class="ps-rule">The step-down is finished'+(zs&&zs.slips?' · '+zs.clean+' clean days banked, best run '+zs.best:'')+'.</p></div>'+
+        '<div class="ps-acts">'+
+        (rs?'<button class="btn ps-btn'+(rs.pattern?' acc':' ghost')+'" data-ps="adjust">Using again? Get back on a plan</button>':'')+
+        '<button class="btn ps-btn ghost" data-ps="after">After-zero plans and rewards</button></div>';
+      box.innerHTML=html;return;
+    }
+    var z=zeroDate(), dz=daysToZero(), pl=dayPlanOf(today,idx);
+    var rule=phase.single?'Evening only · one sitting':phase.sessionMax+' a sitting · '+fmtGapH(spacingHNow())+' apart';
+    var rows='';
+    for(var i=idx;i<BASE_PHASES.length;i++){
+      var r=sch[i], p=BASE_PHASES[i];
+      if(!r||r.skipped||!r.start)continue;
+      if(p.cap===0){
+        rows+='<div class="ps-row zero"><span class="ps-cap">0</span><span class="ps-when">'+psDay(r.start)+'</span><span class="ps-days">zero</span></div>';
+        break;
+      }
+      var a=i===idx?today:r.start, e=r.end||a, nd=Math.round((e-a)/MS_DAY)+1;
+      var when=(i===idx?'Today':fmtShort(a))+(nd>1?' – '+(a.getMonth()===e.getMonth()&&i!==idx?e.getDate():fmtShort(e)):'');
+      rows+='<div class="ps-row'+(i===idx?' now':'')+'"><span class="ps-cap">'+p.capText+'</span><span class="ps-when">'+when+'</span>'+
+        '<span class="ps-days">'+nd+' day'+(nd===1?'':'s')+'</span></div>';
+    }
+    html='<div class="card ps-card"><div class="ps-top">'+
+        '<div class="ps-f"><span class="ps-k">Today\'s limit</span><span class="ps-n">'+phase.capText+'</span></div>'+
+        '<div class="ps-f"><span class="ps-k">Zero</span><span class="ps-n">'+fmtShort(z)+'</span><span class="ps-s">'+(dz===1?'tomorrow':'in '+dz+' days')+'</span></div></div>'+
+        '<p class="ps-rule">'+rule+(pl&&pl.w&&pl.w.length?'<br><span>'+pl.w.join(' · ')+'</span>':'')+'</p></div>'+
+      '<div class="card ps-card"><p class="ps-h">The steps from here</p><div class="ps-rows">'+rows+'</div></div>'+
+      '<div class="ps-acts"><button class="btn ps-btn'+(planDecision?' acc':' ghost')+'" data-ps="adjust">'+(planDecision?'A change is suggested — review it':'Change the plan')+'</button></div>';
+    box.innerHTML=html;
+  }
+  RENDER_HOOKS.push(renderPlanSimple);
+  (function(){
+    var box=document.getElementById('planSimple'), more=document.getElementById('planMore');
+    if(!box||!more)return;
+    box.addEventListener('click',function(ev){
+      var b=ev.target.closest('[data-ps]');if(!b)return;
+      more.open=true;
+      setPlanPane(b.dataset.ps);
+      setTimeout(function(){try{more.scrollIntoView({block:'start',behavior:'smooth'});centreStrips();}catch(e){}},60);
+    });
+    more.addEventListener('toggle',function(){if(more.open)setTimeout(function(){try{centreStrips();}catch(e){}},0);});
+  })();
   function renderFooterLine(){
     var el=$('footerLine');if(!el)return;
     var m=gapMax();
