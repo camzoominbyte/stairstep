@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Taper">
@@ -1461,7 +1461,7 @@
     opacity:0;transition:opacity .22s var(--e-exit)}
   .px-sheet[hidden]{display:none}
   .px-sheet.show{opacity:1;transition:opacity .16s linear}
-  .px-sheet:not(.show){pointer-events:none}
+  .px-sheet:not(.show){pointer-events:auto}
   .px-shp{position:relative;width:100%;max-width:560px;background:var(--s1);border-radius:var(--r-lg) var(--r-lg) 0 0;
     padding:0 0 calc(20px + env(safe-area-inset-bottom,0px));
     box-shadow:0 -1px 0 var(--line),0 -18px 40px -24px rgba(0,0,0,.35);
@@ -3149,6 +3149,95 @@
     .px-sheet>.px-shp{transform:none!important;transition:none!important}
     .toast{transform:none!important;transition:opacity .15s linear!important}
   }
+
+  /* ==== [R] CALM — the Nov 2026 pass ==== */
+  /* One layer over the rest, so it can be read (and reverted) as a whole.
+     Fewer surfaces competing: cards sit flat on the page with a hairline
+     instead of a lit edge and a drop shadow, the aura is a hint rather than a
+     glow, and one type scale does the hierarchy. Nothing here changes what is
+     shown — only how loudly. */
+  :root{
+    --r-lg:22px; --r-md:16px; --pad:18px;
+    --shadow-card:0 0 0 1px var(--line);
+    --glass:rgba(255,255,255,.82);
+  }
+  html.dark{
+    --s1:#12151C; --s2:#191D26; --s3:#222733;
+    --line:rgba(255,255,255,.08);
+    --shadow-card:0 0 0 1px var(--line);
+    --glass:rgba(18,21,28,.82);
+  }
+  /* sticky needs a clip, not a hidden overflow: hidden made body the
+     scroller, and the Plan segmented control scrolled away with the page */
+  html,body{overflow-x:clip}
+  body::before{opacity:.55}
+  .card{margin-bottom:14px}
+  .card-h{margin-bottom:14px}
+  .card-h .label,.card-h .label b{font-size:15px;font-weight:650;color:var(--ink)}
+  h1{font-size:32px}
+  .countdown{color:var(--ink-2)}
+  /* chips: quieter, so status words read before their fills */
+  .chip{font-weight:600}
+  /* tab bar: labels readable, and the glass less milky */
+  .tab span,.tab small{font-size:11px}
+  .tabbar{box-shadow:0 0 0 1px var(--glass-line),0 12px 30px -18px rgba(0,0,0,.6)}
+  /* header buttons reach 44pt */
+  .icon-btn{width:44px;height:44px}
+  .xopen::after{content:"";position:absolute;inset:-6px}
+  .px-cap{position:relative}
+  .px-cap::after{content:"";position:absolute;inset:-7px -4px}
+  .wks-d i{font-size:11px}
+  .hold-sub{opacity:1}
+  #dataBox{font-size:16px}
+  /* landscape: the cockpit is the whole screen, so the aura goes and the page can't scroll under it */
+  @media (orientation:landscape) and (max-height:560px){
+    body::before{display:none}
+    html{overflow:hidden}
+  }
+  /* offers on Today: one calm row, the accent only on the icon */
+  .tc-land{background:var(--s1)}
+
+  /* ---- the record: re-entry offer + Journey card (prefixes rz-, rm-, rc-) ---- */
+  .rz{display:flex;flex-direction:column;gap:12px}
+  .rz-lede{font-size:14px;line-height:1.45;color:var(--ink-2)}
+  .rz-lede b{color:var(--ink)}
+  .rz-row{display:flex;flex-direction:column;gap:6px}
+  .rz-l{font-size:12.5px;font-weight:600;color:var(--ink-2)}
+  .rz .gap-pick small{display:block;font-size:11px;font-weight:500;color:var(--ink-3);margin-top:1px}
+  .rz .gap-pick.on small{color:inherit;opacity:.85}
+  .rm-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .rm-f{background:var(--s2);border-radius:var(--r-md);padding:10px 11px;display:flex;flex-direction:column;gap:2px;min-width:0}
+  .rm-k{font-size:11.5px;font-weight:600;color:var(--ink-2)}
+  .rm-v{font-family:var(--f-round);font-weight:700;font-size:20px;letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums}
+  .rm-s{font-size:11px;color:var(--ink-3);line-height:1.25}
+  .rm-chain{display:flex;flex-wrap:wrap;align-items:center;gap:4px 2px}
+  .rm-st{display:inline-flex;flex-direction:column;align-items:center;min-width:34px;padding:5px 6px;border-radius:10px;background:var(--s2)}
+  .rm-st b{font-family:var(--f-round);font-size:15px;font-weight:700;color:var(--ink);line-height:1.1}
+  .rm-st i{font-style:normal;font-size:11px;color:var(--ink-3)}
+  .rm-st.z{background:var(--under-bg)}
+  .rm-st.z b{color:var(--under-t)}
+  .rm-ar{color:var(--ink-3);display:inline-flex}
+  .rc-k{font-size:12.5px;font-weight:600;color:var(--ink-2);margin:14px 0 8px}
+  .rc-k:first-of-type{margin-top:0}
+  .rc-k b{color:var(--ink)}
+  .rc-rows{display:flex;flex-direction:column;gap:7px}
+  .rc-row{display:grid;grid-template-columns:34px 1fr auto 48px;align-items:center;gap:10px}
+  .rc-cap{font-family:var(--f-round);font-weight:700;font-size:15px;text-align:right;color:var(--ink)}
+  .rc-bar{height:8px;border-radius:4px;background:var(--s3);overflow:hidden}
+  .rc-bar i{display:block;height:100%;border-radius:4px}
+  .rc-v{font-size:12.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .rc-v b{color:var(--ink);font-weight:650}
+  .rc-w{font-size:12px;font-weight:650}
+  .rc-row.brk .rc-cap{color:var(--over-t)}
+  .rc-note{font-size:13px;line-height:1.45;color:var(--ink-2);margin-top:10px}
+  .rc-note b{color:var(--ink)}
+  .rc-zs{display:flex;flex-wrap:wrap;gap:8px}
+  .rc-z{display:flex;flex-direction:column;padding:8px 12px;border-radius:var(--r-md);background:var(--s2);font-size:13px;color:var(--ink-2)}
+  .rc-z b{font-family:var(--f-round);font-size:19px;color:var(--ink)}
+  .rc-z small{font-size:11px;color:var(--ink-3)}
+  .rc-z.on{background:var(--under-bg)}
+  @media (max-width:340px){.rm-facts{grid-template-columns:1fr 1fr}}
+  /* ==== [/R] ==== */
 </style>
 <script>
 try{
@@ -3470,21 +3559,6 @@ try{
   <p class="ck-note" id="ckNote"></p>
 </div>
 
-<div class="card ladder" id="cmCard" hidden>
-  <div class="card-h tc-h">
-    <p class="label"><b>The ladder</b></p>
-    <span class="chip sm acc" id="cmChip" hidden></span>
-  </div>
-  <div class="cm-row">
-    <span class="cm-val" id="cmVal">–</span>
-    <span class="cm-lbl" id="cmLbl"></span>
-  </div>
-  <p class="cm-sub" id="cmSub"></p>
-  <div class="cm-bars" id="cmBars" aria-hidden="true"></div>
-  <div class="cm-ax" id="cmAx"></div>
-  <div class="cm-figs" id="cmFigs"></div>
-  <p class="cm-note" id="cmNote"></p>
-</div>
 
 <div class="tc-nudge" id="backupNudge" hidden></div>
 </main>
@@ -3514,7 +3588,24 @@ try{
   <div id="trendChart"></div>
 </section>
 
+<section class="card jn-card jn-record" id="recordCard" aria-label="What your record says" hidden></section>
+
 <section class="card jn-card jn-gaps" id="gapTrend" aria-label="Longest gap, day by day" hidden></section>
+<div class="card ladder" id="cmCard" hidden>
+  <div class="card-h tc-h">
+    <p class="label"><b>The ladder</b></p>
+    <span class="chip sm acc" id="cmChip" hidden></span>
+  </div>
+  <div class="cm-row">
+    <span class="cm-val" id="cmVal">–</span>
+    <span class="cm-lbl" id="cmLbl"></span>
+  </div>
+  <p class="cm-sub" id="cmSub"></p>
+  <div class="cm-bars" id="cmBars" aria-hidden="true"></div>
+  <div class="cm-ax" id="cmAx"></div>
+  <div class="cm-figs" id="cmFigs"></div>
+  <p class="cm-note" id="cmNote"></p>
+</div>
 
 <div class="history openable card jn-days" id="dayCard" data-title="Day by day">
   <button class="xopen" data-target="dayCard" data-title="Day by day" aria-label="Open day by day in detail"><svg class="ic" aria-hidden="true"><use href="#i-open"/></svg></button>
@@ -4327,6 +4418,8 @@ try{
        followed a failed quit while leaving that cliff in place rebuilds
        everything except the part that broke. */
   var R2_PACES=[
+    {hold:0,name:'Paced from your record',
+     note:'Bigger, shorter steps where your days have held; smaller, longer ones where they have come apart. Read off your own log.'},
     {hold:2,name:'Two days a rung',
      note:'The pace the restart was walking. Fastest to zero, and the one the log has already been tested against.'},
     {hold:3,name:'Three days a rung',
@@ -4341,7 +4434,7 @@ try{
     return R2_PACES[0];
   }
   // how a pace reads in a sentence — "1 days a rung" is not one
-  function r2PaceText(h){return h===1?'one step a day, a week to zero':h+' days a rung';}
+  function r2PaceText(h){return h===0?'paced from your record':h===1?'one step a day, a week to zero':h+' days a rung';}
   /* ================= one week to zero =================
      The paces above trade days-per-rung against the calendar, and all of them
      are long: from 10, two days a rung is sixteen days and four is over a
@@ -4419,9 +4512,16 @@ try{
     if(p.cap===3&&p.single){q.desc=R2_LOW3.desc;q.goals=R2_LOW3.goals;q.plans=R2_LOW3.plans;}
     return q;
   }
-  function r2Entry(c,hold,gen,eve,n){
+  function r2Entry(c,hold,gen,eve,n,afterZero,fromRecord){
     var src=r2RungAt(c);if(!src)return null;
     var q=r2Clone(src,hold,gen);
+    if(afterZero||fromRecord){
+      q.desc=afterZero
+        ?"Back on a ladder after zero. Nothing before today is erased — the days that zero held stay banked — and this descent is paced from what your own record shows you can hold."
+        :"The descent, rebuilt from your record: bigger steps where your days have held, smaller and longer ones where they have come apart.";
+      q.goals=["Land under "+q.capText+" today. Every step from here is sized and timed from your own logged days, not a template."];
+      return q;
+    }
     // the day before a week that was written in to start tomorrow
     if(eve){
       q.desc="The day before the week. A looser ceiling on purpose — the change came quickly, and the week starts tomorrow at 10.";
@@ -4439,10 +4539,12 @@ try{
   }
   // the caps a rebuilt second descent walks below its entry, in descent order
   function r2Tail(c,hold,len){
+    if(hold===0)return modelPlan(c).slice(1).map(function(r){return r.capText;});
     return r2TailRungs(c,hold,len).map(function(q){return q.capText;});
   }
   // calendar length of a second descent rebuilt from cap c — mirrors buildLadder
   function r2Len(c,hold,len){
+    if(hold===0)return modelLen(c);
     return (1+r2TailRungs(c,hold,len).length)*Math.max(1,hold||2);
   }
   /* Every rebuild the restarted descent has taken, oldest first. Stored as a
@@ -4459,6 +4561,170 @@ try{
     if(!rs)return [];
     if(rs.rebuilds&&rs.rebuilds.length)return rs.rebuilds;
     return rs.rebuild?[rs.rebuild]:[];   // the single-slot shape, read forward
+  }
+  /* ================= what the record says =================
+     Every move above re-enters on a three- or seven-day median and walks a
+     template: the same rungs, the same days on each, whoever the person is.
+     The record already holds the better evidence — four months of days, each
+     logged against the ceiling it was lived under — so this reads it:
+
+     - HOLD RATE per ceiling: the share of logged days at or under it. Pooled
+       with the neighbouring ceilings (±2) when one has too few days to say
+       anything alone.
+     - THE BREAKDOWN POINT: the highest ceiling the record shows holding on
+       fewer than 60% of days (n ≥ 3). Above it, steps can be bigger and
+       shorter; at and below it every attempt so far has come apart, so the
+       steps get small and long.
+     - THE DEMONSTRATED LEVEL: the ceiling recent days met about 7 times in 9
+       (the 7th-lowest of the last 9 logged days) — the percentile rule from
+       shaping research (Lamb 2010): a target met most days, not a hope.
+     - THE ZERO ATTEMPTS: each zero the record reached, and how many days it
+       held before the first hit.
+
+     And from it, the plan (modelPlan): each cut at most ~25% of the current
+     ceiling (NSW Health's cannabis guidance is 25% a week; benzodiazepine
+     consensus is proportional cuts with pauses allowed), so the steps shrink
+     in absolute size as the number does. Each rung held 2–4 days by its own
+     hold rate, and never fewer than 4 at or below the breakdown point —
+     withdrawal after a cut peaks around days 2–6, and a cut taken before the
+     last one has settled stacks the two. None of this is a trial result for
+     cannabis tapering; there isn't one. It is the record, read with the
+     guidance that exists, and the person still picks the pace. */
+  var MODEL_N=3, MODEL_BREAK=0.6;
+  function recordModel(){return rc('model',function(){
+    var by={}, d=new Date(TAPER_START), recent=[], lapses=[];
+    var sch=schedule();
+    while(dkeyOf(d)<todayKey){
+      var k=dkeyOf(d), c=countOf(k), pi=phaseIndexFor(d);
+      var cp=pi>=0?BASE_PHASES[pi].cap:null;
+      if(c!==null&&cp>0){
+        var b=by[cp]||(by[cp]={cap:cp,n:0,held:0});
+        b.n++;if(c<=cp)b.held++;
+      }
+      if(c!==null&&cp!==0)recent.push(c);
+      d=addDays(d,1);
+    }
+    // each zero the record reached: days held before the first hit
+    for(var i=0;i<BASE_PHASES.length;i++){
+      if(BASE_PHASES[i].cap!==0||!sch[i]||!sch[i].start||sch[i].start>today)continue;
+      var zd=new Date(sch[i].start), end=sch[i].end&&sch[i].end<today?sch[i].end:today, held=0, broke=false;
+      while(zd<=end){
+        if((countOf(dkeyOf(zd))||0)>0){broke=true;break;}
+        if(dkeyOf(zd)<todayKey)held++;
+        zd=addDays(zd,1);
+      }
+      lapses.push({at:dkeyOf(sch[i].start),held:held,broke:broke});
+    }
+    function rateAt(c){
+      var n=0,h=0;
+      if(by[c]&&by[c].n>=MODEL_N)return {r:by[c].held/by[c].n,n:by[c].n,own:true};
+      for(var k in by){if(Math.abs(+k-c)<=2){n+=by[k].n;h+=by[k].held;}}
+      return n>=MODEL_N?{r:h/n,n:n,own:false}:null;
+    }
+    var caps=Object.keys(by).map(Number).sort(function(a,b){return b-a;}), brk=null;
+    for(i=0;i<caps.length;i++){
+      var bc=by[caps[i]];
+      if(bc.n>=MODEL_N&&bc.held/bc.n<MODEL_BREAK){brk=caps[i];break;}
+    }
+    var last9=recent.slice(-9).sort(function(a,b){return a-b;});
+    var demo=last9.length>=3?last9[Math.min(last9.length-1,Math.ceil(last9.length*0.75)-1)]:null;
+    var logged=0;for(k in by)logged+=by[k].n;
+    return {by:by,caps:caps,rateAt:rateAt,breakdown:brk,demo:demo,last9:recent.slice(-9),
+            lapses:lapses,logged:logged,ok:logged>=10};
+  });}
+  // the smallest rung at or above n — a level becomes a ceiling the ladder has
+  function rungAbove(n){
+    var pool=descentPool().slice().reverse();
+    for(var i=0;i<pool.length;i++)if(pool[i].cap>=n)return pool[i];
+    return COARSE_RUNGS[0];
+  }
+  // how long the record says to hold a ceiling
+  function modelDays(m,c){
+    var r=m.rateAt(c), dd=r==null?3:r.r>=0.75?2:r.r>=0.55?3:4;
+    if(m.breakdown&&c<=m.breakdown)dd=Math.max(dd,4);
+    return dd;
+  }
+  /* The plan from a re-entry ceiling: [{cap,capText,days}], entry first.
+     Each next ceiling is the shallowest rung that cuts no more than 25% —
+     or, where no rung sits inside that, the next one down. */
+  function modelPlan(c){
+    var m=recordModel(), pool=descentPool().filter(function(q){return q.cap<c;});
+    var entry=r2RungAt(c)||rungAbove(c), out=[{cap:entry.cap,capText:entry.capText,days:modelDays(m,entry.cap)}];
+    var cur=entry.cap;
+    while(true){
+      var below=pool.filter(function(q){return q.cap<cur;});
+      if(!below.length)break;
+      var floor=cur*0.75, pick=null;
+      for(var i=below.length-1;i>=0;i--)if(below[i].cap>=floor){pick=below[i];break;}
+      if(!pick)pick=below[0];
+      out.push({cap:pick.cap,capText:pick.capText,days:modelDays(m,pick.cap)});
+      cur=pick.cap;
+    }
+    return out;
+  }
+  function modelLen(c){return modelPlan(c).reduce(function(s,r){return s+r.days;},0);}
+  // the rebuild entry a record-paced plan is stored as (the caller adds `at`)
+  function modelEntry(c){
+    var pl=modelPlan(c);
+    return {cap:pl[0].cap,hold:pl[0].days,tail:pl.slice(1).map(function(r){return [r.cap,r.days];})};
+  }
+  function pctTxt(r){return Math.round(r*100)+'%';}
+  /* The record, as three facts and a plan — the part of every rebuild offer
+     that says why the steps are the size they are. */
+  function recordFactsHTML(entryCap){
+    var m=recordModel();
+    if(!m.ok)return '';
+    var facts=[], top=m.rateAt(entryCap);
+    if(top)facts.push(['Held '+entryCap,pctTxt(top.r),'of '+top.n+' days at or near it']);
+    if(m.breakdown){
+      var br=m.rateAt(m.breakdown);
+      facts.push(['Breaks at',String(m.breakdown),'held '+pctTxt(br.r)+' there']);
+    }
+    var lz=m.lapses.filter(function(l){return l.broke;});
+    if(lz.length){
+      var hs=lz.map(function(l){return l.held;});
+      facts.push(['Zero held',hs.join(', '),'day'+(hs.length===1&&hs[0]===1?'':'s')+' before the first hit']);
+    }
+    return '<div class="rm-facts">'+facts.map(function(f){
+      return '<div class="rm-f"><span class="rm-k">'+f[0]+'</span><span class="rm-v">'+f[1]+'</span><span class="rm-s">'+f[2]+'</span></div>';
+    }).join('')+'</div>';
+  }
+  /* Journey: the model, drawn. One bar a ceiling — how often your days held
+     at it — with the breakdown point named, then each zero and how long it
+     held. Colour carries its word, like everywhere else. */
+  function renderRecordCard(){
+    var card=$('recordCard');if(!card)return;
+    var m=recordModel();
+    if(!m.ok){card.hidden=true;return;}
+    card.hidden=false;
+    var rows=m.caps.filter(function(c){return m.by[c].n>=2;}).map(function(c){
+      var b=m.by[c], r=b.held/b.n, tone=r>=0.75?'under':r>=MODEL_BREAK?'atcap':'over';
+      var word=r>=0.75?'holds':r>=MODEL_BREAK?'mixed':'breaks';
+      return '<div class="rc-row'+(c===m.breakdown?' brk':'')+'"><span class="rc-cap">'+((r2RungAt(c)||{capText:c}).capText)+'</span>'+
+        '<span class="rc-bar"><i style="width:'+Math.max(4,Math.round(r*100))+'%;background:var(--'+tone+')"></i></span>'+
+        '<span class="rc-v"><b>'+pctTxt(r)+'</b> '+b.held+'/'+b.n+'</span>'+
+        '<span class="rc-w" style="color:var(--'+tone+'-t)">'+word+'</span></div>';
+    }).join('');
+    var zs=m.lapses.map(function(l){
+      return '<span class="rc-z'+(l.broke?'':' on')+'"><b>'+l.held+'</b> day'+(l.held===1?'':'s')+'<small>'+fmtShort(dateOf(l.at))+(l.broke?'':' · running')+'</small></span>';
+    }).join('');
+    var nxt='';
+    if(!isZeroEra&&idx>=0&&cap>0){
+      nxt='<p class="rc-k">From today\'s ceiling, paced by this record</p>'+modelChainHTML(cap);
+    }else if(isZeroEra&&m.demo){
+      nxt='<p class="rc-k">If you ever need the ladder again, it would start near <b>'+rungAbove(m.demo).capText+'</b></p>';
+    }
+    card.innerHTML='<div class="card-h"><p class="label"><b>What your record says</b></p><span class="chip sm ghost">'+m.logged+' days</span></div>'+
+      '<p class="rc-k">How often your days held at each ceiling</p><div class="rc-rows">'+rows+'</div>'+
+      (m.breakdown?'<p class="rc-note">From <b>'+m.breakdown+'</b> down is where descents have come apart, so a ladder rebuilt from this record takes smaller steps there and holds each one at least four days.</p>':'')+
+      (zs?'<p class="rc-k">Each zero, and how long it held</p><div class="rc-zs">'+zs+'</div>':'')+nxt;
+  }
+  RENDER_HOOKS.push(renderRecordCard);
+  function modelChainHTML(c){
+    return '<div class="rm-chain">'+modelPlan(c).map(function(r){
+      return '<span class="rm-st"><b>'+r.capText+'</b><i>'+r.days+'d</i></span>';
+    }).join('<span class="rm-ar">'+icon('chev','ic-xs')+'</span>')+
+      '<span class="rm-ar">'+icon('chev','ic-xs')+'</span><span class="rm-st z"><b>0</b></span></div>';
   }
   /* ================= the rebuilt landing =================
      The rebase answers a descent that has come apart; this answers the one
@@ -4588,11 +4854,21 @@ try{
     var rbs=rebuildsOf(d), g, r2, r2e, tail;
     for(g=0;g<rbs.length;g++){
       r2=rbs[g];
-      tail=r2TailRungs(r2.cap,r2.hold,r2.len,r2.rungs);
-      r2e=r2Entry(r2.cap,r2.hold,g,r2.eve,r2.hold===1?1+tail.length:0);
+      /* a re-entry taken AFTER a zero (z): the zero the descent before it
+         reached becomes an interlude of its own — the days that quit held,
+         closed off on the eve of this anchor — exactly as the restart turns
+         the first quit into one. Without it the last capped rung would ride
+         every clean day since zero at its cap. */
+      if(r2.z){var zq=rsInterlude(zero);zq.zg=g;out.push(zq);}
+      /* a plan paced from the record carries its own tail: each rung with
+         its own days. Otherwise one pace for every rung, as before. */
+      var plan=r2.tail
+        ? r2.tail.map(function(t){return {q:r2RungAt(t[0]),d:t[1]};}).filter(function(t){return t.q;})
+        : r2TailRungs(r2.cap,r2.hold,r2.len,r2.rungs).map(function(q){return {q:q,d:r2.hold};});
+      r2e=r2Entry(r2.cap,r2.hold,g,r2.eve,(r2.hold===1&&!r2.tail)?1+plan.length:0,r2.z,!!r2.tail);
       if(!r2e)continue;
       out.push(r2e);
-      for(i=0;i<tail.length;i++)out.push(r2Clone(tail[i],r2.hold,g));
+      for(i=0;i<plan.length;i++)out.push(r2Clone(plan[i].q,plan[i].d,g));
     }
     out.push(zero);
     return out;
@@ -4660,7 +4936,9 @@ try{
      evening it belongs to, not tomorrow's cap. */
   var DAY_CUTOFF_H = 4;
   function pad(n){return ('0'+n).slice(-2);}
-  function logicalNow(){return new Date(Date.now() - DAY_CUTOFF_H*3600000);}
+  /* 4am on the wall clock, not four absolute hours back: on a DST change the
+     two differ by an hour, and the day rolled at 3am or 5am */
+  function logicalNow(){var n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate(),n.getHours()-DAY_CUTOFF_H,n.getMinutes(),n.getSeconds());}
   function dkeyOf(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
   function dateOf(key){var p=key.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
   function addDays(d,n){return new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);}
@@ -4830,7 +5108,7 @@ try{
        back to them. Anything unreadable is dropped rather than guessed at, and
        a dose whose pill is gone has nothing to name it, so it goes too. */
     if(!d.pills||typeof d.pills!=='object'||d.pills instanceof Array)d.pills={};
-    var plIds={};
+    var plIds=Object.create(null);
     d.pills.list=(d.pills.list instanceof Array?d.pills.list:[]).filter(function(p){
       if(!p||typeof p!=='object'||typeof p.id!=='string'||!p.id||plIds[p.id])return false;
       if(typeof p.name!=='string'||!p.name.trim())return false;
@@ -4982,7 +5260,18 @@ try{
                  typeof qz.at==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(qz.at)&&
                  qz.at>prevAt&&
                  typeof qz.cap==='number'&&!!r2RungAt(qz.cap)&&
-                 typeof qz.hold==='number'&&r2Pace(qz.hold).hold===qz.hold))break;
+                 typeof qz.hold==='number'&&
+                 (r2Pace(qz.hold).hold===qz.hold||(qz.tail!==undefined&&qz.hold>=1&&qz.hold<=7&&qz.hold===Math.round(qz.hold)))))break;
+            /* tail: a plan paced from the record — [cap, days] pairs, descending,
+               every cap a real rung below the entry, every hold 1–7 days. A bad
+               tail drops the whole entry: its hold was only valid beside it. */
+            if(qz.tail!==undefined){
+              var tOk=qz.tail instanceof Array&&qz.tail.length>=1&&qz.tail.every(function(t,ti){
+                return t instanceof Array&&typeof t[0]==='number'&&typeof t[1]==='number'&&
+                  t[0]>0&&t[0]<(ti?qz.tail[ti-1][0]:qz.cap)&&!!r2RungAt(t[0])&&t[1]>=1&&t[1]<=7&&t[1]===Math.round(t[1]);});
+              if(!tOk)break;
+            }
+            if(qz.z!==undefined&&qz.z!==1)delete qz.z;
             // len: a shorter week (days in it), only meaningful at hold 1
             if(qz.len!==undefined&&!(qz.hold===1&&typeof qz.len==='number'&&qz.len>=2&&qz.len<=WEEK_DAYS))delete qz.len;
             // rungs: the week's caps pinned by hand — descending, all below the entry, all real rungs
@@ -5055,7 +5344,16 @@ try{
        from here. A week started from the door on Oct 15 is replaced: this is
        the same week, moved a day. */
     d.prescribed=(d.prescribed&&typeof d.prescribed==='object'&&!(d.prescribed instanceof Array))?d.prescribed:{};
+    /* zeroAt and lockTo are day keys or nothing — a malformed one would print
+       "day NaN" or make dateOf throw in every zero-era card */
+    if(d.zeroAt!==undefined&&!(typeof d.zeroAt==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(d.zeroAt)))delete d.zeroAt;
+    if(d.replan.lockTo!==undefined&&!(typeof d.replan.lockTo==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(d.replan.lockTo)&&d.replan.lockFrom))delete d.replan.lockTo;
+    /* The three Oct 15–17 writes below were for that week only. Restoring an
+       older backup today must not inject a week, and a lock, into it — so
+       they only run while that week was still ahead. */
     var rsP=d.replan.restart, PS={eve:'2026-10-15',at:'2026-10-16',eveCap:14,cap:10};
+    var psLive=dkeyOf(logicalNow())<='2026-10-21';
+    if(!psLive)rsP=null;
     if(!d.prescribed[PS.at]&&rsP&&rsP.at==='2026-08-18'&&
        !(rsP.rebuilds||[]).some(function(r){return r.at>PS.eve;})){
       var eDay=d.days[PS.eve], eCnt=eDay?Math.max(0,(eDay.hits?eDay.hits.length:0)+(eDay.adj||0)):0;
@@ -5198,6 +5496,10 @@ try{
        engine that absorbs miss six exactly like miss one is manufacturing
        the pattern that matters. */
     var slack=SLACK_TOTAL, lockKey=data.replan&&data.replan.lockFrom;
+    /* a lock is bounded, not deleted, when a move replaces the dates it froze:
+       the days walked under it keep the ceilings they were lived under */
+    var lockTo=data.replan&&data.replan.lockTo;
+    function isLocked(k){return !!(lockKey&&k>=lockKey&&(!lockTo||k<lockTo));}
     /* the rebase anchor, read off the ladder itself so the walk can never
        disagree with buildLadder about whether a rebuilt tail exists */
     var rbDate=null,rbKey=null,rebCapVal=null,rbEntered=false;
@@ -5237,12 +5539,15 @@ try{
     var r2Entered=rbList.map(function(){return false;});
     var r2Key=rbList.length?rbList[rbList.length-1].at:null;
     var r2Date=r2Dates.length?r2Dates[0]:null;      // where the rebuilt tail begins
-    var r2CapVal=null,r2Hold=rbList.length?(rbList[rbList.length-1].hold||2):null;
+    var r2Last=rbList.length?rbList[rbList.length-1]:null;
+    // a record-paced rebuild reads as pace 0, whatever its entry rung's days
+    var r2CapVal=null,r2Hold=r2Last?(r2Last.tail?0:(r2Last.hold||2)):null;
     // the anchor that ends a rung of generation g (-1 = the restart's own rungs)
     function nextAnchor(g){var n=(g==null?-1:g)+1;return n<r2Dates.length?r2Dates[n]:null;}
     function genOf(p){return p.r2?(p.r2i||0):-1;}
     function relbl(start,end){
       if(!end)return fmtShort(start)+' →';
+      if(dkeyOf(start)===dkeyOf(end))return fmtShort(start);
       if(start.getMonth()===end.getMonth())return fmtShort(start)+'–'+end.getDate();
       return fmtShort(start)+'–'+fmtShort(end);
     }
@@ -5257,6 +5562,7 @@ try{
        goes forward" — and the engine used to contradict it. The day is still
        recorded; it just leaves zero where the user last saw it. */
     var ritualSealed=!!(data.ritual&&data.ritual.completedAt);
+    var ritualFor=ritualSealed?(data.ritual.completedFor||dkeyOf(new Date(data.ritual.completedAt))):'';
     /* One day, one charge. The boundary check below can absorb the day after a
        rung ends — and when it does it bumps `auto`, which re-opens the while
        loop over that very same date, where the in-loop check charged it a
@@ -5376,12 +5682,14 @@ try{
                recorded here as it is decided, so the schedule can explain
                itself without a second walk that could disagree with this one */
             if(c!==null&&c>p.cap&&!charged[dk]){
-              // the zero rung is length-1; the last capped rung is length-2
-              var sealed=ritualSealed&&i===BASE_PHASES.length-2;
+              /* the rung right before a zero, and only for the descent the
+                 ritual was done for — a restart puts zeros mid-ladder, and an
+                 August ritual has nothing to say about a November evening */
+              var sealed=ritualSealed&&isZeroRungAt(i+1)&&ritualFor>=dkeyOf(start);
               if(resp==='kept'||resp==='held')causes.push({kind:'declined',key:dk,d:new Date(d),c:c,cap:p.cap,i:i});
               else if(sealed)causes.push({kind:'noslack',key:dk,d:new Date(d),c:c,cap:p.cap,i:i,sealed:true});
-              else if(slack<=0||(lockKey&&dk>=lockKey))
-                causes.push({kind:'noslack',key:dk,d:new Date(d),c:c,cap:p.cap,i:i,locked:!!(lockKey&&dk>=lockKey)});
+              else if(slack<=0||isLocked(dk))
+                causes.push({kind:'noslack',key:dk,d:new Date(d),c:c,cap:p.cap,i:i,locked:isLocked(dk)});
               else{slack--;auto++;causes.push({kind:'over',key:dk,d:new Date(d),c:c,cap:p.cap,i:i});}
             }
           }
@@ -5397,8 +5705,8 @@ try{
               // a deferral is an extension too, and it is the one that can
               // repeat forever — it spends from the same budget
               charged[dk2]=1;   // this date is now spoken for, either way
-              if(slack<=0||(lockKey&&dk2>=lockKey))
-                causes.push({kind:'noslack',key:dk2,d:new Date(d),c:c2,cap:nextCap,i:i,locked:!!(lockKey&&dk2>=lockKey),defer:true});
+              if(slack<=0||isLocked(dk2))
+                causes.push({kind:'noslack',key:dk2,d:new Date(d),c:c2,cap:nextCap,i:i,locked:isLocked(dk2),defer:true});
               else{slack--;auto++;causes.push({kind:'defer',key:dk2,d:new Date(d),c:c2,cap:nextCap,rode:p.cap,i:i});}
             }
           }
@@ -5417,8 +5725,9 @@ try{
          held, closed off on the day the second descent starts. Its length is
          not in the ladder (it is however long that quit lasted), so the walk
          sets it here — the one rung whose duration only the calendar knows. */
-      if(p.cap===0&&p.zi&&rsDate){
-        end=addDays(rsDate,-1);
+      var ziAt=p.zi?(p.zg!=null?r2Dates[p.zg]:rsDate):null;
+      if(p.cap===0&&p.zi&&ziAt){
+        end=addDays(ziAt,-1);
         if(end<start)end=new Date(start);
         cur=addDays(end,1);
       }
@@ -5439,7 +5748,7 @@ try{
     out.slack=slack;                    // extension days still available
                                         // (the newest rebuild's own, when rebuilt)
     out.slackTotal=SLACK_TOTAL;
-    out.locked=!!lockKey;
+    out.locked=!!lockKey&&!lockTo;
     out.rebased=rbKey;                  // 'YYYY-MM-DD' when a rebuilt descent is live
     out.rebCap=rebCapVal;               // its re-entry ceiling
     out.landed=ldKey;                   // 'YYYY-MM-DD' when a rebuilt landing is live
@@ -6250,7 +6559,11 @@ try{
   // witness today, once, whenever the app is open after zero — the evidence
   // cmObserved reads back. Written straight to storage; no re-render needed.
   function markSeenToday(){
-    if(!isZeroEra)return;
+    if(!isZeroEra){
+      // a late-logged eve can hold the last rung a day: the stamp must follow
+      if(data.zeroAt&&data.zeroAt>=todayKey){delete data.zeroAt;save();}
+      return;
+    }
     var dirty=false;
     // freeze the zero anchor the first time we render past it (H12)
     if(!data.zeroAt){data.zeroAt=dkeyOf(zeroDate());dirty=true;}
@@ -6331,6 +6644,13 @@ try{
      day counter is then the only honest clock we have. */
   function acuteWindow(){
     var last=lastHitEver();
+    /* a slip entered as a count (no timestamps) is invisible to lastHitEver;
+       date the clock from the end of that day instead of the older stamp */
+    var lu=lastUseDay();
+    if(lu&&(!last||dkeyOf(new Date(last.getTime()-DAY_CUTOFF_H*3600000))<dkeyOf(lu))){
+      var lend=new Date(lu.getFullYear(),lu.getMonth(),lu.getDate()+1,DAY_CUTOFF_H);
+      last=lend>new Date()?new Date():lend;
+    }
     if(!last)return null;
     var h=(Date.now()-last.getTime())/3600000;
     if(h<0)h=0;                                  // a forward-dated import
@@ -6376,7 +6696,7 @@ try{
        window the check-in tightens for — and then the ordinary timeline
        resumes. */
     if(slipped&&n<=SLIP_ECHO_D)
-      return 'Day '+cd+' since zero · day '+n+' of a new run — withdrawal isn’t restarting, that adjustment closed '+(cd>29?'weeks ago':(cd-1)+' day'+(cd-1===1?'':'s')+' ago')+'. A lapse costs a run, never the physiology, and a first lapse predicts nothing — it’s the pattern that matters. The counter climbs again from here.';
+      return 'Day '+cd+' since zero · day '+n+' of a new run — withdrawal isn’t restarting, '+(cd>21?'that adjustment closed '+(cd>35?'weeks':(cd-21)+' day'+(cd-21===1?'':'s'))+' ago':'that adjustment is '+(cd-1)+' day'+(cd-1===1?'':'s')+' in, and one hit does not reset it')+'. A lapse costs a run, never the physiology, and a first lapse predicts nothing — it’s the pattern that matters. The counter climbs again from here.';
     /* Past the echo, both clocks keep running and each keeps its own job: the
        physiology follows the calendar since zero, which no lapse restarted,
        and the milestones follow the run, because "30 days clean" can only mean
@@ -6729,7 +7049,7 @@ try{
           dayRows+='<div class="'+rowCls+'">'+
             '<span class="pd-date">'+WEEKDAYS[dd.getDay()].slice(0,3)+' '+dd.getDate()+'</span>'+
             '<span class="pd-wins">'+(dpl&&dpl.w?dpl.w.join(' · '):'—')+'</span>'+
-            '<span class="pd-gap">'+(p.single?'evening':fmtGapH(spacingHOn(dd,i))+' gap')+'</span></div>';
+            '<span class="pd-gap">'+(p.cap<=0?'zero':p.single?'evening':fmtGapH(spacingHOn(dd,i))+' gap')+'</span></div>';
           dd=addDays(dd,1);
         }
         if(dayRows)dayRows='<div class="phase-days">'+dayRows+'</div>';
@@ -6812,6 +7132,7 @@ try{
        two tails from claiming the same days: one anchor ends the descent, the
        other extends it, and they cannot both own the calendar from here. */
     if(data.replan.finish)return null;
+    if(data.replan.restart)return null;   // a first-descent anchor can't postdate a restart
     if(data.ritual&&data.ritual.completedAt)return null;
     if(zeroCalDay()>7)return null;
     var z=zeroDay();
@@ -6901,6 +7222,7 @@ try{
   function finishSuggest(){
     if(isZeroEra)return null;                         // there is nothing left to end
     if(data.replan.finish)return null;                // taken; the schedule card owns the undo
+    if(data.replan.restart)return null;               // would postdate the restart: normData drops it
     if(idx<0||idx>=BASE_PHASES.length-1)return null;
     if((countOf(todayKey)||0)>0)return null;          // today has a hit in it — not finished
     var last=lastUseDay();
@@ -6953,7 +7275,18 @@ try{
      plan meets the days. */
   function restartSuggest(){
     if(!isZeroEra)return null;
-    if(data.replan.restart)return null;
+    /* After a restart the zero era used to be a dead end: this move was spent,
+       and every other one needs a capped rung still ahead. A later zero that
+       came apart now re-enters the ladder as a dated rebuild (z) — the quit
+       it closes off becomes an interlude, like the first one did. Only from
+       the open-ended zero at the end of the ladder, and not twice in a day. */
+    var again=!!data.replan.restart;
+    if(again){
+      if(idx!==BASE_PHASES.length-1)return null;
+      var rbz=rebuildsOf(data);
+      if(data.replan.restart.at===todayKey||(rbz.length&&rbz[rbz.length-1].at===todayKey))return null;
+    }
+    var zb=dkeyOf(zeroDay());
     /* Only the CURRENT run of using days: walk back from yesterday and stop at
        the first clean one. Reaching further crosses the stretch the quit
        actually held and starts picking up days from the taper before it, which
@@ -6963,6 +7296,8 @@ try{
        is not the plan meeting the days, it is the plan setting them up. */
     var run=[],d=addDays(today,-1),tries=0;
     while(tries<21){
+      // never across the zero line: the taper's last days are not a relapse
+      if(dkeyOf(d)<zb)break;
       var c=countOf(dkeyOf(d));
       if(c===null||c===0)break;
       run.push(c);d=addDays(d,-1);tries++;
@@ -6979,15 +7314,16 @@ try{
     var pool=FINE_RUNGS.concat(COARSE_RUNGS).filter(function(q){return q.cap>0;})
       .sort(function(a,b){return a.cap-b.cap;});
     var rung=null;
-    for(var i=0;i<pool.length;i++)if(pool[i].cap>=need){rung=pool[i];break;}
+    if(again)rung=rungAbove(need);   // the second time round, the fuller pool (7, 6, 4…)
+    for(var i=0;!rung&&i<pool.length;i++)if(pool[i].cap>=need){rung=pool[i];break;}
     if(!rung)rung=COARSE_RUNGS[0];
     // a return is days, not a night: today counts toward the pattern, but on
     // its own it is still the lapse the counter already handles
     var using=run.length+(tc>0?1:0);
     return {cap:rung.cap,capText:rung.capText,med:med,run:run.slice(0,3).reverse(),
             todayC:tc,days:using,pattern:using>=2,
-            newZero:addDays(today,rsLen(rung.cap)),
-            banked:(zeroStats()||{}).clean||0};
+            newZero:addDays(today,again?modelLen(rung.cap):rsLen(rung.cap)),
+            banked:(zeroStats()||{}).clean||0,again:again};
   }
   /* Every ceiling the ladder can start from, at or above what today already
      holds. The log picks a recommendation; it does not get to pick FOR you.
@@ -7007,7 +7343,41 @@ try{
     out.sort(function(a,b){return a.cap-b.cap;});
     return out;
   }
+  /* Back on a ladder after a later zero. Three paces, the record's first:
+     the plan read off the log, two days a rung, or a week. The ceiling and
+     pace are transient picks; nothing is written until the button. */
+  var rzSel='rec', rzCap=null;
+  function rzPlanFor(c,pace){
+    if(pace==='rec')return modelPlan(c);
+    var h=+pace, tail=r2TailRungs(c,h);
+    return [{cap:c,capText:(r2RungAt(c)||{capText:String(c)}).capText,days:h}].concat(tail.map(function(q){return {cap:q.cap,capText:q.capText,days:h};}));
+  }
+  function reentryOfferHTML(sug){
+    var c=(rzCap&&r2RungAt(rzCap))?rzCap:sug.cap;
+    var paces=[['rec','From your record'],['2','Two days a step'],['1','One week']];
+    function zOf(p){return addDays(today,rzPlanFor(c,p).reduce(function(s,r){return s+r.days;},0));}
+    var z=zOf(rzSel);
+    var picks=restartRungs(Math.max(sug.todayC,1)).filter(function(r){return r.cap<=Math.max(16,sug.cap);});
+    var m=recordModel();
+    return '<div class="rz">'+
+      '<p class="rz-lede">'+(sug.run.length?'The last '+(sug.run.length===1?'day':sug.run.length+' days')+': <b>'+sug.run.join(', ')+'</b>'+(sug.todayC?', today <b>'+sug.todayC+'</b>':'')+'. ':'Today: <b>'+sug.todayC+'</b>. ')+
+        'The '+sug.banked+' clean day'+(sug.banked===1?'':'s')+' stay banked. Back on a ladder from <b>'+(r2RungAt(c)||{capText:c}).capText+'</b>:</p>'+
+      recordFactsHTML(c)+
+      '<div class="rz-row"><span class="rz-l">Start at</span><div class="gap-picks">'+picks.map(function(r){
+        return '<button class="gap-pick'+(r.cap===c?' on':'')+'" data-sc="rzcap" data-cap="'+r.cap+'">'+r.capText+'</button>';}).join('')+'</div></div>'+
+      '<div class="rz-row"><span class="rz-l">Pace</span><div class="gap-picks">'+paces.map(function(p){
+        return '<button class="gap-pick'+(p[0]===rzSel?' on':'')+'" data-sc="rzpace" data-p="'+p[0]+'">'+p[1]+'<small>'+fmtShort(zOf(p[0]))+'</small></button>';}).join('')+'</div></div>'+
+      (rzSel==='rec'?modelChainHTML(c):'<div class="rm-chain">'+rzPlanFor(c,rzSel).map(function(r){return '<span class="rm-st"><b>'+r.capText+'</b><i>'+r.days+'d</i></span>';}).join('<span class="rm-ar">'+icon('chev','ic-xs')+'</span>')+'<span class="rm-ar">'+icon('chev','ic-xs')+'</span><span class="rm-st z"><b>0</b></span></div>')+
+      '<button class="r2-go" data-sc="rez" data-cap="'+c+'" data-p="'+rzSel+'">Start — zero '+WEEKDAYS[z.getDay()]+', '+fmtShort(z)+'</button>'+
+      '<details class="sc-why"><summary>Why these steps</summary>'+
+        '<p class="sc-note">Each cut is at most about a quarter of the ceiling it leaves, so the steps shrink as the number does. Each ceiling is held 2–4 days by how often your own days held at it'+
+        (m.breakdown?', and at least 4 from <b>'+m.breakdown+'</b> down, where your record has come apart most':'')+
+        ' — withdrawal after a cut peaks around days 2–6, and stacking a second cut on the first is where steps fail.</p>'+
+        '<p class="sc-note">There is no cannabis tapering trial; this is your record read against the guidance that exists (NSW Health: about 25% a week). Tapering eases withdrawal — it does not change the odds of staying stopped. That is decided in the weeks after zero.</p></details>'+
+      '<p class="r2-undo">Nothing is erased, and you can undo it today. If this was one night rather than a change of direction, leave it — the counter restarts tomorrow on its own.</p></div>';
+  }
   function restartOfferHTML(sug){
+    if(sug.again)return reentryOfferHTML(sug);
     var nz=sug.newZero;
     return '<div class="sc-fine"><p class="sc-note"><b>Using again, and the ladder is behind you.</b> '+
       (sug.run.length?'The last '+(sug.run.length===1?'full day':sug.run.length+' full days')+' of it came in at <b>'+sug.run.join(', ')+
@@ -7123,7 +7493,7 @@ try{
      commit button is pressed, and a half-made choice has no business surviving
      a reload. Defaults to three: two days a rung is the pace this descent has
      been walking, so it is the one option the log has already argued against. */
-  var r2Sel=3;
+  var r2Sel=0;   // the record's pace leads
   /* The ceiling to re-enter at. Null follows the recommendation; a tap pins
      one. Transient like the pace — nothing is chosen until the commit. */
   var r2SelCap=null;
@@ -7442,7 +7812,7 @@ try{
         '</div></div>';
     }
     var reb='', rebLive=false, landLive=false;
-    if(!isZeroEra&&!sch.rebased&&!sch.landed&&!sch.locked&&sch.slack<=0){
+    if(!isZeroEra&&!sch.rebased&&!sch.landed&&!sch.restarted&&!sch.locked&&sch.slack<=0){
       var sug=rebSuggest();
       if(sug&&sug.cap>cap){
         rebLive=true;
@@ -7588,7 +7958,7 @@ try{
     planDecision=!!(r2g||rsg||fsg||rebLive||landLive);
     var auto=!lead&&!isZeroEra&&nRows>0&&nRows<=4;
     var open=scOpen===null?auto:scOpen;
-    var sumTxt=nRows?nRows+' day'+(nRows===1?'':'s')+' moved the descent':'nothing moved it';
+    var sumTxt=nRows?nRows+' entr'+(nRows===1?'y':'ies')+' · '+nAdj+' moved the descent':'nothing moved it';
     box.innerHTML=top+driftNote+count+
       (lead?'<div class="sc-lead">'+lead+'</div>':'')+
       '<p class="sc-slack">'+slackLine+'</p>'+moveBlock+
@@ -7738,7 +8108,7 @@ try{
           (zs&&zs.slips?'<div><span class="chip sm clean">Banked</span><span><b>'+zs.clean+'</b> clean days total · best run <b>'+zs.best+'</b> — a slip never wipes the total</span></div>':'')+
           '<div><span class="chip sm ghost">Walked</span><span><b>'+BASE_PHASES[0].capText+' → 0</b> in '+totalD+' days · the counter only climbs now</span></div>'+
         '</div>'+
-        tpFoldHTML('feel','wave','How today may feel',feelSum(today,BASE_PHASES.length-1),feelHTML(today,BASE_PHASES.length-1,false));
+        (function(){var fh=feelHTML(today,BASE_PHASES.length-1,false);return fh?tpFoldHTML('feel','wave','How today may feel',feelSum(today,BASE_PHASES.length-1),fh):'';})();
       return;
     }
     box.classList.remove('zero');
@@ -7810,7 +8180,7 @@ try{
   function renderSchedStrip(){
     var el=$('schedStrip');if(!el)return;
     var sch=schedule(),z=zeroDate();
-    var last=today>z?(addDays(z,21)<today?addDays(z,21):today):z;
+    var last=today>z?today:z;
     var html='',d=new Date(sch[0].start);
     while(d<=last){
       var k=dkeyOf(d),di=phaseIndexFor(d),p=BASE_PHASES[di<0?0:di];
@@ -7901,7 +8271,7 @@ try{
     if(isZeroEra){
       if(cnt>0)return {pct:0,tone:'clean'};   // a slip empties the ring; the banked total never resets
       var n=Math.max(0,daysFree()), prev=0, next=null;
-      for(var i=0;i<MARKERS.length;i++){if(MARKERS[i][0]>n){next=MARKERS[i][0];break;}prev=MARKERS[i][0];}
+      for(var i=0;i<MARKERS.length;i++){if(MARKERS[i][0]===n)return {pct:100,tone:'clean',next:n};if(MARKERS[i][0]>n){next=MARKERS[i][0];break;}prev=MARKERS[i][0];}
       if(!next)return {pct:100,tone:'clean'};
       return {pct:Math.max(1.5,(n-prev)/(next-prev)*100),tone:'clean',next:next};
     }
@@ -7910,7 +8280,7 @@ try{
     var since=now-last.getTime(), full=cnt>=cap?'done':'open';
     if(phase.single){
       var nx=thNextWindow(cnt,now,thDayBounds(today)[1]);
-      if(nx&&nx>last.getTime())return {pct:Math.min(100,since/(nx-last.getTime())*100),tone:'acc'};
+      if(nx&&nx>last.getTime()){var sp=Math.min(100,since/(nx-last.getTime())*100);return {pct:sp,tone:sp>=100?full:'acc'};}
       return {pct:100,tone:full};
     }
     var req=spacingHNow()*3600000;
@@ -8036,7 +8406,9 @@ try{
          from the last dose (acuteWindow keeps a lapse from restarting it);
          past it — and on a day with a hit, which is not a withdrawal day —
          the program's week */
-      ph.innerHTML=(aw0&&aw0.i<ACUTE.length-1&&!count)
+      ph.innerHTML=(rso&&rso.pattern)
+        ?icon('wave','ic-xs')+'Using again · '+rso.days+' days'
+        :(aw0&&aw0.i<ACUTE.length-1&&!count)
         ?icon('wave','ic-xs')+'Withdrawal · '+esc(aw0.phase)+' · '+esc(aw0.sub)
         :icon('spark','ic-xs')+(zp?esc(zp.t)+' · week '+Math.min(12,Math.ceil(zcd/7))+' of 12':'12 weeks done · day '+zcd);
       var gg=$('ghGains');
@@ -8192,6 +8564,9 @@ try{
         lastNums['stLast']=undefined;
         $('stLast').innerHTML=fmtTime(le)+' <small>'+fmtShort(le)+'</small>';
       }
+    }else if(dkeyOf(new Date(si.last.getTime()-DAY_CUTOFF_H*3600000))!==todayKey){
+      lastNums['stLast']=undefined;
+      $('stLast').innerHTML=fmtTime(si.last)+' <small>'+fmtShort(si.last)+'</small>';
     }else{
       setTxt('stLast',fmtTime(si.last));
       var room=si.inSession<phase.sessionMax&&(Date.now()-si.last.getTime())<=SESSION_GAP;
@@ -8433,7 +8808,7 @@ try{
       }
       h+='</div>';
     }
-    return h+ydGridHTML();
+    return h;   // the grid of every day since zero lives on Journey now
   }
   function renderYday(){
     var card=$('ydayCard');
@@ -9021,11 +9396,14 @@ try{
     var expanded=$('dayCard').classList.contains('expanded');
     var total=Math.round((today-start)/MS_DAY)+1;
     // the clean run each zero-era day stood on — one pass, zero to today
+    // every zero-era stretch has its own run — the first quit's interlude too
     var runOf={}, z=zeroDay();
-    if(isZeroEra&&z<=today){
-      var r=0,zd=new Date(z);
-      while(zd<=today){var zk=dkeyOf(zd);r=(countOf(zk)||0)>0?0:r+1;runOf[zk]=r;zd=addDays(zd,1);}
-    }
+    (function(){
+      var r=0,zd=new Date(start);
+      while(zd<=today){var zk=dkeyOf(zd),zm=dayMetrics(zk);
+        if(!zm.isZ)r=0;else{r=(countOf(zk)||0)>0?0:r+1;runOf[zk]=r;}
+        zd=addDays(zd,1);}
+    })();
     var zKey=isZeroEra?dkeyOf(z):null;
     var rows='', shown=0, d=new Date(today);
     while(d>=start){
@@ -9163,7 +9541,6 @@ try{
         if(!groups[gk]){groups[gk]={t:hd,n:0};order.push(gk);}
         groups[gk].n++;
       });
-      order.sort();
       order.forEach(function(gk){
         var g=groups[gk];
         block+='<div class="hgroup"><span class="ht">'+fmtTime(g.t)+'</span>'+
@@ -9259,6 +9636,7 @@ try{
         // exclude today so the banner never promises a day not yet held
         var banked=zsb?zsb.clean-(((countOf(todayKey)||0)>0)?0:1):0;
         if(banked<0)banked=0;
+        if((countOf(todayKey)||0)>0)return;   // today already has hits: "restarts today" would be false
         title='The run restarts today';
         body='Yesterday slipped — '+c+' hit'+(c===1?'':'s')+'. Data, not doom. '+
           (banked>0
@@ -9288,7 +9666,7 @@ try{
         body='Yesterday: <b>'+c+' of '+yCap+'</b>'+
           (margin>0?' — <b>'+margin+' under cap</b>.':' — right at the ceiling, and the ceiling won.');
       }
-      if(!isZeroEra&&idx>yIdx)body+=' Today the cap steps down to <b>'+BASE_PHASES[idx].capText+'</b>.';
+      if(!isZeroEra&&idx>yIdx)body+=(BASE_PHASES[idx].cap<yCap?' Today the cap steps down to <b>':' Today the ladder re-enters at <b>')+BASE_PHASES[idx].capText+'</b>.';
       // the inverse of the hold: a day already lived at the next cap can
       // end this step early and pull the zero date a day closer
       if(!isZeroEra&&yIdx===idx&&idx<BASE_PHASES.length-1){
@@ -9473,7 +9851,7 @@ try{
       :'One honest reading a night. This is the record that shows the adjustment window closing — sleep is the one the research says settles last.';
     var nSet=0;
     $('ckRows').innerHTML=CK_METRICS.map(function(m){
-      var v=e[m.k]||0,yv=ye[m.k]||0,dots='';
+      var v=Math.max(0,Math.min(5,(+e[m.k])|0)),yv=Math.max(0,Math.min(5,(+ye[m.k])|0)),dots='';
       if(v)nSet++;
       for(var i=1;i<=5;i++){
         // .ck-dot stays a DIRECT child of the [data-k] row — the tap handler reads parentNode
@@ -9692,6 +10070,9 @@ try{
       return;
     }
     function tick(){
+      if(data.urgeStart&&Date.now()-data.urgeStart>URGE_STALE_MS){
+        data.urgeStart=null;save();if(urgeTick){clearInterval(urgeTick);urgeTick=null;}renderUrge();return;
+      }
       var left=URGE_MS-(Date.now()-data.urgeStart);
       if(left<=0){
         var wasRunning=chip.classList.contains('running');
@@ -9733,7 +10114,7 @@ try{
     lastAlertedOpen=openTs;
     data.lastWinAlert=openTs;
     setTimeout(save,0);
-    return true;
+    return Date.now()-openTs<90000;
   }
   function notifOK(){return data.notifyWindows&&'Notification' in window&&Notification.permission==='granted';}
   function windowAlert(){
@@ -10941,6 +11322,10 @@ try{
        grading it against a capped day scores it on rules it no longer
        lives under — and because a slip's 2 hits "beat" yesterday's 3, the
        card could close a slip with "Every needle moved the right way." */
+    // a slip day is not graded on taper needles against another slip
+    if(m.isZ&&(m.eff||0)>0){
+      return mvCard('The move','','<p class="dc-sum">A slip — '+m.eff+' logged. Data, not doom: banked days stay banked, and a slip day is not scored against another day.</p>'+mvBase(m));
+    }
     if(m.isZ!==pm.isZ){
       return mvCard('The move','',
         '<p class="dc-sum">'+(m.isZ
@@ -11051,7 +11436,8 @@ try{
     var d=m.date, t=taperProgress();
     var facts=[], era;
     if(m.isZ){
-      var off=Math.round((d-zeroDate())/MS_DAY)+1, inZ=Math.round((d-today)/MS_DAY);
+      var zs0=(m.di>=0&&schedule()[m.di].start)||zeroDate();
+      var off=Math.round((d-zs0)/MS_DAY)+1, inZ=Math.round((d-today)/MS_DAY);
       facts.push(m.future?('In '+inZ+' day'+(inZ>1?'s':'')):('Day '+off+' at zero'));
       era='<span class="chip sm clean">'+icon('spark')+'Zero era</span>';
     }else{
@@ -11236,7 +11622,9 @@ try{
       if(e&&e.hits){
         for(var i=0;i<e.hits.length;i++){
           var hd=new Date(e.hits[i]);
-          if(pad(hd.getHours())+':'+pad(hd.getMinutes())===gm){e.hits.splice(i,1);countChanged(key);save();break;}
+          if(pad(hd.getHours())+':'+pad(hd.getMinutes())===gm){e.hits.splice(i,1);countChanged(key);
+            if(!e.hits.length&&!(e.adj>0)&&key!==todayKey&&dayMetrics(key).cap>0)delete data.days[key];
+            save();break;}
         }
       }
       renderAll();
@@ -11244,7 +11632,9 @@ try{
     }
     if(act==='adjdec'){
       var e2=data.days[key];
-      if(e2&&(e2.adj||0)>0){e2.adj--;countChanged(key);save();}
+      if(e2&&(e2.adj||0)>0){e2.adj--;countChanged(key);
+        if(!e2.hits.length&&!(e2.adj>0)&&key!==todayKey&&dayMetrics(key).cap>0)delete data.days[key];
+        save();}
       renderAll();
     }
   }
@@ -12328,6 +12718,9 @@ try{
 
   function renderPlanList(){
     var box=$('planList'),html='';
+    // a half-typed plan survives the app being backgrounded and brought back
+    var ed0=$('plEdit');
+    if(ed0&&!ed0.hidden&&(($('plCue')||{}).value||($('plThen')||{}).value))return;
     (data.plans||[]).forEach(function(p,i){
       html+='<div class="pl-row"><span class="pl-k"><span class="pl-if">If</span> '+esc(p.cue)+
         ', <span class="pl-then">then</span> '+esc(p.then)+'</span>'+
@@ -12911,7 +13304,7 @@ try{
     else if(a==='day'||a==='wk'||a==='today'){
       if(a==='wk'){pillUI.wk=Math.max(0,pillUI.wk+(+b.dataset.d||0));pillUI.day=null;}
       else if(a==='today'){pillUI.wk=0;pillUI.day=null;}
-      else pillUI.day=b.dataset.k||null;
+      else pillUI.day=(b.dataset.k&&b.dataset.k!==todayKey)?b.dataset.k:null;
       if(pillUI.panel&&pillUI.panel.kind==='dose')pillUI.panel=null;
       renderPills(true);
     }
@@ -13162,6 +13555,7 @@ try{
 
   /* ================= events ================= */
   function logHit(){
+    computeToday();   // the 4am boundary may have passed since the last paint
     /* the wave won. A timer still running must not go on to bank itself as
        "outlasted" — the one counter whose whole worth is that it is true.
        A timer past its 20 minutes is left alone, so a completed-but-not-yet
@@ -13297,6 +13691,7 @@ try{
      on both, because the boundary it answers is lived on Today. */
   function handleSchedAct(ev){
     var b=ev.target.closest('[data-sc]');if(!b)return;
+    computeToday();
     var act=b.dataset.sc, k=b.dataset.k, i=+b.dataset.i;
     if(act==='apply')delete data.holdPrompts[k];        // let the day hold its step after all
     else if(act==='decline')data.holdPrompts[k]='kept'; // and back again — nothing here is one-way
@@ -13306,8 +13701,8 @@ try{
     // zero a day earlier while dropping the user two rungs mid-afternoon. The
     // date the user is looking at includes today's already-applied moves;
     // freeze everything after it.
-    else if(act==='lock'){data.replan.lockFrom=dkeyOf(addDays(today,1));}
-    else if(act==='unlock'){delete data.replan.lockFrom;}
+    else if(act==='lock'){data.replan.lockFrom=dkeyOf(addDays(today,1));delete data.replan.lockTo;}
+    else if(act==='unlock'){delete data.replan.lockFrom;delete data.replan.lockTo;}
     /* Re-file the ladder before saving: holds are stored by cap, and the
        whole app re-derives from the log on the next paint, so the switch
        needs no migration of its own — only the ladder swapped in first. */
@@ -13370,6 +13765,31 @@ try{
       relader();
     }
     else if(act==='unrestart'){delete data.replan.restart;delete data.zeroAt;relader();}
+    else if(act==='rzcap'){rzCap=+b.dataset.cap||null;renderAll();return;}
+    else if(act==='rzpace'){rzSel=b.dataset.p||'rec';renderAll();return;}
+    /* back on a ladder after a later zero: a dated rebuild marked z, so the
+       zero it closes becomes an interlude. The frozen zero comes off (the new
+       descent stamps its own); a lock is bounded at today rather than deleted,
+       so the week walked under it keeps its dates. */
+    else if(act==='rez'){
+      var rzO=data.replan.restart;
+      if(rzO){
+        if(!rzO.rebuilds)rzO.rebuilds=rzO.rebuild?[rzO.rebuild]:[];
+        delete rzO.rebuild;
+        var rc0=+b.dataset.cap, rp=b.dataset.p||'rec', ent;
+        if(rp==='rec')ent=modelEntry(rc0);
+        else ent={cap:rc0,hold:+rp};
+        ent.at=todayKey;ent.z=1;
+        rzO.rebuilds.push(ent);
+        delete data.zeroAt;
+        if(data.replan.lockFrom&&data.replan.lockFrom<todayKey)data.replan.lockTo=todayKey;
+        else delete data.replan.lockFrom;
+        // a week locks its date; an older lock simply runs on through it
+        if(+rp===1){if(!data.replan.lockFrom)data.replan.lockFrom=todayKey;delete data.replan.lockTo;}
+        rzSel='rec';rzCap=null;
+        relader();
+      }
+    }
     /* the eighth move: anchor today inside the running restart, re-enter at
        the offered cap, and hold every rung below it for the chosen number of
        days. Nested under the restart it rebuilds, so a later restart carries
@@ -13381,7 +13801,7 @@ try{
        pick that wrote to storage would mark the backup stale for a decision
        that has not been made yet. */
     else if(act==='r2pick'){
-      r2Sel=+b.dataset.hold||3;
+      r2Sel=isNaN(+b.dataset.hold)?0:+b.dataset.hold;
       renderAll();
       return;
     }
@@ -13397,8 +13817,10 @@ try{
         var rsO=data.replan.restart;
         if(!rsO.rebuilds)rsO.rebuilds=rsO.rebuild?[rsO.rebuild]:[];
         delete rsO.rebuild;                       // the list is the record now
-        var hd=+b.dataset.hold||2;
-        rsO.rebuilds.push({at:todayKey,cap:+b.dataset.cap,hold:hd});
+        var hd=isNaN(+b.dataset.hold)?2:+b.dataset.hold;
+        var ne=hd===0?modelEntry(+b.dataset.cap):{cap:+b.dataset.cap,hold:hd};
+        ne.at=todayKey;
+        rsO.rebuilds.push(ne);
         delete data.replan.lockFrom;
         /* the week locks its date from its own first day. Today is safe to
            include, unlike the lock button's: nothing has been charged against
@@ -13420,6 +13842,11 @@ try{
         var popped=rsU.rebuilds.pop();
         // the week's own lock goes with it; a lock set by hand since stays
         if(popped&&popped.hold===1&&data.replan.lockFrom===popped.at)delete data.replan.lockFrom;
+        // a re-entry after zero bounded the old lock at its own date: unbound it
+        if(popped&&popped.z&&data.replan.lockTo===popped.at)delete data.replan.lockTo;
+        // and the holds set on the generation that is going (it can be rebuilt again)
+        var gp='2'+(rsU.rebuilds.length>0?rsU.rebuilds.length+'_':'');
+        for(var hk2 in data.holds)if(hk2.indexOf(gp)===0&&/^\d+$/.test(hk2.slice(gp.length)))delete data.holds[hk2];
         if(!rsU.rebuilds.length)delete rsU.rebuilds;
       }
       relader();
@@ -13714,7 +14141,7 @@ try{
       setDataMsg('Backup restored. (The data it replaced was stashed, just in case.)'+
         (rep.dropped?' '+rep.dropped+' unreadable day'+(rep.dropped>1?'s were':' was')+' dropped.':'')+
         (rep.fixed?' '+rep.fixed+' day'+(rep.fixed>1?'s':'')+' had damaged entries repaired.':''),'ok');
-    }catch(e){setDataMsg('That doesn’t look like a valid backup.','err');}
+    }catch(e){relader();rcClear();renderAll();setDataMsg('That doesn’t look like a valid backup.','err');}
   });
   /* Both destructive restores stash what they replace under 'ttz2-preimport'
      and say so. Nothing ever read that key back, so "stashed, just in case"
@@ -14356,7 +14783,19 @@ try{
 
   /* offline support */
   if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw.js').catch(function(){});
+    navigator.serviceWorker.register('sw.js').then(function(reg){
+      document.addEventListener('visibilitychange',function(){if(!document.hidden)reg.update().catch(function(){});});
+    }).catch(function(){});
+    /* a new build took over: reload, but never under an open sheet, editor
+       or half-typed field — wait for the next time the app is put away */
+    var hadCtl=!!navigator.serviceWorker.controller, swReload=false;
+    navigator.serviceWorker.addEventListener('controllerchange',function(){
+      if(!hadCtl){hadCtl=true;return;}
+      if(swReload)return;swReload=true;
+      function go(){location.reload();}
+      if(document.hidden)go();
+      else document.addEventListener('visibilitychange',function v(){if(document.hidden){document.removeEventListener('visibilitychange',v);go();}});
+    });
   }
 })();
 </script>

@@ -1,7 +1,7 @@
 {
   "name": "Taper to Zero",
   "short_name": "Taper",
-  "description": "Ten days, flower only, the cap only goes down.",
+  "description": "A cannabis step-down that adapts to your own logged days, then a counter that only climbs.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

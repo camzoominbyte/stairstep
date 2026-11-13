@@ -1,9 +1,8 @@
 /* Taper to Zero — offline cache.
    Bump CACHE on any deploy so installed phones pick up the new version. */
-var CACHE = 'ttz-v9.9.0';
+var CACHE = 'ttz-v10.0.0';
 var SHELL = './index.html';
 var ASSETS = [
-  './',
   './index.html',
   './guide.html',
   './manifest.webmanifest',
@@ -61,7 +60,9 @@ self.addEventListener('activate', function (e) {
   e.waitUntil(
     caches.keys().then(function (keys) {
       return Promise.all(keys.map(function (k) {
-        if (k !== CACHE) return caches.delete(k);
+        // only this app's own old generations: CacheStorage is per origin,
+        // and other projects on the same GitHub Pages host have their own
+        if (k !== CACHE && k.indexOf('ttz-') === 0) return caches.delete(k);
       }));
     }).then(function () { return self.clients.claim(); })
   );
