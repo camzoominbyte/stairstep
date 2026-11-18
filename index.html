@@ -1243,14 +1243,16 @@
      been kept — never "take one". */
   /* the running timer over the box: how long since the last dose of the one
      pill whose spacing is the thing being watched. It restarts on each dose. */
-  .px-tm{padding:12px 16px 13px}
+  .px-tm{display:grid;grid-template-columns:auto minmax(0,1fr);padding:12px 16px 13px}
   .px-tm[hidden]{display:none}
-  .px-tmh{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
-  .px-tml{min-width:0;font-size:12.5px;font-weight:650;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .px-tms{flex:none;font-size:12.5px;font-weight:600;color:var(--ink-3);font-variant-numeric:tabular-nums;white-space:nowrap}
-  .px-tmv{display:block;margin-top:2px;font-family:var(--f-round);font-size:36px;font-weight:700;letter-spacing:-.03em;line-height:1.08;
+  /* two figures side by side: the day's load, and the clock since the last dose */
+  .px-tmc{min-width:0;display:flex;flex-direction:column}
+  .px-tmc+.px-tmc{margin-left:16px;padding-left:16px;border-left:1px solid var(--line)}
+  .px-tml{font-size:12.5px;font-weight:650;color:var(--ink-2);white-space:nowrap}
+  .px-tms{margin-top:2px;font-size:12.5px;font-weight:600;color:var(--ink-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .px-tmv{display:block;margin-top:2px;font-family:var(--f-round);font-size:31px;font-weight:700;letter-spacing:-.03em;line-height:1.1;
     color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
-  .px-tmv small{margin:0 2px 0 1px;font-size:17px;font-weight:650;letter-spacing:0;color:var(--ink-2)}
+  .px-tmv small{margin:0 2px 0 1px;font-size:15px;font-weight:650;letter-spacing:0;color:var(--ink-2)}
   .px-tmv i{font-style:normal;color:var(--ink-3)}
   .px-tmv i small{color:var(--ink-3)}
   .px-board{padding:12px 16px 6px}
@@ -1430,6 +1432,8 @@
   .px-lbl{display:block;font-size:12.5px;font-weight:650;color:var(--ink-2)}
   .px-off>.px-lbl{margin:0 2px 9px}
   @media (max-width:350px){
+    .px-tm{grid-template-columns:minmax(0,1fr);row-gap:10px}
+    .px-tmc+.px-tmc{margin:0;padding:10px 0 0;border-left:0;border-top:1px solid var(--line)}
     .px-th b{font-size:15px}
     .px-tile{padding:10px 8px 12px 11px}
     .px-et{width:45px;font-size:13px}
@@ -3706,7 +3710,7 @@ try{
      the fold itself is static so the accordion and fold-memory wiring find it
      at boot. -->
 <main class="view" id="vPills">
-  <section class="card px-tm" id="pillTimer" aria-label="Time since the last dose" hidden></section>
+  <section class="card px-tm" id="pillTimer" aria-label="Today’s load and the time since the last dose" hidden></section>
   <section class="card px-board" id="pillBoard" aria-label="What you have taken, by day"></section>
   <div class="px-pk" id="pillPick" role="group" aria-label="Log a dose"></div>
   <details class="fold px-manage" id="pillManage">
@@ -12963,8 +12967,10 @@ try{
      dose keeps it, so going down reads straight off the log.
      Nothing here reaches the schedule engine and the engine reaches nothing
      here — logging a dose saves and repaints this view alone.
-     Doses file by the same 4am day as everything else, so a 1am dose counts
-     toward the evening it belongs to. */
+     Pills keep the calendar's day, midnight to midnight — not the 4am day
+     the taper files by. What is being watched here is the load per day, and
+     a day's load is the date's: a dose at 1am belongs to the day that has
+     just begun. */
   var PILL_GAPS=[1,2,3,4,5,6,8,10,12,24];
   /* what has to survive a repaint: the open panel, the form being filled in,
      whether the supplement list is open, which zoom the card is at (view:
@@ -12980,7 +12986,12 @@ try{
     for(var i=0;i<l.length;i++)if(l[i].id===id)return l[i];
     return null;
   }
-  function pillDay(ms){return dkeyOf(new Date(ms-DAY_CUTOFF_H*3600000));}
+  /* the pills' own day: the date on the calendar. `today` and `todayKey`
+     are the taper's (they turn over at 4am) and are not read in here. */
+  function pillDay(ms){return dkeyOf(new Date(ms));}
+  function pillToday(){var n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate());}
+  function pillTodayKey(){return dkeyOf(new Date());}
+  function pillYdayKey(){return dkeyOf(addDays(pillToday(),-1));}
   // one pill's doses as ms, oldest first (the log is kept sorted)
   function pillTimes(id){
     var o=[];
@@ -12991,10 +13002,6 @@ try{
     var ts=pillTimes(id),now=Date.now(),l=null;
     for(var i=0;i<ts.length;i++)if(ts[i]<=now)l=ts[i];
     return l;
-  }
-  function pillTodayTimes(id){
-    var now=Date.now();
-    return pillTimes(id).filter(function(t){return t<=now&&pillDay(t)===todayKey;});
   }
   function fmtMg(v){return String(+(+v).toFixed(3));}
   // what the pill is at: its mg, or a dose typed in before there was an mg
@@ -13032,7 +13039,7 @@ try{
   }
   function pillWhenFull(ms){
     var d=new Date(ms),k=pillDay(ms);
-    return (k===todayKey?'Today':k===ydayKey()?'Yesterday':WEEKDAYS[d.getDay()].slice(0,3)+' '+fmtShort(d))+', '+fmtTime(d);
+    return (k===pillTodayKey()?'Today':k===pillYdayKey()?'Yesterday':WEEKDAYS[d.getDay()].slice(0,3)+' '+fmtShort(d))+', '+fmtTime(d);
   }
   // how far into the spacing the person set; null when none is set
   function pillGapState(p,last){
@@ -13084,7 +13091,7 @@ try{
      days, each cell the day's mg, and a press on a day opens it. */
   var PILL_WK=7;
   function pillWeekKeys(){
-    var end=addDays(today,-PILL_WK*pillUI.wk),o=[];
+    var end=addDays(pillToday(),-PILL_WK*pillUI.wk),o=[];
     for(var i=PILL_WK-1;i>=0;i--)o.push(dkeyOf(addDays(end,-i)));
     return o;
   }
@@ -13104,14 +13111,17 @@ try{
   }
   function pillDayName(k){
     var d=dateOf(k);
-    return k===todayKey?'Today':k===ydayKey()?'Yesterday':WEEKDAYS[d.getDay()]+', '+fmtShort(d);
+    return k===pillTodayKey()?'Today':k===pillYdayKey()?'Yesterday':WEEKDAYS[d.getDay()]+', '+fmtShort(d);
   }
   function pillDosesTxt(n){return n+' dose'+(n===1?'':'s');}
 
-  /* ---- the timer: the one pill whose spacing is the thing being watched ----
-     Valium. Over the day's box sits a clock that has been running since its
-     last dose — to the second, restarting when the next one is logged — and
-     on the timeline its gaps always show, the overnight one included. */
+  /* ---- the watched pill: Valium ----
+     What all of this is for is the benzo load per day, so the one benzo on
+     the board gets a card of its own over the day's box. On the left, what
+     it has come to today in mg, with yesterday's under it — the date's
+     load, midnight to midnight. On the right, a clock that has been running
+     since its last dose, to the second, restarting when the next one is
+     logged. On the timeline its gaps always show, the overnight one too. */
   var PILL_TIMER='rx-valium';
   function pillTimerPill(){
     var hit=null;
@@ -13129,17 +13139,36 @@ try{
     }
     return o;
   }
-  // "2h 05m 34s", the seconds held back; days lead once there is one
+  /* "2h 05m 34s", the seconds held back; once there is a day it leads and
+     the seconds go — a clock that long is not read to the second */
   function pillTimerTxt(ms){
     var s=Math.max(0,Math.floor(ms/1000)),d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60);
-    return (d?d+'<small>d</small> ':'')+(d||h?h+'<small>h</small> ':'')+
-      (d||h||m?(d||h?pad(m):m)+'<small>m</small> ':'')+'<i>'+(d||h||m?pad(s%60):s%60)+'<small>s</small></i>';
+    if(d)return d+'<small>d</small> '+h+'<small>h</small> '+pad(m)+'<small>m</small>';
+    return (h?h+'<small>h</small> ':'')+(h||m?(h?pad(m):m)+'<small>m</small> ':'')+'<i>'+(h||m?pad(s%60):s%60)+'<small>s</small></i>';
+  }
+  // what a pill came to on one date: its mg where every dose has one, and how many doses
+  function pillLoad(id,k){
+    var L={n:0,mg:0,all:true},now=Date.now();
+    data.pills.log.forEach(function(x){
+      if(x.id!==id)return;
+      var t=Date.parse(x.t);
+      if(t>now||pillDay(t)!==k)return;
+      L.n++;
+      if(x.mg)L.mg+=x.mg;else L.all=false;
+    });
+    return L;
   }
   function pillTimerHTML(){
     var p=pillTimerPill(),last=p?pillLast(p.id):null;
     if(last===null)return '';
-    return '<div class="px-tmh"><span class="px-tml">Since the last '+esc(p.name)+'</span><span class="px-tms">'+esc(pillWhenFull(last))+'</span></div>'+
-      '<span class="px-tmv" id="pillTmV" role="timer" data-t="'+last+'">'+pillTimerTxt(Date.now()-last)+'</span>';
+    var T=pillLoad(p.id,pillTodayKey()),Y=pillLoad(p.id,pillYdayKey());
+    function fig(L){return L.all?fmtMg(L.mg)+'<small>mg</small>':L.n+'<small>'+(L.n===1?'dose':'doses')+'</small>';}
+    return '<div class="px-tmc"><span class="px-tml">'+esc(p.name)+' today</span>'+
+        '<span class="px-tmv">'+(T.n?fig(T):'0<small>'+(p.mg?'mg':'doses')+'</small>')+'</span>'+
+        '<span class="px-tms">'+(Y.n?'yesterday '+(Y.all?fmtMg(Y.mg)+' mg':pillDosesTxt(Y.n)):'none yesterday')+'</span></div>'+
+      '<div class="px-tmc"><span class="px-tml">Since the last one</span>'+
+        '<span class="px-tmv" id="pillTmV" role="timer" data-t="'+last+'">'+pillTimerTxt(Date.now()-last)+'</span>'+
+        '<span class="px-tms">'+esc(pillWhenFull(last))+'</span></div>';
   }
   // the timer's own tick, to the second — only while it is on screen
   setInterval(function(){
@@ -13175,11 +13204,12 @@ try{
         (sel?pillDoseHTML(x.id,x.t):'')+'</div>';
     });
     /* what a pill came to, where there is something to add up: one dose
-       already says its mg on its own line */
+       already says its mg on its own line, and on today the watched pill's
+       load is the figure on the card over the box */
     var tot='';
     data.pills.list.forEach(function(p){
       var ds=day[p.id]||[],sum=0,all=true;
-      if(ds.length<2)return;
+      if(ds.length<2||(live&&tp===p))return;
       ds.forEach(function(x){if(x.mg)sum+=x.mg;else all=false;});
       tot+='<span><b>'+esc(p.name)+'</b> '+(all?fmtMg(sum)+' mg':ds.length+' doses')+'</span>';
     });
@@ -13234,7 +13264,7 @@ try{
       (p.k==='s'?sup:main).push(p);
     });
     if(!main.length&&!sup.length)return '<p class="px-none">No pills on the board. Bring one back under <b>Your pills</b>, below.</p>';
-    var rows=1+main.length+(sup.length?1+sup.length:0),r=1,anyMg=false,anyDot=false;
+    var rows=1+main.length+(sup.length?1+sup.length:0),r=1,anyMg=false,anyDot=false,todayKey=pillTodayKey();
     // the days: a button the height of the table each, then what heads it
     var h=keys.map(function(k,j){
       var n=by[k]?by[k].n:0;
@@ -13291,7 +13321,7 @@ try{
       '</div></div>';
     pillLive=false;
     if(week)return h+pillWeekHTML(keys,by);
-    var sel=keys.indexOf(pillUI.day)>=0?pillUI.day:last,live=sel===todayKey;
+    var todayKey=pillTodayKey(),sel=keys.indexOf(pillUI.day)>=0?pillUI.day:last,live=sel===todayKey;
     pillLive=live;
     h+='<div class="px-wk" role="group" aria-label="Day">'+
       keys.map(function(k){
@@ -13375,6 +13405,7 @@ try{
   function renderPillsSub(){
     var el=$('pillsSub');if(!el)return;
     var n=0,now=Date.now();
+    var today=pillToday(),todayKey=dkeyOf(today);
     data.pills.log.forEach(function(x){var t=Date.parse(x.t);if(t<=now&&pillDay(t)===todayKey)n++;});
     var wd=WEEKDAYS[today.getDay()].slice(0,3)+' '+fmtShort(today);
     el.innerHTML=wd+' · '+(n?'<strong>'+n+'</strong> dose'+(n===1?'':'s')+' today':'nothing logged yet today');
@@ -13386,8 +13417,9 @@ try{
   function renderPills(force){
     var host=$('pillBoard');if(!host)return;
     var ae=document.activeElement;
-    if(!force&&ae&&ae.closest&&ae.closest('#vPills')&&/^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName)){pillsTick();return;}
+    if(!force&&ae&&ae.closest&&ae.closest('#vPills')&&/^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName)){pillsTick(true);return;}
     renderPillsSub();
+    pillDrawnKey=pillTodayKey();
     host.innerHTML=pillBoardHTML();
     $('pillPick').innerHTML=pillLive?pillTilesHTML():'';
     var tm=$('pillTimer'),th=pillTimerHTML();
@@ -13400,8 +13432,12 @@ try{
   RENDER_HOOKS.push(renderPills);
   /* the 30s tick: only what time moves — how long since the last one on each
      tile, and where a spacing is set, where it stands. No field is ever
-     rebuilt. */
-  function pillsTick(){
+     rebuilt. The one thing that draws the card again is midnight: the
+     pills' day has turned over, and the taper's 4am repaint is hours off
+     (`stay` is the repaint asking, which must not be sent round again). */
+  var pillDrawnKey='';
+  function pillsTick(stay){
+    if(stay!==true&&pillDrawnKey&&pillDrawnKey!==pillTodayKey()){renderPills();return;}
     Array.prototype.forEach.call(document.querySelectorAll('#pillPick [data-pv="last"]'),function(el){
       el.textContent=pillAgo(el.dataset.t?+el.dataset.t:null);
     });
@@ -13492,16 +13528,15 @@ try{
       save();renderPills(true);
     });
   }
-  /* an entry's time, set on the clock. The time lands on the dose's own day
-     — a day that runs to 4am, so an hour before then is the night it ends —
-     and never ahead of now. The box is not redrawn while the field is in
-     use (its picker would close under the thumb); it is when it lets go. */
+  /* an entry's time, set on the clock. The time lands on the dose's own
+     date and never ahead of now. The box is not redrawn while the field is
+     in use (its picker would close under the thumb); it is when it lets go. */
   function pillDoseTime(inp){
     var pn=pillUI.panel;if(!pn||pn.kind!=='dose')return;
     var i=pillIndex(pn.id,pn.t),m=/^(\d{1,2}):(\d{2})/.exec(inp.value||'');
     if(i<0||!m)return;
     var day=dateOf(pillDay(pn.t)),h=+m[1];
-    var nt=new Date(day.getFullYear(),day.getMonth(),day.getDate()+(h<DAY_CUTOFF_H?1:0),h,+m[2]).getTime();
+    var nt=new Date(day.getFullYear(),day.getMonth(),day.getDate(),h,+m[2]).getTime();
     var cur=new Date(pn.t);
     if(h===cur.getHours()&&+m[2]===cur.getMinutes())return;
     if(nt>Date.now()){
@@ -13520,7 +13555,7 @@ try{
     if(i<0){pillUI.panel=null;renderPills(true);return;}
     if(nt>Date.now())return;
     data.pills.log[i].t=new Date(nt).toISOString();pillSortLog();
-    if(pillDay(nt)!==pillDay(pn.t)){var nd=pillDay(nt);pillUI.day=nd===todayKey?null:nd;pillUI.wk=0;}
+    if(pillDay(nt)!==pillDay(pn.t)){var nd=pillDay(nt);pillUI.day=nd===pillTodayKey()?null:nd;pillUI.wk=0;}
     pn.t=nt;
     hideToast();   // its Undo was holding the old timestamp
     save();renderPills(true);
@@ -13622,7 +13657,7 @@ try{
       if(a==='wk'){pillUI.wk=Math.max(0,pillUI.wk+(+b.dataset.d||0));pillUI.day=null;}
       else if(a==='today'){pillUI.wk=0;pillUI.day=null;}
       // a day pressed in the week opens as that day
-      else{pillUI.day=(b.dataset.k&&b.dataset.k!==todayKey)?b.dataset.k:null;pillUI.view='day';}
+      else{pillUI.day=(b.dataset.k&&b.dataset.k!==pillTodayKey())?b.dataset.k:null;pillUI.view='day';}
       if(pillUI.panel&&pillUI.panel.kind==='dose')pillUI.panel=null;
       renderPills(true);
     }
