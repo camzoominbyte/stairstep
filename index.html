@@ -13165,8 +13165,26 @@ try{
     data.pills.log.forEach(function(x){if(x.id===id)o.push(Date.parse(x.t));});
     return o;
   }
+  /* ---- a press near the hour lands on the hour ----
+     A dose pressed within five minutes either side of the hour — 12:55 to
+     1:05 by the clock — is logged at the hour itself, 1:00 PM; anywhere
+     else it keeps the moment it was pressed. It never crosses midnight:
+     from 11:55 PM it stays where it was pressed, so a dose is never moved
+     onto the next day's load. Before the hour that puts the dose a few
+     minutes ahead of now, so the views take "now" as up to five minutes on
+     (pillSeen) — nothing else can stamp a dose ahead, since an entry's time
+     set by hand still has to have passed. Only a press snaps. */
+  var PILL_SNAP=5;
+  function pillSnap(ts){
+    var d=new Date(ts),m=d.getMinutes(),h=d.getHours();
+    if(m<=PILL_SNAP)return new Date(d.getFullYear(),d.getMonth(),d.getDate(),h).getTime();
+    if(m>=60-PILL_SNAP&&h<23)return new Date(d.getFullYear(),d.getMonth(),d.getDate(),h+1).getTime();
+    return ts;
+  }
+  // the latest a logged dose can be stamped: a press before the hour lands on it
+  function pillSeen(){return Date.now()+PILL_SNAP*60000;}
   function pillLast(id){
-    var ts=pillTimes(id),now=Date.now(),l=null;
+    var ts=pillTimes(id),now=pillSeen(),l=null;
     for(var i=0;i<ts.length;i++)if(ts[i]<=now)l=ts[i];
     return l;
   }
@@ -13264,7 +13282,7 @@ try{
   }
   // the week's doses filed by day, then by pill; `older` says there is a week before it
   function pillWeekMap(keys){
-    var first=keys[0],last=keys[keys.length-1],by=Object.create(null),older=false,now=Date.now();
+    var first=keys[0],last=keys[keys.length-1],by=Object.create(null),older=false,now=pillSeen();
     data.pills.log.forEach(function(x){
       var t=Date.parse(x.t);if(t>now)return;
       var k=pillDay(t);
@@ -13315,7 +13333,7 @@ try{
   }
   // what a pill came to on one date: its mg where every dose has one, and how many doses
   function pillLoad(id,k){
-    var L={n:0,mg:0,all:true},now=Date.now();
+    var L={n:0,mg:0,all:true},now=pillSeen();
     data.pills.log.forEach(function(x){
       if(x.id!==id)return;
       var t=Date.parse(x.t);
@@ -13633,7 +13651,7 @@ try{
   }
   function renderPillsSub(){
     var el=$('pillsSub');if(!el)return;
-    var n=0,now=Date.now();
+    var n=0,now=pillSeen();
     var today=pillToday(),todayKey=dkeyOf(today);
     data.pills.log.forEach(function(x){var t=Date.parse(x.t);if(t<=now&&pillDay(t)===todayKey)n++;});
     var wd=WEEKDAYS[today.getDay()].slice(0,3)+' '+fmtShort(today);
@@ -13706,6 +13724,11 @@ try{
      day, and the dose opens so its time can be set */
   function pillLog(id,ts,past){
     var p=pillOf(id);if(!p)return;
+    /* on the hour when it was pressed near one. A dose is known by its pill
+       and its stamp, so a second press that lands on the same stamp (two
+       Valium logged at 12:58 and 1:02 both land on 1:00) goes a second on */
+    ts=pillSnap(ts);
+    while(pillIndex(id,ts)>=0)ts+=1000;
     var iso=new Date(ts).toISOString(),e={id:id,t:iso};
     // the dose keeps the mg the pill was at when it was pressed
     if(p.mg)e.mg=p.mg;
