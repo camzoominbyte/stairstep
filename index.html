@@ -1351,12 +1351,13 @@
   .px-none b{color:var(--ink);font-weight:650}
   /* ---- a colour a pill ----
      A main pill's marker is a solid dot, a supplement's a ring. --pc-1…4
-     (Valium, Clonidine, Hydroxyzine, Prilosec) were stepped as a set, and
-     --pc-5…7 (the first three supplements) as another, so each set holds
-     apart for colour-blind eyes too, on the light card and the dark one.
+     are the four main pills in his own colours (Nov 18): Valium light blue,
+     Clonidine orange, Hydroxyzine light lime green, Prilosec purple — each
+     a shade deeper on the white card so a 10px dot still reads, a shade
+     lighter on the dark one. --pc-5…7 are the first three supplements.
      --pc-0 is everything past those. */
-  :root{--pc-0:#7C8493;--pc-1:#0153a6;--pc-2:#8478ff;--pc-3:#8e2956;--pc-4:#eb6834;--pc-5:#09a974;--pc-6:#bf8100;--pc-7:#a30018}
-  html.dark{--pc-0:#7f879b;--pc-1:#1367c3;--pc-2:#9085e9;--pc-3:#bc396c;--pc-4:#ea6837;--pc-5:#32ad7e;--pc-6:#c98500;--pc-7:#b2373c}
+  :root{--pc-0:#7C8493;--pc-1:#45a6ec;--pc-2:#f28a1e;--pc-3:#8fca2a;--pc-4:#8b4fd8;--pc-5:#09a974;--pc-6:#bf8100;--pc-7:#a30018}
+  html.dark{--pc-0:#7f879b;--pc-1:#7cc5f8;--pc-2:#f79a3a;--pc-3:#b2e352;--pc-4:#a87cf0;--pc-5:#32ad7e;--pc-6:#c98500;--pc-7:#b2373c}
   .px-d{flex:none;display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c)}
   .px-d.o{background:none;box-shadow:inset 0 0 0 2.5px var(--c)}
   /* ---- Day: the box — the day's intake as one timeline ---- */
@@ -13346,10 +13347,10 @@ try{
   /* ---- a colour a pill ----
      Each main pill has a marker colour of its own, and each supplement a
      ring — hollow, so a supplement never reads as a medicine. The four main
-     colours were stepped as a set, and the three ring colours as another,
-     to stay apart from each other for colour-blind eyes as well, on both
-     the light card and the dark one (the slots are --pc-1…7 in the
-     stylesheet). There are only so many hues that hold apart: a main pill
+     colours are his: Valium light blue, Clonidine orange, Hydroxyzine light
+     lime green, Prilosec purple; the three ring colours are a set of their
+     own (the slots are --pc-1…7 in the stylesheet, light and dark).
+     There are only so many hues that hold apart: a main pill
      past the built-in four, or a supplement past the third, takes the
      neutral --pc-0 rather than a colour made up for it. The name is always
      beside the marker, so colour is never the only thing saying which. */
@@ -13380,8 +13381,15 @@ try{
      Under the timeline, the day in sum: what a pill came to where there is
      something to add up, and the time between each dose of the pill with
      the timer — its first of the day measured from the last one of the
-     days before. */
+     days before. A shared line reads in a fixed order, not the order the
+     pills were pressed: Valium, Clonidine, Hydroxyzine, Prilosec (PILL_MAIN's
+     order), then anything else as it was taken — so Valium always leads. */
   var PILL_TOGETHER=5*60000;
+  function pillRank(p){
+    var k=pillKind(p);
+    for(var i=0;k&&i<PILL_MAIN.length;i++)if(PILL_MAIN[i]===k)return i;
+    return PILL_MAIN.length;
+  }
   function pillDayBoxHTML(day,live){
     var list=[],id;
     for(id in day)if(id!=='n')day[id].forEach(function(x){list.push({id:id,t:x.t,mg:x.mg});});
@@ -13402,6 +13410,7 @@ try{
       if(g&&x.t-g.t<=PILL_TOGETHER)g.items.push(x);else groups.push({t:x.t,items:[x]});
     });
     groups.forEach(function(g){
+      g.items.sort(function(a,b){return pillRank(a.p)-pillRank(b.p)||a.t-b.t;});
       var open=null,first=g.items[0];
       var its=g.items.map(function(x){
         var sel=!!pn&&pn.kind==='dose'&&pn.id===x.id&&pn.t===x.t,fresh=x.t===pillNewT&&x.id===pillNewId;
