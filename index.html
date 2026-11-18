@@ -1349,45 +1349,63 @@
   .px-dh .btn.sm{flex:none;background:var(--s2)}
   .px-none{font-size:14px;line-height:1.45;color:var(--ink-2);margin:12px 2px 10px}
   .px-none b{color:var(--ink);font-weight:650}
+  /* ---- a colour a pill ----
+     A main pill's marker is a solid dot, a supplement's a ring. --pc-1…4
+     (Valium, Clonidine, Hydroxyzine, Prilosec) were stepped as a set, and
+     --pc-5…7 (the first three supplements) as another, so each set holds
+     apart for colour-blind eyes too, on the light card and the dark one.
+     --pc-0 is everything past those. */
+  :root{--pc-0:#7C8493;--pc-1:#0153a6;--pc-2:#8478ff;--pc-3:#8e2956;--pc-4:#eb6834;--pc-5:#09a974;--pc-6:#bf8100;--pc-7:#a30018}
+  html.dark{--pc-0:#7f879b;--pc-1:#1367c3;--pc-2:#9085e9;--pc-3:#bc396c;--pc-4:#ea6837;--pc-5:#32ad7e;--pc-6:#c98500;--pc-7:#b2373c}
+  .px-d{flex:none;display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c)}
+  .px-d.o{background:none;box-shadow:inset 0 0 0 2.5px var(--c)}
   /* ---- Day: the box — the day's intake as one timeline ---- */
-  /* what the right-hand figures are, said once over the column */
-  .px-ecap{display:block;margin:8px 20px -2px 0;text-align:right;font-size:11px;font-weight:600;line-height:1;color:var(--ink-3)}
-  .px-tl{margin:6px 0 8px}
-  /* an entry is one button the width of the box: time, node, what, how long after */
-  .px-eb{display:flex;align-items:center;width:calc(100% + 16px);min-height:38px;margin:0 -8px;padding:2px 8px;border:0;border-radius:12px;
-    background:none;color:var(--ink);font-family:var(--f-ui);text-align:left;cursor:pointer;
-    -webkit-tap-highlight-color:transparent;touch-action:manipulation}
-  .px-eb:active{background:color-mix(in srgb,var(--acc) 7%,transparent)}
-  .px-e.sel>.px-eb{background:var(--s2)}
-  .px-eb:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
-  .px-et{flex:none;width:50px;text-align:right;font-family:var(--f-round);font-size:14px;font-weight:700;letter-spacing:-.01em;
-    font-variant-numeric:tabular-nums;white-space:nowrap}
-  /* the rail: a node a dose, joined down the box */
-  .px-en{flex:none;align-self:stretch;position:relative;width:28px}
-  .px-en::before{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:2px;margin-left:-1px;background:var(--line-2)}
-  .px-e:first-child .px-en::before{top:50%}
-  .px-e:last-child .px-en::before{bottom:50%}
-  .px-e:only-child .px-en::before{display:none}
-  /* an open entry's editor sits between it and the next: the rail stops either side */
-  .px-e.sel .px-en::before{bottom:50%}
-  .px-e.sel+.px-e .px-en::before{top:50%}
-  .px-e.sel:first-child .px-en::before,.px-e.sel+.px-e:last-child .px-en::before{display:none}
-  .px-en::after{content:"";position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;
-    background:var(--acc);box-shadow:0 0 0 3px var(--s1)}
-  .px-e.sel .px-en::after{box-shadow:0 0 0 3px var(--s2)}
-  .px-e.new .px-en::after{animation:popin 420ms var(--snap) both}
-  .px-ew{flex:1;min-width:0;display:flex;align-items:baseline;gap:6px;overflow:hidden;white-space:nowrap}
-  .px-ew b{min-width:0;overflow:hidden;text-overflow:ellipsis;font-family:var(--f-round);font-size:16px;font-weight:700;letter-spacing:-.015em}
-  .px-ew span{flex:none;font-size:13px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums}
-  .px-eg{flex:none;margin-left:8px;font-size:12.5px;font-weight:650;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
-  .px-eb>.ic{flex:none;width:14px;height:14px;margin-left:6px;stroke-width:2.4;color:var(--ink-3)}
-  .px-e.sel>.px-eb>.ic{transform:rotate(90deg)}
+  .px-tl{margin:8px 0 8px}
+  /* a line is a time and what was taken at it: one pill, or the few taken together */
+  .px-er{position:relative;display:flex;align-items:flex-start;min-height:34px}
+  .px-et{flex:none;width:50px;padding-top:7px;text-align:right;font-family:var(--f-round);font-size:14px;font-weight:700;letter-spacing:-.01em;
+    line-height:20px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  /* the rail runs down through the first marker of every line */
+  .px-er::before{content:"";position:absolute;left:63px;top:0;bottom:0;width:2px;background:var(--line-2)}
+  .px-e:first-child>.px-er::before{top:17px}
+  .px-e:last-child>.px-er::before{bottom:auto;height:17px}
+  .px-e:first-child:last-child>.px-er::before{display:none}
+  /* an open line's editor sits between it and the next: the rail stops either side */
+  .px-e.sel>.px-er::before{bottom:auto;height:17px}
+  .px-e.sel+.px-e>.px-er::before{top:17px}
+  .px-e.sel:first-child>.px-er::before,.px-e.sel+.px-e:last-child>.px-er::before{display:none}
+  .px-is{position:relative;flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:0 4px;padding-left:4px}
+  /* a pill on a line: its marker, its name, its mg — one button each */
+  .px-it{display:inline-flex;align-items:baseline;gap:6px;min-width:0;max-width:100%;min-height:34px;padding:0 5px;border:0;border-radius:10px;background:none;
+    color:var(--ink);font-family:var(--f-ui);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+  .px-e:not(.many) .px-it{flex:1}
+  .px-it:active{background:color-mix(in srgb,var(--acc) 8%,transparent)}
+  .px-it.sel{background:var(--s2)}
+  .px-it:focus-visible,.px-ec:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
+  .px-it .px-d{align-self:center;box-shadow:0 0 0 3px var(--s1)}
+  .px-it .px-d.o{background:var(--s1);box-shadow:inset 0 0 0 2.5px var(--c),0 0 0 3px var(--s1)}
+  .px-it.sel .px-d{box-shadow:0 0 0 3px var(--s2)}
+  .px-it.sel .px-d.o{background:var(--s2);box-shadow:inset 0 0 0 2.5px var(--c),0 0 0 3px var(--s2)}
+  .px-it.new .px-d{animation:popin 420ms var(--snap) both}
+  .px-it b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--f-round);font-size:16px;font-weight:700;letter-spacing:-.015em;line-height:34px}
+  /* several on a line: a little smaller, so more of them fit along it */
+  .px-e.many .px-is{gap:0 2px}
+  .px-e.many .px-it{gap:5px}
+  .px-e.many .px-it b{font-size:15px}
+  .px-e.many .px-it span{font-size:12px}
+  .px-it span{flex:none;font-size:13px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .px-ec{flex:none;width:22px;height:34px;margin-right:-4px;padding:0;border:0;background:none;color:var(--ink-3);cursor:pointer;display:grid;place-items:center;
+    -webkit-tap-highlight-color:transparent}
+  .px-ec .ic{width:14px;height:14px;stroke-width:2.4}
+  .px-e.sel .px-ec .ic{transform:rotate(90deg)}
   /* what each pill came to, where there is something to add up */
-  .px-tots{display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 12px;margin:0 0 10px;padding-top:10px;border-top:1px solid var(--line);
-    font-size:13.5px;line-height:1.35;color:var(--ink-2)}
+  .px-ft{margin:0 0 10px;padding-top:10px;border-top:1px solid var(--line);display:grid;gap:5px}
+  .px-tots{display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 12px;margin:0;font-size:13.5px;line-height:1.35;color:var(--ink-2)}
   .px-tots i{font-style:normal;font-size:12.5px;font-weight:650;color:var(--ink-3)}
   .px-tots span{white-space:nowrap;font-variant-numeric:tabular-nums}
   .px-tots b{font-weight:650;color:var(--ink)}
+  .px-tots span{display:inline-flex;align-items:center;gap:5px}
+  .px-tots .px-d{width:8px;height:8px}
   /* ---- Day: the pills to press, under the box ---- */
   .px-pk{margin:0 0 12px}
   .px-pk:empty{display:none}
@@ -1396,7 +1414,7 @@
   .px-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
   /* a tile is one press: the button is laid under what the tile says, which
      lets the press through; the mg chip sits above it */
-  .px-tile{position:relative;min-width:0;padding:10px 10px 12px 14px;border-radius:var(--r-md);background:var(--s1)}
+  .px-tile{position:relative;min-width:0;padding:10px 10px 12px 12px;border-radius:var(--r-md);background:var(--s1)}
   .px-tap{position:absolute;inset:0;padding:0;border:0;border-radius:inherit;background:none;cursor:pointer;
     -webkit-tap-highlight-color:transparent;touch-action:manipulation}
   .px-tile>span{position:relative;pointer-events:none}
@@ -1407,12 +1425,15 @@
   .px-th b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
     font-family:var(--f-round);font-size:17px;font-weight:700;letter-spacing:-.015em;line-height:1.2}
   /* the + is the thing you press, so it is the thing in the accent */
-  .px-plus{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--acc-bg);color:var(--acc-t);
+  .px-plus{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--acc-bg);color:var(--acc-t);
     transition:transform var(--d-press) var(--e-move),background var(--d-press) var(--e-move)}
   .px-plus .ic{width:17px;height:17px;stroke-width:2.6}
   .px-tile.new .px-plus{animation:popin 420ms var(--snap) both}
   .px-ts{display:flex;flex-wrap:wrap;align-items:center;gap:0 7px;margin-top:2px;min-height:28px}
   .px-ago{font-size:12.5px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .px-th{gap:6px}
+  .px-th b{font-size:15.5px}
+  .px-tml .px-d{margin-right:6px;vertical-align:1px;width:9px;height:9px}
   /* on a tile the mg is plain figures with the chevron that says it opens:
      a chip inside a tile is a box in a box, and the two don't fit a line */
   .px-tile .px-mg{height:28px;padding:0;background:none;box-shadow:none;font-size:14.5px}
@@ -1457,17 +1478,18 @@
   .px-wh span{font-size:11px;font-weight:650;line-height:1;color:var(--ink-3)}
   .px-wh b{font-family:var(--f-round);font-size:15px;font-weight:700;line-height:1.1;color:var(--ink);font-variant-numeric:tabular-nums}
   .px-wh.now span,.px-wh.now b{color:var(--acc-t)}
-  .px-wn{display:flex;align-items:center;height:40px;padding:0 6px 0 4px;border-top:1px solid var(--line)}
-  .px-wn b{min-width:0;font-family:var(--f-round);font-size:15px;font-weight:700;letter-spacing:-.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .px-wn{display:flex;align-items:center;height:40px;padding:0 3px 0 3px;border-top:1px solid var(--line)}
+  .px-wn b{min-width:0;font-family:var(--f-round);font-size:14.5px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .px-wn.s b{font-family:var(--f-ui);font-size:14px;font-weight:600;letter-spacing:0}
   .px-wn.lbl{height:30px;align-items:flex-end;padding-bottom:5px;font-size:12.5px;font-weight:650;color:var(--ink-2)}
   .px-wc{display:grid;place-items:center;height:40px;border-top:1px solid var(--line);font-family:var(--f-round);font-size:13.5px;font-weight:700;
     letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
   .px-wc.sm{font-size:11px}
   .px-wc.z{font-weight:500;color:var(--ghost)}
-  .px-wc i{width:9px;height:9px;border-radius:50%;background:var(--acc)}
+  .px-wc .px-d{width:9px;height:9px}
+  .px-wn .px-d{margin-right:5px;width:9px;height:9px}
   .px-wlg{margin:8px 0 10px;font-size:12px;line-height:1.4;color:var(--ink-3)}
-  .px-wlg i{display:inline-block;width:8px;height:8px;margin:0 3px 0 0;border-radius:50%;background:var(--acc)}
+  .px-wlg i{display:inline-block;width:8px;height:8px;margin:0 3px 0 0;border-radius:50%;box-shadow:inset 0 0 0 2px var(--ink-3)}
   @media (min-width:400px){
     .px-wt{grid-template-columns:minmax(0,1fr) repeat(7,36px)}
     .px-wc{font-size:14.5px}
@@ -1480,12 +1502,10 @@
     .px-th b{font-size:15px}
     .px-tile{padding:10px 8px 12px 11px}
     .px-et{width:45px;font-size:13px}
-    .px-en{width:22px}
-    .px-ew{gap:5px}
-    .px-ew b{font-size:14.5px}
-    .px-ew span{font-size:12.5px}
-    .px-eg{margin-left:4px;font-size:12px}
-    .px-eb>.ic{margin-left:3px}
+    .px-er::before{left:58px}
+    .px-it{gap:6px}
+    .px-it b{font-size:14.5px}
+    .px-it span{font-size:12.5px}
     .px-pg>span{display:none}
     .px-wt{grid-template-columns:minmax(0,1fr) repeat(7,24px)}
     .px-wc{font-size:12px}
@@ -1515,6 +1535,9 @@
   .px-in .btn.go{background:var(--acc);color:var(--on-acc);box-shadow:none}
   /* an entry, opened: its time and its mg, each set where it stands */
   .px-e>.px-in{margin:4px 0 8px}
+  /* which pill is open: on a line of several it has to say */
+  .px-eh{display:flex;align-items:center;gap:7px;margin:0 0 12px}
+  .px-in .px-eh b{font-family:var(--f-round);font-size:16px;font-weight:700;letter-spacing:-.015em;color:var(--ink)}
   .px-ef{display:grid;gap:8px;margin:0 0 14px}
   .px-ef>span{font-size:12.5px;font-weight:650;color:var(--ink-2)}
   /* the time, on the clock itself: 17px so iOS doesn't zoom the page to it */
@@ -3259,7 +3282,7 @@
     .cz-overlay,html.no-vt .detail-overlay{transition:opacity .15s linear!important}
     .cz-overlay:not(.show),html.no-vt .detail-overlay:not(.show){transform:none}
     /* pills: the new dose lands without the pop; the toast fades, never slides */
-    .px-in,.px-pick,.px-e.new .px-en::after,.px-tile.new .px-plus,.px-pk .px-sc.new{animation:none!important}
+    .px-in,.px-pick,.px-it.new .px-d,.px-tile.new .px-plus,.px-pk .px-sc.new{animation:none!important}
     .px-bar i,.px-tap,.px-plus,.px-sc,.px-mg,.px-stp,.px-opt{transition:none!important}
     .px-sheet{transition:opacity .15s linear!important}
     .px-sheet>.px-shp{transform:none!important;transition:none!important}
@@ -13306,7 +13329,7 @@ try{
     if(last===null)return '';
     var T=pillLoad(p.id,pillTodayKey()),Y=pillLoad(p.id,pillYdayKey());
     function fig(L){return L.all?fmtMg(L.mg)+'<small>mg</small>':L.n+'<small>'+(L.n===1?'dose':'doses')+'</small>';}
-    return '<div class="px-tmc"><span class="px-tml">'+esc(p.name)+' today</span>'+
+    return '<div class="px-tmc"><span class="px-tml">'+pillDot(p)+esc(p.name)+' today</span>'+
         '<span class="px-tmv">'+(T.n?fig(T):'0<small>'+(p.mg?'mg':'doses')+'</small>')+'</span>'+
         '<span class="px-tms">'+(Y.n?'yesterday '+(Y.all?fmtMg(Y.mg)+' mg':pillDosesTxt(Y.n)):'none yesterday')+'</span></div>'+
       '<div class="px-tmc"><span class="px-tml">Since the last one</span>'+
@@ -13320,31 +13343,79 @@ try{
     if(el)el.innerHTML=pillTimerTxt(Date.now()-(+el.dataset.t));
   },1000);
 
+  /* ---- a colour a pill ----
+     Each main pill has a marker colour of its own, and each supplement a
+     ring — hollow, so a supplement never reads as a medicine. The four main
+     colours were stepped as a set, and the three ring colours as another,
+     to stay apart from each other for colour-blind eyes as well, on both
+     the light card and the dark one (the slots are --pc-1…7 in the
+     stylesheet). There are only so many hues that hold apart: a main pill
+     past the built-in four, or a supplement past the third, takes the
+     neutral --pc-0 rather than a colour made up for it. The name is always
+     beside the marker, so colour is never the only thing saying which. */
+  var PILL_HUE={'rx-valium':1,'rx-clonidine':2,'rx-hydroxyzine':3,'rx-prilosec':4};
+  function pillHue(p){
+    if(p.k==='s'){
+      // by its place among every supplement there has been, on the board or off, so it keeps its colour
+      var l=data.pills.list,n=0;
+      for(var i=0;i<l.length;i++){
+        if(l[i].k!=='s')continue;
+        n++;
+        if(l[i]===p)return n<=3?4+n:0;
+      }
+      return 0;
+    }
+    var k=pillKind(p);
+    return (k&&PILL_HUE[k.id])||0;
+  }
+  function pillDot(p){
+    return '<i class="px-d'+(p.k==='s'?' o':'')+'" style="--c:var(--pc-'+pillHue(p)+')"></i>';
+  }
+
   /* ---- Day: the box ---- */
-  /* the day as one timeline. Each entry is a button the width of the box;
-     the one that is open carries its editor under it. `gap` is the time
-     since the same pill earlier that day — the first of a pill has none,
-     except the pill with the timer, whose every gap shows: its first of the
-     day is measured from the last one of the days before. */
+  /* the day as one timeline. Pills taken together — within five minutes of
+     the first — share a line: one time, then each pill with its marker and
+     mg, running along the line and wrapping when there are many. Each pill
+     on a line is its own button and opens its own editor under the line.
+     Under the timeline, the day in sum: what a pill came to where there is
+     something to add up, and the time between each dose of the pill with
+     the timer — its first of the day measured from the last one of the
+     days before. */
+  var PILL_TOGETHER=5*60000;
   function pillDayBoxHTML(day,live){
     var list=[],id;
     for(id in day)if(id!=='n')day[id].forEach(function(x){list.push({id:id,t:x.t,mg:x.mg});});
-    if(!list.length)return '<p class="px-none">'+(live?'Nothing logged yet today. Press a pill below and it lands here.':'Nothing logged.')+'</p>';
+    if(!list.length)return '<p class="px-none">'+(live?'Nothing logged yet today. Press a pill below and it lands here.':'Nothing logged this day. Press a pill below to add one.')+'</p>';
     list.sort(function(a,b){return a.t-b.t;});
-    var pn=pillUI.panel,prev=Object.create(null),anyGap=false,rows='',tp=pillTimerPill();
+    var pn=pillUI.panel,rows='',tp=pillTimerPill(),groups=[],was=null,gaps=[];
     list.forEach(function(x){
       var p=pillOf(x.id);if(!p)return;
-      var was=prev[x.id]||(tp&&tp.id===x.id?pillPrevAt(x.id,x.t):null),gap=was?x.t-was:0;
-      prev[x.id]=x.t;
-      if(gap)anyGap=true;
-      var sel=!!pn&&pn.kind==='dose'&&pn.id===x.id&&pn.t===x.t,fresh=x.t===pillNewT&&x.id===pillNewId;
-      rows+='<div class="px-e'+(sel?' sel':'')+(fresh?' new':'')+'">'+
-        '<button class="px-eb" data-pact="dose" data-id="'+esc(x.id)+'" data-t="'+x.t+'" aria-expanded="'+(sel?'true':'false')+'" aria-label="'+
-          esc(p.name)+(x.mg?' '+fmtMg(x.mg)+' mg':'')+', '+esc(pillWhenFull(x.t))+(gap?', '+fmtDur(gap)+' after the same pill earlier':'')+'. Press to change its time or mg.">'+
-          '<span class="px-et">'+fmtClk(new Date(x.t))+'</span><i class="px-en"></i>'+
-          '<span class="px-ew"><b>'+esc(p.name)+'</b>'+(x.mg?'<span>'+fmtMg(x.mg)+' mg</span>':'')+'</span>'+
-          (gap?'<span class="px-eg">'+fmtDur(gap)+'</span>':'')+icon('chev')+'</button>'+
-        (sel?pillDoseHTML(x.id,x.t):'')+'</div>';
+      x.p=p;
+      if(tp&&tp.id===x.id){
+        var before=was===null?pillPrevAt(x.id,x.t):was;
+        // two on one line were one taking: no gap between them
+        x.gap=before!==null&&x.t-before>PILL_TOGETHER?x.t-before:0;
+        if(x.gap)gaps.push(fmtDur(x.gap));
+        was=x.t;
+      }
+      var g=groups[groups.length-1];
+      if(g&&x.t-g.t<=PILL_TOGETHER)g.items.push(x);else groups.push({t:x.t,items:[x]});
+    });
+    groups.forEach(function(g){
+      var open=null,first=g.items[0];
+      var its=g.items.map(function(x){
+        var sel=!!pn&&pn.kind==='dose'&&pn.id===x.id&&pn.t===x.t,fresh=x.t===pillNewT&&x.id===pillNewId;
+        if(sel)open=x;
+        return '<button class="px-it'+(sel?' sel':'')+(fresh?' new':'')+'" data-pact="dose" data-id="'+esc(x.id)+'" data-t="'+x.t+'" aria-expanded="'+(sel?'true':'false')+'" aria-label="'+
+          esc(x.p.name)+(x.mg?' '+fmtMg(x.mg)+' mg':'')+', '+esc(pillWhenFull(x.t))+(x.gap?', '+fmtDur(x.gap)+' after the one before':'')+'. Press to change its time or mg.">'+
+          pillDot(x.p)+'<b>'+esc(x.p.name)+'</b>'+(x.mg?'<span>'+fmtMg(x.mg)+' mg</span>':'')+'</button>';
+      }).join('');
+      rows+='<div class="px-e'+(open?' sel':'')+(g.items.length>1?' many':'')+'"><div class="px-er">'+
+        '<span class="px-et">'+fmtClk(new Date(g.t))+'</span><span class="px-is">'+its+'</span>'+
+        /* the chevron says a line opens. A line of several has none: each
+           pill on it is its own press, and the width goes to fitting them */
+        (g.items.length>1?'':'<button class="px-ec" data-pact="dose" data-id="'+esc(first.id)+'" data-t="'+first.t+'" tabindex="-1" aria-hidden="true">'+icon('chev')+'</button>')+'</div>'+
+        (open?pillDoseHTML(open.id,open.t):'')+'</div>';
     });
     /* what a pill came to, where there is something to add up: one dose
        already says its mg on its own line, and on today the watched pill's
@@ -13354,36 +13425,41 @@ try{
       var ds=day[p.id]||[],sum=0,all=true;
       if(ds.length<2||(live&&tp===p))return;
       ds.forEach(function(x){if(x.mg)sum+=x.mg;else all=false;});
-      tot+='<span><b>'+esc(p.name)+'</b> '+(all?fmtMg(sum)+' mg':ds.length+' doses')+'</span>';
+      tot+='<span>'+pillDot(p)+'<b>'+esc(p.name)+'</b> '+(all?fmtMg(sum)+' mg':ds.length+' doses')+'</span>';
     });
-    return (anyGap?'<span class="px-ecap" aria-hidden="true">since the same pill</span>':'')+
-      '<div class="px-tl">'+rows+'</div>'+
-      (tot?'<p class="px-tots"><i>In all</i>'+tot+'</p>':'');
+    return '<div class="px-tl">'+rows+'</div>'+
+      (tot||gaps.length?'<div class="px-ft">'+
+        (gaps.length?'<p class="px-tots"><i>Between '+esc(tp.name)+' doses</i>'+gaps.map(function(g){return '<span><b>'+g+'</b></span>';}).join('')+'</p>':'')+
+        (tot?'<p class="px-tots"><i>In all</i>'+tot+'</p>':'')+'</div>':'');
   }
   /* ---- Day: the pills to press, under the box ----
-     A main pill is a tile: its name and a +, the mg it is at (the chip is
-     the one thing on it that opens something) and how long since the last
-     one. A supplement is a chip. Pressing either logs it now. */
-  function pillTilesHTML(){
+     A main pill is a tile: its marker and name, a +, the mg it is at (the
+     one thing on it that opens something) and how long since the last one.
+     A supplement is a chip. On today a press logs it now. On an earlier day
+     the same tiles add to that day: the dose lands at this time of day on
+     that date and opens, so its time can be set — and the tiles say nothing
+     about now. */
+  function pillTilesHTML(sel,live){
     var main='',sup='',supAsk='',tp=pillTimerPill();
     pillsOn().forEach(function(p){
-      var id=esc(p.id),last=pillLast(p.id),ask=pillAskHTML(p),fresh=p.id===pillNewId;
+      var id=esc(p.id),last=pillLast(p.id),ask=live?pillAskHTML(p):'',fresh=p.id===pillNewId;
+      var lbl=live?'Log '+esc(p.name)+(p.mg?', '+fmtMg(p.mg)+' mg':'')+', now':'Add '+esc(p.name)+(p.mg?', '+fmtMg(p.mg)+' mg':'')+' to '+esc(pillDayName(sel));
       if(p.k==='s'){
-        sup+='<button class="px-sc'+(fresh?' new':'')+'" data-pact="take" data-id="'+id+'" aria-label="Log '+esc(p.name)+', now">'+icon('plus')+esc(p.name)+'</button>';
+        sup+='<button class="px-sc'+(fresh?' new':'')+'" data-pact="take" data-id="'+id+'" aria-label="'+lbl+'">'+pillDot(p)+esc(p.name)+icon('plus')+'</button>';
         supAsk+=ask;
         return;
       }
-      var gs=pillGapState(p,last);
+      var gs=live?pillGapState(p,last):null;
       main+='<div class="px-tile'+(fresh?' new':'')+'" data-id="'+id+'">'+
-        '<button class="px-tap" data-pact="take" data-id="'+id+'" aria-label="Log '+esc(p.name)+(p.mg?', '+fmtMg(p.mg)+' mg':'')+', now"></button>'+
-        '<span class="px-th"><b>'+esc(p.name)+'</b><span class="px-plus" aria-hidden="true">'+icon('plus')+'</span></span>'+
-        /* how long since the last one — except on the pill with the timer,
-           which says it to the second over the box */
-        '<span class="px-ts">'+pillMgHTML(p,'mg')+(tp===p&&last!==null?'':
+        '<button class="px-tap" data-pact="take" data-id="'+id+'" aria-label="'+lbl+'"></button>'+
+        '<span class="px-th">'+pillDot(p)+'<b>'+esc(p.name)+'</b><span class="px-plus" aria-hidden="true">'+icon('plus')+'</span></span>'+
+        /* how long since the last one — only on today, and not on the pill
+           with the timer, which says it to the second over the box */
+        '<span class="px-ts">'+pillMgHTML(p,'mg')+(!live||(tp===p&&last!==null)?'':
           '<span class="px-ago" data-pv="last" data-t="'+(last===null?'':last)+'">'+pillAgo(last)+'</span>')+'</span>'+
         (gs?pillGapHTML(p,gs):'')+'</div>'+ask;
     });
-    var h='<span class="px-pkl">Log a dose</span>'+
+    var h='<span class="px-pkl">'+(live?'Log a dose':'Add to '+esc(pillDayName(sel)))+'</span>'+
       (main?'<div class="px-tiles">'+main+'</div>':'<p class="px-none">No pills on the board. Bring one back under <b>Your pills</b>, below.</p>');
     var left=pillPickList(),open=pillUI.pick&&left.length;
     if(sup||left.length){
@@ -13424,9 +13500,9 @@ try{
         a.forEach(function(x){if(x.mg)v+=x.mg;else inMg=false;});
         return {mg:v,n:a.length};
       });
-      h+='<span class="px-wn'+(p.k==='s'?' s':'')+'" style="grid-area:'+r+'/1"><b>'+esc(p.name)+'</b></span>';
+      h+='<span class="px-wn'+(p.k==='s'?' s':'')+'" style="grid-area:'+r+'/1">'+pillDot(p)+'<b>'+esc(p.name)+'</b></span>';
       vals.forEach(function(v,j){
-        var tx=!v.n?'·':inMg?fmtMg(v.mg):v.n===1?'<i></i>':v.n+'×';
+        var tx=!v.n?'·':inMg?fmtMg(v.mg):v.n===1?pillDot(p):v.n+'×';
         if(v.n){if(inMg)anyMg=true;else anyDot=true;}
         h+='<span class="px-wc'+(v.n?'':' z')+(tx.length>4&&v.n&&inMg?' sm':'')+'" style="grid-area:'+r+'/'+(j+2)+'" aria-label="'+esc(p.name)+', '+esc(pillDayName(keys[j]))+': '+
           (v.n?(inMg?fmtMg(v.mg)+' mg, ':'')+pillDosesTxt(v.n):'none')+'">'+tx+'</span>';
@@ -13446,7 +13522,7 @@ try{
   }
   /* whether the card is showing today as a day — the one case with pills
      to press under it */
-  var pillLive=false;
+  var pillLive=false,pillSel='';   // pillSel: the date the Day view is on ('' in Week)
   function pillBoardHTML(){
     var keys=pillWeekKeys(),wm=pillWeekMap(keys),by=wm.by,last=keys[keys.length-1];
     var week=pillUI.view==='week',pager=wm.older||pillUI.wk>0;
@@ -13462,10 +13538,10 @@ try{
       '<span>'+fmtShort(a)+' – '+(a.getMonth()===b.getMonth()?b.getDate():fmtShort(b))+'</span>'+
       (pager?'<button class="px-wkn" data-pact="wk" data-d="-1"'+(pillUI.wk>0?'':' disabled')+' aria-label="The week after">'+icon('chev')+'</button>':'')+
       '</div></div>';
-    pillLive=false;
+    pillLive=false;pillSel='';
     if(week)return h+pillWeekHTML(keys,by);
     var todayKey=pillTodayKey(),sel=keys.indexOf(pillUI.day)>=0?pillUI.day:last,live=sel===todayKey;
-    pillLive=live;
+    pillLive=live;pillSel=sel;
     h+='<div class="px-wk" role="group" aria-label="Day">'+
       keys.map(function(k){
         var d=dateOf(k),n=by[k]?by[k].n:0;
@@ -13493,6 +13569,7 @@ try{
     if(mg&&mgs.indexOf(mg)<0)mgs.push(mg);
     mgs.sort(function(a,b){return a-b;});
     return '<div class="px-in px-mv" role="group" aria-label="Change this dose of '+esc(p.name)+'">'+
+      '<p class="px-eh">'+pillDot(p)+'<b>'+esc(p.name)+'</b></p>'+
       '<div class="px-ef"><span>Time</span>'+
         '<input class="px-time" type="time" data-pin="dt" value="'+pad(d.getHours())+':'+pad(d.getMinutes())+'" aria-label="The time this dose was taken">'+
         '<div class="btn-row">'+nb(-3600000,'−1h','One hour earlier')+nb(-900000,'−15m','15 minutes earlier')+
@@ -13564,7 +13641,7 @@ try{
     renderPillsSub();
     pillDrawnKey=pillTodayKey();
     host.innerHTML=pillBoardHTML();
-    $('pillPick').innerHTML=pillLive?pillTilesHTML():'';
+    $('pillPick').innerHTML=pillSel?pillTilesHTML(pillSel,pillLive):'';
     var tm=$('pillTimer'),th=pillTimerHTML();
     tm.hidden=!th;tm.innerHTML=th;
     var on=pillsOn(),ns=on.filter(function(p){return p.k==='s';}).length,nm=on.length-ns;
@@ -13616,15 +13693,18 @@ try{
 
   /* ---- pill actions ---- */
   function pillSortLog(){data.pills.log.sort(function(a,b){return a.t<b.t?-1:a.t>b.t?1:0;});}
-  function pillLog(id,ts){
+  /* `past` is a dose being added to an earlier day: the card stays on that
+     day, and the dose opens so its time can be set */
+  function pillLog(id,ts,past){
     var p=pillOf(id);if(!p)return;
     var iso=new Date(ts).toISOString(),e={id:id,t:iso};
     // the dose keeps the mg the pill was at when it was pressed
     if(p.mg)e.mg=p.mg;
     data.pills.log.push(e);pillSortLog();
-    pillUI.panel=null;pillNewT=Date.parse(iso);pillNewId=id;
-    // a dose lands on the day it was taken — bring that day back into view
-    pillUI.view='day';pillUI.wk=0;pillUI.day=null;
+    pillNewT=Date.parse(iso);pillNewId=id;
+    if(past)pillUI.panel={kind:'dose',id:id,t:pillNewT};
+    // a dose pressed now lands on today — bring today back into view
+    else{pillUI.panel=null;pillUI.view='day';pillUI.wk=0;pillUI.day=null;}
     save();renderPills(true);
     if(navigator.vibrate)navigator.vibrate(8);
     toast(esc(p.name)+(p.mg?' '+fmtMg(p.mg)+' mg':'')+' logged<small>'+pillWhenFull(Date.parse(iso))+'</small>','Undo',function(){pillDrop(id,Date.parse(iso));});
@@ -13634,6 +13714,14 @@ try{
   var pillTakeAt={id:null,t:0};
   function pillTake(id){
     var p=pillOf(id);if(!p)return;
+    /* on an earlier day the press adds to that day, at this time of day on
+       that date (always a time that has passed) — and never asks about a
+       spacing, which is a question about now */
+    if(pillSel&&pillSel!==pillTodayKey()){
+      var d=dateOf(pillSel),n=new Date();
+      pillLog(id,new Date(d.getFullYear(),d.getMonth(),d.getDate(),n.getHours(),n.getMinutes()).getTime(),true);
+      return;
+    }
     var gs=pillGapState(p,pillLast(id));
     if(gs&&!gs.clear){pillUI.panel={id:id,kind:'early'};renderPills(true);return;}
     pillLog(id,Date.now());
