@@ -14642,9 +14642,153 @@ try{
     try{localStorage.setItem('ttz2-preimport',json||JSON.stringify(data));return true;}catch(e){return false;}
   }
   var STASH_NO=' (This phone was too full to stash the data it replaced — there is no undo for this one.)';
+  /* ---- a pasted pill history ----
+     A dose record kept somewhere else — a note, a spreadsheet — comes in
+     through the same box as a backup, but it is its own kind of paste and
+     it only ever ADDS to the dose log:
+       {"ttzPills":1,"year":2026,"pills":{…},"doses":{…}}
+       pills : key → {name, id?, keys?, k?, off?}. A pill already on the
+               list (by id, by name, or by one of `keys` standing as a word
+               in its name) takes the doses, on the board or off it; one
+               that isn't there is made — on the board unless `off`
+       doses : "MM-DD" → ["HHMM v7.5 c p*2", …], on the phone's own clock.
+               A token is a pill's key and then its mg. A bare key is one
+               pill and `*n` is n of them: logged at n × the mg that pill
+               is set to on this phone, and with no mg where it has none —
+               an mg is never made up for a dose
+     All or nothing: one line that can't be read turns the whole paste away.
+     A dose within 15 minutes of one already logged for the same pill is
+     taken to be that dose and left out, so pasting twice adds nothing, and
+     a time that hasn't come yet is left out too. It is deliberately not
+     shaped like a backup (no `days`), so a copy of the app from before this
+     can't take it for one and offer to replace everything with it. */
+  var PILL_HIST_SAME=15*60000;
+  function pillHistRead(d){
+    if(!d||typeof d!=='object'||d.ttzPills!==1)return null;
+    var y=d.year,defs=Object.create(null),doses=[],k;
+    if(typeof y!=='number'||y%1||y<2000||y>2100)return null;
+    if(!d.pills||typeof d.pills!=='object'||d.pills instanceof Array)return null;
+    if(!d.doses||typeof d.doses!=='object'||d.doses instanceof Array)return null;
+    for(k in d.pills){
+      var q=d.pills[k];
+      if(!/^[a-z]{1,6}$/.test(k)||!q||typeof q!=='object'||typeof q.name!=='string'||!q.name.trim())return null;
+      var def={name:q.name.trim().slice(0,40),keys:[]};
+      if(typeof q.id==='string'&&/^[a-z0-9-]{1,40}$/.test(q.id))def.id=q.id;
+      if(q.keys instanceof Array)for(var a=0;a<q.keys.length;a++){
+        if(typeof q.keys[a]==='string'&&q.keys[a].trim())def.keys.push(q.keys[a].trim().toLowerCase());
+      }
+      if(q.k==='s')def.k='s';
+      if(q.off===true)def.off=true;
+      defs[k]=def;
+    }
+    for(k in d.doses){
+      var md=/^(\d\d)-(\d\d)$/.exec(k),rows=d.doses[k];
+      if(!md||!(rows instanceof Array))return null;
+      for(var i=0;i<rows.length;i++){
+        var m=typeof rows[i]==='string'?/^(\d\d)(\d\d)((?: [a-z]+(?:\d+(?:\.\d+)?)?(?:\*\d+)?)+)$/.exec(rows[i]):null;
+        if(!m)return null;
+        var at=new Date(y,+md[1]-1,+md[2],+m[1],+m[2]);
+        // Nov 31 or 24:60 would roll over into some other day — not a time anyone wrote down
+        if(at.getMonth()!==+md[1]-1||at.getDate()!==+md[2]||at.getHours()!==+m[1]||at.getMinutes()!==+m[2])return null;
+        var toks=m[3].slice(1).split(' ');
+        for(var j=0;j<toks.length;j++){
+          var tk=/^([a-z]+)(\d+(?:\.\d+)?)?(?:\*(\d+))?$/.exec(toks[j]);
+          var mg=tk[2]?+tk[2]:0,n=tk[3]?+tk[3]:1;
+          if(!defs[tk[1]]||(tk[2]&&!(mg>0&&mg<=100000))||n<1||n>20)return null;
+          doses.push({t:at.getTime(),key:tk[1],mg:mg,n:n});
+        }
+      }
+    }
+    doses.sort(function(p,q){return p.t-q.t;});
+    return {defs:defs,doses:doses};
+  }
+  // the pill on this phone a history's pill is: its id first, then one on the board over one off it
+  function pillHistFind(def){
+    var hit=null,best=0,dn=def.name.toLowerCase();
+    data.pills.list.forEach(function(p){
+      var n=p.name.toLowerCase(),byId=!!def.id&&p.id===def.id;
+      var is=byId||n===dn||def.keys.some(function(key){
+        var at=n.indexOf(key);
+        return at>=0&&!/[a-z0-9]/.test(n.charAt(at-1))&&!/[a-z0-9]/.test(n.charAt(at+key.length));
+      });
+      if(!is)return;
+      var sc=(byId?4:0)+(p.off?0:2)+1;
+      if(sc>best){best=sc;hit=p;}
+    });
+    return hit;
+  }
+  /* what a history would add, worked out before anything is touched, so the
+     question can say the number and a "no" leaves the log exactly as it was */
+  function pillHistPlan(H){
+    var now=Date.now(),res=Object.create(null),P={add:[],make:[],dup:0,ahead:0,from:0,to:0};
+    H.doses.forEach(function(x){
+      if(x.t>now){P.ahead++;return;}
+      var r=res[x.key];
+      if(!r){
+        var p=pillHistFind(H.defs[x.key]);
+        r=res[x.key]={def:H.defs[x.key],pill:p,id:p?p.id:'',had:p?pillTimes(p.id):[],put:Object.create(null),n:0};
+      }
+      if(r.put[x.t]||r.had.some(function(u){return Math.abs(u-x.t)<=PILL_HIST_SAME;})){P.dup++;return;}
+      r.put[x.t]=1;
+      if(!r.pill&&!r.n)P.make.push(r);
+      r.n++;
+      var mg=x.mg?x.mg*x.n:r.pill&&r.pill.mg?r.pill.mg*x.n:0;
+      P.add.push({r:r,t:x.t,mg:mg});
+      if(!P.from||x.t<P.from)P.from=x.t;
+      if(x.t>P.to)P.to=x.t;
+    });
+    return P;
+  }
+  function pillHistApply(P){
+    P.make.forEach(function(r){
+      var id=r.def.id||'p'+Date.now().toString(36);
+      while(pillOf(id))id+=Math.floor(Math.random()*36).toString(36);
+      var p={id:id,name:r.def.name};
+      if(r.def.k)p.k='s';
+      if(r.def.off)p.off=true;
+      data.pills.list.push(p);
+      r.id=id;
+    });
+    P.add.forEach(function(x){
+      var e={id:x.r.id,t:new Date(x.t).toISOString()};
+      if(x.mg)e.mg=+x.mg.toFixed(3);
+      data.pills.log.push(e);
+    });
+    pillSortLog();
+  }
+  function pillHistImport(d){
+    var H=pillHistRead(d);
+    if(!H||!H.doses.length){setDataMsg('That pill history can’t be read, so nothing was added.','err');return;}
+    var P=pillHistPlan(H),n=P.add.length;
+    function ds(c){return c+' dose'+(c===1?'':'s');}
+    if(!n){
+      setDataMsg(P.dup?'Nothing to add — '+(P.dup===1?'the one dose':'all '+P.dup+' doses')+' in that history '+(P.dup===1?'is':'are')+' already in your log.'
+        :'Nothing to add — none of those times has come yet.','info');
+      return;
+    }
+    var a=new Date(P.from),b=new Date(P.to);
+    var span=dkeyOf(a)===dkeyOf(b)?fmtShort(a):fmtShort(a)+' – '+(a.getMonth()===b.getMonth()?b.getDate():fmtShort(b));
+    var left=(P.dup?' '+ds(P.dup)+' already in your log '+(P.dup===1?'is':'are')+' left out.':'');
+    if(!confirm('Add '+ds(n)+' ('+span+') to your pill log?\n\nNothing already logged is changed.'+left))return;
+    // stashed first, so "Undo the last restore" takes the whole paste back out
+    var stOk=stashCurrent();
+    pillHistApply(P);
+    save();renderAll();
+    var on=[],off=[];
+    P.make.forEach(function(r){(r.def.off?off:on).push(r.def.name);});
+    setDataMsg(ds(n)+' added to Pills, '+span+'.'+
+      (P.dup?' '+ds(P.dup)+' already in your log '+(P.dup===1?'was':'were')+' left alone.':'')+
+      (P.ahead?' '+ds(P.ahead)+' timed later than now '+(P.ahead===1?'was':'were')+' left out.':'')+
+      (on.length?' New on the board: '+on.join(', ')+'.':'')+
+      (off.length?' In the record but off the board: '+off.join(', ')+'.':'')+
+      (stOk?' (“Undo the last restore” takes them back out.)':STASH_NO),'ok');
+  }
   $('btnImport').addEventListener('click',function(){
     var raw=$('dataBox').value.trim();
     if(!raw){setDataMsg('Paste a backup into the box first.','err');return;}
+    var hist=null;
+    try{hist=JSON.parse(raw);}catch(e){}
+    if(hist&&typeof hist==='object'&&hist.ttzPills!==undefined){pillHistImport(hist);return;}
     try{
       var d=JSON.parse(raw);
       if(!validShape(d))throw new Error('bad');
