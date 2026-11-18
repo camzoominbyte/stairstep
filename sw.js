@@ -1,6 +1,6 @@
 /* Taper to Zero — offline cache.
    Bump CACHE on any deploy so installed phones pick up the new version. */
-var CACHE = 'ttz-v10.3.0';
+var CACHE = 'ttz-v10.4.0';
 var SHELL = './index.html';
 var ASSETS = [
   './index.html',
