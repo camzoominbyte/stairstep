@@ -5338,6 +5338,9 @@ try{
      them off saved lists the same way, once. */
   var PILL_SEED=2;
   var PILL_GONE=['rx-adderall','rx-lunesta'];
+  /* a press within PILL_SNAP minutes of the hour lands on the hour
+     (pillSnap); PILL_SNAP_FROM is the day that came in */
+  var PILL_SNAP=5,PILL_SNAP_FROM='2026-11-18';
   var PILL_MAIN=[
     {id:'rx-valium',name:'Valium',keys:['valium','diazepam'],mgs:[2,5,10],st:0.5},
     {id:'rx-clonidine',name:'Clonidine',keys:['clonidine'],mgs:[0.1,0.2,0.3],st:0.05},
@@ -5439,6 +5442,27 @@ try{
       return o;
     });
     d.pills.log.sort(function(a,b){return a.t<b.t?-1:a.t>b.t?1:0;});
+    /* a press near the hour lands on the hour (pillSnap). The doses already
+       logged on the day that came in, before it did, are put on the hour
+       too, once — `snap` says it has happened, so a time set by hand after
+       that is left as set. Days before it stay as they were recorded. A
+       dose that would land on a stamp its pill already has goes a second
+       on, as a press does. */
+    if(!d.pills.snap){
+      var plAt=Object.create(null);
+      d.pills.log.forEach(function(x){plAt[x.id+'@'+Date.parse(x.t)]=1;});
+      d.pills.log.forEach(function(x){
+        var t=Date.parse(x.t),nt=pillDay(t)<PILL_SNAP_FROM?t:pillSnap(t);
+        if(nt===t)return;
+        delete plAt[x.id+'@'+t];
+        while(plAt[x.id+'@'+nt])nt+=1000;
+        plAt[x.id+'@'+nt]=1;
+        x.t=new Date(nt).toISOString();
+      });
+      d.pills.log.sort(function(a,b){return a.t<b.t?-1:a.t>b.t?1:0;});
+      d.pills.snap=1;
+      pillSnapNow=true;
+    }
     /* money settings. spendPerWeek is what the user actually typed;
        costPerHit is the derived unit every money surface multiplies by. A
        stored weekly figure always wins, so a hand-edited backup can't leave
@@ -5712,6 +5736,7 @@ try{
     if(v)data.holds[k]=v;else delete data.holds[k];
   }
   var prescribedNow=false;   // set by normData when it writes the Oct 16 week in
+  var pillSnapNow=false;     // set by normData when it puts the day's doses on the hour
   var data=normData(loadData());
   var saveFailed=false;
   /* per-paint memo: heavy analytics (day scans, session grouping) compute
@@ -5735,6 +5760,7 @@ try{
   }
   // a plan normData wrote in is a change to the record — keep it
   if(prescribedNow){prescribedNow=false;save();}
+  if(pillSnapNow){pillSnapNow=false;save();}
   // ask the browser to protect this origin's storage from eviction
   try{
     if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(function(){});
@@ -13173,8 +13199,9 @@ try{
      onto the next day's load. Before the hour that puts the dose a few
      minutes ahead of now, so the views take "now" as up to five minutes on
      (pillSeen) — nothing else can stamp a dose ahead, since an entry's time
-     set by hand still has to have passed. Only a press snaps. */
-  var PILL_SNAP=5;
+     set by hand still has to have passed. Only a press snaps (and, once,
+     the doses already on the log from the day it came in — normData).
+     PILL_SNAP is set up with PILL_SEED, since normData runs before here. */
   function pillSnap(ts){
     var d=new Date(ts),m=d.getMinutes(),h=d.getHours();
     if(m<=PILL_SNAP)return new Date(d.getFullYear(),d.getMonth(),d.getDate(),h).getTime();
