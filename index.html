@@ -744,6 +744,18 @@
   .th-vsi:empty{display:none}
   .th-vsi{display:inline-flex}
   .th-vsl{font-family:var(--f-ui);font-weight:550;font-size:12.5px;color:var(--ink-2);letter-spacing:0}
+  /* the count as its two kinds, on a day the pen was used. The swatches are
+     the pips' own: solid is flower, hatched is pen. */
+  .th-kinds{display:flex;flex-wrap:wrap;align-items:center;gap:3px 7px;margin:10px 0 -3px;
+    font-family:var(--f-round);font-size:13.5px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  .th-kinds[hidden]{display:none}
+  .kd{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+  .kd b{color:var(--ink);font-weight:700}
+  .kd-sw{width:11px;height:11px;border-radius:3px;background:var(--ink-2);flex:none}
+  .kd-sw.pn{background-image:var(--pen-hatch)}
+  .kd-plus{color:var(--ink-3)}
+  /* a pen hit's stamp carries the word wherever stamps are spelled out */
+  .pk{font-family:var(--f-ui);font-style:normal;font-size:10.5px;font-weight:700;letter-spacing:.01em;color:var(--ink-2);margin-left:2px;word-spacing:0}
 
   /* ---- pips: one per allowed hit, grouped by sitting ---- */
   #thPips{display:flex;gap:3px;margin-top:12px;height:22px}
@@ -755,6 +767,10 @@
   #thPips .tp.o{background:var(--over);box-shadow:none}
   #thPips .tp.pl{background:var(--acc-bg);box-shadow:inset 0 0 0 1.5px var(--acc)}
   #thPips .tp.popin{animation:popin 480ms var(--snap) both}
+  /* a pen hit keeps its status colour and is hatched with the card's own
+     surface, so it reads at any pip width and in both themes */
+  #todayCard{--pen-hatch:repeating-linear-gradient(135deg,var(--s1) 0 2.5px,transparent 2.5px 6px)}
+  #thPips .tp.pn{background-image:var(--pen-hatch)}
   .th-bar{display:none}
   .th-meta{
     display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:8px;
@@ -820,6 +836,23 @@
     font-family:var(--f-round);font-weight:700;font-size:18px;font-variant-numeric:tabular-nums;
   }
   .tally-btns .minus:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+  /* ---- the pen / vape hold: the same gesture on a quieter capsule, so the
+     saturated one stays the only loud control. It takes the row under the
+     hold and the −1 (.tally-btns wraps). ---- */
+  .tally-btns{flex-wrap:wrap}
+  .hold-log.pen,html:not(.dark) .hold-log.pen{
+    flex:1 0 100%;height:54px;border-radius:27px;gap:11px;padding:0 16px 0 6px;
+    background:var(--s2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line);
+  }
+  .hold-log.pen::after{background:color-mix(in srgb,var(--acc) 22%,transparent)}
+  .hold-log.pen .hold-knob,html:not(.dark) .hold-log.pen .hold-knob{
+    width:42px;height:42px;background:var(--acc-bg);color:var(--acc-t);box-shadow:none}
+  .hold-log.pen .hold-ring{width:38px;height:38px}
+  .hk-pen{position:absolute;width:19px;height:19px;transition:transform var(--d-fast) var(--snap),opacity var(--d-fast)}
+  .hold-log.holding .hk-pen{transform:scale(.86)}
+  .hold-log.logged .hk-pen{opacity:0}
+  .hold-log.pen .hold-label{font-size:15.5px}
+  .hold-log.pen .hold-sub{font-size:12px;font-weight:550;color:var(--ink-2);opacity:1}
 
   /* ---- urge timer + Earlier ---- */
   #todayCard .action-row{display:flex;gap:8px;margin-top:10px;align-items:stretch}
@@ -865,6 +898,9 @@
   #btnSlip{flex:1;min-width:0}
   #btnSlip::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--slip);flex:none}
   .slip-undo{flex:0 0 64px;padding:0;font-family:var(--f-round);font-weight:700;font-size:16px;color:var(--ink-2)}
+  #todayCard.free .th-sliprow{flex-wrap:wrap}
+  .slip-pen{flex:1 0 100%;gap:7px;color:var(--ink-2)}
+  .slip-pen .ic{width:17px;height:17px}
   .slip-btn[hidden]{display:none}
   .slip-btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
@@ -876,10 +912,13 @@
     background:var(--s2);box-shadow:inset 0 0 0 1px var(--line);color:var(--ink);
     font-family:var(--f-round);font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;
   }
+  .earlier-row{flex-wrap:wrap}
+  .earlier-row input{flex:0 1 140px}
   .earlier-row button{
-    flex:1.3;height:48px;border-radius:24px;border:0;cursor:pointer;
+    flex:1 1 0;min-width:0;height:48px;padding:0 6px;border-radius:24px;border:0;cursor:pointer;white-space:nowrap;
     background:var(--acc-bg);color:var(--acc-t);font-family:var(--f-ui);font-size:14px;font-weight:650;
   }
+  #btnAddEarlierPen{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line-2)}
   .earlier-row button:focus-visible,.earlier-row input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   #earlierMsg{font-size:12.5px;color:var(--ink-2);margin:7px 2px 0}
   #earlierMsg[hidden]{display:none}
@@ -898,6 +937,7 @@
     .hold-label{white-space:normal;font-size:15.5px;line-height:1.1}
     .hold-sub{display:none}
     .tally-btns .minus{flex-basis:54px}
+    .earlier-row input{flex:1 0 100%}
     #btnEarlier>span{display:none}
     #btnEarlier{padding:0 14px}
   }
@@ -1088,6 +1128,9 @@
     font-family:var(--f-ui);text-align:left;cursor:pointer}
   .vh:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .vh>.ic{position:absolute;right:9px;bottom:14px;color:var(--ink-3)}
+  /* a day the pen was used says how its count splits, under the status so
+     the two heads still line up */
+  .vh-k{font-size:12px;font-weight:600;color:var(--ink-2);margin:7px 22px 0 0;font-variant-numeric:tabular-nums}
   .vh-d{font-size:12.5px;font-weight:650;color:var(--ink-2);white-space:nowrap}
   /* a narrow phone has no room for the word: the right-hand column is today */
   @media (max-width:380px){.vh-t{display:none}}
@@ -1726,6 +1769,7 @@
   .jr-top{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;line-height:1.1}
   .jr-n{font-family:var(--f-round);font-size:22px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ink)}
   .jr-of{font-size:13px;font-weight:600;color:var(--ink-3)}
+  .jr-pen{font-size:12.5px;font-weight:600;color:var(--ink-2)}
   .jr-times{font-family:var(--f-round);font-size:12.5px;font-weight:600;line-height:1.55;color:var(--ink-3);font-variant-numeric:tabular-nums}
   .jr-times b{color:var(--ink);font-weight:650;white-space:nowrap}
   .jr-times b i{font-style:normal;color:var(--ink-3);font-weight:600;margin-left:1px}
@@ -2952,6 +2996,10 @@
   .ed-time input:focus{outline:none}
   .ed-time:focus-within{box-shadow:inset 0 0 0 2px var(--acc)}
   .timefix .btn{flex:none;padding:0 18px}
+  /* two things to add (a hit, a pen hit): the time takes its own line */
+  .timefix.two{flex-wrap:wrap}
+  .timefix.two .ed-time{flex:1 0 100%}
+  .timefix.two .btn{flex:1 1 0;min-width:0;justify-content:center;padding:0 10px;white-space:nowrap}
   .ed-msg{font-size:13px;font-weight:550;color:var(--over-t);margin:10px 2px 0}
   @media (prefers-reduced-motion: reduce){
     .cz-overlay>.sheet,html.no-vt .detail-overlay>.sheet{transform:none!important;transition:none!important}
@@ -3414,6 +3462,7 @@ try{
 <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 13.5 4.5 9 9 4.5"/><path d="M4.5 9H14a5.5 5.5 0 0 1 0 11h-3"/></symbol>
 <symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.6 1.6M9.5 2.5h5M18.5 6.5l1.2-1.2"/></symbol>
 <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5 9.8 17 19 7.5"/></symbol>
+<symbol id="i-pen" viewBox="0 0 24 24"><g transform="rotate(-45 12 12)"><rect x="2.6" y="9.7" width="11.4" height="4.6" rx="1.5"/><path d="M14 10.6h3.6a1 1 0 0 1 1 1v.8a1 1 0 0 1-1 1H14M18.6 12h2.8"/><circle cx="6" cy="12" r=".9" fill="currentColor" stroke="none"/></g></symbol>
 <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
 <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M12 11v5.2"/><circle cx="12" cy="7.9" r="1.1" fill="currentColor" stroke="none"/></symbol>
 <symbol id="i-earlier" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4.5v3.6h3.6M12 8v4.2l2.8 1.7"/></symbol>
@@ -3633,6 +3682,9 @@ try{
       <span class="delta flat th-vs" id="thVs"><span class="th-vsi" id="thVsIc"></span><span id="stVs">–</span><span class="th-vsl" id="thVsL">vs yesterday by now</span></span>
     </div>
   </div>
+  <!-- the count as its two kinds, only on a day the pen was used (renderToday);
+       it sits on the pips because its swatches are their key -->
+  <p class="th-kinds" id="thKinds" hidden></p>
   <div class="th-medal" id="thMedal" hidden></div>
   <!-- what the clean clock is buying, counted from the same instant (zero era) -->
   <div class="th-gains" id="ghGains" hidden></div>
@@ -3653,6 +3705,17 @@ try{
       <span class="hold-tx"><span class="hold-label" id="holdLabel">Hold to log a hit</span><span class="hold-sub">Press &amp; hold · 0.7 s</span></span>
     </button>
     <button class="minus" id="btnMinus" aria-label="Remove one hit">−1</button>
+    <!-- the pen / vape: the same hold on a quieter capsule. A pen hit is a
+         hit (it counts against the cap and restarts the gap) and carries a
+         tag, so the day can be read as flower + pen -->
+    <button class="hold-log pen" id="holdPen" aria-label="Press and hold to log a pen or vape hit, or press Enter">
+      <span class="hold-knob" aria-hidden="true">
+        <svg class="hold-ring" viewBox="0 0 44 44" aria-hidden="true"><circle class="hk-track" cx="22" cy="22" r="18"/><circle class="hk-prog" id="holdPenRing" cx="22" cy="22" r="18" pathLength="100" transform="rotate(-90 22 22)"/></svg>
+        <svg class="ic hk-pen" aria-hidden="true"><use href="#i-pen"/></svg>
+        <svg class="ic hk-check" aria-hidden="true"><use href="#i-check"/></svg>
+      </span>
+      <span class="hold-tx"><span class="hold-label" id="holdPenLabel">Hold to log a pen hit</span><span class="hold-sub">Pen / vape · press &amp; hold</span></span>
+    </button>
   </div>
   <div class="action-row">
     <button class="delay-chip" id="urgeChip">Urge? Start the 20-minute timer.</button>
@@ -3661,10 +3724,13 @@ try{
   <div class="th-sliprow">
     <button class="slip-btn" id="btnSlip">Slipped? Log it honestly</button>
     <button class="slip-btn slip-undo" id="btnSlipUndo" hidden aria-label="Remove the last slip logged today">−1</button>
+    <!-- the pen takes the row under it, the way its hold does during the taper -->
+    <button class="slip-btn slip-pen" id="btnSlipPen" aria-label="Log a pen or vape slip"><svg class="ic" aria-hidden="true"><use href="#i-pen"/></svg>Pen / vape slip</button>
   </div>
   <div class="earlier-row" id="earlierRow" hidden>
     <input type="time" id="earlierTime" aria-label="Time the hit happened">
-    <button id="btnAddEarlier">Add hit at this time</button>
+    <button id="btnAddEarlier" aria-label="Add a hit at this time">Add hit</button>
+    <button id="btnAddEarlierPen" aria-label="Add a pen or vape hit at this time">Add pen</button>
   </div>
   <p id="earlierMsg" hidden></p>
   <div class="th-foot">
@@ -5152,6 +5218,20 @@ try{
       var adj=Number(e.adj);
       if(!isFinite(adj)||adj<0){adj=0;if(e.adj!==undefined&&e.adj!==0)fixed++;}
       out[k]={hits:hits,adj:Math.round(adj)};
+      /* the pen tags ride along: each one kept only against a hit that is
+         really there, so an import can never count a pen hit twice */
+      if(e.pen instanceof Array){
+        var have={},pen=[];
+        hits.forEach(function(h){have[h]=(have[h]||0)+1;});
+        e.pen.forEach(function(h){
+          var t=(typeof h==='number')?h:Date.parse(h);
+          if(isNaN(t)||!(t>0))return;
+          var iso=new Date(t).toISOString();
+          if(have[iso]>0){have[iso]--;pen.push(iso);}
+        });
+        if(pen.length)out[k].pen=pen.sort();
+        if(pen.length!==e.pen.length)fixed++;
+      }
     }
     d.days=out;
     return {fixed:fixed,dropped:dropped};
@@ -5998,7 +6078,51 @@ try{
      with no surface anywhere showing why the descent stopped adjusting. */
   function countChanged(key){
     if(data.holdPrompts[key])delete data.holdPrompts[key];
+    penSync(data.days[key]);
   }
+  /* ================= pen / vape hits =================
+     A pen hit is a hit. It goes into e.hits like every other, so the count
+     against the cap, the gap clock, the sittings and every timeline read it
+     with nothing changed: the combined total IS the day's count. What makes
+     it a pen hit is its stamp also being listed in e.pen, and that list is
+     all "tracked separately" is: flower = count − pen. e.pen only exists
+     on a day the pen was used, and is always a sub-list of e.hits (two hits
+     can share a stamp: Earlier adds a second at the same minute). penSync
+     drops a tag whose hit has gone; countChanged calls it, and every edit
+     to a day's hits already ends there. */
+  function penSync(e){
+    if(!e||e.pen===undefined)return;
+    if(!(e.pen instanceof Array)||!(e.hits instanceof Array)){delete e.pen;return;}
+    var have={};
+    e.hits.forEach(function(h){have[h]=(have[h]||0)+1;});
+    e.pen=e.pen.filter(function(t){if(have[t]>0){have[t]--;return true;}return false;});
+    if(!e.pen.length)delete e.pen;
+  }
+  function penOf(key){var e=data.days[key];return e&&e.pen?e.pen.length:0;}
+  // push one hit onto a day, tagged if it was the pen
+  function addHit(key,ts,pen){
+    var e=entryFor(key,true), iso=ts.toISOString();
+    e.hits.push(iso);
+    if(pen)(e.pen=e.pen||[]).push(iso);
+    countChanged(key);
+  }
+  // sessionsFor(key) again, as true/false per hit: was it the pen
+  function penSessions(key){return rc('pn:'+key,function(){
+    var e=data.days[key], left={};
+    if(e&&e.pen)e.pen.forEach(function(t){var ms=+new Date(t);left[ms]=(left[ms]||0)+1;});
+    return sessionsFor(key).map(function(ss){return ss.map(function(t){
+      var ms=t.getTime();
+      if(left[ms]>0){left[ms]--;return true;}
+      return false;
+    });});
+  });}
+  // "3 flower + 2 pen": how a count splits, said only where the pen was used
+  function kindsTxt(n,pen){
+    if(!pen)return '';
+    var fl=Math.max(0,n-pen);
+    return fl?fl+' flower + '+pen+' pen':(n>1?'all pen':'pen');
+  }
+  var PEN_TAG='<i class="pk">pen</i>';
   function setCount(key,n){
     n=Math.max(0,n);
     var e=entryFor(key,true);
@@ -6504,9 +6628,9 @@ try{
     var el=$('tallyCount');
     el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');
   }
-  function plusOne(){
+  function plusOne(pen){
     if(!motionOK)return;
-    var card=$('todayCard'),b=$('holdLog');
+    var card=$('todayCard'),b=$(pen?'holdPen':'holdLog');
     var s=document.createElement('span');s.className='plusone';s.textContent='+1';
     var cr=card.getBoundingClientRect(),br=b.getBoundingClientRect();
     s.style.top=(br.top-cr.top-8)+'px';
@@ -8528,10 +8652,12 @@ try{
     if(cnt>T)groups.push(cnt-T);
     else if(cnt<T){var cut=T-cnt;while(cut>0&&groups.length){var g=groups.length-1,d=Math.min(cut,groups[g]);groups[g]-=d;cut-=d;if(!groups[g])groups.pop();}}
     var h='',i=0,st=cnt>capN?'u':cnt===capN?'a':'u';
+    // the timed hits in clock order, each one pen or not (untimed ones trail, never pen)
+    var pf=[].concat.apply([],penSessions(todayKey));
     groups.forEach(function(n,gi){
       for(var j=0;j<n;j++,i++){
         var c=i>=capN?'o':st;
-        h+='<i class="tp '+c+(j===0&&gi>0?' g':'')+(i===pop?' popin':'')+'"></i>';
+        h+='<i class="tp '+c+(pf[i]?' pn':'')+(j===0&&gi>0?' g':'')+(i===pop?' popin':'')+'"></i>';
       }
     });
     var empty=Math.max(0,capN-cnt);
@@ -8576,6 +8702,7 @@ try{
       $('streakChip').hidden=true;
       $('thScore').hidden=true;
       $('thCount').hidden=true;
+      $('thKinds').hidden=true;
       $('thPips').hidden=true;
       $('tallyBtns').hidden=true;
       $('statRow').hidden=true;
@@ -8620,7 +8747,8 @@ try{
         $('thCK').textContent='Clean days banked';
         setTxt('thCN',zs0?zs0.clean:0);
         $('thCS').innerHTML='the run restarts <b>tomorrow</b>';
-        med.innerHTML='<span class="chip sm slip"><span class="dot"></span>Slip</span><span><b>'+count+'</b> logged today · data, not doom</span>';
+        var pnZ=penOf(todayKey);
+        med.innerHTML='<span class="chip sm slip"><span class="dot"></span>Slip</span><span><b>'+count+'</b> logged today'+(pnZ?' · '+kindsTxt(count,pnZ):'')+' · data, not doom</span>';
         $('barFill').style.width='100%';$('barFill').style.background='var(--clay)';
         $('barNote').textContent='Slip logged. Data, not doom — every clean day stays banked ('+(zs0?zs0.clean:0)+' so far). Tomorrow the run restarts; the total never resets.';
         $('btnSlip').textContent='Logged '+count+' today — tap to add another';
@@ -8694,6 +8822,12 @@ try{
     $('thCount').classList.toggle('th-pre',idx<0);
     setNum('tallyCount',count,!booted);
     $('capLabel').textContent='of '+cap+' hits today';
+    /* the count as its two kinds: said only on a day the pen was used, so a
+       flower-only day reads exactly as it always has */
+    var pnT=penOf(todayKey), kdEl=$('thKinds'), flT=Math.max(0,count-pnT);
+    kdEl.hidden=!pnT;
+    if(pnT)setHTML(kdEl,(flT?'<span class="kd"><i class="kd-sw"></i><b>'+flT+'</b> flower</span><span class="kd-plus">+</span>':'')+
+      '<span class="kd"><i class="kd-sw pn"></i>'+(flT?'<b>'+pnT+'</b> pen':(count>1?'all pen':'pen'))+'</span>');
     // the day's structure, spelled out where the count lives — and what changes tomorrow
     var schedTxt=phase.single
       ?'One evening session only'
@@ -8803,7 +8937,7 @@ try{
     var T=0,sits=ss.map(function(x){T+=x.length;var t=x[0];return '<span class="th-st"><b>'+thClk(t)+'</b>'+(t.getHours()<12?'a':'p')+(x.length>1?' <i>×'+x.length+'</i>':'')+'</span>';});
     if(count>T)sits.push('<span class="th-st"><i>+'+(count-T)+' untimed</i></span>');
     $('thSits').innerHTML=sits.length?sits.join('<span class="th-sep" aria-hidden="true">·</span>'):'<span class="th-st"><i>Nothing yet today</i></span>';
-    pp.setAttribute('aria-label',count+' of '+cap+' hits'+(ss.length?': '+ss.map(function(x){return x.length+' at '+fmtTime(x[0]);}).join(', '):'')+
+    pp.setAttribute('aria-label',count+' of '+cap+' hits'+(pnT?' ('+kindsTxt(count,pnT)+')':'')+(ss.length?': '+ss.map(function(x){return x.length+' at '+fmtTime(x[0]);}).join(', '):'')+
       (count>cap?', '+(count-cap)+' over the cap':', '+left+' left')+(plan?', next sitting up to '+plan:''));
     thLastCnt=count;
     var dl=$('thDial');
@@ -8848,10 +8982,10 @@ try{
     return (t.getHours()%12||12)+':'+pad(t.getMinutes())+'<small>'+(t.getHours()<12?'AM':'PM')+'</small>';
   }
   // every hit's minute, mono — ":10 :14 :19", the hour spelled out when it turns
-  function ydRaw(sess){
+  function ydRaw(sess,pf){
     var h0=sess[0].getHours();
-    return sess.map(function(t){
-      return (t.getHours()===h0?'':(t.getHours()%12||12))+':'+pad(t.getMinutes());
+    return sess.map(function(t,i){
+      return (t.getHours()===h0?'':(t.getHours()%12||12))+':'+pad(t.getMinutes())+(pf&&pf[i]?PEN_TAG:'');
     }).join(' ');
   }
   function ydStatChip(mm,soFar){
@@ -8925,7 +9059,7 @@ try{
       });
       h+='<div class="yr-sit'+(isT?'':' y')+'"><i class="yr-n"></i><div class="yr-tm">'+ydClk(sess[0])+
         (sess.length>1?'<span class="x">×'+sess.length+'</span>':'')+'</div>'+
-        '<div class="yr-raw">'+ydRaw(sess)+'</div></div>';
+        '<div class="yr-raw">'+ydRaw(sess,mm.penBy[si])+'</div></div>';
     });
     if(mm.adj>0)h+='<div class="yr-sit hol"><i class="yr-n"></i><div class="yr-tm sm">+'+mm.adj+'</div><div class="yr-raw ui">logged without times</div></div>';
     if(isT&&!mm.isZ){
@@ -8950,7 +9084,8 @@ try{
     return '<button class="vh" type="button" data-day="'+mm.key+'" aria-label="'+(isT?'Today':'Yesterday')+', '+fmtShort(mm.date)+', '+
         n.replace(/<[^>]+>/g,'')+' — open in full">'+
       '<span class="vh-d">'+ydWk(mm.date)+' · '+fmtShort(mm.date)+(isT?'<span class="vh-t"> · today</span>':'')+'</span>'+
-      '<span class="vh-n">'+n+'</span>'+ydStatChip(mm,isT)+icon('chev','ic-sm')+'</button>';
+      '<span class="vh-n">'+n+'</span>'+ydStatChip(mm,isT)+
+      (mm.pen?'<span class="vh-k">'+kindsTxt(mm.eff||0,mm.pen)+'</span>':'')+icon('chev','ic-sm')+'</button>';
   }
   function ydGridHTML(){
     var z=zeroDay(), n=Math.round((today-z)/MS_DAY)+1;
@@ -9502,7 +9637,8 @@ try{
       cls+=' jr-z';
       if(m.eff>0){
         var st=jnSittings(m);
-        mid='<p class="jr-top"><span class="jr-n jn-t-over">'+m.eff+'</span><span class="jr-of">logged'+(m.isToday?' today':'')+'</span></p>'+
+        mid='<p class="jr-top"><span class="jr-n jn-t-over">'+m.eff+'</span><span class="jr-of">logged'+(m.isToday?' today':'')+'</span>'+
+          (m.pen?'<span class="jr-pen">· '+m.pen+' pen</span>':'')+'</p>'+
           (st.length?'<p class="jr-times">'+st.join(' · ')+'</p>':'');
         rt=jnChip(m,true)+'<small>run restarts<br>'+(m.isToday?'tomorrow':'the next day')+'</small>';
         aria='slip, '+m.eff+' logged';
@@ -9520,7 +9656,8 @@ try{
     }else{
       var eff=m.eff||0, sits=jnSittings(m), nx=jnNextOpen(m);
       if(nx)sits.push(nx);
-      mid='<p class="jr-top"><span class="jr-n">'+eff+'</span><span class="jr-of">of '+esc(m.capText)+(m.isToday?' so far':'')+'</span></p>'+
+      mid='<p class="jr-top"><span class="jr-n">'+eff+'</span><span class="jr-of">of '+esc(m.capText)+(m.isToday?' so far':'')+'</span>'+
+        (m.pen?'<span class="jr-pen">· '+m.pen+' pen</span>':'')+'</p>'+
         (sits.length?'<p class="jr-times">'+sits.join(' <span class="jr-sep">·</span> ')+'</p>'
           :'<p class="jr-soft jr-line">Nothing logged yet today</p>')+
         jnLongest(m);
@@ -9693,17 +9830,18 @@ try{
       var block='<div class="hsession"><div class="hsession-head">'+
         '<span class="sn">Sitting '+(si+1)+'</span>'+
         '<span class="stot">'+sess.length+' hit'+(sess.length>1?'s':'')+'</span></div>';
-      var groups={},order=[];
-      sess.forEach(function(hd){
-        var gk=pad(hd.getHours())+':'+pad(hd.getMinutes());
-        if(!groups[gk]){groups[gk]={t:hd,n:0};order.push(gk);}
+      // a row a minute and a kind, so a pen hit can be taken off on its own
+      var groups={},order=[],pf=penSessions(key)[si]||[];
+      sess.forEach(function(hd,hi){
+        var hm=pad(hd.getHours())+':'+pad(hd.getMinutes()), pn=!!pf[hi], gk=hm+(pn?'p':'');
+        if(!groups[gk]){groups[gk]={t:hd,n:0,hm:hm,pen:pn};order.push(gk);}
         groups[gk].n++;
       });
       order.forEach(function(gk){
-        var g=groups[gk];
+        var g=groups[gk], one=g.pen?'pen hit':'hit';
         block+='<div class="hgroup"><span class="ht">'+fmtTime(g.t)+'</span>'+
-          '<span class="hn">'+g.n+' hit'+(g.n>1?'s':'')+'</span>'+
-          '<button class="ed-minus" data-act="gdec" data-hm="'+gk+'" aria-label="Remove one hit at '+fmtTime(g.t)+'">'+MINUS_IC+'</button></div>';
+          '<span class="hn">'+g.n+' '+one+(g.n>1?'s':'')+'</span>'+
+          '<button class="ed-minus" data-act="gdec" data-hm="'+g.hm+'"'+(g.pen?' data-pen="1"':'')+' aria-label="Remove one '+one+' at '+fmtTime(g.t)+'">'+MINUS_IC+'</button></div>';
       });
       detail+=block+'</div>';
     });
@@ -9714,8 +9852,9 @@ try{
         '<button class="ed-minus" data-act="adjdec" aria-label="One less untimed hit">'+MINUS_IC+'</button></div>';
     }
     if(!detail)detail='<p class="ed-empty">Nothing logged this day yet.</p>';
-    detail+='<div class="timefix"><label class="ed-time"><span>Time</span><input type="time" value="'+lastFixTime+'" aria-label="Time the hit happened"></label>'+
-            '<button class="btn acc" data-act="addat">'+icon('plus')+'Add hit</button></div>';
+    detail+='<div class="timefix two"><label class="ed-time"><span>Time</span><input type="time" value="'+lastFixTime+'" aria-label="Time the hit happened"></label>'+
+            '<button class="btn acc" data-act="addat">'+icon('plus')+'Add hit</button>'+
+            '<button class="btn ghost" data-act="addat" data-pen="1">'+icon('pen')+'Add pen hit</button></div>';
     if(fixMsg)detail+='<p class="ed-msg" role="status">'+fixMsg+'</p>';
     return '<section class="card dp-card hdetail dp-editor" data-key="'+key+'">'+
       '<div class="hedit"><span class="ed-ic" aria-hidden="true">'+icon('earlier')+'</span>'+
@@ -11619,6 +11758,7 @@ try{
       else if(m.reqGapH>0)facts.push(fmtGapH(m.reqGapH)+' gaps');
       era='<span class="chip sm acc">'+icon('plan')+'Taper</span>';
     }
+    if(!m.future&&m.pen>0)facts.push(kindsTxt(m.eff||0,m.pen));
     var when='<span class="dp-when"><b>'+WEEKDAYS[d.getDay()]+'</b> · '+fmtShort(d)+(m.isToday?' · today':'')+'</span>';
     var big, side='', pips='';
     if(m.future){
@@ -11789,18 +11929,22 @@ try{
       var ts=new Date(bd.getFullYear(),bd.getMonth(),bd.getDate()+shift,+hm[0],+hm[1]);
       if(ts>new Date()){fixMsg='That time hasn’t happened yet.';dpRender(key,true);return;}
       if(data.urgeStart&&ts.getTime()>=data.urgeStart&&ts.getTime()<data.urgeStart+URGE_MS)data.urgeStart=null;
-      entryFor(key,true).hits.push(ts.toISOString());
-      countChanged(key);
+      addHit(key,ts,btn.dataset.pen==='1');
       lastFixTime=v;fixMsg='';
       save();renderAll();
       return;
     }
     if(act==='gdec'){
-      var e=data.days[key], gm=btn.dataset.hm;
+      var e=data.days[key], gm=btn.dataset.hm, wantPen=btn.dataset.pen==='1', left={};
       if(e&&e.hits){
+        // which hits carry a pen tag, read the way penSessions reads them
+        (e.pen||[]).forEach(function(t){left[t]=(left[t]||0)+1;});
         for(var i=0;i<e.hits.length;i++){
-          var hd=new Date(e.hits[i]);
-          if(pad(hd.getHours())+':'+pad(hd.getMinutes())===gm){e.hits.splice(i,1);countChanged(key);
+          var hd=new Date(e.hits[i]), isP=left[e.hits[i]]>0;
+          if(isP)left[e.hits[i]]--;
+          if(isP===wantPen&&pad(hd.getHours())+':'+pad(hd.getMinutes())===gm){
+            if(isP)e.pen.splice(e.pen.indexOf(e.hits[i]),1);
+            e.hits.splice(i,1);countChanged(key);
             if(!e.hits.length&&!(e.adj>0)&&key!==todayKey&&dayMetrics(key).cap>0)delete data.days[key];
             save();break;}
         }
@@ -11831,6 +11975,8 @@ try{
       capText:di>=0?BASE_PHASES[di].capText:BASE_PHASES[0].capText,
       single:!!(di>=0&&BASE_PHASES[di].single),
       reqGapH:0, count:countOf(key), adj:0, eff:null,
+      // of the count, how many were the pen; penBy mirrors sessions hit for hit
+      pen:penOf(key), penBy:penSessions(key),
       sessions:sessionsFor(key), sessN:0, first:null, last:null, spanMs:null,
       firstMin:null, lastMin:null,
       gaps:[], gapSpans:[], gapAvgMs:null, gapMinMs:null, gapsMet:null, heldRule:null,
@@ -12415,10 +12561,7 @@ try{
       m.gapSpans.forEach(function(g,gi){if(g.si===si)h+=gapRow(g,gi);});
       // one row per sitting: its first clock time, the count, and every hit's
       // raw minute in mono so no stamp hides behind a tap
-      var h0=sess[0].getHours();
-      var mins=sess.map(function(t){
-        return (t.getHours()===h0?'':(t.getHours()%12||12))+':'+pad(t.getMinutes());
-      }).join(' ');
+      var mins=ydRaw(sess,m.penBy[si]);
       h+='<div class="clk-sit"><span class="clk-node" aria-hidden="true"></span>'+
         '<span class="clk-sd"><span class="clk-t">'+tHTML(sess[0])+
         '</span>'+
@@ -13904,16 +14047,16 @@ try{
   }
 
   /* ================= events ================= */
-  function logHit(){
+  function logHit(pen){
     computeToday();   // the 4am boundary may have passed since the last paint
     /* the wave won. A timer still running must not go on to bank itself as
        "outlasted" — the one counter whose whole worth is that it is true.
        A timer past its 20 minutes is left alone, so a completed-but-not-yet
        -banked one still counts. */
     if(data.urgeStart&&Date.now()-data.urgeStart<URGE_MS)data.urgeStart=null;
-    entryFor(todayKey,true).hits.push(new Date().toISOString());countChanged(todayKey);
+    addHit(todayKey,new Date(),pen);
     save();renderAll();
-    plusOne();popBig();
+    plusOne(pen);popBig();
   }
 
   /* hold-to-log: press and hold — the capsule washes with light and the
@@ -13921,8 +14064,9 @@ try{
      The ring is a circle with pathLength=100, so no geometry is measured
      (the old rounded-rect perimeter math, and its negative-width error when
      pressed while hidden, are gone). */
-  (function(){
-    var btn=$('holdLog'),label=$('holdLabel'),rect=$('holdRingRect');
+  /* one hold, two capsules: the hit and, under it, the pen. Each owns its
+     ring, its label and its own state. */
+  function holdControl(btn,label,rect,idleTxt,pen){
     var HOLD=680, raf=null, doneT=null, t0=0, prog=0, holding=false, busy=false, hintT=null;
     btn.classList.add('idle');
     function fitRing(){
@@ -13943,7 +14087,7 @@ try{
     function start(headStart){
       if(busy||holding)return;
       holding=true;
-      if(hintT){clearTimeout(hintT);hintT=null;label.textContent='Hold to log a hit';}
+      if(hintT){clearTimeout(hintT);hintT=null;label.textContent=idleTxt;}
       btn.classList.remove('idle');btn.classList.add('holding');
       fitRing();
       if(navigator.vibrate)navigator.vibrate(5);
@@ -13961,7 +14105,7 @@ try{
       // a quick tap gets a gentle nudge toward the gesture
       if(prog<0.35){
         label.textContent='Press & hold';
-        hintT=setTimeout(function(){label.textContent='Hold to log a hit';hintT=null;},1100);
+        hintT=setTimeout(function(){label.textContent=idleTxt;hintT=null;},1100);
       }
       var from=prog,d0=performance.now();
       (function drain(t){
@@ -13978,12 +14122,12 @@ try{
       if(raf){cancelAnimationFrame(raf);raf=null;}
       btn.classList.remove('holding');btn.classList.add('logged');
       setProg(1);
-      logHit();
+      logHit(pen);
       if(navigator.vibrate)navigator.vibrate(10);
       label.textContent=isZeroEra?'Logged':'Logged · '+(countOf(todayKey)||0)+' of '+cap;
       setTimeout(function(){
         btn.classList.remove('logged');
-        label.textContent='Hold to log a hit';
+        label.textContent=idleTxt;
         setProg(0);
         btn.classList.add('idle');
         busy=false;
@@ -14005,7 +14149,9 @@ try{
         start(HOLD*0.5); // keyboard: same ritual, half the wait
       }
     });
-  })();
+  }
+  holdControl($('holdLog'),$('holdLabel'),$('holdRingRect'),'Hold to log a hit',false);
+  holdControl($('holdPen'),$('holdPenLabel'),$('holdPenRing'),'Hold to log a pen hit',true);
   $('btnMinus').addEventListener('click',function(){
     computeToday();
     var n=countOf(todayKey)||0;
@@ -14016,7 +14162,7 @@ try{
     var n=countOf(todayKey)||0;
     if(n>0){setCount(todayKey,n-1);renderAll();}
   });
-  $('btnSlip').addEventListener('click',function(){
+  function logSlip(pen){
     computeToday();
     /* This used to DECREMENT whenever today already had a hit, so the Today
        card could record exactly one slip per day and a second tap deleted
@@ -14026,10 +14172,12 @@ try{
     var n=countOf(todayKey)||0;
     if(n>0||confirm('Log a slip for today? It gets recorded honestly — data, not doom.')){
       if(data.urgeStart&&Date.now()-data.urgeStart<URGE_MS)data.urgeStart=null;
-      entryFor(todayKey,true).hits.push(new Date().toISOString());countChanged(todayKey);
+      addHit(todayKey,new Date(),pen);
       save();renderAll();
     }
-  });
+  }
+  $('btnSlip').addEventListener('click',function(){logSlip(false);});
+  $('btnSlipPen').addEventListener('click',function(){logSlip(true);});
   $('btnHold').addEventListener('click',function(){
     // the hold itself is automatic (derived in schedule()) — this just
     // acknowledges the banner without disturbing the auto-adjustment
@@ -14236,7 +14384,7 @@ try{
     }
     $('earlierMsg').textContent='';$('earlierMsg').hidden=true;
   });
-  $('btnAddEarlier').addEventListener('click',function(){
+  function addEarlier(pen){
     computeToday();
     var v=$('earlierTime').value;
     if(!v){$('earlierMsg').textContent='Pick a time first.';$('earlierMsg').hidden=false;return;}
@@ -14246,11 +14394,12 @@ try{
     var ts=new Date(today.getFullYear(),today.getMonth(),today.getDate()+dayShift,+hm[0],+hm[1]);
     if(ts>new Date()){$('earlierMsg').textContent='That time hasn’t happened yet today.';$('earlierMsg').hidden=false;return;}
     if(data.urgeStart&&Date.now()-data.urgeStart<URGE_MS)data.urgeStart=null;
-    entryFor(todayKey,true).hits.push(ts.toISOString());
-    countChanged(todayKey);
+    addHit(todayKey,ts,pen);
     save();renderAll();
-    $('earlierMsg').textContent='Added a hit at '+fmtTime(ts)+'. Tap again for another at the same time.';$('earlierMsg').hidden=false;
-  });
+    $('earlierMsg').textContent='Added a '+(pen?'pen hit':'hit')+' at '+fmtTime(ts)+'. Tap again for another at the same time.';$('earlierMsg').hidden=false;
+  }
+  $('btnAddEarlier').addEventListener('click',function(){addEarlier(false);});
+  $('btnAddEarlierPen').addEventListener('click',function(){addEarlier(true);});
   $('urgeChip').addEventListener('click',function(){
     if(!data.urgeStart){data.urgeStart=Date.now();}
     else if(Date.now()-data.urgeStart>=URGE_MS){data.urgeStart=null;}
