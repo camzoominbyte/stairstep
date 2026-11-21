@@ -1298,6 +1298,14 @@
   .px-tmv small{margin:0 2px 0 1px;font-size:15px;font-weight:650;letter-spacing:0;color:var(--ink-2)}
   .px-tmv i{font-style:normal;color:var(--ink-3)}
   .px-tmv i small{color:var(--ink-3)}
+  /* the goal between doses, under both figures: a line that says when it is
+     reached and a bar filling toward it */
+  .px-tg{grid-column:1/-1;margin-top:11px;font-size:12.5px;font-weight:650;line-height:1.2;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  .px-tg b{font-weight:700;color:var(--ink)}
+  .px-tg.clear,.px-tg.clear b{color:var(--under-t)}
+  .px-tg .px-bar{height:5px;border-radius:3px;margin-top:7px}
+  .px-tg .px-bar i{border-radius:3px;background:var(--pc-1)}
+  .px-tg.clear .px-bar i{background:var(--under)}
   .px-board{padding:12px 16px 6px}
   /* the week: press a day to read it, ‹ pages back a week */
   /* the week strip on Today */
@@ -1367,40 +1375,43 @@
      before, the mg on the right edge, a chevron. The total under it keeps
      the same columns, "Total" standing where a time would. */
   .px-tl{margin:6px 0 4px}
-  .px-g{display:grid;grid-template-columns:50px minmax(0,1fr);column-gap:8px;padding:3px 0;border-top:1px solid var(--line)}
+  .px-g{display:grid;grid-template-columns:50px minmax(0,1fr);column-gap:8px;padding:2px 0;border-top:1px solid var(--line)}
   .px-tl>.px-g:first-child{border-top:0}
-  .px-et{padding-top:9px;text-align:right;font-family:var(--f-round);font-size:14px;font-weight:700;letter-spacing:-.01em;
+  .px-et{padding-top:6px;text-align:right;font-family:var(--f-round);font-size:13px;font-weight:700;letter-spacing:-.01em;
     line-height:20px;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
   .px-gl{min-width:0}
   /* a pill on a line: one button the width of the row */
-  .px-it{display:flex;align-items:center;gap:8px;width:100%;min-width:0;min-height:38px;padding:0 4px 0 8px;border:0;border-radius:10px;background:none;
+  .px-it{display:flex;align-items:center;gap:8px;width:100%;min-width:0;min-height:32px;padding:0 4px 0 8px;border:0;border-radius:9px;background:none;
     color:var(--ink);font-family:var(--f-ui);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
   .px-it:active{background:color-mix(in srgb,var(--acc) 8%,transparent)}
   .px-it.sel{background:var(--s2)}
   .px-it:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
   .px-it.new .px-d{animation:popin 420ms var(--snap) both}
   .px-it b{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-    font-family:var(--f-round);font-size:16px;font-weight:700;letter-spacing:-.015em;line-height:1.2}
+    font-family:var(--f-round);font-size:14.5px;font-weight:700;letter-spacing:-.015em;line-height:1.2}
   /* the Valium gap: how long after the Valium before */
-  .px-gp{flex:none;display:inline-flex;align-items:center;gap:3px;height:20px;padding:0 7px 0 5px;border-radius:10px;background:var(--s2);
-    font-size:12px;font-weight:650;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .px-gp{flex:none;display:inline-flex;align-items:center;gap:3px;height:18px;padding:0 6px 0 4px;border-radius:9px;background:var(--s2);
+    font-size:11.5px;font-weight:650;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
   .px-gp .ic{width:12px;height:12px;stroke-width:2.3;color:var(--ink-3)}
   .px-it.sel .px-gp{background:var(--s3)}
+  /* a gap that reached the goal between doses */
+  .px-gp.ok,.px-it.sel .px-gp.ok{background:var(--under-bg);color:var(--under-t)}
+  .px-gp.ok .ic{color:var(--under-t)}
   /* the mg, right-aligned so the column reads straight down */
-  .px-em{flex:none;margin-left:auto;font-family:var(--f-round);font-size:15px;font-weight:700;letter-spacing:-.01em;color:var(--ink);
+  .px-em{flex:none;margin-left:auto;font-family:var(--f-round);font-size:14px;font-weight:700;letter-spacing:-.01em;color:var(--ink);
     font-variant-numeric:tabular-nums;white-space:nowrap}
-  .px-em small{margin-left:2px;font-family:var(--f-ui);font-size:11.5px;font-weight:600;letter-spacing:0;color:var(--ink-2)}
+  .px-em small{margin-left:2px;font-family:var(--f-ui);font-size:11px;font-weight:600;letter-spacing:0;color:var(--ink-2)}
   .px-it>.ic{flex:none;width:14px;height:14px;stroke-width:2.4;color:var(--ink-3);transition:transform var(--d-press) var(--e-move)}
   .px-it.sel>.ic{transform:rotate(90deg)}
   /* an opened row's editor takes the card's whole width, under the row */
   .px-gl .px-e>.px-in{margin:4px 0 8px -58px}
   /* the total: the same columns, a heavier rule over it */
-  .px-g.px-tot{margin:0 0 10px;padding:6px 0 2px;border-top:1.5px solid var(--line-2)}
-  .px-tot .px-et{padding-top:7px;font-family:var(--f-ui);font-size:12.5px;font-weight:650;letter-spacing:0;color:var(--ink-2)}
-  .px-tr{display:flex;align-items:center;gap:8px;min-height:34px;padding:0 26px 0 8px}
-  .px-tr b{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14.5px;font-weight:650;color:var(--ink)}
-  .px-tn{flex:none;font-size:12.5px;font-weight:600;color:var(--ink-3);font-variant-numeric:tabular-nums;white-space:nowrap}
-  .px-tr .px-em{font-size:15px}
+  .px-g.px-tot{margin:0 0 8px;padding:4px 0 2px;border-top:1.5px solid var(--line-2)}
+  .px-tot .px-et{padding-top:4px;font-family:var(--f-ui);font-size:12px;font-weight:650;letter-spacing:0;color:var(--ink-2)}
+  .px-tr{display:flex;align-items:center;gap:8px;min-height:28px;padding:0 26px 0 8px}
+  .px-tr b{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13.5px;font-weight:650;color:var(--ink)}
+  .px-tn{flex:none;font-size:12px;font-weight:600;color:var(--ink-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .px-tr .px-em{font-size:14px}
   /* ---- Day: the pills to press, under the box ---- */
   .px-pk{margin:0 0 12px}
   .px-pk:empty{display:none}
@@ -1409,29 +1420,29 @@
   .px-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
   /* a tile is one press: the button is laid under what the tile says, which
      lets the press through; the mg chip sits above it */
-  .px-tile{position:relative;min-width:0;padding:10px 10px 12px 12px;border-radius:var(--r-md);background:var(--s1)}
+  .px-tile{position:relative;min-width:0;padding:7px 9px 8px 12px;border-radius:var(--r-md);background:var(--s1)}
   .px-tap{position:absolute;inset:0;padding:0;border:0;border-radius:inherit;background:none;cursor:pointer;
     -webkit-tap-highlight-color:transparent;touch-action:manipulation}
   .px-tile>span{position:relative;pointer-events:none}
   .px-tile .px-mg{pointer-events:auto}
   .px-tile:has(.px-tap:active){background:color-mix(in srgb,var(--acc) 9%,var(--s1))}
   .px-tile:has(.px-tap:active) .px-plus{transform:scale(.88);background:var(--acc);color:var(--on-acc)}
-  .px-th{display:flex;align-items:center;gap:6px;min-height:34px}
+  .px-th{display:flex;align-items:center;gap:6px;min-height:30px}
   .px-th b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
     font-family:var(--f-round);font-size:17px;font-weight:700;letter-spacing:-.015em;line-height:1.2}
   /* the + is the thing you press, so it is the thing in the accent */
-  .px-plus{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--acc-bg);color:var(--acc-t);
+  .px-plus{flex:none;width:27px;height:27px;border-radius:50%;display:grid;place-items:center;background:var(--acc-bg);color:var(--acc-t);
     transition:transform var(--d-press) var(--e-move),background var(--d-press) var(--e-move)}
-  .px-plus .ic{width:17px;height:17px;stroke-width:2.6}
+  .px-plus .ic{width:15px;height:15px;stroke-width:2.6}
   .px-tile.new .px-plus{animation:popin 420ms var(--snap) both}
-  .px-ts{display:flex;flex-wrap:wrap;align-items:center;gap:0 7px;margin-top:2px;min-height:28px}
+  .px-ts{display:flex;flex-wrap:wrap;align-items:center;gap:0 7px;margin-top:0;min-height:24px}
   .px-ago{font-size:12.5px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
   .px-th{gap:6px}
-  .px-th b{font-size:15.5px}
+  .px-th b{font-size:15px}
   .px-tml .px-d{margin-right:6px;vertical-align:1px;width:9px;height:9px}
   /* on a tile the mg is plain figures with the chevron that says it opens:
      a chip inside a tile is a box in a box, and the two don't fit a line */
-  .px-tile .px-mg{height:28px;padding:0;background:none;box-shadow:none;font-size:14.5px}
+  .px-tile .px-mg{height:24px;padding:0;background:none;box-shadow:none;font-size:14px}
   .px-tile .px-mg.unset{padding:0;box-shadow:none;font-size:13px}
   /* the mg the pill is at. A 30px chip with a 44px target around it. */
   .px-mg{position:relative;z-index:1;flex:none;display:inline-flex;align-items:center;gap:2px;height:30px;padding:0 7px 0 10px;border:0;border-radius:15px;cursor:pointer;
@@ -1491,18 +1502,36 @@
   .px-vd{padding:12px 16px 2px}
   .px-vdh{margin:0 0 4px;font-size:12.5px;font-weight:650;color:var(--ink-2)}
   .px-vdh .px-d{margin-right:6px;vertical-align:1px;width:9px;height:9px}
-  .px-vr{display:grid;grid-template-columns:52px minmax(0,1fr) 62px 52px;align-items:center;gap:0 10px;min-height:38px;border-top:1px solid var(--line)}
-  .px-vr:first-child{border-top:0}
-  .px-vn{font-size:13.5px;font-weight:650;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .px-vr{display:grid;grid-template-columns:50px minmax(0,1fr) 52px 40px;align-items:center;gap:0 9px;min-height:32px;border-top:1px solid var(--line)}
+  .px-vr:first-child,.px-vr.ax+.px-vr{border-top:0}
+  .px-vn{font-size:13px;font-weight:650;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
   .px-vr.now .px-vn{color:var(--acc-t)}
-  .px-vb{position:relative;height:8px;border-radius:4px;background:var(--s2);overflow:hidden}
-  .px-vb i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--c)}
-  .px-vm{text-align:right;font-family:var(--f-round);font-size:16px;font-weight:700;letter-spacing:-.015em;color:var(--ink);
+  /* the day as a line, midnight to midnight, a notch each six hours; every
+     row shares the scale, so a dose reads against the days over and under it */
+  .px-vb{position:relative;height:22px;margin:0 6px;
+    background:linear-gradient(var(--line-2),var(--line-2)) 0 50%/100% 1px no-repeat,
+      linear-gradient(var(--line-2),var(--line-2)) 0 50%/1px 7px no-repeat,
+      linear-gradient(var(--line-2),var(--line-2)) 25% 50%/1px 7px no-repeat,
+      linear-gradient(var(--line-2),var(--line-2)) 50% 50%/1px 7px no-repeat,
+      linear-gradient(var(--line-2),var(--line-2)) 75% 50%/1px 7px no-repeat,
+      linear-gradient(var(--line-2),var(--line-2)) 100% 50%/1px 7px no-repeat}
+  /* a dose: a dot where it fell in the day, wider for more mg */
+  .px-vk{position:absolute;top:50%;width:var(--z,9px);height:var(--z,9px);margin:calc(var(--z,9px)/-2) 0 0 calc(var(--z,9px)/-2);
+    border-radius:50%;background:var(--c);box-shadow:0 0 0 1.5px var(--s1)}
+  /* where the goal after the last dose lands: a ring, not a dose */
+  .px-vk.g{--z:10px;background:var(--s1);box-shadow:inset 0 0 0 2px var(--under)}
+  .px-vq{position:absolute;top:3px;bottom:3px;width:1.5px;margin-left:-.75px;border-radius:1px;background:var(--ink-3)}
+  .px-vr.ax{min-height:16px;border-top:0}
+  .px-va{position:relative;height:14px;margin:0 6px}
+  .px-va i{position:absolute;top:0;transform:translateX(-50%);font-style:normal;font-size:10.5px;font-weight:600;line-height:14px;color:var(--ink-3);white-space:nowrap}
+  .px-vm{text-align:right;font-family:var(--f-round);font-size:14.5px;font-weight:700;letter-spacing:-.015em;color:var(--ink);
     font-variant-numeric:tabular-nums;white-space:nowrap}
-  .px-vm small{margin-left:2px;font-family:var(--f-ui);font-size:11.5px;font-weight:600;letter-spacing:0;color:var(--ink-2)}
-  .px-vm.z{font-family:var(--f-ui);font-size:13px;font-weight:600;letter-spacing:0;color:var(--ghost)}
+  .px-vm small{margin-left:2px;font-family:var(--f-ui);font-size:11px;font-weight:600;letter-spacing:0;color:var(--ink-2)}
+  .px-vm.z{font-family:var(--f-ui);font-size:12.5px;font-weight:600;letter-spacing:0;color:var(--ghost)}
   .px-vx{display:flex;justify-content:flex-end}
-  .px-vs{font-size:12.5px;font-weight:600;color:var(--ink-3);white-space:nowrap}
+  .px-vs{font-size:12px;font-weight:600;color:var(--ink-3);white-space:nowrap}
+  .px-vd .px-wlg i.g{box-shadow:inset 0 0 0 2px var(--under)}
+  .px-vd .px-wlg i.d{background:var(--pc-1);box-shadow:none}
   .px-vd .px-wlg{margin:4px 0 10px}
   .px-vbt{margin:0 0 12px}
   .px-vbt .btn.sm{background:var(--s2)}
@@ -1516,27 +1545,29 @@
     .px-tm{grid-template-columns:minmax(0,1fr);row-gap:10px}
     .px-tmc+.px-tmc{margin:0;padding:10px 0 0;border-left:0;border-top:1px solid var(--line)}
     .px-th b{font-size:15px}
-    .px-tile{padding:10px 8px 12px 11px}
+    .px-tile{padding:7px 8px 8px 11px}
     .px-g{grid-template-columns:44px minmax(0,1fr);column-gap:6px}
     .px-et{font-size:13px}
     .px-it{gap:6px;padding:0 2px 0 6px}
-    .px-it b{font-size:15px}
+    .px-it b{font-size:14px}
     .px-gp{padding:0 6px}
     .px-gp .ic{display:none}
-    .px-em{font-size:14px}
+    .px-em{font-size:13.5px}
     .px-gl .px-e>.px-in{margin-left:-50px}
     .px-tr{gap:5px;padding:0 4px 0 6px}
-    .px-tr b{font-size:14px}
+    .px-tr b{font-size:13px}
     .px-tn{font-size:12px}
-    .px-tr .px-em{font-size:14px}
+    .px-tr .px-em{font-size:13.5px}
     .px-pg>span{display:none}
     .px-wt{grid-template-columns:minmax(0,1fr) repeat(7,24px)}
     .px-wc{font-size:12px}
     .px-wn{padding:0 2px 0 4px}
     .px-wn b{font-size:13.5px;letter-spacing:-.02em}
-    .px-vr{grid-template-columns:46px minmax(0,1fr) 56px 48px;gap:0 8px}
-    .px-vn{font-size:12.5px}
-    .px-vm{font-size:15px}
+    .px-vr{grid-template-columns:44px minmax(0,1fr) 50px 34px;gap:0 5px}
+    .px-vn{font-size:12px}
+    .px-vm{font-size:13.5px}
+    .px-vm small{font-size:10.5px}
+    .px-vx .dv,.px-vs{font-size:11.5px}
   }
   /* supplements not on the row yet: a chip to press, and the list behind it */
   .px-scs{display:flex;flex-wrap:wrap;gap:8px}
@@ -13362,6 +13393,22 @@ try{
      since its last dose, to the second, restarting when the next one is
      logged. On the timeline its gaps always show, the overnight one too. */
   var PILL_TIMER='rx-valium';
+  /* the goal between its doses: six hours, his own (Nov 21) — "a rough goal
+     or time to reach before the next dose". It is a mark to aim at and
+     never a gate: nothing asks or blocks on it. A spacing he sets on the
+     pill himself (gapH, under Your pills) takes its place. */
+  var PILL_GOAL_H=6;
+  function pillGoalH(p){return p.gapH||PILL_GOAL_H;}
+  // "7:00 PM", with the day where it is not today's
+  function pillAtTxt(ms){
+    var k=pillDay(ms),d=new Date(ms);
+    return (k===pillTodayKey()?'':k===pillYdayKey()?'yesterday ':k===dkeyOf(addDays(pillToday(),1))?'tomorrow ':WEEKDAYS[d.getDay()].slice(0,3)+' ')+fmtTime(d);
+  }
+  function pillGoalHTML(last,G){
+    var need=G*3600000,since=Date.now()-last,ok=since>=need;
+    return {ok:ok,h:(ok?fmtGapH(G)+' reached at '+pillAtTxt(last+need):'Goal <b>'+fmtGapH(G)+'</b> between doses — at <b>'+pillAtTxt(last+need)+'</b>')+
+      '<span class="px-bar" aria-hidden="true"><i style="width:'+Math.max(0,Math.min(100,since/need*100)).toFixed(1)+'%"></i></span>'};
+  }
   function pillTimerPill(){
     var hit=null;
     pillsOn().forEach(function(p){var k=pillKind(p);if(!hit&&k&&k.id===PILL_TIMER)hit=p;});
@@ -13400,20 +13447,27 @@ try{
   function pillTimerHTML(){
     var p=pillTimerPill(),last=p?pillLast(p.id):null;
     if(last===null)return '';
-    var T=pillLoad(p.id,pillTodayKey()),Y=pillLoad(p.id,pillYdayKey());
+    var T=pillLoad(p.id,pillTodayKey()),Y=pillLoad(p.id,pillYdayKey()),G=pillGoalH(p),g=pillGoalHTML(last,G);
     function fig(L){return L.all?fmtMg(L.mg)+'<small>mg</small>':L.n+'<small>'+(L.n===1?'dose':'doses')+'</small>';}
     return '<div class="px-tmc"><span class="px-tml">'+pillDot(p)+esc(p.name)+' today</span>'+
         '<span class="px-tmv">'+(T.n?fig(T):'0<small>'+(p.mg?'mg':'doses')+'</small>')+'</span>'+
         '<span class="px-tms">'+(Y.n?'yesterday '+(Y.all?fmtMg(Y.mg)+' mg':pillDosesTxt(Y.n)):'none yesterday')+'</span></div>'+
       '<div class="px-tmc"><span class="px-tml">Since the last one</span>'+
         '<span class="px-tmv" id="pillTmV" role="timer" data-t="'+last+'">'+pillTimerTxt(Date.now()-last)+'</span>'+
-        '<span class="px-tms">'+esc(pillWhenFull(last))+'</span></div>';
+        '<span class="px-tms">'+esc(pillWhenFull(last))+'</span></div>'+
+      '<div class="px-tg'+(g.ok?' clear':'')+'" id="pillTmG" data-h="'+G+'">'+g.h+'</div>';
   }
   // the timer's own tick, to the second — only while it is on screen
   setInterval(function(){
     if(document.body.dataset.view!=='pills'||document.hidden)return;
     var el=$('pillTmV');
-    if(el)el.innerHTML=pillTimerTxt(Date.now()-(+el.dataset.t));
+    if(!el)return;
+    el.innerHTML=pillTimerTxt(Date.now()-(+el.dataset.t));
+    var ge=$('pillTmG');
+    if(ge){
+      var g=pillGoalHTML(+el.dataset.t,+ge.dataset.h);
+      if(g.h!==ge.dataset.s){ge.dataset.s=g.h;ge.innerHTML=g.h;ge.classList.toggle('clear',g.ok);}
+    }
   },1000);
 
   /* ---- Valium, day by day ----
@@ -13444,8 +13498,16 @@ try{
       if(j===want){more=true;days.push({k:k,L:pillLoad(p.id,k)});break;}
       days.push({k:k,L:pillLoad(p.id,k)});
     }
-    var shown=more?days.slice(0,-1):days,max=0;
-    shown.forEach(function(d){if(d.L.n&&d.L.all&&d.L.mg>max)max=d.L.mg;});
+    var shown=more?days.slice(0,-1):days,by=Object.create(null),max=0;
+    // each day's doses, and the biggest single one shown — a dot is sized against it
+    data.pills.log.forEach(function(x){
+      if(x.id!==p.id)return;
+      var t=Date.parse(x.t);if(t>now)return;
+      var k=pillDay(t);(by[k]||(by[k]=[])).push({t:t,mg:x.mg||0});
+    });
+    shown.forEach(function(d){(by[d.k]||[]).forEach(function(x){if(x.mg>max)max=x.mg;});});
+    function at(t,k){return Math.max(0,Math.min(100,(t-dateOf(k).getTime())/864000)).toFixed(1);}
+    var last=pillLast(p.id),G=pillGoalH(p),due=last===null?null:last+G*3600000,ring=false;
     function delta(a,b){
       if(a.all&&b.all)return {d:a.mg-b.mg,mg:true};
       if(!a.all&&!b.all)return {d:a.n-b.n,mg:false};
@@ -13456,7 +13518,16 @@ try{
       if(!isT&&L.n&&prev&&prev.L.n)c=delta(L,prev.L);
       var name=isT?'Today':WEEKDAYS[dt.getDay()].slice(0,3)+' '+dt.getDate();
       var fig=L.n?(L.all?fmtMg(L.mg)+'<small>mg</small>':L.n+'<small>'+(L.n===1?'dose':'doses')+'</small>'):(isT?'none yet':'none');
-      var w=L.n&&L.all&&max?Math.max(3,L.mg/max*100):0;
+      var ds=by[d.k]||[];
+      var marks=ds.map(function(x){
+        return '<i class="px-vk" style="left:'+at(x.t,d.k)+'%'+(max&&x.mg?';--z:'+(6+5*x.mg/max).toFixed(1)+'px':'')+'"></i>';
+      }).join('');
+      if(isT){
+        marks+='<i class="px-vq" style="left:'+at(Date.now(),d.k)+'%"></i>';
+        // where the goal lands, while it is still ahead and still today
+        if(due!==null&&due>Date.now()&&pillDay(due)===d.k){ring=true;marks+='<i class="px-vk g" style="left:'+at(due,d.k)+'%"></i>';}
+      }
+      var times=ds.length?', at '+ds.map(function(x){return fmtTime(new Date(x.t));}).join(', '):'';
       var cx='',cs='';
       if(c){
         var amt=c.mg?fmtMg(Math.abs(c.d)):Math.abs(c.d);
@@ -13465,17 +13536,21 @@ try{
       }
       else if(isT&&L.n)cx='<span class="px-vs">so far</span>';
       return '<div class="px-vr'+(isT?' now':'')+'" role="listitem" aria-label="'+esc(pillDayName(d.k))+': '+
-          (L.n?(L.all?fmtMg(L.mg)+' mg':pillDosesTxt(L.n)):'none logged')+(isT&&L.n?' so far':'')+cs+'">'+
+          (L.n?(L.all?fmtMg(L.mg)+' mg':pillDosesTxt(L.n)):'none logged')+(isT&&L.n?' so far':'')+times+cs+'">'+
         '<span class="px-vn">'+name+'</span>'+
-        '<span class="px-vb" aria-hidden="true">'+(w?'<i style="width:'+w.toFixed(1)+'%"></i>':'')+'</span>'+
+        '<span class="px-vb" aria-hidden="true">'+marks+'</span>'+
         '<span class="px-vm'+(L.n?'':' z')+'" aria-hidden="true">'+fig+'</span>'+
         '<span class="px-vx" aria-hidden="true">'+cx+'</span></div>';
     }).join('');
     var btns=(more?'<button class="btn sm ghost" data-pact="vdmore">Earlier days</button>':'')+
       (want>PILL_VD?'<button class="btn sm ghost" data-pact="vdless">Last '+PILL_VD+' days</button>':'');
     return '<p class="px-vdh">'+pillDot(p)+esc(p.name)+', day by day</p>'+
-      '<div class="px-vl" role="list" style="--c:var(--pc-'+pillHue(p)+')">'+rows+'</div>'+
-      '<p class="px-wlg">Each day against the day before</p>'+
+      '<div class="px-vl" role="list" style="--c:var(--pc-'+pillHue(p)+')">'+
+        '<div class="px-vr ax" aria-hidden="true"><span></span><span class="px-va">'+
+          ['12a','6a','12p','6p','12a'].map(function(l,i){return '<i style="left:'+i*25+'%">'+l+'</i>';}).join('')+'</span><span></span><span></span></div>'+
+        rows+'</div>'+
+      '<p class="px-wlg"><i class="d" style="background:var(--pc-'+pillHue(p)+')"></i>A dot a dose'+
+        (ring?' &nbsp; <i class="g"></i>'+fmtGapH(G)+' after the last':'')+'</p>'+
       (btns?'<div class="btn-row px-vbt">'+btns+'</div>':'');
   }
   // drawn on a repaint, and on the tick only when it reads differently (yesterday by now moves)
@@ -13541,7 +13616,7 @@ try{
     for(id in day)if(id!=='n')day[id].forEach(function(x){list.push({id:id,t:x.t,mg:x.mg});});
     if(!list.length)return '<p class="px-none">'+(live?'Nothing logged yet today. Press a pill below and it lands here.':'Nothing logged this day. Press a pill below to add one.')+'</p>';
     list.sort(function(a,b){return a.t-b.t;});
-    var pn=pillUI.panel,tp=pillTimerPill(),groups=[],was=null;
+    var pn=pillUI.panel,tp=pillTimerPill(),groups=[],was=null,goal=tp?pillGoalH(tp)*3600000:0;
     list.forEach(function(x){
       var p=pillOf(x.id);if(!p)return;
       x.p=p;
@@ -13561,9 +13636,9 @@ try{
           var sel=!!pn&&pn.kind==='dose'&&pn.id===x.id&&pn.t===x.t,fresh=x.t===pillNewT&&x.id===pillNewId;
           return '<div class="px-e'+(sel?' sel':'')+'"><button class="px-it'+(sel?' sel':'')+(fresh?' new':'')+'" data-pact="dose" data-id="'+esc(x.id)+'" data-t="'+x.t+
               '" aria-expanded="'+(sel?'true':'false')+'" aria-label="'+esc(x.p.name)+(x.mg?' '+fmtMg(x.mg)+' mg':'')+', '+esc(pillWhenFull(x.t))+
-              (x.gap?', '+fmtDur(x.gap)+' after the '+esc(x.p.name)+' before':'')+'. Press to change its time or mg.">'+
+              (x.gap?', '+fmtDur(x.gap)+' after the '+esc(x.p.name)+' before'+(x.gap>=goal?' (goal reached)':''):'')+'. Press to change its time or mg.">'+
             pillDot(x.p)+'<b>'+esc(x.p.name)+'</b>'+
-            (x.gap?'<span class="px-gp">'+icon('timer')+fmtDur(x.gap)+'</span>':'')+
+            (x.gap?'<span class="px-gp'+(x.gap>=goal?' ok':'')+'">'+icon('timer')+fmtDur(x.gap)+'</span>':'')+
             '<span class="px-em">'+(x.mg?fmtMg(x.mg)+'<small>mg</small>':'')+'</span>'+icon('chev')+'</button>'+
             (sel?pillDoseHTML(x.id,x.t):'')+'</div>';
         }).join('')+'</div></div>';
@@ -13601,7 +13676,7 @@ try{
         supAsk+=ask;
         return;
       }
-      var gs=live?pillGapState(p,last):null;
+      var gs=live&&tp!==p?pillGapState(p,last):null;
       main+='<div class="px-tile'+(fresh?' new':'')+'" data-id="'+id+'">'+
         '<button class="px-tap" data-pact="take" data-id="'+id+'" aria-label="'+lbl+'"></button>'+
         '<span class="px-th">'+pillDot(p)+'<b>'+esc(p.name)+'</b><span class="px-plus" aria-hidden="true">'+icon('plus')+'</span></span>'+
