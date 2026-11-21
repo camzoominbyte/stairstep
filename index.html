@@ -1374,14 +1374,14 @@
      row is the same: marker, name, (on Valium) the gap since the one
      before, the mg on the right edge, a chevron. The total under it keeps
      the same columns, "Total" standing where a time would. */
-  .px-tl{display:grid;gap:6px;margin:8px 0 6px}
-  /* a taking is a block of its own: the time, then what was taken. One with
-     Valium in it wears Valium's colour — a tint and a bar down its edge —
-     so the doses being watched stand out of the day at a glance; the rest
-     are plain. */
-  .px-g{display:grid;grid-template-columns:44px minmax(0,1fr);column-gap:8px;align-items:start;padding:5px 6px 5px 9px;border-radius:12px;background:var(--s2)}
-  .px-g.v{background:color-mix(in srgb,var(--c) 11%,var(--s1));box-shadow:inset 3px 0 0 var(--c)}
-  .px-et{padding-top:4px;text-align:right;font-family:var(--f-round);font-size:13px;font-weight:700;letter-spacing:-.01em;
+  .px-tl{margin:6px 0 4px}
+  /* a taking is a time and what was taken at it, with a rule between one
+     taking and the next so the day reads as a line of times. Valium has a
+     bar of its own in its colour — only its line, never the taking: what
+     was taken with it sits under the bar, outside the blue, as capsules. */
+  .px-g{display:grid;grid-template-columns:44px minmax(0,1fr);column-gap:9px;align-items:start;padding:8px 0;border-top:1px solid var(--line-2)}
+  .px-tl>.px-g:first-child{border-top:0}
+  .px-et{padding-top:5px;text-align:right;font-family:var(--f-round);font-size:13px;font-weight:700;letter-spacing:-.01em;
     line-height:20px;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
   .px-gl{min-width:0}
   /* a pill in a taking: a button, whichever shape it takes */
@@ -1392,18 +1392,20 @@
   .px-it b{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
     font-family:var(--f-round);font-weight:700;letter-spacing:-.015em;line-height:1.2}
   /* Valium is the line the block is about: its name, its gap, its mg on the right edge */
-  .px-it.v{gap:7px;width:100%;min-height:28px;padding:0 2px 0 3px;border-radius:8px}
+  .px-it.v{gap:7px;width:100%;min-height:30px;padding:0 5px 0 10px;border-radius:9px;
+    background:color-mix(in srgb,var(--c) 13%,var(--s1));box-shadow:inset 3px 0 0 var(--c)}
+  .px-it.v+.px-it.v{margin-top:4px}
   .px-it.v b{font-size:15px}
-  .px-it.v:active,.px-it.v.sel{background:color-mix(in srgb,var(--c) 16%,transparent)}
+  .px-it.v:active,.px-it.v.sel{background:color-mix(in srgb,var(--c) 24%,var(--s1))}
   /* the pills taken with it, or on their own: small capsules in a row, each
      outlined in its own colour */
   .px-cs{display:flex;flex-wrap:wrap;gap:5px;padding:2px 0}
-  .px-cs.w{grid-column:1/-1;padding:4px 0 2px}
-  .px-it.c{flex:none;max-width:100%;gap:5px;height:25px;padding:0 8px 0 7px;border-radius:13px;background:var(--s1);
+  .px-it.v+.px-cs{padding:6px 0 0}
+  .px-it.c{flex:none;max-width:100%;gap:4px;height:25px;padding:0 8px 0 6px;border-radius:13px;background:var(--s1);
     box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--c) 55%,transparent)}
-  .px-it.c b{font-family:var(--f-ui);font-size:13px;font-weight:650;letter-spacing:0}
+  .px-it.c b{font-family:var(--f-ui);font-size:12.5px;font-weight:650;letter-spacing:0}
   .px-it.c .px-d{width:8px;height:8px}
-  .px-it.c .px-em{margin-left:1px;font-size:12.5px;color:var(--ink-2)}
+  .px-it.c .px-em{margin-left:0;font-size:12px;color:var(--ink-2)}
   .px-it.c .px-em small{margin-left:1px;font-size:10.5px}
   .px-it.c:active{transform:scale(.96)}
   .px-it.c.sel{background:color-mix(in srgb,var(--c) 22%,var(--s1));box-shadow:inset 0 0 0 2px var(--c)}
@@ -1420,13 +1422,9 @@
   .px-it>.ic{flex:none;width:13px;height:13px;stroke-width:2.4;color:var(--ink-3);transition:transform var(--d-press) var(--e-move)}
   .px-it.sel>.ic{transform:rotate(90deg)}
   /* an opened pill's editor takes the block's whole width, under what was taken */
-  .px-g>.px-in{grid-column:1/-1;margin:6px 0 2px;background:var(--s1)}
-  .px-g>.px-in .btn{background:var(--s2)}
-  .px-g>.px-in .btn.ghost{background:transparent}
-  .px-g>.px-in .btn.go{background:var(--acc)}
-  .px-g>.px-in .px-time,.px-g>.px-in .px-mo:not(.on):not(.other){background:var(--s2)}
+  .px-g>.px-in{grid-column:1/-1;margin:8px 0 0}
   /* the total: not a block — one quiet line under the day, a pill after a pill */
-  .px-g.px-tot{display:flex;flex-wrap:wrap;align-items:center;gap:2px 12px;margin:0 0 8px;padding:7px 4px 2px;border-radius:0;background:none;border-top:1px solid var(--line)}
+  .px-g.px-tot{display:flex;flex-wrap:wrap;align-items:center;gap:2px 12px;margin:0 0 8px;padding:8px 4px 2px;border-top:1.5px solid var(--line-2)}
   .px-tot .px-et{padding-top:0;font-family:var(--f-ui);font-size:12px;font-weight:650;letter-spacing:0;color:var(--ink-2)}
   .px-tot .px-gl{display:contents}
   .px-tr{display:flex;align-items:center;gap:5px;min-width:0;min-height:22px}
@@ -1568,7 +1566,7 @@
     .px-tmc+.px-tmc{margin:0;padding:10px 0 0;border-left:0;border-top:1px solid var(--line)}
     .px-th b{font-size:15px}
     .px-tile{padding:7px 8px 8px 11px}
-    .px-g{grid-template-columns:40px minmax(0,1fr);column-gap:6px;padding-left:8px}
+    .px-g{grid-template-columns:40px minmax(0,1fr);column-gap:6px}
     .px-et{font-size:12.5px}
     .px-it.v{gap:6px}
     .px-it.v b{font-size:14px}
@@ -13659,10 +13657,8 @@ try{
         if(v)lead+=h;else chips+=h;
         if(sel)open=pillDoseHTML(x.id,x.t);
       });
-      return '<div class="px-g'+(lead?' v" style="--c:var(--pc-'+pillHue(tp)+')':'')+'"><span class="px-et">'+fmtClk(new Date(g.t))+'</span><div class="px-gl">'+
-        lead+(chips&&!lead?'<div class="px-cs">'+chips+'</div>':'')+'</div>'+
-        /* under a Valium line the capsules take the block's whole width, so two fit side by side */
-        (chips&&lead?'<div class="px-cs w">'+chips+'</div>':'')+open+'</div>';
+      return '<div class="px-g"><span class="px-et">'+fmtClk(new Date(g.t))+'</span><div class="px-gl">'+
+        lead+(chips?'<div class="px-cs">'+chips+'</div>':'')+'</div>'+open+'</div>';
     }).join('');
     if(list.length<2)return '<div class="px-tl">'+rows+'</div>';
     /* the total: the pills in the order a taking reads, the supplements
